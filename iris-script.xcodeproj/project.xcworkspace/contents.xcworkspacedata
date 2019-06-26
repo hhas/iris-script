@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:iris-lang.xcodeproj">
+      location = "self:/Users/has/iris-lang/iris-script.xcodeproj">
    </FileRef>
 </Workspace>
