@@ -8,7 +8,7 @@ import Foundation
 
 
 
-struct Block: ComplexValue, ExpressibleByArrayLiteral {
+struct Block: ComplexValue { // caution: this does not capture lexical scope
     
     var description: String { return "\(self.data)" }
     
@@ -17,10 +17,6 @@ struct Block: ComplexValue, ExpressibleByArrayLiteral {
     let nominalType: Coercion = asBlock
     
     let data: [Value]
-    
-    init(arrayLiteral data: Value...) {
-        self.init(data)
-    }
     
     init(_ data: [Value]) {
         self.data = data
@@ -35,7 +31,7 @@ struct Block: ComplexValue, ExpressibleByArrayLiteral {
         }
         return try coercion.coerce(value: result, in: scope)
     }
-    func swiftEval<T: BridgingCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         // bit clumsy (also unnecessary if we enforce structured programming, as we can just process the last expression in self.data separately
         return try coercion.unbox(value: self.eval(in: scope, as: coercion), in: scope)
     }

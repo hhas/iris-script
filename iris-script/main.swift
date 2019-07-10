@@ -1,17 +1,27 @@
 //
 //  main.swift
 
+// iris-script recapitulates sylvia-lang, which recapitulates entoli
+
+// syntactically, the final language should be primarily word-based with the minimum punctuation necessary to ensure unambiguous parsing (for discussion purposes, assume a word is any single word, or multiple words separated by underscores, or operator symbol)
+
+// “everything is a command”; there is no distinction between a “variable” and a command with zero arguments. Conceptually, `set foo to 3` is storing the value `3` in the environment's 'foo' slot as if it was simple closure: { ()->Value in return value } (where 'value' is 3). Thus `foo` will always operate as a command; similar to Ruby, there is no distinction between `foo` (name only) or `foo {}` (name + empty arguments record), as there is in Swift/Python/JavaScript/etc.
+
+// all commands behave as right-associative prefix 'operators'; where the right operand may be omitted (in which case it is null). For practical purposes, the operand when given is always treated as a record of zero or more fields, where each field has a value and is optionally labeled. (A record is effectively a tuple/struct hybrid.)
+
+// Q. to what extent could optimization be achieved by eval-ing script against meta-libraries? (i.e. libraries that define the same set of handler interfaces as standard libraries, but whose handlers perform transformations on the initial AST in order to yield a more efficient equivalent)
+
 import Foundation
 
 
 let e = Environment()
 
-try stdlib_loadHandlers(into: e)
+stdlib_loadHandlers(into: e)
 
 
-try e.addNativeHandler(
+try e.define(
     HandlerInterface(name: "foo", parameters: [("number", nullSymbol, AsEditable(asNumber))], result: asNothing),
-    [Command("show", [(nil, Command("bar"))])])
+    Block([Command("show", [(nil, Command("bar"))])]))
 
 let v = Text("313.0")
 
@@ -35,11 +45,15 @@ do {
 
     print("b=", v2)
     
+    try e.set(Name("bar"), to: 7)
+    
+    print("b2=", v2)
+    
     // TO DO: does 'editable parameter' need to be different to 'editable value'? i.e. AsEditableValue evals the input value and outputs it in a mutable box; whereas AsEditableParameter requires its input to be an editable value, evals the value using the intersection of its original and parameter types, stores the result back in the box and adds that box to the handler scope (Q. does this mean the editable box's constrained type also needs updated to the intersection? Remember, all changes to that box made by/within the handler are shared with the calling scope [c.f. pass-by-reference]).
 
-    print("c=", try v2.eval(in: e, as: AsList(asString))) // this modifies the contents of `bar` slot, causing d= to fail, which is not right; eval should not write coerced value back, except when coercing an editable value passed as editable argument (equivalent to Swift's var+pass-by-reference semantics); even then, the coercion must be rejected if the editable value's constrained type doesn't allow it; only time a coercion should be applied like this is when evaling command argument to parameter type (`to foo {bar as editable list of text}…`)
+    print("c=", try v2.eval(in: e, as: AsList(asString)))
 
-    print("d=", try v2.eval(in: e, as: AsEditable(asString))) // bear in mind asString only coerces to scalar; it won't quote number
+    print("d=", try v2.eval(in: e, as: AsEditable(asString))) // (bear in mind asString only coerces to scalar; it won't convert Number to String so the number will still appear unquoted, which is fine)
 
 } catch {
     print(error)
@@ -74,7 +88,7 @@ struct AddHandler: Handler { // 5x faster than standard implementation (which is
         return try add(left: arg_0, right: arg_1)
     }
     
-    func swiftCall<T: BridgingCoercion>(with command: Command, in dynamicScope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftCall<T: SwiftCoercion>(with command: Command, in dynamicScope: Scope, as coercion: T) throws -> T.SwiftType {
         throw NotYetImplementedError()
     }
     
@@ -84,7 +98,7 @@ struct AddHandler: Handler { // 5x faster than standard implementation (which is
         return try coercion.coerce(value: self, in: scope)
     }
     
-    func swiftEval<T: BridgingCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         return try coercion.unbox(value: self, in: scope)
     }
 }

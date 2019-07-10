@@ -12,11 +12,13 @@ import Foundation
 // foo; of bar; of baz
 
 
-struct List: CollectionValue {
+struct List: CollectionValue { // ExpressibleByArrayLiteral?
     
     var description: String { return "\(self.data)" }
     
     let nominalType: Coercion = asList
+    
+    // TO DO: rename `constrainedType` to `structuralType`/`reifiedType`? make it public on Value?
     
     private var constrainedType: Coercion = asList // TO DO: how/when is best to specialize this (bear in mind that list may contain commands and other exprs that are not guaranteed to eval to same type/value every time)
     
@@ -40,7 +42,7 @@ struct List: CollectionValue {
         return try List(self.map{ try $0.eval(in: scope, as: coercion.item) })
     }
     
-    func toArray<T: BridgingCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
+    func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
         return try self.map{ try $0.swiftEval(in: scope, as: coercion.item) }
     }
     

@@ -10,14 +10,14 @@
 import Foundation
 
 
-typealias BridgingScalarCoercion = BridgingCoercion
+protocol SwiftScalarCoercion: SwiftCoercion {}
 
 
 // scalar coercions don't coerce to exact type, only to scalar (having satisfied that the value can be represented as that exact type if needed); Q. any benefit in caching exact value? what about values caching coercions in general? (particularly strings and collections, which can be large and expensive)
 
-struct AsValue: BridgingScalarCoercion {
+struct AsValue: SwiftScalarCoercion {
     
-    let name: Symbol = "anything"
+    let name: Name = "anything"
     
     typealias SwiftType = Value
     
@@ -33,15 +33,15 @@ struct AsValue: BridgingScalarCoercion {
     }
 }
 
-struct AsInt: BridgingScalarCoercion {
+struct AsInt: SwiftScalarCoercion {
     
-    let name: Symbol = "integer"
+    let name: Name = "integer"
     
     typealias NativeType = Int
     
     typealias SwiftType = NativeType
     
-    func coerce(value: Value, in scope: Scope) throws -> Value { // this implementation preserves original type; is there any benefit to this?
+    func coerce(value: Value, in scope: Scope) throws -> Value { // this implementation preserves original value type; is there any benefit to this? (e.g. a Text value coerced to asInt remains a Text value; only its validity as an integer is checked; its constrained type could be updated to reflect this [if that provides any benefit over recalculating], or it could be otherwise annotated)
         let result: Value
         switch value {
         case is Int: return value
@@ -62,12 +62,12 @@ struct AsInt: BridgingScalarCoercion {
 }
 
 
-struct AsConstrainedInt: BridgingScalarCoercion {
+struct AsConstrainedInt: SwiftScalarCoercion {
     
-    let name: Symbol = "integer"
+    let name: Name = "integer"
     
     var description: String { // TO DO: code or descriptive text? (if descriptive, how to localize?)
-        var result = self.name.name
+        var result = self.name.label
         if let m = self.min { result += " from \(m)" }
         if let m = self.max { result += " up to \(m)" }
         return result
@@ -79,7 +79,7 @@ struct AsConstrainedInt: BridgingScalarCoercion {
     
     let min: NativeType?, max: NativeType?
     
-    init(min: NativeType? = nil, max: NativeType? = nil) {
+    init(min: NativeType? = nil, max: NativeType? = nil) { // TO DO: also needs a nonZero constraint option (e.g. the denominator in division handlers)
         self.min = min
         self.max = max
     }
@@ -101,9 +101,9 @@ struct AsConstrainedInt: BridgingScalarCoercion {
 
 // TO DO: decide bignum, decimal, fractional; also quantity (although quantity will be composite of number and unit)
 
-struct AsDouble: BridgingScalarCoercion {
+struct AsDouble: SwiftScalarCoercion {
     
-    let name: Symbol = "real"
+    let name: Name = "real"
     
     typealias NativeType = Double
     
@@ -123,9 +123,9 @@ struct AsDouble: BridgingScalarCoercion {
     }
 }
 
-struct AsString: BridgingScalarCoercion {
+struct AsString: SwiftScalarCoercion {
     
-    let name: Symbol = "string"
+    let name: Name = "string"
     
     typealias SwiftType = String
     
@@ -146,9 +146,9 @@ struct AsString: BridgingScalarCoercion {
 }
 
 
-struct AsScalar: BridgingScalarCoercion {
+struct AsScalar: SwiftScalarCoercion {
     
-    let name: Symbol = "scalar"
+    let name: Name = "scalar"
     
     typealias SwiftType = ScalarValue
     
@@ -174,9 +174,9 @@ let asString = AsString()
 
 
 
-struct AsNumber: BridgingScalarCoercion {
+struct AsNumber: SwiftScalarCoercion {
     
-    let name: Symbol = "number"
+    let name: Name = "number"
     
     typealias NativeType = Number
     

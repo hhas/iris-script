@@ -8,6 +8,7 @@ import Foundation
 
 // TO DO: should be ok with an extra `lexicalScope` slot that's assigned as needed (Q. how to weakref/strongref? we need to watch out for circular refs in backing stores: a handler defined in a context should maintain a weakref to that context; evaling `handler_name as handler` [closure] should return strongref'd copy that can be returned for use outside that context; storing that strongref'd copy back in same context should re-weakref it; anything more convoluted will probably just leak cycles refunless we have a GC to break those)
 
+// TO DO: assuming primitive handlers can have editable parameters, need to decide how best to support these
 
 
 struct PrimitiveHandler: Handler {
@@ -45,7 +46,7 @@ struct PrimitiveHandler: Handler {
     
     // Q. how to bypass result coercion in swiftCall? (move `Coercion.box()` up to `call()`?) bear in mind that box doesn't do constraint checking (which we really should do)
     
-    func swiftCall<T: BridgingCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         // TO DO: how will this intersect coercions? do we need a separate swiftFunc wrapper that supports generics? we could presumably sneak out the primitive result in a Value wrapper, relying on runtime casts rather than generics, but that's a kludge; the problem is that swiftEval code paths need to use unbox instead of coerce (trying to achieve a single unified code path for both native->native and native->primitive [c.f. kiwi] proved to be an endless rabbit hole in entoli, hence the switch to separate code paths; only way to reduce code duplication would be to pass the coerce/unbox step as a closure argument, but again that will likely get silly); the alternative, given that most Values are now nice cheap structs [caveat that collection values currently hold each element as a Value, not a Swift primitive, making full unboxing an O(n) operation; the swiftEval code path avoids creating this extra work], would be to use Value throughout, and only unbox at the very end (much depends on if/how iris implements sylvia-style Value annotations, as constructing and storing [relatively expensive] annotations is a waste of time if the end result is the unboxed Swift value)
         throw NotYetImplementedError()
     }

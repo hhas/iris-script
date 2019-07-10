@@ -7,35 +7,35 @@ import Foundation
 
 
 
-public struct Symbol: ComplexValue, ExpressibleByStringLiteral, Comparable, Hashable {
+public struct Name: ComplexValue, ExpressibleByStringLiteral, Comparable, Hashable {
     
-    public var description: String { return "#\(self.name)" }
+    public var description: String { return "#\(self.label)" }
     
     public typealias StringLiteralType = String
     
     // TO DO: rename Name? (for consistency with UnknownNameError)? not sure about this: symbols are also used as first-class values ("class"/"enum"/typeType/typeEnumerated)
     
-    let nominalType: Coercion = asSymbol
+    let nominalType: Coercion = asName
     
-    public let name: String
-    public let key: String // interring symbols would enable more efficient key representation, but for now it's sufficient to use case-normalized string
+    public let label: String
+    private let key: String // interring symbols would enable more efficient key representation, but for now it's sufficient to use case-normalized string
     
     public init(stringLiteral value: StringLiteralType) {
         self.init(value)
     }
     
     public init(_ name: String) {
-        self.name = name
+        self.label = name
         self.key = name.lowercased()
     }
     
     //
     
-    public static func < (lhs: Symbol, rhs: Symbol) -> Bool {
+    public static func < (lhs: Name, rhs: Name) -> Bool {
         return lhs.key < rhs.key
     }
     
-    public static func == (lhs: Symbol, rhs: Symbol) -> Bool {
+    public static func == (lhs: Name, rhs: Name) -> Bool {
         return lhs.key == rhs.key
     }
     
@@ -46,5 +46,5 @@ public struct Symbol: ComplexValue, ExpressibleByStringLiteral, Comparable, Hash
 
 
 
-let nullSymbol = Symbol("")
+let nullSymbol = Name("")
 

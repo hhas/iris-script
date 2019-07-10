@@ -30,10 +30,10 @@ struct MemoizedStaticValue: Handler {
     let result: Value
     
     func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
-        return coercion == self.coercion ? self.result : try self.value.eval(in: scope, as: coercion)
+        return self.coercion.isa(coercion) ? self.result : try self.value.eval(in: scope, as: coercion)
     }
-    func swiftCall<T: BridgingCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        fatalError()
+    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        fatalError() // TO DO: this unboxes as T; how practical/useful to cache returned value
     }
 }
 
@@ -50,7 +50,7 @@ struct DynamicallyBoundHandler: Handler {
         return try handler.call(with: command, in: scope, as: coercion)
     }
     
-    func swiftCall<T: BridgingCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         fatalError()
     }
 }
@@ -93,7 +93,7 @@ struct BindHandlerOnFirstUse: Handler {
         }
     }
     
-    func swiftCall<T: BridgingCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         return try coercion.unbox(value: self.call(with: command, in: scope, as: coercion), in: scope)
     }
 }

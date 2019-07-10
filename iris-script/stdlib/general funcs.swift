@@ -65,11 +65,10 @@ func show(value: Value) { // primitive library function
 
 /******************************************************************************/
 
-// TO DO: should interface be Value? how is it represented natively? (record?)
 
-func defineHandler(name: Symbol, parameters: [HandlerInterface.Parameter], result: Coercion,
-                   action: Block, isEventHandler: Bool, commandEnv: Environment) throws {
-    let interface = try HandlerInterface.validatedInterface(name: name, parameters: parameters,
-                                                            result: result, isEventHandler: isEventHandler)
-    try commandEnv.addNativeHandler(interface, action)
+func defineHandler(interface: HandlerInterface, action: Block, commandEnv: Scope) throws { // TO DO: need to check what, if any, command scopes are not Environment instances
+    guard let commandEnv = commandEnv as? Environment else {
+        throw InternalError(description: "Can't define handler on non-Environment scope.")
+    }
+    try commandEnv.define(interface, action)
 }

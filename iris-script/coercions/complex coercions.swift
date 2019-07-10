@@ -10,57 +10,29 @@ import Foundation
 
 // TO DO: this is a little dicey as it assumes values cannot coerce to complex types; would be safer to implement Value.toComplex(in:as:), with the default implementation throwing if not same type (this allows values to implement their own toComplex where appropriate)
 
-struct AsComplex<T: Value>: BridgingCoercion { // T must be concrete struct or class; abstract protocols aren't accepted
+struct AsComplex<T: Value>: SwiftCoercion { // T must be concrete struct or class; abstract protocols aren't accepted
     
-    let name: Symbol
+    let name: Name
     
     typealias SwiftType = T
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
-        if !(value is T) { throw UnknownCoercionError(value: value, coercion: self) }
-        return value
-    }
-    
-    func box(value: SwiftType, in scope: Scope) -> Value {
-        return value
-    }
-    
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let result = value as? SwiftType else { throw UnknownCoercionError(value: value, coercion: self) }
+        guard let result = try value.swiftEval(in: scope, as: asAnything) as? SwiftType else {
+            throw UnknownCoercionError(value: value, coercion: self)
+        }
         return result
     }
 }
 
 
-struct AsKey: BridgingCoercion { // unwraps Symbol as normalized String
+struct AsName: SwiftCoercion {
     
-    let name: Symbol = "name"
+    var name: Name { return Name("name") } // avoid creating cycle between Name and AsName when initializing them
     
-    typealias SwiftType = String
-    
-    func coerce(value: Value, in scope: Scope) throws -> Value {
-        if !(value is Symbol) { throw UnknownCoercionError(value: value, coercion: self) }
-        return value
-    }
-    
-    func box(value: SwiftType, in scope: Scope) -> Value {
-        return Symbol(value)
-    }
-    
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let name = value as? Symbol else { throw UnknownCoercionError(value: value, coercion: self) }
-        return name.key
-    }
-}
-
-struct AsSymbol: BridgingCoercion {
-    
-    var name: Symbol { return Symbol("name") } // avoid creating cycle between Symbol and AsSymbol when initializing them
-    
-    typealias SwiftType = Symbol
+    typealias SwiftType = Name
     
     func coerce(value: Value, in scope: Scope) throws -> Value {
-        if !(value is Symbol) { throw UnknownCoercionError(value: value, coercion: self) }
+        if !(value is Name) { throw UnknownCoercionError(value: value, coercion: self) }
         return value
     }
     
@@ -69,15 +41,15 @@ struct AsSymbol: BridgingCoercion {
     }
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let name = value as? Symbol else { throw UnknownCoercionError(value: value, coercion: self) }
+        guard let name = value as? Name else { throw UnknownCoercionError(value: value, coercion: self) }
         return name
     }
 }
 
 
-struct AsHandler: BridgingCoercion { // (can't use AsComplex<Handler> as Handler isn't concrete type; however, we'll need some custom implementation anyway)
+struct AsHandler: SwiftCoercion { // (can't use AsComplex<Handler> as Handler isn't concrete type; however, we'll need some custom implementation anyway)
     
-    let name: Symbol = "handler"
+    let name: Name = "handler"
     
     typealias SwiftType = Handler
     
@@ -103,16 +75,25 @@ struct AsHandler: BridgingCoercion { // (can't use AsComplex<Handler> as Handler
 
 // TO DO (complex types generally only coerce to Any or Self)
 let asCommand = AsComplex<Command>(name: "command")
-let asSymbol = AsSymbol()
-let asKey = AsKey()
-let asHandlerInterface = AsComplex<Command>(name: "handler_interface")
+let asName = AsName()
+let asHandlerInterface = AsComplex<HandlerInterface>(name: "handler_interface") // TO DO: handler interface can be coerced to/from Record
 let asHandler = AsHandler()
 let asBlock = AsComplex<Block>(name: "block")
 
 
-// TO DO
-let asParameter = asValue
-let asIs = asAnything
+
+struct AsIs: SwiftCoercion {
+    
+    let name: Name = "anything"
+    
+    typealias SwiftType = Value
+    
+    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+        return value
+    }
+}
+
+let asIs = AsIs()
 
 
 
@@ -132,9 +113,9 @@ let asBool = AsComplex<Bool>(name: "boolean")
 
 
 
-struct AsCoercion: BridgingCoercion {
+struct AsCoercion: SwiftCoercion {
     
-    let name: Symbol = "coercion"
+    let name: Name = "coercion"
     
     typealias SwiftType = Coercion
     
@@ -159,31 +140,40 @@ let asCoercion = AsCoercion() // can't use AsComplex<Coercion> as generics requi
 
 
 
-let asRecord = AsComplex<Record>(name: "record")
+//let asRecord = AsComplex<Record>(name: "record") // TO DO: what about AsRecord with specified fields
 
 
 
 
-struct AsError: BridgingCoercion {
+struct AsError: SwiftCoercion {
     
-    let name: Symbol = "error"
+    let name: Name = "error"
     
     typealias SwiftType = NativeError
     
+    // TO DO: why isn't SwiftCoercion extension adding coerce and box methods?
+    
     func coerce(value: Value, in scope: Scope) throws -> Value {
-        if !(value is Coercion) { throw UnknownCoercionError(value: value, coercion: self) }
-        return value
+        return try self.unbox(value: value, in: scope)
     }
     
     func box(value: SwiftType, in scope: Scope) -> Value {
         return value
     }
-    
+  
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let result = value as? SwiftType else { throw UnknownCoercionError(value: value, coercion: self) }
+        guard let result = try value.swiftEval(in: scope, as: asAnything) as? SwiftType else {
+            throw UnknownCoercionError(value: value, coercion: self)
+        }
         return result
     }
 }
 
 let asError = AsError()
 
+
+
+// asLiteralCast -- takes `as {left: Name, right: Coercion}` command and decomposes it? or should parseHandlerInterface() deal with `BINDING as COERCION` pattern itself?
+
+
+// TO DO: LiteralCoercion? (this could be a single/generic struct, as all it does is typecheck the given value… although there is a caveat as some values eval first… another reason to lose the initial Value.eval call)

@@ -18,8 +18,10 @@ import Foundation
 
 // Q. how best to implement symbols? case-preserving, case-insensitive; (e.g. interred in case-insensitive hash?); Q. can/should symbols be able to describe ObjC-style method names? (arguably Swift func names+param labels too); what should/shouldn't be valid chars in symbols? (bear in mind that symbols may be names of anything, including operators, so all chars are legal, although how they're interpreted may depend on context, e.g. `foo:bar:baz:`)
 
+// for booleans, define true and false, with `nothing` coercing to false and everything else coercing to true? (is this sufficient to support Icon-style chaining, e.g. `3 < x < 6`?)
 
-protocol Value: CustomStringConvertible {
+
+protocol Value: CustomStringConvertible { // TO DO:
     
     var description: String { get }
     
@@ -28,10 +30,10 @@ protocol Value: CustomStringConvertible {
     var isMemoizable: Bool { get }
     
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value
-    func swiftEval<T: BridgingCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType
+    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType
     
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value
-    func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue
+    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value // any value except `nothing`
+    func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue // text/number/date/URL
     func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number
     
     func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool
@@ -41,9 +43,12 @@ protocol Value: CustomStringConvertible {
     
     // Q. implement toArray in terms of iterator (or possibly even `toIterator`?)
     func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> List
-    func toArray<T: BridgingCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType]
+    func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType]
 
     //func toEditable(in scope: Scope, as coercion: AsEditable) throws -> EditableValue
+    
+    func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record
+    
 }
 
 extension Value {
@@ -55,7 +60,7 @@ extension Value {
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
         return try coercion.coerce(value: self, in: scope)
     }
-    func swiftEval<T: BridgingCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         return try coercion.unbox(value: self, in: scope)
     }
     
@@ -91,13 +96,18 @@ extension Value {
         fatalError("must be overridden") // scalar returns single-item list; collection returns list; complex evals with coercion as return type
     }
     
-    func toArray<T: BridgingCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
+    func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
         fatalError("must be overridden")
     }
     
     //func toEditable(in scope: Scope, as coercion: AsEditable) throws -> EditableValue {
     //    return EditableValue(try coercion.coercion.coerce(value: self, in: scope))
     //}
+    
+    // TO DO: is this appropriate? (probably, c.f. Value->List(Value), but need to check corner cases for command args/handler sigs - may need to distinguish record literals, as `foo`, `foo {}`, `foo nothing`, and `foo {nothing}` have different meanings)
+    func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
+        return try Record([(nullSymbol, self)]) // TO DO: need to eval self; TO DO: this is also wrong for commands (move to ScalarValue extension?)
+    }
 }
 
 // TO DO: can/should all scalars be BoxedValues? what functionality can be defined on BoxedValue extension?
@@ -136,7 +146,7 @@ extension ScalarValue {
     func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> List {
         return List([try self.eval(in: scope, as: coercion.item)])
     }
-    func toArray<T: BridgingCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
+    func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
         return try [self.swiftEval(in: scope, as: coercion.item)]
     }
 }

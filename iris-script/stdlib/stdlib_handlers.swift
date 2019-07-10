@@ -8,8 +8,8 @@
 import Foundation
 
 
-let leftParameterLabel = Symbol("left")
-let rightParameterLabel = Symbol("right")
+let leftParameterLabel = Name("left")
+let rightParameterLabel = Name("right")
 
 
 
@@ -709,8 +709,8 @@ private func function_ge_left_right(command: Command, commandEnv: Scope, handler
 
 // is_a (value, of_type)
 private let type_isA_value_ofType = (
-    param_0: (label: Symbol("value"), coercion: asValue),
-    param_1: (label: Symbol("of_type"), coercion: asCoercion),
+    param_0: (label: Name("value"), coercion: asValue),
+    param_1: (label: Name("of_type"), coercion: asCoercion),
     result: asBool
 )
 private let interface_isA_value_ofType = HandlerInterface(
@@ -765,7 +765,7 @@ private func function_joinValues_left_right(command: Command, commandEnv: Scope,
 
 // show (value)
 private let type_show_value = (
-    param_0: (label: Symbol("value"), coercion: asValue),
+    param_0: (label: Name("value"), coercion: asValue),
     result: asNothing
 )
 let interface_show_value = HandlerInterface(
@@ -790,41 +790,31 @@ func function_show_value(command: Command, commandEnv: Scope, handler: Handler, 
 
 
 // define_handler (name, parameters, return_type, action, is_event_handler)
-let type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv = (
-    param_0: (label: Symbol("name"), coercion: asSymbol),
-    param_1: (label: Symbol("parameters"), coercion: AsArray(asParameter)),
-    param_2: (label: Symbol("result"), coercion: asCoercion),
-    param_3: (label: Symbol("action"), coercion: asIs), // TO DO: coercion? (asUnboundBlock)
-    param_4: (label: Symbol("is_event_handler"), coercion: asBool),
+let type_defineHandler_interface_action_commandEnv = (
+    // TO DO: reduce `name+parameters+result` to single parameter of type asHandlerInterface?
+    param_0: (label: Name("interface"), coercion: asHandlerInterface),
+    param_1: (label: Name("action"), coercion: asBlock),
     result: asNothing
 )
-let interface_defineHandler_name_parameters_result_action_isEventHandler_commandEnv = HandlerInterface(
+let interface_defineHandler_interface_action_commandEnv = HandlerInterface(
     name: "define_handler",
     parameters: [
-        (type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_0.label, nullSymbol, type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_0.coercion),
-        (type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_1.label, nullSymbol, type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_1.coercion),
-        (type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_2.label, nullSymbol, type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_2.coercion),
-        (type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_3.label, nullSymbol, type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_3.coercion),
-        (type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_4.label, nullSymbol, type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_4.coercion),
+        (type_defineHandler_interface_action_commandEnv.param_0.label, nullSymbol, type_defineHandler_interface_action_commandEnv.param_0.coercion),
+        (type_defineHandler_interface_action_commandEnv.param_1.label, nullSymbol, type_defineHandler_interface_action_commandEnv.param_1.coercion),
+ 
     ],
-    result: type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.result
+    result: type_defineHandler_interface_action_commandEnv.result
 )
-func function_defineHandler_name_parameters_result_action_isEventHandler_commandEnv(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+func function_defineHandler_interface_action_commandEnv(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
     let arguments = command.arguments
-    let arg_0 = try command.swiftValue(at: &index, for: type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_0, in: commandEnv)
-    let arg_1 = try command.swiftValue(at: &index, for: type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_1, in: commandEnv)
-    let arg_2 = try command.swiftValue(at: &index, for: type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_2, in: commandEnv)
-    let arg_3 = try command.swiftValue(at: &index, for: type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_3, in: commandEnv)
-    let arg_4 = try command.swiftValue(at: &index, for: type_defineHandler_name_parameters_result_action_isEventHandler_commandEnv.param_4, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_defineHandler_interface_action_commandEnv.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_defineHandler_interface_action_commandEnv.param_1, in: commandEnv)
     if arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     try defineHandler(
-        name: arg_0,
-        parameters: [], // arg_1, // TO DO
-        result: arg_2,
-        action: [], // arg_3,
-        isEventHandler: arg_4,
-        commandEnv: commandEnv as! Environment // TO DO
+        interface: arg_0,
+        action: arg_1,
+        commandEnv: commandEnv
     )
     return nullValue
 }
@@ -832,38 +822,41 @@ func function_defineHandler_name_parameters_result_action_isEventHandler_command
 
 
 
-func stdlib_loadHandlers(into env: Environment) throws {
-    // this creates refcycles, but since primitive modules don't need to be unloaded this shouldn't be a problem
+func stdlib_loadHandlers(into env: Environment) {
     
-    try env.addPrimitiveHandler(interface_exponent_left_right, function_exponent_left_right)
-    try env.addPrimitiveHandler(interface_positive_left, function_positive_left)
-    try env.addPrimitiveHandler(interface_negative_left, function_negative_left)
-    try env.addPrimitiveHandler(interface_add_left_right, function_add_left_right)
-    try env.addPrimitiveHandler(interface_subtract_left_right, function_subtract_left_right)
-    try env.addPrimitiveHandler(interface_multiply_left_right, function_multiply_left_right)
-    try env.addPrimitiveHandler(interface_divide_left_right, function_divide_left_right)
-    try env.addPrimitiveHandler(interface_div_left_right, function_div_left_right)
-    try env.addPrimitiveHandler(interface_mod_left_right, function_mod_left_right)
-    try env.addPrimitiveHandler(interface_isLessThan_left_right, function_isLessThan_left_right)
-    try env.addPrimitiveHandler(interface_isLessThanOrEqualTo_left_right, function_isLessThanOrEqualTo_left_right)
-    try env.addPrimitiveHandler(interface_isEqualTo_left_right, function_isEqualTo_left_right)
-    try env.addPrimitiveHandler(interface_isNotEqualTo_left_right, function_isNotEqualTo_left_right)
-    try env.addPrimitiveHandler(interface_isGreaterThan_left_right, function_isGreaterThan_left_right)
-    try env.addPrimitiveHandler(interface_isGreaterThanOrEqualTo_left_right, function_isGreaterThanOrEqualTo_left_right)
-    try env.addPrimitiveHandler(interface_NOT_right, function_NOT_right)
-    try env.addPrimitiveHandler(interface_AND_left_right, function_AND_left_right)
-    try env.addPrimitiveHandler(interface_OR_left_right, function_OR_left_right)
-    try env.addPrimitiveHandler(interface_XOR_left_right, function_XOR_left_right)
+    //
+    
+    // caution: this creates refcycles between environment and its handlers, but this shouldn't be an issue as libraries are never unloaded (while refcycles can be broken by emptying environment's frame dictionary prior to discarding it, unloading assumes none of the library's handlers have been captured elsewhere in runtime's current state; if they have, that'll 1. prevent complete unloading and 2. result in undefined behavior if those handlers are subsequently invoked); this could be a problem if in future we want to implement hot reloading of libraries in long-running processes (though that is a Hard Problem in any language)
+    env.define(interface_exponent_left_right, function_exponent_left_right)
+    env.define(interface_positive_left, function_positive_left)
+    env.define(interface_negative_left, function_negative_left)
+    env.define(interface_add_left_right, function_add_left_right)
+    env.define(interface_subtract_left_right, function_subtract_left_right)
+    env.define(interface_multiply_left_right, function_multiply_left_right)
+    env.define(interface_divide_left_right, function_divide_left_right)
+    env.define(interface_div_left_right, function_div_left_right)
+    env.define(interface_mod_left_right, function_mod_left_right)
+    env.define(interface_isLessThan_left_right, function_isLessThan_left_right)
+    env.define(interface_isLessThanOrEqualTo_left_right, function_isLessThanOrEqualTo_left_right)
+    env.define(interface_isEqualTo_left_right, function_isEqualTo_left_right)
+    env.define(interface_isNotEqualTo_left_right, function_isNotEqualTo_left_right)
+    env.define(interface_isGreaterThan_left_right, function_isGreaterThan_left_right)
+    env.define(interface_isGreaterThanOrEqualTo_left_right, function_isGreaterThanOrEqualTo_left_right)
+    env.define(interface_NOT_right, function_NOT_right)
+    env.define(interface_AND_left_right, function_AND_left_right)
+    env.define(interface_OR_left_right, function_OR_left_right)
+    env.define(interface_XOR_left_right, function_XOR_left_right)
 
     
-    try env.addPrimitiveHandler(interface_lt_left_right, function_lt_left_right)
-    try env.addPrimitiveHandler(interface_le_left_right, function_le_left_right)
-    try env.addPrimitiveHandler(interface_eq_left_right, function_eq_left_right)
-    try env.addPrimitiveHandler(interface_ne_left_right, function_ne_left_right)
-    try env.addPrimitiveHandler(interface_gt_left_right, function_gt_left_right)
-    try env.addPrimitiveHandler(interface_ge_left_right, function_ge_left_right)
-    try env.addPrimitiveHandler(interface_isA_value_ofType, function_isA_value_ofType)
-    try env.addPrimitiveHandler(interface_joinValues_left_right, function_joinValues_left_right)
-    try env.addPrimitiveHandler(interface_show_value, function_show_value)
+    env.define(interface_lt_left_right, function_lt_left_right)
+    env.define(interface_le_left_right, function_le_left_right)
+    env.define(interface_eq_left_right, function_eq_left_right)
+    env.define(interface_ne_left_right, function_ne_left_right)
+    env.define(interface_gt_left_right, function_gt_left_right)
+    env.define(interface_ge_left_right, function_ge_left_right)
+    env.define(interface_isA_value_ofType, function_isA_value_ofType)
+    env.define(interface_joinValues_left_right, function_joinValues_left_right)
+    env.define(interface_show_value, function_show_value)
 
+    env.define(interface_defineHandler_interface_action_commandEnv, function_defineHandler_interface_action_commandEnv)
 }

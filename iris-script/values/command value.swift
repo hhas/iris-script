@@ -64,18 +64,18 @@ import Foundation
 
 class Command: ComplexValue {
     
-    typealias Argument = (label: Symbol?, value: Value)
+    typealias Argument = (label: Name?, value: Value)
     
     var description: String {
-        return self.arguments.count == 0 ? self.name.name : "\(self.name.name) {\(self.arguments.map{ "\($0 == nil ? "" : "\($0!.name):")\($1)" }.joined(separator: ", "))}"
+        return self.arguments.count == 0 ? self.name.label : "\(self.name.label) {\(self.arguments.map{ "\($0 == nil ? "" : "\($0!.label):")\($1)" }.joined(separator: ", "))}"
     }
 
     let nominalType: Coercion = asCommand
     
-    let name: Symbol
+    let name: Name
     let arguments: [Argument] // TO DO: single, optional argument which is coerced to record and pattern-matched against HandlerInterface.Parameter
     
-    init(_ name: Symbol, _ arguments: [Argument] = []) {
+    init(_ name: Name, _ arguments: [Argument] = []) {
         self.name = name
         self.arguments = arguments
     }
@@ -92,53 +92,38 @@ class Command: ComplexValue {
         return try self._handler.call(with: self, in: scope, as: coercion) // updates self._handler on first call
         //return try coercion.coerce(value: self, in: scope)
     }
-    func swiftEval<T: BridgingCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         return try self._handler.swiftCall(with: self, in: scope, as: coercion) // updates self._handler on first call
         //return try coercion.coerce(value: self, in: scope)
     }
     
     // TO DO: if handler is static bound, we don't need to go through all this every time; just check params once and store array of operations to perform: omitted and constant args can be evaluated once and memoized; only exprs need evaled every time, and coercions may be minimized where arg's input coercion is member of expr's output coercion
     
-    func value(at index: inout Int, for param: (label: Symbol, coercion: Coercion), in commandEnv: Scope) throws -> Value {
-        let i = index
-        //print("Unboxing argument \(paramKey)")
-        let value: Value
+    private func value(at index: inout Int, named label: Name) -> Value {
         if index < self.arguments.count {
             let arg = self.arguments[index]
-            if arg.label == nil || arg.label == param.label {
-                value = arg.value
+            if arg.label == nil || arg.label == label {
                 index += 1
-            } else {
-                value = nullValue
+                return arg.value
             }
-        } else {
-            value = nullValue
         }
+        return nullValue
+    }
+        
+    func value(at index: inout Int, for param: (label: Name, coercion: Coercion), in commandEnv: Scope) throws -> Value {
+        let i = index
         do {
-            return try value.eval(in: commandEnv, as: param.coercion)
+            return try self.value(at: &index, named: param.label).eval(in: commandEnv, as: param.coercion)
         } catch {
             throw BadArgumentError(at: i, of: self).from(error)
         }
     }
     
     
-    func swiftValue<T: BridgingCoercion>(at index: inout Int, for param: (label: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
+    func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Name, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
         let i = index
-        //print("Unboxing argument \(paramKey)")
-        let value: Value
-        if index < self.arguments.count {
-            let arg = self.arguments[index]
-            if arg.label == nil || arg.label == param.label {
-                value = arg.value
-                index += 1
-            } else {
-                value = nullValue
-            }
-        } else {
-            value = nullValue
-        }
         do {
-            return try value.swiftEval(in: commandEnv, as: param.coercion)
+            return try self.value(at: &index, named: param.label).swiftEval(in: commandEnv, as: param.coercion)
         } catch {
             throw BadArgumentError(at: i, of: self).from(error)
         }

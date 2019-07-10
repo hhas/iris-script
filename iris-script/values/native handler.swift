@@ -6,6 +6,8 @@
 import Foundation
 
 
+// weak, latent typing (strictly speaking, code is untyped and latent typing is implemented as a library-defined behavior on top of untyped code; performs runtime type-checking by default but should also support compile-time type checking/inference given alternate primitive libraries)
+
 
 struct NativeHandler: Handler {
     
@@ -30,19 +32,18 @@ struct NativeHandler: Handler {
     func call(with command: Command, in commandScope: Scope, as coercion: Coercion) throws -> Value {
         // if this handler defines and returns another handler (closure), the child handler may want to modify this scope so make it fully editable (write barriers are mostly for libraries to use)
         guard let handlerScope = self.lexicalScope?.subscope() as? Environment else { fatalError("BUG: dead scope.") }
-        // TO DO: bind command arguments to handlerScope
         let result: Value
         do {
             var index = 0
-            let arguments = command.arguments
             for (label, binding, coercion) in self.interface.parameters {
-                // TO DO: don't use `set` as we need to bind to current frame (Q. how do we deal with masking?)
-                try handlerScope.set(binding, to: try command.value(at: &index, for: (label, coercion), in: commandScope))
+                let argument = try command.value(at: &index, for: (label, coercion), in: commandScope)
+                handlerScope.bind(name: binding, to: argument)
             }
-            if arguments.count > index && !self.interface.isEventHandler { // too many arguments
+            if command.arguments.count > index && !self.interface.isEventHandler { // too many arguments
                 throw UnknownArgumentError(at: index, of: command)
             }
-            result = try self.action.eval(in: handlerScope, as: self.interface.result) // TO DO: any reason to go through eval here? (if we restrict body type to Block then in principle no…)
+            result = try self.action.eval(in: handlerScope, as: self.interface.result.intersect(with: coercion)) // TO DO: any reason to go through eval here? (if we restrict body type to Block then in principle no…)
+            
             //result = try self.interface.result.coerce(value: self.action, in: handlerScope) // (…in which case use this to reduce stack pressure) … except that Block implements eval, not toTYPE methods
             // note: the result coercion only applies to returned value (e.g. if return type is Thunk, it won't actually do anything as the Block's eval loop has already forced the result of each expr)
         } catch {
@@ -52,7 +53,7 @@ struct NativeHandler: Handler {
         return result
     }
     
-    func swiftCall<T: BridgingCoercion>(with command: Command, in dynamicScope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftCall<T: SwiftCoercion>(with command: Command, in dynamicScope: Scope, as coercion: T) throws -> T.SwiftType {
         return try coercion.unbox(value: self.call(with: command, in: dynamicScope, as: coercion), in: dynamicScope) // ick
     }
     
@@ -65,7 +66,7 @@ struct NativeHandler: Handler {
         return try coercion.coerce(value: handler, in: scope)
     }
     
-    func swiftEval<T: BridgingCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         return try coercion.unbox(value: self, in: scope)
     }
     

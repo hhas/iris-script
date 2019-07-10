@@ -28,8 +28,12 @@ struct NullValue: Value { // expanding `nothing` always throws transient NullCoe
         throw NullCoercionError(value: self, coercion: coercion)
     }
     
-    func toArray<T: BridgingCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
+    func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
         throw NullCoercionError(value: self, coercion: coercion)
+    }
+    
+    func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
+        throw NullCoercionError(value: self, coercion: coercion) // TO DO: confirm this is correct (as opposed to returning an empty record); probably, as `optional record` requires null coercion error 
     }
 }
 

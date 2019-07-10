@@ -24,7 +24,7 @@ protocol Handler: ComplexValue {
     
     func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value
     
-    func swiftCall<T: BridgingCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType
+    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType
     
 }
 

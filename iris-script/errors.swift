@@ -8,7 +8,7 @@
 import Foundation
 
 
-protocol NativeError: Error, Value {
+protocol NativeError: Value, Error {
     
 }
 
@@ -50,28 +50,57 @@ struct NotYetImplementedError: NativeError {
 }
 
 
+struct MalformedRecordError: NativeError {
+    
+    var description: String { return "Found duplicate name `\(self.name.label)` in record \(self.fields)" } // TO DO: format
+    
+    let name: Name
+    let fields: [Record.Field]
+    
+    init(name: Name, in fields: [Record.Field]) {
+        self.name = name
+        self.fields = fields
+    }
+}
+
+
+// Environment errors
 
 struct UnknownNameError: NativeError {
     
-    var description: String { return "Can’t find `\(self.name.name)` in \(self.scope)" }
+    var description: String { return "Can’t find `\(self.name.label)` in \(self.scope)" }
     
-    let name: Symbol
+    let name: Name
     let scope: Accessor
-
-    init(name: Symbol, in scope: Accessor) {
+    
+    init(name: Name, in scope: Accessor) {
         self.name = name
         self.scope = scope
     }
 }
 
+
 struct ImmutableScopeError: NativeError {
     
-    var description: String { return "Can’t set value named `\(self.name.name)` in immutable \(self.scope)" }
+    var description: String { return "Can’t modify value named `\(self.name.label)` in immutable \(self.scope)" }
     
-    let name: Symbol
+    let name: Name
     let scope: Accessor
     
-    init(name: Symbol, in scope: Accessor) {
+    init(name: Name, in scope: Accessor) {
+        self.name = name
+        self.scope = scope
+    }
+}
+
+struct ExistingNameError: NativeError {
+    
+    var description: String { return "Can’t replace existing value named `\(self.name.label)` in \(self.scope)" }
+    
+    let name: Name
+    let scope: Accessor
+    
+    init(name: Name, in scope: Accessor) {
         self.name = name
         self.scope = scope
     }
@@ -79,12 +108,12 @@ struct ImmutableScopeError: NativeError {
 
 struct ImmutableValueError: NativeError {
     
-    var description: String { return "Can’t set immutable value named `\(self.name.name)` in \(self.scope)" }
+    var description: String { return "Can’t modify immutable value named `\(self.name.label)` in \(self.scope)" }
     
-    let name: Symbol
+    let name: Name
     let scope: Accessor
     
-    init(name: Symbol, in scope: Accessor) {
+    init(name: Name, in scope: Accessor) {
         self.name = name
         self.scope = scope
     }
@@ -184,4 +213,12 @@ struct BadInterfaceError: NativeError {
     init(_ interface: HandlerInterface) {
         self.interface = interface
     }
+}
+
+
+
+struct InternalError: NativeError {
+
+    let description: String
+    
 }

@@ -5,6 +5,8 @@
 
 import Foundation
 
+// TO DO: how best to represent annotations (e.g. when preserving non-code data in parsed AST: comments, user docs, etc)? sylvia defined an annotation collection in Value base class, but iris uses structs so it would need to be defined on every iris-defined value type [excepting Int/Double, which are existing Swift types so can't be extended], plus it'd probably want to use Foundation classes so that progressively attached metadata is shared across all instances of that value (which means added refcounting); alternative is to use AnnotatedValue wrapper class similar to EditableValue, which can be added only where needed (and since the AST will probably end up being incrementally parsed, we may want something that enables AST subtrees to be modified in-place)
+
 
 // Q. need to make sure values don't get double-boxed by accident (e.g. EditableValue.set(EditableValue(…)), or when evaling the boxed value returns another box); lastly, we do need to consider how native code (bind-once + editable boxes) will cross-compile to Swift (let/var + pass-by-value structs, pass-by-reference classes, and reference-backed structs)
 
@@ -33,12 +35,12 @@ class EditableValue: Handler, Mutator {
     //
     
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
-        let result = try self.data.eval(in: scope, as: coercion) // TO DO: this needs to intersect the given coercion with self.coercion and pass the result to self.data.eval(…); Q. how should intersecting [e.g.] AsScalar with AsList work out?
-        self.data = result
+        let result = try self.data.eval(in: scope, as: coercion) // TO DO: this needs to intersect the given coercion with self.coercion and pass the resulting coercion to self.data.eval(…); Q. how should intersecting [e.g.] AsScalar with AsList work out?
+        //        self.data = result // this is wrong; only mutator operations should modify editable box's content [in the case of editable parameters to a command, the handler should eval and update the box's content when binding it to the handler's scope] // Q. what if coercion is AsEditable? we don't want to create a second box
         return result
     }
     
-    func swiftEval<T: BridgingCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         let result = try self.eval(in: scope, as: coercion)
         return try coercion.unbox(value: result, in: scope)
     }
@@ -60,12 +62,12 @@ class EditableValue: Handler, Mutator {
         }
     }
     
-    func swiftCall<T: BridgingCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         fatalError()
     }
     
     
-    func set(_ name: Symbol, to value: Value) throws {
+    func set(_ name: Name, to value: Value) throws {
         if name == nullSymbol {
             self.data = value // TO DO: this needs to apply self.coercion, throwing if the given value does not fit box's original type and constraints
         } else {
@@ -73,7 +75,7 @@ class EditableValue: Handler, Mutator {
         }
     }
     
-    func get(_ key: Symbol) -> Value? {
+    func get(_ key: Name) -> Value? {
         return (self.data as? Accessor)?.get(key)
     }
 }

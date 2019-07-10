@@ -14,7 +14,7 @@ protocol CollectionCoercion: Coercion {
 
 struct AsList: CollectionCoercion {
     
-    let name: Symbol = "list"
+    let name: Name = "list"
     
     let item: Coercion
     
@@ -30,17 +30,17 @@ struct AsList: CollectionCoercion {
 
 
 
-protocol BridgingCollectionCoercion: BridgingCoercion {
+protocol SwiftCollectionCoercion: SwiftCoercion {
     
-    associatedtype ElementCoercion: BridgingCoercion
+    associatedtype ElementCoercion: SwiftCoercion
     
     var item: ElementCoercion { get }
 }
 
 
-struct AsArray<ElementCoercion: BridgingCoercion>: BridgingCollectionCoercion {
+struct AsArray<ElementCoercion: SwiftCoercion>: SwiftCollectionCoercion {
     
-    let name: Symbol = "list" // TO DO
+    let name: Name = "list" // TO DO
     
     typealias SwiftType = [ElementCoercion.SwiftType]
     
