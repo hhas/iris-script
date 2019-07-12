@@ -10,6 +10,8 @@ import Foundation
 
 // TO DO: AsNullIntersection (empty set) that always throws on coerce/unbox
 
+// TO DO: AsPrecis, AsVariant
+
 
 struct AsNothing: Coercion { // used in HandlerInterface.result to return `nothing`
     
@@ -178,6 +180,7 @@ struct AsEditable: SwiftCoercion {
         // if value is already editable then update in-place
         if let editable = value as? EditableValue { // bit dicey (e.g. value could be an EditableValue, but wrapped in a Thunk)
             try editable.set(nullSymbol, to: result)  // TO DO: this is wrong assumes that the original value's underlying type is same as self.coercion, which it may not be; e.g. `set foo to 3 as editable number, set bar to foo as editable list of string` is legal code, but is going to break #foo slot's value; not sure what best answer is - perhaps only share the box if both types are identical, else create a new box? (that's probably not ideal either, as the point of using runtime coercions is to allow flexibility when a value isn't of the exact [nominal] type required but can be coerced to that type)
+            // safe behavior passing in would be outertype isa innertype, but passing out would be innertype isa outertype, thus any mismatch between types means a constraint error may occur (type errors are acceptable from a dynamic typing POV - where the goal is to detect and raise early and clearly, not to avoid completely - although would be flagged as warning/error when linting/baking); given that common usage pattern is to type handler interfaces and leave bound values untyped, the outertype will normally be `editable [anything]`, unless the assignment operation parameterizes `EditableValue` with the bound value's nominal/constrained type
             return editable
         } else {
             return EditableValue(result, as: self.coercion)

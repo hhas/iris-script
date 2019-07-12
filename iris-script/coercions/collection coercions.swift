@@ -28,7 +28,7 @@ struct AsList: CollectionCoercion {
 }
 
 
-
+// TO DO: what should AsDictionary's SwiftType be? (c.f. Dictionary.Element, which is a `(key:Key,value:Value)` tuple)
 
 protocol SwiftCollectionCoercion: SwiftCoercion {
     

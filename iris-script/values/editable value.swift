@@ -16,6 +16,9 @@ import Foundation
 // to keep mutability semantics conceptually simple, there should be no distinction between mutable value and mutable storage. All environments slots are write-once, so inherently immutable; [im]mutability is purely a function of the content of a slot: if the slot's value allows editability, either because it's an EditableValue 'box' or something equivalent, then attributes of that value [if it's a list or record] should appear mutable as well. The simplest [though not necessarily efficient] way to achieve this is to replace the box's current value with the new value. If implementing a more parsimonious mechanism [to minimize CPU overheads due to copying] where the box's value is itself mutatable [e.g. a struct with a `var data:Array<>`] then this mutation may need to be mediated by the box—what we don't want is for the mutable struct to 'escape' into an immutable context; i.e. there should be no equivalent to Swift's storing a mutable class in a `let` slot, or an immutable list in an editable box. (At least with Swift collection structs, their copy-on-write[-if-needed] behavior should protect against shared state escaping editable boundaries.) One option may be for list/record mutator methods to return the modified value (either a new value or the current value with in-place changes) which the editable box automatically stores in place of the previous version (though we'll need to watch out for excessive copying, as Swift is liable to think the underlying Array is not unique and so re-copy it on every write)
 
 
+// TO DO: beware cases where an [e.g.] immutable list could contain editable values; might want to enforce item immutability
+
+
 class EditableValue: Handler, Mutator {
     
     // Handler and Accessor behaviors are pass-thrus to the underlying Value
@@ -33,6 +36,9 @@ class EditableValue: Handler, Mutator {
     }
     
     //
+    
+    var immutableValue: Value { return self.data } // this is kinda tricky: if self.data is, say, a List of editable values, those values also need to be made immutable (ideally, collections should never contain EditableValue items; only the topmost value should be boxed, but we need to give more thought to that)
+    
     
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
         let result = try self.data.eval(in: scope, as: coercion) // TO DO: this needs to intersect the given coercion with self.coercion and pass the resulting coercion to self.data.eval(…); Q. how should intersecting [e.g.] AsScalar with AsList work out?
@@ -75,7 +81,65 @@ class EditableValue: Handler, Mutator {
         }
     }
     
-    func get(_ key: Name) -> Value? {
-        return (self.data as? Accessor)?.get(key)
+    func get(_ name: Name) -> Value? {
+        return self.data.get(name)
+    }
+}
+
+
+
+
+struct ScopeLockedValue: Handler, Mutator { // experimental
+    
+    // Handler and Accessor behaviors are pass-thrus to the underlying Value
+    
+    let nominalType: Coercion
+    
+    var description: String { return "editable \(self.data)" }
+    
+    private let data: Value
+    private let scope: Scope
+    
+    init(_ data: Value, in scope: Scope) {
+        self.data = data
+        self.scope = scope
+        self.nominalType = data.nominalType
+    }
+    
+    //
+    
+    func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
+        return try self.data.eval(in: scope, as: coercion)
+    }
+    
+    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        return try self.data.swiftEval(in: scope, as: coercion)
+    }
+    
+    // func toEditable(in scope: Scope, as coercion: AsEditable) throws -> EditableValue {
+    //      return self
+    //  }
+    
+    func call(with command: Command, in commandScope: Scope, as coercion: Coercion) throws -> Value {
+        if let handler = self.data as? Handler { // handler; Q. what are correct semantics when slot contains a replaceable handler? calling the handler won't update the slot's value; only way to change behavior is to replace the handler with another value; Q. what if handler is replaced with non-handler? should we forbid that? (or limit box to AsOptional(asHandler)?)
+            return try handler.call(with: command, in: commandScope, as: coercion)
+        } else if command.arguments.count == 0 { // stored value
+            return try self.data.eval(in: commandScope, as: coercion) // problem: this discards original editable box, so changes made by handler won't propagate back; are we sure that's what we want?
+        } else {
+            throw UnknownArgumentError(at: 0, of: command)
+        }
+    }
+    
+    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        fatalError()
+    }
+    
+    
+    func set(_ name: Name, to value: Value) throws {
+        throw ImmutableScopeError(name: name, in: self.scope)
+    }
+    
+    func get(_ name: Name) -> Value? {
+        return self.data.get(name)
     }
 }

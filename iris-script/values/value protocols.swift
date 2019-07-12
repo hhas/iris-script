@@ -16,18 +16,21 @@ import Foundation
 
 // Q. to what extent is lazy eval and/or memoization safe and practical? we want to encourage stream/pipeline processing (controlled iterators, not free-for-all loops) and denoting explicit side-effects
 
-// Q. how best to implement symbols? case-preserving, case-insensitive; (e.g. interred in case-insensitive hash?); Q. can/should symbols be able to describe ObjC-style method names? (arguably Swift func names+param labels too); what should/shouldn't be valid chars in symbols? (bear in mind that symbols may be names of anything, including operators, so all chars are legal, although how they're interpreted may depend on context, e.g. `foo:bar:baz:`)
+// Q. how best to implement symbols? case-preserving, case-insensitive; (e.g. interned in case-insensitive hash?); Q. can/should symbols be able to describe ObjC-style method names? (arguably Swift func names+param labels too); what should/shouldn't be valid chars in symbols? (bear in mind that symbols may be names of anything, including operators, so all chars are legal, although how they're interpreted may depend on context, e.g. `foo:bar:baz:`)
 
 // for booleans, define true and false, with `nothing` coercing to false and everything else coercing to true? (is this sufficient to support Icon-style chaining, e.g. `3 < x < 6`?)
 
 
-protocol Value: CustomStringConvertible { // TO DO:
+protocol Value: Mutator, CustomStringConvertible { // TO DO:
     
     var description: String { get }
     
     var nominalType: Coercion { get }
     
     var isMemoizable: Bool { get }
+    
+    var immutableValue: Value { get } // experimental
+    
     
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value
     func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType
@@ -51,9 +54,12 @@ protocol Value: CustomStringConvertible { // TO DO:
     
 }
 
-extension Value {
+
+extension Value { // default implementations
     
     var isMemoizable: Bool { return false }
+    
+    var immutableValue: Value { return self } // default implementation as most Value types are inherently immutable; caution: mutable values MUST override this; TO DO: move this to ScalarValue, forcing collection and complex values to provide their own implementation?
     
     // TO DO: rethrow errors as EvaluationError (in particular, null coercion errors must not propagate)
     
@@ -64,33 +70,50 @@ extension Value {
         return try coercion.unbox(value: self, in: scope)
     }
     
+    // accessors
+    
+    func get(_ name: Name) -> Value? {
+        return name == nullSymbol ? self : nil
+    }
+
+    func set(_ name: Name, to value: Value) throws {
+        throw ImmutableValueError(name: name, in: self) // TO DO: check if/where name can be nullSymbol (e.g. when setting an environment slot, ideally we want the error message to give the slot name)
+    }
+    
+    // TO DO: also implement default `call`/`swiftCall` for non-callable values?
+    
+    
     //
     
     func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
         return self
     }
     
+    // TO DO: should default implementations of toTYPE forward to one or more [@inlinable?] generic implementations? if we want to eliminate Value.eval/swiftEval then this will be easiest way to do it, as types that currently override eval can override the generic method[s] instead of every single one of the following
+    
     func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue {
-        throw UnknownCoercionError(value: self, coercion: coercion)
+        throw UnsupportedCoercionError(value: self, coercion: coercion)
     }
     func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
-        throw UnknownCoercionError(value: self, coercion: coercion)
+        throw UnsupportedCoercionError(value: self, coercion: coercion)
     }
     
     func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool { // TBC
-        throw UnknownCoercionError(value: self, coercion: coercion)
+        throw UnsupportedCoercionError(value: self, coercion: coercion)
     }
     func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
-        throw UnknownCoercionError(value: self, coercion: coercion)
+        throw UnsupportedCoercionError(value: self, coercion: coercion)
     }
     func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
-        throw UnknownCoercionError(value: self, coercion: coercion)
+        throw UnsupportedCoercionError(value: self, coercion: coercion)
     }
     func toString(in scope: Scope, as coercion: Coercion) throws -> String {
-        throw UnknownCoercionError(value: self, coercion: coercion)
+        throw UnsupportedCoercionError(value: self, coercion: coercion)
     }
     
     // Q. implement toArray in terms of iterator (or possibly even `toIterator`?)
+    
+    // TO DO: should probably provide default implementation for these
     
     func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> List { // Q. better to use iterator?
         fatalError("must be overridden") // scalar returns single-item list; collection returns list; complex evals with coercion as return type

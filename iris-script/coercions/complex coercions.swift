@@ -18,7 +18,7 @@ struct AsComplex<T: Value>: SwiftCoercion { // T must be concrete struct or clas
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         guard let result = try value.swiftEval(in: scope, as: asAnything) as? SwiftType else {
-            throw UnknownCoercionError(value: value, coercion: self)
+            throw UnsupportedCoercionError(value: value, coercion: self)
         }
         return result
     }
@@ -32,7 +32,7 @@ struct AsName: SwiftCoercion {
     typealias SwiftType = Name
     
     func coerce(value: Value, in scope: Scope) throws -> Value {
-        if !(value is Name) { throw UnknownCoercionError(value: value, coercion: self) }
+        if !(value is Name) { throw UnsupportedCoercionError(value: value, coercion: self) }
         return value
     }
     
@@ -41,7 +41,7 @@ struct AsName: SwiftCoercion {
     }
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let name = value as? Name else { throw UnknownCoercionError(value: value, coercion: self) }
+        guard let name = value as? Name else { throw UnsupportedCoercionError(value: value, coercion: self) }
         return name
     }
 }
@@ -56,7 +56,7 @@ struct AsHandler: SwiftCoercion { // (can't use AsComplex<Handler> as Handler is
     // TO DO: when should handlers capture their lexical scope? and when should that capture be strongref vs weakref?
     
     func coerce(value: Value, in scope: Scope) throws -> Value {
-        if !(value is Handler) { throw UnknownCoercionError(value: value, coercion: self) }
+        if !(value is Handler) { throw UnsupportedCoercionError(value: value, coercion: self) }
         // TO DO: return strongrefd handler?
         return value
     }
@@ -66,7 +66,7 @@ struct AsHandler: SwiftCoercion { // (can't use AsComplex<Handler> as Handler is
     }
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let result = value as? SwiftType else { throw UnknownCoercionError(value: value, coercion: self) }
+        guard let result = value as? SwiftType else { throw UnsupportedCoercionError(value: value, coercion: self) }
         // TO DO: return strongrefd handler?
         return result
     }
@@ -120,7 +120,7 @@ struct AsCoercion: SwiftCoercion {
     typealias SwiftType = Coercion
     
     func coerce(value: Value, in scope: Scope) throws -> Value {
-        if !(value is Coercion) { throw UnknownCoercionError(value: value, coercion: self) }
+        if !(value is Coercion) { throw UnsupportedCoercionError(value: value, coercion: self) }
         return value
     }
     
@@ -129,7 +129,7 @@ struct AsCoercion: SwiftCoercion {
     }
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let result = value as? SwiftType else { throw UnknownCoercionError(value: value, coercion: self) }
+        guard let result = value as? SwiftType else { throw UnsupportedCoercionError(value: value, coercion: self) }
         return result
     }
 }
@@ -163,7 +163,7 @@ struct AsError: SwiftCoercion {
   
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         guard let result = try value.swiftEval(in: scope, as: asAnything) as? SwiftType else {
-            throw UnknownCoercionError(value: value, coercion: self)
+            throw UnsupportedCoercionError(value: value, coercion: self)
         }
         return result
     }

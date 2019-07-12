@@ -15,6 +15,8 @@ import Foundation
 // TO DO: call()/swiftCall() needs to implement special-case behavior when coercion is AsHandler and command has no arguments, in which case return the handler itself without calling it (Q. what about when the handler being called returns a handler? which one do we want to capture? we can always determine this by checking if command has an explicit argument, e.g. `foo as handler` returns the #foo handler whereas `foo {} as handler` calls the #foo handler coercing its output to a handler)
 
 
+// TO DO: Handler protocol needs public API for getting its Scope for reporting purposes (this is slightly complicated as primitive vs native handlers capture their host environment in different ways)
+
 
 protocol Handler: ComplexValue {
     

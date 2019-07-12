@@ -142,7 +142,7 @@ struct NullCoercionError: CoercionError { // value is `nothing`
     let coercion: Coercion
 }
 
-struct UnknownCoercionError: CoercionError { // cannot coerce value to specified type
+struct UnsupportedCoercionError: CoercionError { // cannot coerce value to specified type
     
     let value: Value
     let coercion: Coercion

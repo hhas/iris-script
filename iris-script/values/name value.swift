@@ -1,5 +1,5 @@
 //
-//  symbol value.swift
+//  name value.swift
 //  iris-lang
 //
 
@@ -18,7 +18,7 @@ public struct Name: ComplexValue, ExpressibleByStringLiteral, Comparable, Hashab
     let nominalType: Coercion = asName
     
     public let label: String
-    private let key: String // interring symbols would enable more efficient key representation, but for now it's sufficient to use case-normalized string
+    private let key: String // interning symbols would enable more efficient key representation, but for now it's sufficient to use case-normalized string
     
     public init(stringLiteral value: StringLiteralType) {
         self.init(value)

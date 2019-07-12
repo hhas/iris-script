@@ -3,7 +3,12 @@
 //  iris-lang
 //
 
+// conceptually a command is a right-associative unary operator with arbitrary name and fixed precedence, where operand is always a record (non-record values are coerced to single-field record upon evaluation); in practice, the current Command implementation is an atomic structure comprising a name and Array of fields, plus internal caching (while it could be implemented as a Command(Name,Record) struct, this does not lend itself to dynamic [run-time] optimization; the tradeoff is increased code complexity)
+
+
 import Foundation
+
+// TO DO: what about wildcard matching of record fields/command arguments, c.f. `(a,b,*rest)`/`foo(c,d,**rest)` in Python?
 
 /*
  

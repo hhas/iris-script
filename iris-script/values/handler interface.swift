@@ -6,11 +6,19 @@
 import Foundation
 
 
+// literal syntax is `NAME { [ LABEL: ] BINDING [ as COERCION ], … } [ returning COERCION ]`
+
+
+// Q. how close can literal syntax for AsRecord coercion be to parameter record above? bear in mind that if a handler returns multiple values, `returning` operand should be a record coercion (in theory, its fields may be labeled or unlabeled, depending on how caller is expected to consume returned record, e.g. `set {a,b,c} to do_something` doesn't demand labels, though it's probably still best to require them in the signature as they are self-documenting); main awkwardness is binding names, which standard records don't have (since a record field is {label:value}; obviously if we define a coercion for the value portion that returns a `{name,coercion}` tuple given `name` or `name as coercion`/`‘as’ {name, coercion}`)
+
+
+// TO DO: how to represent significant handler characteristics (e.g. referentially-transparent/safe/idempotent/side-effects/unsafe/destructive/dependencies); similar to isEventHandler, these aren't really characteristics of handler interface, but might be best attached to it [note that only primitive handlers would explicitly declare their characteristics; native handlers would need to recursively lookup their commands' handlers to obtain set of all found characteristics; furthermore, this is all pretty much done on trust as Swift lacks mechanisms to check/enforce any guarantees, not least as underlying [Obj]C[++] APIs are an absolute free-for-all]
+
 
 struct HandlerInterface: ComplexValue { // native representation is a record; how best to convert to/from that?
     
     var description: String {
-        return "\(self.name.label) {\(self.parameters.map{ "\($0.label): \($1.label == "" ? "…" : $1.label) as \($2)" }.joined(separator: ", "))} returning \(self.result)"
+        return "\(self.name.label) {\(self.parameters.map{ "\($0.label): \($1.label == "" ? $0.label : $1.label) as \($2)" }.joined(separator: ", "))} returning \(self.result)"
     }
     
     // TO DO: store binding names separately? primitive handlers don't need them, and native handlers should probably treat them as private (i.e. third-party code should not make any assumptions about these names - they are defined by and for the handler's own use only); in theory, code analysis tools will want to know all bound names; then again, the easiest way to do code analysis in iris it to execute the script against alternate libraries that have the same signatures but different behaviors (e.g. whereas a standard `switch` handler lazily matches conditions and only evaluates the first matched case, an analytical `switch` handler would evaluate all conditions and all cases to generate an analysis of all possible behaviors)
@@ -61,6 +69,13 @@ struct HandlerInterface: ComplexValue { // native representation is a record; ho
             throw BadInterfaceError(interface)
         }
         return interface
+    }
+    
+    
+    func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
+        return Record([(Name("name"), self.name),
+                       (Name("input"), List(self.parameters.map({$0.coercion}))), // Q. what about binding names?
+                       (Name("output"), self.result)], as: asRecord) // TO DO: reify coercion?
     }
 }
 

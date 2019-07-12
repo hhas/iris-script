@@ -5,11 +5,13 @@
 
 import Foundation
 
-// TO DO: worth interring all/some coercions? (might have performance benefits when evaling lists and records, as membership tests/intersects for any pair of [class-based] Coercions can be calculated once and hashed by instance identity, reducing subsequent tests to hash lookup + null check [although this is still slower than compile-time])
+// TO DO: worth interning all/some coercions? (might have performance benefits when evaling lists and records, as membership tests/intersects for any pair of [class-based] Coercions can be calculated once and hashed by instance identity, reducing subsequent tests to hash lookup + null check [although this is still slower than compile-time type-checking])
 
 
 // TO DO: also need generic intersect (Q. which operand should determine returned SwiftType? probably rhs)
 
+
+// important: coercions must always be non-lossy; i.e. while a simpler representation of user data can be coerced to a more complex representation, e.g. `"foo" as list → ["foo"]`, the opposite is not allowed, so `["foo"] as string` → UnsupportedCoercionError()
 
 
 protocol Coercion: Value {

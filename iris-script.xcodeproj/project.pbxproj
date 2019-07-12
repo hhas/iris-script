@@ -21,7 +21,7 @@
 		4F25FB8C22B6E561007EE7AE /* stdlib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25FB8B22B6E561007EE7AE /* stdlib_handlers.swift */; };
 		4F26065422BECD7B0036D904 /* record value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065322BECD7B0036D904 /* record value.swift */; };
 		4F26065622C0158C0036D904 /* editable value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065522C0158C0036D904 /* editable value.swift */; };
-		4F26065822C015A30036D904 /* symbol value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065722C015A30036D904 /* symbol value.swift */; };
+		4F26065822C015A30036D904 /* name value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065722C015A30036D904 /* name value.swift */; };
 		4F26065B22C015F10036D904 /* handler interface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065A22C015F10036D904 /* handler interface.swift */; };
 		4F26065D22C0161D0036D904 /* native handler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065C22C0161D0036D904 /* native handler.swift */; };
 		4F26065F22C016570036D904 /* primitive handler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065E22C016570036D904 /* primitive handler.swift */; };
@@ -37,6 +37,7 @@
 		4F84D01622AE819000C9FD23 /* errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D01522AE819000C9FD23 /* errors.swift */; };
 		4FFC6F2522D6818000D636B9 /* lexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2422D6818000D636B9 /* lexer.swift */; };
 		4FFC6F2722D6818C00D636B9 /* parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2622D6818C00D636B9 /* parser.swift */; };
+		4FFC6F2A22D7704D00D636B9 /* access protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2922D7704D00D636B9 /* access protocols.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -66,7 +67,7 @@
 		4F25FB8B22B6E561007EE7AE /* stdlib_handlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = stdlib_handlers.swift; sourceTree = "<group>"; };
 		4F26065322BECD7B0036D904 /* record value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record value.swift"; sourceTree = "<group>"; };
 		4F26065522C0158C0036D904 /* editable value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "editable value.swift"; sourceTree = "<group>"; };
-		4F26065722C015A30036D904 /* symbol value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "symbol value.swift"; sourceTree = "<group>"; };
+		4F26065722C015A30036D904 /* name value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "name value.swift"; sourceTree = "<group>"; };
 		4F26065A22C015F10036D904 /* handler interface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler interface.swift"; sourceTree = "<group>"; };
 		4F26065C22C0161D0036D904 /* native handler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "native handler.swift"; sourceTree = "<group>"; };
 		4F26065E22C016570036D904 /* primitive handler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "primitive handler.swift"; sourceTree = "<group>"; };
@@ -83,6 +84,7 @@
 		4F84D01522AE819000C9FD23 /* errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = errors.swift; sourceTree = "<group>"; };
 		4FFC6F2422D6818000D636B9 /* lexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lexer.swift; sourceTree = "<group>"; };
 		4FFC6F2622D6818C00D636B9 /* parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = parser.swift; sourceTree = "<group>"; };
+		4FFC6F2922D7704D00D636B9 /* access protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "access protocols.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,15 +102,15 @@
 			isa = PBXGroup;
 			children = (
 				4F84D00722ADA12A00C9FD23 /* value protocols.swift */,
+				4F1EA48422B279B500FFA4D2 /* null value.swift */,
 				4F1EA48622B27B8D00FFA4D2 /* text values.swift */,
 				4F25FB8422B64B58007EE7AE /* numeric values.swift */,
-				4F26065722C015A30036D904 /* symbol value.swift */,
+				4F26065722C015A30036D904 /* name value.swift */,
 				4F26066022C017AC0036D904 /* commands */,
 				4F26065922C015D50036D904 /* handlers */,
 				4F1EA48822B2888400FFA4D2 /* collection values.swift */,
 				4F26065322BECD7B0036D904 /* record value.swift */,
 				4F84D01322AE7EEA00C9FD23 /* block value.swift */,
-				4F1EA48422B279B500FFA4D2 /* null value.swift */,
 				4F26065522C0158C0036D904 /* editable value.swift */,
 			);
 			path = values;
@@ -188,7 +190,7 @@
 				4FFC6F2322D6816F00D636B9 /* parser */,
 				4F1EA48B22B4E71300FFA4D2 /* values */,
 				4F1EA48C22B4E72F00FFA4D2 /* coercions */,
-				4F84D00B22ADA1AF00C9FD23 /* environment.swift */,
+				4FFC6F2822D7703000D636B9 /* scopes */,
 				4F84D01522AE819000C9FD23 /* errors.swift */,
 				4F257CCA22BACB0D00A51CF5 /* chunk expressions */,
 				4F25FB8822B6AC57007EE7AE /* stdlib */,
@@ -203,6 +205,15 @@
 				4FFC6F2622D6818C00D636B9 /* parser.swift */,
 			);
 			path = parser;
+			sourceTree = "<group>";
+		};
+		4FFC6F2822D7703000D636B9 /* scopes */ = {
+			isa = PBXGroup;
+			children = (
+				4FFC6F2922D7704D00D636B9 /* access protocols.swift */,
+				4F84D00B22ADA1AF00C9FD23 /* environment.swift */,
+			);
+			path = scopes;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -262,6 +273,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4F1EA48722B27B8D00FFA4D2 /* text values.swift in Sources */,
+				4FFC6F2A22D7704D00D636B9 /* access protocols.swift in Sources */,
 				4F2B81BF22CCD63E00FD1EB8 /* record coercion.swift in Sources */,
 				4F26066222C017EF0036D904 /* command bindings.swift in Sources */,
 				4F1EA48522B279B500FFA4D2 /* null value.swift in Sources */,
@@ -283,7 +295,7 @@
 				4FFC6F2522D6818000D636B9 /* lexer.swift in Sources */,
 				4F84D01222AE7E2C00C9FD23 /* handler protocols.swift in Sources */,
 				4F1EA48E22B4E7C200FFA4D2 /* coercion modifiers.swift in Sources */,
-				4F26065822C015A30036D904 /* symbol value.swift in Sources */,
+				4F26065822C015A30036D904 /* name value.swift in Sources */,
 				4F1EA48322B2794400FFA4D2 /* collection coercions.swift in Sources */,
 				4F1EA48922B2888400FFA4D2 /* collection values.swift in Sources */,
 				4F26065422BECD7B0036D904 /* record value.swift in Sources */,

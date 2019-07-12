@@ -83,7 +83,7 @@ enum Number: NumericValue {
     }
     init(_ code: String) throws {
         // temporary (we really want to parse and format numbers ourselves, potentially with localization support [although we'll need access to an environment for that, as it'll be script-specific, relying on top-level syntax imports])
-        guard let d = Double(code) else { throw UnknownCoercionError(value: Text(code), coercion: asNumber) }
+        guard let d = Double(code) else { throw UnsupportedCoercionError(value: Text(code), coercion: asNumber) }
         if Int(exactly: d) != nil, let n = Int(code) {
             self = .integer(n, radix: 10)
         } else {

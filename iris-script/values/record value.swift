@@ -24,7 +24,7 @@ struct Record: Value, Accessor {
     let constrainedType: RecordCoercion
     
     let fields: [Field]
-    private var fieldsByKey = [Name: Value]() // Q. any benefit over `first(where:…)`
+    private var namedFields = [Name: Value]() // Q. any performance benefit over `first(where:…)`? (bearing in mind a typical record would have <20 slots) if not, get rid of this
     
     init(_ fields: [Field]) throws { // field names may be omitted, but must be unique
         var isMemoizable = true
@@ -34,8 +34,8 @@ struct Record: Value, Accessor {
             if key == nullSymbol {
                 isMemoizable = false
             } else {
-                if self.fieldsByKey[key] != nil { throw MalformedRecordError(name: key, in: fields) }
-                self.fieldsByKey[key] = value // TO DO: this might be problematic, as now we've two instances of struct value
+                if self.namedFields[key] != nil { throw MalformedRecordError(name: key, in: fields) }
+                self.namedFields[key] = value // TO DO: this might be problematic, as now we've two instances of struct value
                 if isMemoizable {
                     if !value.isMemoizable { isMemoizable = false }
                     nominalFields.append((key, value.nominalType))
@@ -52,8 +52,8 @@ struct Record: Value, Accessor {
         self.isMemoizable = true // TO DO: check this (e.g. what if field values are thunked?)
     }
     
-    func get(_ key: Name) -> Value? { // TO DO: what about getting by index? or should we provide pattern-matching/eval only?
-        return self.fieldsByKey[key]
+    func get(_ name: Name) -> Value? { // TO DO: what about getting by index? or should we provide pattern-matching/eval only?
+        return self.namedFields[name]
     }
     
     func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
