@@ -10,7 +10,7 @@ import Foundation
 
 protocol RecordCoercion: Coercion {
     
-    typealias Field = (name: Name, coercion: Coercion)
+    typealias Field = (name: Symbol, coercion: Coercion)
     
     var fields: [Field] { get }
 }
@@ -19,7 +19,7 @@ protocol RecordCoercion: Coercion {
 
 struct AsRecord: RecordCoercion {
     
-    let name: Name = "record"
+    let name: Symbol = "record"
     
     var description: String { return "record" } // TO DO
     

@@ -17,6 +17,8 @@ struct NativeHandler: Handler {
     
     let action: Block
     
+    //let isStaticBindable = true // quick-n-dirty cheat // TO DO: check this
+    
     // TO DO: Scope or MutableScope? also, what other mutable scopes are there other than Environment? (e.g. `tell` block scopes are composed of [primary] target scope and [secondary] lexical scope); one reason not to use Environment is
     
     private weak var lexicalScope: Environment? // this should be assigned when handler is instantiated

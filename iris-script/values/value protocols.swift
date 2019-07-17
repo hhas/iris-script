@@ -1,5 +1,5 @@
 //
-//  value.swift
+//  value protocols.swift
 //  iris-lang
 //
 
@@ -45,7 +45,7 @@ protocol Value: Mutator, CustomStringConvertible { // TO DO:
     func toString(in scope: Scope, as coercion: Coercion) throws -> String
     
     // Q. implement toArray in terms of iterator (or possibly even `toIterator`?)
-    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> List
+    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList
     func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType]
 
     //func toEditable(in scope: Scope, as coercion: AsEditable) throws -> EditableValue
@@ -72,11 +72,11 @@ extension Value { // default implementations
     
     // accessors
     
-    func get(_ name: Name) -> Value? {
+    func get(_ name: Symbol) -> Value? {
         return name == nullSymbol ? self : nil
     }
 
-    func set(_ name: Name, to value: Value) throws {
+    func set(_ name: Symbol, to value: Value) throws {
         throw ImmutableValueError(name: name, in: self) // TO DO: check if/where name can be nullSymbol (e.g. when setting an environment slot, ideally we want the error message to give the slot name)
     }
     
@@ -115,7 +115,7 @@ extension Value { // default implementations
     
     // TO DO: should probably provide default implementation for these
     
-    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> List { // Q. better to use iterator?
+    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList { // Q. better to use iterator?
         fatalError("must be overridden") // scalar returns single-item list; collection returns list; complex evals with coercion as return type
     }
     
@@ -127,7 +127,7 @@ extension Value { // default implementations
     //    return EditableValue(try coercion.coercion.coerce(value: self, in: scope))
     //}
     
-    // TO DO: is this appropriate? (probably, c.f. Value->List(Value), but need to check corner cases for command args/handler sigs - may need to distinguish record literals, as `foo`, `foo {}`, `foo nothing`, and `foo {nothing}` have different meanings)
+    // TO DO: is this appropriate? (probably, c.f. Value->OrderedList(Value), but need to check corner cases for command args/handler sigs - may need to distinguish record literals, as `foo`, `foo {}`, `foo nothing`, and `foo {nothing}` have different meanings)
     func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
         return try Record([(nullSymbol, self)]) // TO DO: need to eval self; TO DO: this is also wrong for commands (move to ScalarValue extension?)
     }
@@ -151,7 +151,7 @@ extension BoxedSwiftValue {
 
 
 
-protocol ScalarValue: Value { // can't implement Hashable protocol directly due to Equatable's use of Self; see sylvia-lang's RecordKey + RecordKeyConvertible
+protocol ScalarValue: Value { // can't implement Hashable protocol directly due to Equatable's use of Self (i.e. we want to keep ScalarValue protocol concrete, so that we can use it as parameter/result type in primitive functions; ditto collection types, e.g. `func count(value:CollectionValue)->Int`); see sylvia-lang's RecordKey + RecordKeyConvertible
 }
 
 
@@ -166,8 +166,8 @@ extension ScalarValue {
     
     // all scalars can coerce to single-item list/array/set
     
-    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> List {
-        return List([try self.eval(in: scope, as: coercion.item)])
+    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList {
+        return OrderedList([try self.eval(in: scope, as: coercion.item)])
     }
     func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
         return try [self.swiftEval(in: scope, as: coercion.item)]
@@ -196,6 +196,10 @@ extension CollectionValue {
     }
 */
 }
+
+typealias BoxedCollectionValue = CollectionValue & BoxedSwiftValue
+
+
 
 protocol ComplexValue: Value { // e.g. command, handler; presumably swiftEval doesn't reduce down to raw Swift values
     

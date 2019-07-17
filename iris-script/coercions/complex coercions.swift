@@ -12,7 +12,7 @@ import Foundation
 
 struct AsComplex<T: Value>: SwiftCoercion { // T must be concrete struct or class; abstract protocols aren't accepted
     
-    let name: Name
+    let name: Symbol
     
     typealias SwiftType = T
     
@@ -27,12 +27,12 @@ struct AsComplex<T: Value>: SwiftCoercion { // T must be concrete struct or clas
 
 struct AsName: SwiftCoercion {
     
-    var name: Name { return Name("name") } // avoid creating cycle between Name and AsName when initializing them
+    var name: Symbol { return Symbol("name") } // avoid creating cycle between Symbol and AsName when initializing them
     
-    typealias SwiftType = Name
+    typealias SwiftType = Symbol
     
     func coerce(value: Value, in scope: Scope) throws -> Value {
-        if !(value is Name) { throw UnsupportedCoercionError(value: value, coercion: self) }
+        if !(value is Symbol) { throw UnsupportedCoercionError(value: value, coercion: self) }
         return value
     }
     
@@ -41,7 +41,7 @@ struct AsName: SwiftCoercion {
     }
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let name = value as? Name else { throw UnsupportedCoercionError(value: value, coercion: self) }
+        guard let name = value as? Symbol else { throw UnsupportedCoercionError(value: value, coercion: self) }
         return name
     }
 }
@@ -49,7 +49,7 @@ struct AsName: SwiftCoercion {
 
 struct AsHandler: SwiftCoercion { // (can't use AsComplex<Handler> as Handler isn't concrete type; however, we'll need some custom implementation anyway)
     
-    let name: Name = "handler"
+    let name: Symbol = "handler"
     
     typealias SwiftType = Handler
     
@@ -84,7 +84,7 @@ let asBlock = AsComplex<Block>(name: "block")
 
 struct AsIs: SwiftCoercion {
     
-    let name: Name = "anything"
+    let name: Symbol = "anything"
     
     typealias SwiftType = Value
     
@@ -115,7 +115,7 @@ let asBool = AsComplex<Bool>(name: "boolean")
 
 struct AsCoercion: SwiftCoercion {
     
-    let name: Name = "coercion"
+    let name: Symbol = "coercion"
     
     typealias SwiftType = Coercion
     
@@ -147,7 +147,7 @@ let asCoercion = AsCoercion() // can't use AsComplex<Coercion> as generics requi
 
 struct AsError: SwiftCoercion {
     
-    let name: Name = "error"
+    let name: Symbol = "error"
     
     typealias SwiftType = NativeError
     
@@ -173,7 +173,7 @@ let asError = AsError()
 
 
 
-// asLiteralCast -- takes `as {left: Name, right: Coercion}` command and decomposes it? or should parseHandlerInterface() deal with `BINDING as COERCION` pattern itself?
+// asLiteralCast -- takes `as {left: Symbol, right: Coercion}` command and decomposes it? or should parseHandlerInterface() deal with `BINDING as COERCION` pattern itself?
 
 
 // TO DO: LiteralCoercion? (this could be a single/generic struct, as all it does is typecheck the given value… although there is a caveat as some values eval first… another reason to lose the initial Value.eval call)

@@ -54,10 +54,10 @@ struct MalformedRecordError: NativeError {
     
     var description: String { return "Found duplicate name `\(self.name.label)` in record \(self.fields)" } // TO DO: format
     
-    let name: Name
+    let name: Symbol
     let fields: [Record.Field]
     
-    init(name: Name, in fields: [Record.Field]) {
+    init(name: Symbol, in fields: [Record.Field]) {
         self.name = name
         self.fields = fields
     }
@@ -70,10 +70,10 @@ struct UnknownNameError: NativeError {
     
     var description: String { return "Can’t find `\(self.name.label)` in \(self.scope)" }
     
-    let name: Name
+    let name: Symbol
     let scope: Accessor
     
-    init(name: Name, in scope: Accessor) {
+    init(name: Symbol, in scope: Accessor) {
         self.name = name
         self.scope = scope
     }
@@ -84,10 +84,10 @@ struct ImmutableScopeError: NativeError {
     
     var description: String { return "Can’t modify value named `\(self.name.label)` in immutable \(self.scope)" }
     
-    let name: Name
+    let name: Symbol
     let scope: Accessor
     
-    init(name: Name, in scope: Accessor) {
+    init(name: Symbol, in scope: Accessor) {
         self.name = name
         self.scope = scope
     }
@@ -97,10 +97,10 @@ struct ExistingNameError: NativeError {
     
     var description: String { return "Can’t replace existing value named `\(self.name.label)` in \(self.scope)" }
     
-    let name: Name
+    let name: Symbol
     let scope: Accessor
     
-    init(name: Name, in scope: Accessor) {
+    init(name: Symbol, in scope: Accessor) {
         self.name = name
         self.scope = scope
     }
@@ -110,10 +110,10 @@ struct ImmutableValueError: NativeError {
     
     var description: String { return "Can’t modify immutable value named `\(self.name.label)` in \(self.scope)" }
     
-    let name: Name
+    let name: Symbol
     let scope: Accessor
     
-    init(name: Name, in scope: Accessor) {
+    init(name: Symbol, in scope: Accessor) {
         self.name = name
         self.scope = scope
     }

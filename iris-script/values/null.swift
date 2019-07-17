@@ -1,5 +1,5 @@
 //
-//  other values.swift
+//  null.swift
 //  iris-lang
 //
 
@@ -24,7 +24,7 @@ struct NullValue: Value { // expanding `nothing` always throws transient NullCoe
         throw NullCoercionError(value: self, coercion: coercion)
     }
     
-    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> List {
+    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList {
         throw NullCoercionError(value: self, coercion: coercion)
     }
     

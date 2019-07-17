@@ -30,7 +30,7 @@ struct PrimitiveHandler: Handler {
     private var lexicalScope: Scope // this should be assigned when handler is instantiated
     
     
-    let isStaticBindable = true // quick-n-dirty cheat
+    let isStaticBindable = true // quick-n-dirty cheat as long as all primitive handlers are defined on environments, not on values // TO DO: handlers defined on values (aka methods) must not be static bound to invoking commands for obvious reasons, so we will need to make this setting customizable in future (probably by passing it in init, or maybe making it part of interface definition alongside command/event flag and other [meta]info)
     
     
     func call(with command: Command, in commandEnv: Scope, as coercion: Coercion) throws -> Value {

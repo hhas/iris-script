@@ -1,5 +1,5 @@
 //
-//  scalar.swift
+//  numeric.swift
 //
 
 
@@ -8,12 +8,15 @@ import Darwin
 // TO DO: how safe/practical to write ISO date and time literals without string quoting? e.g. `2019-06-01` and `12:01` can be parsed as date and time if we have whitespace-sensitivity rules for `-` and `:` (which we require anyway in order to support punctuation-less command syntax)
 
 
+// TO DO: replace Number's .overflow and .invalid cases with .error(NumericError), and capture the details in Error; this can also be used to capture errors thrown by standard arithmetic and comparison operators defined on Number extension, as `==() throws` breaks conformance required for Hashable protocol, which Number ought to support (although there are general caveats here wrt the interchangeability of String/Int/Double representations of numbers, particularly once we allow script localization of numeric literals)
+
+
 // TO DO: Number supports mixed type math; how should extended Int/Double do it?
 
 // TO DO: Unit and Quantity(Number,Unit); also UnitType (length, weight, temperature, etc)
 
 
-protocol NumericValue: ScalarValue {}
+protocol NumericValue: ScalarValue, KeyConvertible {}
 
 
 extension Int: NumericValue {
@@ -59,6 +62,23 @@ extension Double: NumericValue {
 
 enum Number: NumericValue {
     
+    static func ==(lhs: Number, rhs: Number) -> Bool {
+        do {
+            return try scalarComparisonOperation(lhs, rhs, intOperator: ==, doubleOperator: ==)
+        } catch {
+            return false
+        }
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        switch self {
+        case .integer(let n, radix: _): return n.hash(into: &hasher)
+        case .floatingPoint(let n):     return n.hash(into: &hasher)
+        case .overflow(let s, _):       return s.hash(into: &hasher)
+        case .invalid(let s):           return s.hash(into: &hasher)
+        }
+    }
+    
     var description: String { return self.literalRepresentation() }
     
     var nominalType: Coercion { return asNumber }
@@ -91,7 +111,7 @@ enum Number: NumericValue {
         }
         /*
         let lexer = Lexer(code: code)
-        switch lexer.readNumber() {
+        switch lexer.readNumber() { // TO DO: how to support localization?
         case .number(value: _, scalar: let scalar):
             self = scalar
         default:
@@ -211,62 +231,63 @@ enum Number: NumericValue {
 
 // TO DO: once BigNum support is implemented, only other reason for throwing is if scalar is .invalid, in which case might be as well just to concatenate both scalar string representations with operator symbol and return as 'unevaluated expression string' instead of throwing (since throwing creates work of its own)
 
-typealias NumberArithmeticFunction = (Number, Number) throws -> Number
-typealias NumberComparisonFunction = (Number, Number) throws -> Bool
+// TO DO: think all these operators need to be non-throwing, instead capturing deferred .failed(Error) and have that throw when next evaled
 
+extension Number {
+    
+    static prefix func -(lhs: Number) throws -> Number {
+        return try scalarArithmeticOperation(Number(0), lhs, intOperator: {(l:Int,r:Int) in l.subtractingReportingOverflow(r)}, doubleOperator: -) // TO DO
+    }
 
-prefix func -(lhs: Number) throws -> Number {
-    return try scalarArithmeticOperation(Number(0), lhs, intOperator: {(l:Int,r:Int) in l.subtractingReportingOverflow(r)}, doubleOperator: -) // TO DO
-}
+    static func +(lhs: Number, rhs: Number) throws -> Number {
+        return try scalarArithmeticOperation(lhs, rhs, intOperator: {(l:Int,r:Int) in l.addingReportingOverflow(r)}, doubleOperator: +)
+    }
+    static func -(lhs: Number, rhs: Number) throws -> Number {
+        return try scalarArithmeticOperation(lhs, rhs, intOperator: {(l:Int,r:Int) in l.subtractingReportingOverflow(r)}, doubleOperator: -)
+    }
+    static func *(lhs: Number, rhs: Number) throws -> Number {
+        return try scalarArithmeticOperation(lhs, rhs, intOperator: {(l:Int,r:Int) in l.multipliedReportingOverflow(by: r)}, doubleOperator: *)
+    }
+    static func /(lhs: Number, rhs: Number) throws -> Number {
+        return try scalarArithmeticOperation(lhs, rhs, intOperator: nil, doubleOperator: /)
+    }
+    func pow(_ rhs: Number) throws -> Number { // exponent
+        return Number(try Darwin.pow(self.toDouble(), rhs.toDouble()))
+    }
+    func div(_ rhs: Number) throws -> Number { // integer division
+        switch (self, rhs) {
+        case (.integer(let leftOp, _), .integer(let rightOp, _)):
+            return Number(leftOp / rightOp)
+        default:
+            let n = try (self / rhs).toDouble()
+            return Number((n >= Double(Int.min) && n <= Double(Int.max)) ? Int(n) : lround(n))
+        }
+    }
+    func mod(_ rhs: Number) throws -> Number { // remainder
+        switch (self, rhs) {
+        case (.integer(let leftOp, _), .integer(let rightOp, _)):
+            return Number(leftOp % rightOp)
+        default:
+            return try Number(self.toDouble().truncatingRemainder(dividingBy: rhs.toDouble()))
+        }
+    }
 
-func +(lhs: Number, rhs: Number) throws -> Number {
-    return try scalarArithmeticOperation(lhs, rhs, intOperator: {(l:Int,r:Int) in l.addingReportingOverflow(r)}, doubleOperator: +)
-}
-func -(lhs: Number, rhs: Number) throws -> Number {
-    return try scalarArithmeticOperation(lhs, rhs, intOperator: {(l:Int,r:Int) in l.subtractingReportingOverflow(r)}, doubleOperator: -)
-}
-func *(lhs: Number, rhs: Number) throws -> Number {
-    return try scalarArithmeticOperation(lhs, rhs, intOperator: {(l:Int,r:Int) in l.multipliedReportingOverflow(by: r)}, doubleOperator: *)
-}
-func /(lhs: Number, rhs: Number) throws -> Number {
-    return try scalarArithmeticOperation(lhs, rhs, intOperator: nil, doubleOperator: /)
-}
-//func %(lhs: Number, rhs: Number) throws -> Number { // TO DO: truncatingRemainder
-//    return try scalarArithmeticOperation(lhs, rhs, intOperator: nil, doubleOperator: %)
-//}
-func pow(_ lhs: Number, _ rhs: Number) throws -> Number {
-    return Number(try pow(lhs.toDouble(), rhs.toDouble()))
-}
-func integerDivision(_ lhs: Number, rhs: Number) throws -> Number {
-    switch (lhs, rhs) {
-    case (.integer(let leftOp, _), .integer(let rightOp, _)):
-        return Number(leftOp / rightOp)
-    default:
-        let n = try (lhs / rhs).toDouble()
-        return Number((n >= Double(Int.min) && n <= Double(Int.max)) ? Int(n) : lround(n))
+    static func <(lhs: Number, rhs: Number) throws -> Bool {
+        return try scalarComparisonOperation(lhs, rhs, intOperator: <, doubleOperator: <)
+    }
+    static func <=(lhs: Number, rhs: Number) throws -> Bool {
+        return try scalarComparisonOperation(lhs, rhs, intOperator: <=, doubleOperator: <=)
+    }
+    //static func ==(lhs: Number, rhs: Number) throws -> Bool {
+    //    return try scalarComparisonOperation(lhs, rhs, intOperator: ==, doubleOperator: ==)
+    //}
+    static func !=(lhs: Number, rhs: Number) throws -> Bool {
+        return try scalarComparisonOperation(lhs, rhs, intOperator: !=, doubleOperator: !=)
+    }
+    static func >(lhs: Number, rhs: Number) throws -> Bool {
+        return try scalarComparisonOperation(lhs, rhs, intOperator: >, doubleOperator: >)
+    }
+    static func >=(lhs: Number, rhs: Number) throws -> Bool {
+        return try scalarComparisonOperation(lhs, rhs, intOperator: >=, doubleOperator: >=)
     }
 }
-
-
-
-func <(lhs: Number, rhs: Number) throws -> Bool {
-    return try scalarComparisonOperation(lhs, rhs, intOperator: <, doubleOperator: <)
-}
-func <=(lhs: Number, rhs: Number) throws -> Bool {
-    return try scalarComparisonOperation(lhs, rhs, intOperator: <=, doubleOperator: <=)
-}
-func ==(lhs: Number, rhs: Number) throws -> Bool {
-    return try scalarComparisonOperation(lhs, rhs, intOperator: ==, doubleOperator: ==)
-}
-func !=(lhs: Number, rhs: Number) throws -> Bool {
-    return try scalarComparisonOperation(lhs, rhs, intOperator: !=, doubleOperator: !=)
-}
-func >(lhs: Number, rhs: Number) throws -> Bool {
-    return try scalarComparisonOperation(lhs, rhs, intOperator: >, doubleOperator: >)
-}
-func >=(lhs: Number, rhs: Number) throws -> Bool {
-    return try scalarComparisonOperation(lhs, rhs, intOperator: >=, doubleOperator: >=)
-}
-
-
-

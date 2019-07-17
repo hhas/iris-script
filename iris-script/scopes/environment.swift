@@ -28,6 +28,9 @@
 // TO DO: implement development environments, i.e. custom Environment classes whose `get()` returns some or all handlers enclosed in specialized wrappers that perform additional actions on `call()` before/after forwarding the call to the original handler; e.g. ProfilingHandler would log microsecond times at which `call()` was entered and exited; DebuggingHandler could provide breakpoint-like behavior by suspending on `call()` until a 'continue' signal is received, and also log the command's input and output values for external inspection; MockHandler could generate a GUI form given the underlying handler's signature, allowing user to inspect its input value and enter their own output value - handy for prototyping/testing scripts while that handler is buggy/unfinished)
 
 
+// TO DO: assume an OS sandbox around script runtime that blocks all external resources (kernel APIs) as standard, instead relying on dependency injection where availability of external  is negotiated between script (which declares resource requirements) and runtime supervisor (which injects XPC connections to approved resources only into runtime subprocess upon launch, typically 'mounting' these resources in the runtime's superglobal namespace, e.g. `@com.apple.finder` is analogous to AS's `application id "com.apple.Finder"`, except that the available functionality is opt-in with greater granularity, e.g. whole-app/permission-to-automate/access-group[s]) [in an ideal world, the supervisor would launch every runtime subprocess instance with dynamically configured sandbox permissions, thereby avoiding every Mach-transported syscall having to travel 'runtime->supervisor->kernel' rather than 'runtime->kernel']; note that a script's sandbox permissions must be fully declarable using [top-level] `«…»` code annotations, i.e. a source-code-only script must contain all information required to run that script on any machine (similar to being able to identify all library dependencies by reverse domain, in order to prompt user if any libs need d/l-ed and installed from external repo before script can run), and these permission annotations must be recursively resolvable, e.g. if a third-party library interacts with iTunes, it should declare its own sandbox annotations; when a script imports that library it should not need to explicitly re-declare those annotations; this implies source code is parsed by the supervisor process, which looks up imported libraries' operator/permission/etc tables and passes the script's AST along with all imported libraries' ASTs to the runtime subprocess for execution [alternatively, it could do a very limited, fast parse of the script source that extracts sandbox-related annotations and superglobal names only, leaving the runtime to do the full source code parse]
+
+
 import Foundation
 
 
@@ -35,7 +38,7 @@ import Foundation
 class NullScope: Scope {
     
     // always returns nil (unless there's a delegate)
-    func get(_ name: Name) -> Value? {
+    func get(_ name: Symbol) -> Value? {
         return nil
     }
     
@@ -54,14 +57,14 @@ class Environment: MutableScope {
     
     internal let isLocked: Bool // can `set` operations initiated on child scopes propagate to this scope?
     
-    internal var frame = [Name: Value]() // TO DO: should values be enums? (depends if environment implements `call(command)`)
+    internal var frame = [Symbol: Value]() // TO DO: should values be enums? (depends if environment implements `call(command)`)
     
     init(parent: Environment? = nil, withWriteBarrier isLocked: Bool = true) {
         self.parent = parent
         self.isLocked = isLocked
     }
     
-    func get(_ name: Name) -> Value? {
+    func get(_ name: Symbol) -> Value? {
         if let result = self.frame[name] { return result }
         var isLocked = false // write-protected scopes can modify themselves but cannot be modified from sub-scopes
         var parentScope: Environment? = self.parent
@@ -82,11 +85,11 @@ class Environment: MutableScope {
     
     // TO DO: `set` takes slot name only; what if a chunk expr is given, e.g. `set field_name of slot_name to new_value`? probably better to get() slot, and determine action from there (one challenge: get-ing an editable box needs to discard the box if a write-barrier is crossed)
     
-    func bind(name: Name, to value: Value) { // called by [Native]Handler.call() when populating handler's stack frame; this does not check for name masking/duplicate names (the former is unavoidable, but as the handler controls those parameter names it will know how to address masked globals [either by renaming its parameters or by using a chunk expr to explicitly reference the masked name's scope], while HandlerInterface is responsible for ensuring all parameter and binding names are unique)
+    func bind(name: Symbol, to value: Value) { // called by [Native]Handler.call() when populating handler's stack frame; this does not check for name masking/duplicate names (the former is unavoidable, but as the handler controls those parameter names it will know how to address masked globals [either by renaming its parameters or by using a chunk expr to explicitly reference the masked name's scope], while HandlerInterface is responsible for ensuring all parameter and binding names are unique)
         self.frame[name] = value
     }
     
-    func set(_ name: Name, to newValue: Value) throws {
+    func set(_ name: Symbol, to newValue: Value) throws {
         if let value = self.get(name) { // if name is already bound in current or parent scope, try to update it
             try value.set(nullSymbol, to: newValue) // throws if value is immutable or defined in a locked scope
             self.bind(name: name, to: value) // adding the found value to the current scope prevents it being overwritten by a subsequent `define(…)`; i.e. `define(…)`, unlike `set`, is allowed to mask names in parent scopes, as long as those names have not yet been used in the current one [i.e. we don't want, say, a command inside a conditional or loop to call the parent implementation in some iterations and the local implementation in others, as that really screws up Command's first-call memoization behavior, and will likely complicate native-to-Swift cross-compilation too]; problem is that this hoisted value ignores its original scope's write boundaries (capturing an immutable version of the value here isn't an option, as that value will no longer reflect changes to the original); for now, we can try putting in an extra wrapper that preserves both its locks and relation to the original, though really not sure if that's going to work in practice or if it creates more problems than it solves; if it doesn't work then we'll need some other way to prevent `define` from masking a value); the other option would be to adopt an AS-like approach to handler definition and command dispatch, where handlers are defined and bound to a scope at compile-time as opposed to our current approach of defining and binding them entirely during execution (a-la Python/JS); the AS approach has the benefit of all slots being known at compile-time, which may assist editing and introspection tools, but probably requires the parser to hardcode their syntactic special forms (which may break homoiconicity and definitely limits metaprogramming); the Py/JS approach keeps scopes open and extensible during execution (handy for library 'includes' and dynamic object construction, and works within existing library-supplied syntax support)
@@ -106,7 +109,9 @@ class Environment: MutableScope {
 
 extension Environment {
     
-    // unlike `set`, `define` always adds to current frame so does not check for existing names in current/parent scopes
+    // TO DO: how to implement multimethods? should extending an existing slot be implicit/explicit?
+    
+    // unlike `set`, `define` adds a new item to the current frame so doesn't check for existing names in parent scopes
     
     func define(_ interface: HandlerInterface, _ action: @escaping PrimitiveHandler.Call) { // called by library glues
         // this assumes environment is initially empty so does not check for existing names
@@ -133,10 +138,10 @@ class TellScope: MutableScope {
         self.parent = parent
     }
     
-    func get(_ name: Name) -> Value? {
+    func get(_ name: Symbol) -> Value? {
         return self.target.get(name) ?? self.parent.get(name)
     }
-    func set(_ name: Name, to value: Value) throws {
+    func set(_ name: Symbol, to value: Value) throws {
         try self.parent.set(name, to: value)
     }
     func subscope(withWriteBarrier isLocked: Bool) -> MutableScope {

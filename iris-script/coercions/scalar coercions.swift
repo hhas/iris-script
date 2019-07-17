@@ -17,7 +17,7 @@ protocol SwiftScalarCoercion: SwiftCoercion {}
 
 struct AsValue: SwiftScalarCoercion {
     
-    let name: Name = "anything"
+    let name: Symbol = "anything"
     
     typealias SwiftType = Value
     
@@ -35,7 +35,7 @@ struct AsValue: SwiftScalarCoercion {
 
 struct AsInt: SwiftScalarCoercion {
     
-    let name: Name = "integer"
+    let name: Symbol = "integer"
     
     typealias NativeType = Int
     
@@ -64,7 +64,7 @@ struct AsInt: SwiftScalarCoercion {
 
 struct AsConstrainedInt: SwiftScalarCoercion {
     
-    let name: Name = "integer"
+    let name: Symbol = "integer"
     
     var description: String { // TO DO: code or descriptive text? (if descriptive, how to localize?)
         var result = self.name.label
@@ -103,7 +103,7 @@ struct AsConstrainedInt: SwiftScalarCoercion {
 
 struct AsDouble: SwiftScalarCoercion {
     
-    let name: Name = "real"
+    let name: Symbol = "real"
     
     typealias NativeType = Double
     
@@ -125,7 +125,7 @@ struct AsDouble: SwiftScalarCoercion {
 
 struct AsString: SwiftScalarCoercion {
     
-    let name: Name = "string"
+    let name: Symbol = "string"
     
     typealias SwiftType = String
     
@@ -148,7 +148,7 @@ struct AsString: SwiftScalarCoercion {
 
 struct AsScalar: SwiftScalarCoercion {
     
-    let name: Name = "scalar"
+    let name: Symbol = "scalar"
     
     typealias SwiftType = ScalarValue
     
@@ -176,7 +176,7 @@ let asString = AsString()
 
 struct AsNumber: SwiftScalarCoercion {
     
-    let name: Name = "number"
+    let name: Symbol = "number"
     
     typealias NativeType = Number
     

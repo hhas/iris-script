@@ -15,7 +15,7 @@ import Foundation
 
 struct AsNothing: Coercion { // used in HandlerInterface.result to return `nothing`
     
-    let name: Name = "nothing"
+    let name: Symbol = "nothing"
     
     func coerce(value: Value, in scope: Scope) throws -> Value {
         let _ = try asAnything.coerce(value: value, in: scope) // this still needs to evaluate value asAnything, discarding result (if value is scalar, it can be discarded immediately) // Q. how necessary is this? (i.e. we want to make sure last expr in handler evaluates, which could get funky when intersecting AsNothing with other coercions)
@@ -27,7 +27,7 @@ struct AsNothing: Coercion { // used in HandlerInterface.result to return `nothi
 
 struct AsOptional: SwiftCoercion { // this returns native Value; for Optional<Value> use MayBeNil
     
-    let name: Name = "optional"
+    let name: Symbol = "optional"
     
     var description: String { return "\(self.coercion) or nothing" }
     
@@ -50,7 +50,7 @@ struct AsOptional: SwiftCoercion { // this returns native Value; for Optional<Va
 
 struct AsSwiftOptional<T: SwiftCoercion>: SwiftCoercion {
     
-    let name: Name = "optional"
+    let name: Symbol = "optional"
     
     var description: String { return "\(self.coercion) or nothing" }
     
@@ -87,7 +87,7 @@ struct AsSwiftOptional<T: SwiftCoercion>: SwiftCoercion {
 
 struct AsDefault: Coercion {
     
-    let name: Name = "default"
+    let name: Symbol = "default"
     
     var description: String { return "\(self.coercion) or \(self.defaultValue)" }
     
@@ -110,7 +110,7 @@ struct AsDefault: Coercion {
 
 struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
     
-    let name: Name = "default"
+    let name: Symbol = "default"
     
     var description: String { return "\(self.coercion) or \(self.defaultValue)" }
     
@@ -158,7 +158,7 @@ struct AsEditable: SwiftCoercion {
 
     // experimental; in effect, environment binds a box containing the actual value, giving behavior similar to Swift's pass-by-reference semantics using structs
     
-    let name: Name = "editable"
+    let name: Symbol = "editable"
     
     var description: String { return "editable \(self.coercion)" }
     

@@ -3,7 +3,13 @@
 //  iris-lang
 //
 
-// conceptually a command is a right-associative unary operator with arbitrary name and fixed precedence, where operand is always a record (non-record values are coerced to single-field record upon evaluation); in practice, the current Command implementation is an atomic structure comprising a name and Array of fields, plus internal caching (while it could be implemented as a Command(Name,Record) struct, this does not lend itself to dynamic [run-time] optimization; the tradeoff is increased code complexity)
+// conceptually a command is a right-associative unary operator with arbitrary name and fixed precedence, where operand is always a record (non-record values are coerced to single-field record upon evaluation); in practice, the current Command implementation is an atomic structure comprising a name and Array of fields, plus internal caching (while it could be implemented as a Command(Symbol,Record) struct, this does not lend itself to dynamic [run-time] optimization; the tradeoff is increased code complexity)
+
+
+// TO DO: what about, say, interpolated strings? we don't provide a syntax for that in core punctuation, so can't be optimized at compile-time; should primitive handler definitions have the ability to supply a custom binding struct
+
+
+// note that late binding and an immutable AST* do not lend themselves to compile-time optimzations such as constant folding (*unless AST nodes are explicitly wrapped in EditableValue, which is the sort of thing the code editor/debugger might want to do); the obvious way to perform AST transforms is to eval the AST against an alternate set of primitive libraries (e.g. this is probably how native->Swift cross-compilation will be done) - when parsing code for that purpose, the parser could use an alternate Value source that provides wrapped versions of some or all Value types [c.f. kiwi parser, caveat we'll need a ValueConstructorProtocol so that different sources can be swapped in]; thus code analysis is code evaluation, just with [class-based] Values that gather 'usage' information (no doubt it'll be much slower than a conventional optimizing compiler design, but has the advantage of being completely library-driven and -extensible, using the exact same library extension mechanisms that supply library-defined handlers and operator sugar in run-time use)
 
 
 import Foundation
@@ -26,16 +32,16 @@ import Foundation
 
 
 
-struct MemoizedStaticValue: Handler {
+struct MemoizedStaticValue: Handler { // slot contains a non-handler value; the command still invokes `call()`, but no argument processing is performed, just evaluation+coercion of the value to the requested type if not already of that type
     
     var description: String { return "\(self.result)" }
     
     let value: Value
-    let coercion: Coercion
+    let coercion: Coercion // constrained type of result (effectively result.constrainedType)
     let result: Value
     
     func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
-        return self.coercion.isa(coercion) ? self.result : try self.value.eval(in: scope, as: coercion)
+        return self.coercion.isa(coercion) ? self.result : try self.value.eval(in: scope, as: coercion) // TO DO: if value is memoizable, what about caching results of eval, using coercion as cache key? e.g. if value is a non-constant expr, e.g. a block, it must be evaled every time, but if value.isMemoizable then there's no need to coerce every time [if the coercion succeeds, then it can cache and return that result every time; if coercion fails, then it can cache and rethrow that coercion error every time])
     }
     func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         fatalError() // TO DO: this unboxes as T; how practical/useful to cache returned value
@@ -43,9 +49,10 @@ struct MemoizedStaticValue: Handler {
 }
 
 
-// TO DO: also DynamicallyBoundNonMaskableHandler? (this would capture Scope, avoiding full lookup every time)
+// TO DO: also DynamicallyBoundNonMaskableHandler? (this would capture Scope, avoiding full lookup every time); Q. is this still needed? late binding allows a command call to fail if handler isn't yet defined; once handler is defined, first call to Environment.get() will lift it to current scope to prevent subsequent masking (Q. what about non-environment scopes?) [note: where multiple parent scopes are persistent, the invoking scope can still end up binding handler from a different parent, depending on the order in which the parents populate the named slot - IOW there is something to be said for AppleScript's static slot definitions over Python/JS-style runtime slot insertions/deletions, which allow crazy runtime customizability at cost of static machine/human reasoning]
 
-struct DynamicallyBoundHandler: Handler {
+
+struct DynamicallyBoundHandler: Handler { // e.g. when looking up a slot on a Value
     
     var description: String { return "<DynamicallyBoundHandler>" }
     

@@ -14,6 +14,43 @@
 import Foundation
 
 
+
+
+let script = """
+
+123, 789
+
+-1.2345e7
+
+to foo {message: s as text, count: n as integer} do
+    repeat n doing: frogblast_the_ventcore s
+done
+
+    [4,5,6]   
+
+
+"""
+
+let scriptLines = script.split(omittingEmptySubsequences: false, whereSeparator: linebreakCharacters.contains)
+
+print(scriptLines)
+
+for line in scriptLines {
+    var nextLexer = Lexer(String(line))
+    if nextLexer != nil {
+        while let lexer = nextLexer {
+            let token: Token
+            (token, nextLexer) = lexer.next()
+            print(token)
+        }
+    } else {
+        print("blank line")
+    }
+    print("--")
+}
+
+
+/*
 let e = Environment()
 
 stdlib_loadHandlers(into: e)
@@ -45,7 +82,7 @@ do {
 
     print("b=", v2)
     
-    try e.set(Name("bar"), to: 7)
+    try e.set(Symbol("bar"), to: 7)
     
     print("b2=", v2)
     
@@ -58,6 +95,9 @@ do {
 } catch {
     print(error)
 }
+
+
+*/
 
 /*
 struct AddHandler: Handler { // 5x faster than standard implementation (which is to say, still dog-slow)

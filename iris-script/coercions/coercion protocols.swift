@@ -16,7 +16,7 @@ import Foundation
 
 protocol Coercion: Value {
     
-    var name: Name { get } // TO DO: canonical vs reified name? // TO DO: how to support localization?
+    var name: Symbol { get } // TO DO: canonical vs reified name? // TO DO: how to support localization?
 
     func coerce(value: Value, in scope: Scope) throws -> Value
     

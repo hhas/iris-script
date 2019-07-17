@@ -1,21 +1,26 @@
 //
-//  record value.swift
+//  record.swift
 //  iris-lang
 //
+//  tuple/struct hybrid
+//
+//  syntactically similar to an AppleScript record, except field order is significant as field names may be omitted, e.g.:
+//
+//  {foo: 1, "hello", baz: nothing}
+//
+
 
 import Foundation
 
 
-// struct-tuple hybrid; syntactically similar to AppleScript record, except field order is significant as field names may be omitted
-
-// e.g. {foo: 1, "hello", baz: nothing}
-
 
 struct Record: Value, Accessor {
     
-    var description: String { return "\(self.fields)" } // TO DO: format
+    // TO DO: `description` should return Swift representation (we need a separate visitor-style API for pretty-printing native values, as formatting needs to be customizable [e.g. when reformatting script's code, where line-wrapping and reindentation is automatic, command arguments can omit record punctuation for low-noise AS-like appearance, and commands can be formatted with or without using custom operator syntax; plus, of course, literate formatting where visual emphasis is assigned to high-level structures rather than low-level token types]; TBH generating Swift representations should probably also be done using same PP API, e.g. for use by cross-compiler when generating [human-readable] Swift code, with `description` invoking that with default formatting options when displaying values for debugging/troubleshooting)
     
-    typealias Field = (name: Name, value: Value) // nullSymbol = unnamed field
+    var description: String { return "{\(self.fields.map{ $0 == nullSymbol ? "\($1)" : "\($0): \($1)"}.joined(separator: ", "))}" }
+    
+    typealias Field = (name: Symbol, value: Value) // nullSymbol = unnamed field
 
     let nominalType: Coercion = asRecord
     
@@ -24,7 +29,7 @@ struct Record: Value, Accessor {
     let constrainedType: RecordCoercion
     
     let fields: [Field]
-    private var namedFields = [Name: Value]() // Q. any performance benefit over `first(where:…)`? (bearing in mind a typical record would have <20 slots) if not, get rid of this
+    private var namedFields = [Symbol: Value]() // Q. any performance benefit over `first(where:…)`? (bearing in mind a typical record would have <20 slots) if not, get rid of this
     
     init(_ fields: [Field]) throws { // field names may be omitted, but must be unique
         var isMemoizable = true
@@ -52,7 +57,7 @@ struct Record: Value, Accessor {
         self.isMemoizable = true // TO DO: check this (e.g. what if field values are thunked?)
     }
     
-    func get(_ name: Name) -> Value? { // TO DO: what about getting by index? or should we provide pattern-matching/eval only?
+    func get(_ name: Symbol) -> Value? { // TO DO: what about getting by index? or should we provide pattern-matching/eval only?
         return self.namedFields[name]
     }
     

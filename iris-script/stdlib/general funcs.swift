@@ -13,6 +13,9 @@
  */
 
 
+// Q. when implementing FS interaction (ideally by mounting filesystem resources as values within the global @namespace, is there any way to take advantage of APFS's copy-on-write file versioning, such that we can observe the outputted file as distinct to the inputted file, even when it's the same 'file', thus supporting file-level Undo where the user can run a script, inspect the new resource, and revert it to the previous version if isn't what they intended? not to mention something approaching referential transparency in IO operations, since two file objects with the same path but different versions are not equal [obviously, openfile(path) is still problematic, though even that might be dealt with by taking an 'attime' argument with current time as its default; thus openfile(path,at:DATE) would open the version of the file that existed at that date, and the only time ref transparency will fail is if that file revision is old enough to have been dearchived to reclaim storage space, in which case that's a halting error])
+
+
 /******************************************************************************/
 // comparison
 

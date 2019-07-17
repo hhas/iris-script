@@ -1,5 +1,5 @@
 //
-//  collection values.swift
+//  list.swift
 //  iris-lang
 //
 
@@ -12,7 +12,7 @@ import Foundation
 // foo; of bar; of baz
 
 
-struct List: CollectionValue { // ExpressibleByArrayLiteral?
+struct OrderedList: BoxedCollectionValue { // ExpressibleByArrayLiteral?
     
     var description: String { return "\(self.data)" }
     
@@ -24,7 +24,7 @@ struct List: CollectionValue { // ExpressibleByArrayLiteral?
     
     var isMemoizable: Bool { return false } // TO DO: lists are memoizable only if all elements are; how/when should we determine this? (we want to avoid iterating long lists more than is necessary); should we also take opportunity to determine minimally constrained type? (e.g. if all items are numbers, constrained type could be inferred as AsArray(asNumber), although whether we want to enforce this when editing list is another question)
     
-    let data: [Value] // TO DO: what about Array<Element>? boxing an array of Swift primitives and boxing each item upon use might have performance advantage in some situations (if so, we probably want to implement that as a GenericList<Element> struct which is natively polymorphic with List; however, that will mean chunk expressions and library commands can't operate directly on List.data all access to list contents must go via methods on CollectionValue/List, which adds an extra level of indirection to an already Swift-stack-heavy AST-walking interpreter)
+    let data: [Value] // TO DO: what about Array<Element>? boxing an array of Swift primitives and boxing each item upon use might have performance advantage in some situations (if so, we probably want to implement that as a GenericList<Element> struct which is natively polymorphic with OrderedList; however, that will mean chunk expressions and library commands can't operate directly on OrderedList.data all access to list contents must go via methods on CollectionValue/OrderedList, which adds an extra level of indirection to an already Swift-stack-heavy AST-walking interpreter)
     
     init(_ data: [Value]) {
         self.data = data
@@ -38,8 +38,8 @@ struct List: CollectionValue { // ExpressibleByArrayLiteral?
         return try self.toList(in: scope, as: asList)
     }
     
-    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> List {
-        return try List(self.map{ try $0.eval(in: scope, as: coercion.item) })
+    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList {
+        return try OrderedList(self.map{ try $0.eval(in: scope, as: coercion.item) })
     }
     
     func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {

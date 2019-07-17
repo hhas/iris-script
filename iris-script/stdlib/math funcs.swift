@@ -7,7 +7,7 @@ import Foundation
 import Darwin
 
 
-func exponent(left: Number, right: Number) throws -> Number { return try pow(left, right) }
+func exponent(left: Number, right: Number) throws -> Number { return try left.pow(right) }
 func positive(left: Number) throws -> Number { return left }
 func negative(left: Number) throws -> Number { return try -left }
 func add(left: Number, right: Number) throws -> Number { return try left + right }

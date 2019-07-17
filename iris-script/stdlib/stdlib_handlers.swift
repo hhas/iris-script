@@ -8,8 +8,8 @@
 import Foundation
 
 
-let leftParameterLabel = Name("left")
-let rightParameterLabel = Name("right")
+let leftParameterLabel = Symbol("left")
+let rightParameterLabel = Symbol("right")
 
 
 
@@ -709,8 +709,8 @@ private func function_ge_left_right(command: Command, commandEnv: Scope, handler
 
 // is_a (value, of_type)
 private let type_isA_value_ofType = (
-    param_0: (label: Name("value"), coercion: asValue),
-    param_1: (label: Name("of_type"), coercion: asCoercion),
+    param_0: (label: Symbol("value"), coercion: asValue),
+    param_1: (label: Symbol("of_type"), coercion: asCoercion),
     result: asBool
 )
 private let interface_isA_value_ofType = HandlerInterface(
@@ -765,7 +765,7 @@ private func function_joinValues_left_right(command: Command, commandEnv: Scope,
 
 // show (value)
 private let type_show_value = (
-    param_0: (label: Name("value"), coercion: asValue),
+    param_0: (label: Symbol("value"), coercion: asValue),
     result: asNothing
 )
 let interface_show_value = HandlerInterface(
@@ -792,8 +792,8 @@ func function_show_value(command: Command, commandEnv: Scope, handler: Handler, 
 // define_handler (name, parameters, return_type, action, is_event_handler)
 let type_defineHandler_interface_action_commandEnv = (
     // TO DO: reduce `name+parameters+result` to single parameter of type asHandlerInterface?
-    param_0: (label: Name("interface"), coercion: asHandlerInterface),
-    param_1: (label: Name("action"), coercion: asBlock),
+    param_0: (label: Symbol("interface"), coercion: asHandlerInterface),
+    param_1: (label: Symbol("action"), coercion: asBlock),
     result: asNothing
 )
 let interface_defineHandler_interface_action_commandEnv = HandlerInterface(

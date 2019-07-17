@@ -1,5 +1,5 @@
 //
-//  editable value.swift
+//  value modifiers.swift
 //  iris-lang
 //
 
@@ -15,13 +15,14 @@ import Foundation
 
 // to keep mutability semantics conceptually simple, there should be no distinction between mutable value and mutable storage. All environments slots are write-once, so inherently immutable; [im]mutability is purely a function of the content of a slot: if the slot's value allows editability, either because it's an EditableValue 'box' or something equivalent, then attributes of that value [if it's a list or record] should appear mutable as well. The simplest [though not necessarily efficient] way to achieve this is to replace the box's current value with the new value. If implementing a more parsimonious mechanism [to minimize CPU overheads due to copying] where the box's value is itself mutatable [e.g. a struct with a `var data:Array<>`] then this mutation may need to be mediated by the box—what we don't want is for the mutable struct to 'escape' into an immutable context; i.e. there should be no equivalent to Swift's storing a mutable class in a `let` slot, or an immutable list in an editable box. (At least with Swift collection structs, their copy-on-write[-if-needed] behavior should protect against shared state escaping editable boundaries.) One option may be for list/record mutator methods to return the modified value (either a new value or the current value with in-place changes) which the editable box automatically stores in place of the previous version (though we'll need to watch out for excessive copying, as Swift is liable to think the underlying Array is not unique and so re-copy it on every write)
 
+//      (caveat to the above: when the value is a chunk expression that points to some external state; e.g. consider an application specifier: while explicit get/set should make it clear that the local value is distinct to the referenced object, the referenced object's state can still change over time regardless of the local value's immutability; this is why, even with ubiquitous immutability, we can't have nice things like any guarantees of referential transparency [except, perhaps, in simple handlers that only consume the built-in data types and never deal with external state or invoke commands that could])
 
-// TO DO: beware cases where an [e.g.] immutable list could contain editable values; might want to enforce item immutability
+// TO DO: beware cases where an [e.g.] immutable List could contain EditableValue items; might want to enforce item [im]mutability solely at the scope slot level; thus `set x to 3 as editable value, set y to [] as editable list, set end of y to x` would automatically de-box the 3 upon inserting it into the list
 
 
 class EditableValue: Handler, Mutator {
     
-    // Handler and Accessor behaviors are pass-thrus to the underlying Value
+    // get() and call() behaviors are pass-thrus to the underlying Value; set() replaces the current Value with a new Value
     
     let nominalType: Coercion = asEditable
     
@@ -37,7 +38,7 @@ class EditableValue: Handler, Mutator {
     
     //
     
-    var immutableValue: Value { return self.data } // this is kinda tricky: if self.data is, say, a List of editable values, those values also need to be made immutable (ideally, collections should never contain EditableValue items; only the topmost value should be boxed, but we need to give more thought to that)
+    var immutableValue: Value { return self.data } // this is kinda tricky: if self.data is, say, a OrderedList of editable values, those values also need to be made immutable (ideally, collections should never contain EditableValue items; only the topmost value should be boxed, but we need to give more thought to that)
     
     
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
@@ -73,7 +74,7 @@ class EditableValue: Handler, Mutator {
     }
     
     
-    func set(_ name: Name, to value: Value) throws {
+    func set(_ name: Symbol, to value: Value) throws { // TO DO: is there ever any situation where name can be anything other than nullSymbol? (Q. should the slot name always be passed here, c.f. call() which always passes the full Command even though the receiving handler ignores the command's name?)
         if name == nullSymbol {
             self.data = value // TO DO: this needs to apply self.coercion, throwing if the given value does not fit box's original type and constraints
         } else {
@@ -81,7 +82,7 @@ class EditableValue: Handler, Mutator {
         }
     }
     
-    func get(_ name: Name) -> Value? {
+    func get(_ name: Symbol) -> Value? {
         return self.data.get(name)
     }
 }
@@ -135,11 +136,11 @@ struct ScopeLockedValue: Handler, Mutator { // experimental
     }
     
     
-    func set(_ name: Name, to value: Value) throws {
+    func set(_ name: Symbol, to value: Value) throws {
         throw ImmutableScopeError(name: name, in: self.scope)
     }
     
-    func get(_ name: Name) -> Value? {
+    func get(_ name: Symbol) -> Value? {
         return self.data.get(name)
     }
 }

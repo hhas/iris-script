@@ -1,9 +1,12 @@
 //
-//  text values.swift
+//  text.swift
 //  iris-script
 //
 
 // from user's POV, scalars are one datatype ('text')
+
+// TO DO: how should Equatable and Hashable be implemented? (particularly if we treat numbers and strings as interchangeable, as normalization and localization issues could make this extremely complicated)
+
 
 import Foundation
 
@@ -11,17 +14,23 @@ import Foundation
 // Q. need to decide on interpolated strings - should they be a distinct datatype with literal representation, or library-defined `format_text {template, …}`; it may help to compare 'interpolated' lists, where list items may be resolved at runtime by commands, e.g. `["foo",bar,"baz",fub-2]`
 
 
-struct Text: BoxedScalarValue {
+struct Text: BoxedScalarValue, ExpressibleByStringLiteral { // 
     
-    var description: String { return self.data.debugDescription } // temporary
+    public var description: String { return self.data.debugDescription } // temporary
     
-    let nominalType: Coercion = asString
+    public typealias StringLiteralType = String
     
-    // TO DO: what about constrained type[s]
+    public let nominalType: Coercion = asString
+    
+    // TO DO: what about constrained type[s]?
     
     let data: String // TO DO: what about capturing 'skip' indexes, e.g. linebreak indexes, for faster processing in common operations, e.g. slicing string using integer indexes (Q. how often are random access operations really performed? and to what extent are those the result of naive/poor idioms/expressibility vs actual need); also cache length if known? (depends on String's internal implementation, but it's probably O(n))
     
-    init(_ data: String) {
+    public init(stringLiteral value: StringLiteralType) {
+        self.init(value)
+    }
+    
+    public init(_ data: String) {
         self.data = data
     }
     
@@ -44,6 +53,19 @@ struct Text: BoxedScalarValue {
     }
 }
 
+
+extension Text: KeyConvertible {
+    
+    func hash(into hasher: inout Hasher) {
+        self.data.hash(into: &hasher)
+    }
+    
+    static func == (lhs: Text, rhs: Text) -> Bool {
+        return lhs.data == rhs.data //lhs.data.localizedCaseInsensitiveCompare(rhs.data) == .orderedSame
+    }
+    
+
+}
 
 
 // Date (use ISO8601 format when coercing to/from Text/String)

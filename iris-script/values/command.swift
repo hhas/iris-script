@@ -1,5 +1,5 @@
 //
-//  command value.swift
+//  command.swift
 //  iris-lang
 //
 
@@ -64,7 +64,7 @@ import Foundation
 
 class Command: ComplexValue {
     
-    typealias Argument = (label: Name?, value: Value)
+    typealias Argument = (label: Symbol?, value: Value)
     
     var description: String {
         return self.arguments.count == 0 ? self.name.label : "\(self.name.label) {\(self.arguments.map{ "\($0 == nil ? "" : "\($0!.label):")\($1)" }.joined(separator: ", "))}"
@@ -72,10 +72,12 @@ class Command: ComplexValue {
 
     let nominalType: Coercion = asCommand
     
-    let name: Name
+    // TO DO: what about a slot for storing optional operator definition?
+    
+    let name: Symbol
     let arguments: [Argument] // TO DO: single, optional argument which is coerced to record and pattern-matched against HandlerInterface.Parameter
     
-    init(_ name: Name, _ arguments: [Argument] = []) {
+    init(_ name: Symbol, _ arguments: [Argument] = []) {
         self.name = name
         self.arguments = arguments
     }
@@ -99,7 +101,7 @@ class Command: ComplexValue {
     
     // TO DO: if handler is static bound, we don't need to go through all this every time; just check params once and store array of operations to perform: omitted and constant args can be evaluated once and memoized; only exprs need evaled every time, and coercions may be minimized where arg's input coercion is member of expr's output coercion
     
-    private func value(at index: inout Int, named label: Name) -> Value {
+    private func value(at index: inout Int, named label: Symbol) -> Value {
         if index < self.arguments.count {
             let arg = self.arguments[index]
             if arg.label == nil || arg.label == label {
@@ -110,7 +112,7 @@ class Command: ComplexValue {
         return nullValue
     }
         
-    func value(at index: inout Int, for param: (label: Name, coercion: Coercion), in commandEnv: Scope) throws -> Value {
+    func value(at index: inout Int, for param: (label: Symbol, coercion: Coercion), in commandEnv: Scope) throws -> Value {
         let i = index
         do {
             return try self.value(at: &index, named: param.label).eval(in: commandEnv, as: param.coercion)
@@ -120,7 +122,7 @@ class Command: ComplexValue {
     }
     
     
-    func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Name, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
+    func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
         let i = index
         do {
             return try self.value(at: &index, named: param.label).swiftEval(in: commandEnv, as: param.coercion)
