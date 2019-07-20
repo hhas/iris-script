@@ -158,6 +158,8 @@ import Foundation
  EXPR: STRING | LIST | KEYED_LIST | RECORD | GROUP | COMMAND | OPERATOR
  
  
+ // note that special-case double-postfix operator syntax (typically used for `to interface action`, `if test action`) wouldn't be needed if commands accepted multiple unlabeled argument fields, or if their handlers use `then:` or other logical preposition to label for the second operand, e.g. `if test do…done` (dp op) vs `if test then: do…done` (low-punctuation command); Q. how would `else` infix operator work with the command form (given that operator precedences need to accommodate users' expectations when operators are interwoven with commands)
+ 
  // in practice, operand exprs may be of specific types (e.g. `to HandlerInterface Block`); how best to parameterize these for individual operator definitions? [it won't affect tokenization or standard parsing behavior; however, the additional info may be used by code editor in providing on-the-fly contextual syntax checking with autocorrect, autocomplete, etc] (Q. should arity be parameterized? or do we really want to discourage complex multi-operand operators [e.g. `if TEST EXPR else EXPR` or, worse, `if TEST EXPR (elif TEST EXPR)* (else EXPR)?`] in favor of simple, composable operators [e.g. `if TEST EXPR` and `EXPR else EXPR`])
  
  // what about comparison operators where we want to normalize operands via `as` clause? that's kinda tricky to compose, because [depending on precedence] `a > b as TYPE` either parses as `(a < b) as TYPE` or `a < (b as TYPE)`, where the former is redundant and the latter is unhelpful [as user would normally parenthesize that intent for visual clarity anyway]; e.g:
@@ -180,3 +182,9 @@ import Foundation
  // mind that match tree nodes aren't unique (EXPR appears in multiple chains, e.g. `[expr(,expr)*]` vs `{expr(,expr)*}`)
  
  */
+
+
+// TO DO: single-line parsing should take a tip from bookkeeping: when balancing a ledger, insert the amount needed to balance CR and DR columns; in this case, where parensed exprs are unbalanced, insert 'placeholder' tokens at start [and/or end?] of line to make that line into a valid expr [sequence]; [Q. should end of each line be 'carry forwards', to be balanced against the expected 'brought forwards' on the next?]
+
+
+// TO DO: `command_name {} expr` should probably be flagged as bad [ambiguous] syntax, as it's unclear if user's intent is `name {}, expr` or `name {{}, expr}` (i.e. if first argument field has a record as its value, explicit disambiguation is required); we may want to expand this rule to ALL appearances of record literals as 'direct arguments'; i.e. while `command_name {} label:expr` is syntactically unambiguous [assuming `label:value` is not itself a legal value, which homoiconicity wants it to be, but punctuation infererence does not], it is easier for user to remember one syntactic rule that applies to `command_name {} …` in all cases

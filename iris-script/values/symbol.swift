@@ -6,6 +6,9 @@
 import Foundation
 
 
+// TO DO: need a better name than Symbol (ideally we want to talk about 'symbols' as syntax, not as semantics; e.g. `≠` is the Unicode symbol meaning 'not-equal', which stdlib defines as an infix operator for performing numerical comparisons); 'Hashtag' would avoid the immediate confusion, although 'hashtag' has its own common meaning which could mislead in other ways
+
+
 public struct Symbol: ComplexValue, KeyConvertible, ExpressibleByStringLiteral {
     
     public var description: String { return "#\(self.label)" }

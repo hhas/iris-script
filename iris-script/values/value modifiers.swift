@@ -5,6 +5,9 @@
 
 import Foundation
 
+
+// TO DO: Boolean type might be implemented as boxes around values, where true encapsulates any value except 'test failed' and false encapsulates 'test failed'; this'd give us Icon-style Boolean test semantics while preserving the visual clarity and convenience of `true`/`false` constants and display (main concern is this doesn't create a hole to sneak complex 'sensitive' data out of an API/library under pretence of it being a simple boolean; as with EditableValue we want to limit how far it can travel before it's reduced to a simpler 'safe' representation)
+
 // TO DO: how best to represent annotations (e.g. when preserving non-code data in parsed AST: comments, user docs, etc)? sylvia defined an annotation collection in Value base class, but iris uses structs so it would need to be defined on every iris-defined value type [excepting Int/Double, which are existing Swift types so can't be extended], plus it'd probably want to use Foundation classes so that progressively attached metadata is shared across all instances of that value (which means added refcounting); alternative is to use AnnotatedValue wrapper class similar to EditableValue, which can be added only where needed (and since the AST will probably end up being incrementally parsed, we may want something that enables AST subtrees to be modified in-place)
 
 

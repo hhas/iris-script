@@ -6,6 +6,9 @@
 import Foundation
 
 
+// TO DO: for lambdas (unnamed, unbound, handlers), use nullSymbol as handler interface's name; Q. should we have a dedicated operator syntax for constructing lambdas, or just use a command?
+
+
 // literal syntax is `HANDLER_NAME { [ LABEL: ] BINDING [ as COERCION ], … } [ returning COERCION ]`
 
 // note that if a `LABEL:` is not explicitly declared, the binding name is also used as the label name, e.g. `to foo {a,b}…` is shorthand for `to foo {a:a as anything, b:b as anything}`; note that Swift takes the opposite approach—in a Swift `func` definition, it's the binding name that can be omitted and the label that's required, in which case the argument value is bound to the label name—but that makes for inconsistent colon placement in function calls vs function interfaces, which is confusing for users; one the goals of handler interfaces is to act as 'visual templates' for the commands that will invoke them (a-la kiwi, where a Handler’s interface is literally defined by a Command value passed as first argument to the `define rule` command, `define rule (foo (a,b), stuff to do)` and `foo (1,2)` - the command's syntax is identical to its definition; only the values’ names are substituted with the actual values); our approach also avoids having to type parameter labels as `_` to indicate unlabeled arguments, which further complicates language syntax and adds to argument vs parameter inconsistency

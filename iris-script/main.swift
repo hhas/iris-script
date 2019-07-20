@@ -14,40 +14,67 @@
 import Foundation
 
 
+// Q. what about dead code detection? (e.g. given the script `1, 2, 3.`, `1` and `2` [being side-effectless] are no-ops, while `3` is only relevant if the evaluator is connected to an output console); flagging 'useless' or 'suspect' code may be most useful in parenthesized groups, e.g. `(1,2+3)` will discard the 1 and return 5, but `(foo,2+3)` will return 5 while also performing a potentially effectful `foo` command; being parenthesized, that expr could be buried deep in a much larger expr (while the same effect can be achieved if a `foo` handler is defined that returns its input parameter as output while also performing its side-effect, that requires an explicit definition of `foo` whereas a parenthesized expr sequence works with any existing handler)
 
 
 let script = """
 
-123, 789
-
+123, 4.56, 789.
 -1.2345e7
+[4,55,6]
 
-to foo {message: s as text, count: n as integer} do
-    repeat n doing: frogblast_the_ventcore s
+
+to wibble {message, times: n as integer} returning nothing do
+    repeat n with: frogblast_the_ventcore message
 done
 
-    [4,5,6]   
+«To call `wibble` using canonical[?] ‘low-punctuation’ command syntax:»
 
+wibble “hello” times: 5
+
+«The above command can also be written as:»
+
+wibble message: “hello” times: 5
+wibble {message: “hello”, times: 5}
+wibble {“hello”, 5}
 
 """
 
+
+let d1 = Date()
+let doc = EditableScript(script)
+let d2 = Date()
+
+
+
+
+print(doc)
+print("parsed in \(String(format: "%0.2f", d2.timeIntervalSince(d1)*1000))ms")
+
+print(doc.debugDescription)
+
+
+
+/*
 let scriptLines = script.split(omittingEmptySubsequences: false, whereSeparator: linebreakCharacters.contains)
 
 print(scriptLines)
 
 for line in scriptLines {
-    var nextLexer = Lexer(String(line))
-    if nextLexer != nil {
-        while let lexer = nextLexer {
-            let token: Token
-            (token, nextLexer) = lexer.next()
+    if let lineReader = LineReader(String(line)) {
+        var lexer: TokenReader = NumericReader(lineReader)
+        var token: Token
+        repeat {
+            (token, lexer) = lexer.next()
             print(token)
-        }
+        } while !token.isEnd
     } else {
         print("blank line")
     }
     print("--")
 }
+*/
+
 
 
 /*

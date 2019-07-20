@@ -17,6 +17,10 @@ import Foundation
 // set {foo, to: make {new: editable {list {of: text}}}}
 
 
+// implement `if` as plain command, `e.g. `if…then:do…done`? avoids an operator definition and reads fairly naturally using low-punctuation command syntax, which aides memorization (if so, we need to make sure that `else` operator has lower precedence than low-punctuation command); Q. what about `to`/`when`/`repeat`/etc? (problem with those is that the natural preposition is `do:`/`doing:`, which rules out `do…done` for denoting a block)
+
+// Q. what about `catching` operator? right now this doesn't allow for binding the thrown error to a specific name, nor does it allow for filtering the error type[s] to catch; we could deal with this much as Swift does, binding the error to a predefined name (`error`); or maybe allowing the right operand to be a single-parameter closure, relying on the parameter's optional `as` clause for filtering by error type (if the thrown error can be coerced to the specified error type[s], the error is passed to the closure to process, otherwise it's propagaged); need to give more thought to error management in general (e.g. being able to catch an error, correct the problem, then resume execution from the point it was thrown, all without permanently unrolling the call stack is an especially powerful continuation-style capability; or being able to suspend execution and immediately switch to interactive debugging mode at the initial failure point, regardless of a script's existing error-handling logic [and, bearing in mind, that the debugging console will be running in a separate process to the script itself, requiring IPC to to connect the two])
+
 
 // commands are effectively right-associative prefix [unary]  operators (use record to pass multiple values); argument is optional (Q. how to distinguish `foo {nothing}` from `foo nothing`/`foo`); if all identifiers are commands, how to distinguish e.g. `foo - 1` from `foo -1`? (if foo can be inspected at parse-time, provide user feedback either by flagging or by rewriting latter as `foo {-1}` for clarity)
 

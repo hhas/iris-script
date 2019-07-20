@@ -222,3 +222,23 @@ struct InternalError: NativeError {
     let description: String
     
 }
+
+
+// syntax errors
+
+enum BadSyntax: NativeError { // while tokens containing invalid code are marked as bad syntax, they do not constitute syntax errors if they appear within a string or annotation literal; however, this can only be determined when the script is parsed in full - all a single-line lexer can do is mark it as a potential issue and move on to the next token
+    
+    var description: String { return String(describing: self) }
+    
+    // TBC: case names and human-readable descriptions
+    
+    case unterminatedAnnotation
+    case unterminatedList
+    case unterminatedRecord
+    case unterminatedGroup
+    case unterminatedQuotedName
+    case unterminatedQuotedString
+    case missingExpression // TO DO: parameterize with expected expression type?
+    case missingName // e.g. handler name or pair label; TO DO: how should missing colon be reported?
+    // TO DO: what else?
+}
