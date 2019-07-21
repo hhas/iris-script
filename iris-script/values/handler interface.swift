@@ -30,7 +30,7 @@ import Foundation
 struct HandlerInterface: ComplexValue { // native representation is a record; how best to convert to/from that?
     
     var description: String {
-        return "\(self.name.label) {\(self.parameters.map{ "\($0.label): \($1.label == "" ? $0.label : $1.label) as \($2)" }.joined(separator: ", "))} returning \(self.result)"
+        return "\(self.name.label) {\(self.parameters.map{ "\($0.label): \($1.label.isEmpty ? $0.label : $1.label) as \($2)" }.joined(separator: ", "))} returning \(self.result)"
     }
     
     // TO DO: store binding names separately? primitive handlers don't need them, and native handlers should probably treat them as private (i.e. third-party code should not make any assumptions about these names - they are defined by and for the handler's own use only); in theory, code analysis tools will want to know all bound names; then again, the easiest way to do code analysis in iris it to execute the script against alternate libraries that have the same signatures but different behaviors (e.g. whereas a standard `switch` handler lazily matches conditions and only evaluates the first matched case, an analytical `switch` handler would evaluate all conditions and all cases to generate an analysis of all possible behaviors)

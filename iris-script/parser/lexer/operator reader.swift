@@ -41,16 +41,16 @@ struct OperatorDefinition: Lexeme, CustomStringConvertible {
     
     // TO DO: this may be better expressed as a pattern, which can be loaded directly into parser's matching table (Q. how do we deal with trinary operators? second name may be matched as another operator, or as letters/symbols)
     
-    var description: String { return "Lexeme(\(self.name))" }
+    var description: String { return "OperatorDefinition(\(self.name))" }
     
     enum Name {
-        case word(Symbol)
-        case symbol(Symbol)
+        case word(String)
+        case symbol(String)
         
         init?(_ name: String) {
             switch name {
-            case wordCharacters:    self = .word(Symbol(name))
-            case symbolCharacters:  self = .symbol(Symbol(name))
+            case wordCharacters:    self = .word(name)
+            case symbolCharacters:  self = .symbol(name)
             default:                return nil
             }
         }
@@ -59,10 +59,12 @@ struct OperatorDefinition: Lexeme, CustomStringConvertible {
     let name: Name
     let aliases: [Name]
     
-    init?(_ name: String, aliases: [String] = []) { // native libraries should always use this API; primitive libraries will use it until they can build pre-validated, pre-optimized definitions, at which point they can skip these checks at load-time [except when running in troubleshooting mode]
-        guard let name = Name(name) else { return nil }
-        self.name = name
-        self.aliases = [] // TO DO
+    // TO DO: invalid names/aliases = fatalError
+    
+    init(_ name: String, aliases: [String] = []) { // native libraries should always use this API; primitive libraries will use it until they can build pre-validated, pre-optimized definitions, at which point they can skip these checks at load-time [except when running in troubleshooting mode]
+        guard let n = Name(name) else { fatalError("Invalid operator name: \"\(name)\"") }
+        self.name = n
+        self.aliases = aliases.map{ if let name = Name($0) { return name } else { fatalError("Invalid operator name: \"\($0)\"") }}
     }
     
     
@@ -89,50 +91,72 @@ class OperatorRegistry { // caution: being a shared resource, this may need lock
     
     struct PartialMatch  { // TO DO: main parser needs a variation on this to match complex expr patterns (literal tokens/parameterized exprs, optional/repeating units)
         
-        private var nextMatch = [Character: PartialMatch]()
+        private var matches = [Character: PartialMatch]()
         private var definition: OperatorDefinition? // problem: what about overloaded operators which have >1 fixity (e.g. +/-)? or do we punt the problem, leaving it to parsefunc to determine which operand[s] are missing/present? or do we leave it a glorious free-for-all, where libraries can attach any number of operator definitions to an operator name, and it's up to parser to sort them out/complain about conflicts (Q. where there is a conflict, how can user disambiguate? or do we just say to avoid importing the problem syntax and invoke the underlying command within a `tell LIBRARY…` block?)
         
         mutating func add(_ name: Substring, _ definition: OperatorDefinition) {
             if let char = name.first {
-                if self.nextMatch[char] == nil { self.nextMatch[char] = PartialMatch() }
-                self.nextMatch[char]!.add(name.dropFirst(1), definition)
+                if self.matches[char] == nil { self.matches[char] = PartialMatch() }
+                self.matches[char]!.add(name.dropFirst(1), definition)
             } else {
+                // TO DO: warning? throw? store both? (storing both has advantage that conflicting operators are only a problem if they're used)
+                if self.definition != nil { print("overwriting existing operator definition", self.definition!, "with", definition) }
                 self.definition = definition
             }
         }
         
         func match(_ value: Substring) -> (endIndex: String.Index, definition: OperatorDefinition)? {
-            if let char = value.first, let partialMatch = self.nextMatch[char] {
-                if let fullMatch = partialMatch.match(value.dropFirst(1)) {
-                    return fullMatch
-                } else if let definition = self.definition {
-                    return (value.startIndex, definition) // TO DO: check this isn't off-by-one
+            guard let char = value.first else { // else reached end
+                if let definition = self.definition {
+                    return (value.endIndex, definition)
+                } else {
+                    return nil
                 }
+            }
+            if let fullMatch = self.matches[char]?.match(value.dropFirst(1)) {
+                return fullMatch
+            }
+            if let definition = self.definition {
+                return (value.startIndex, definition) // TO DO: check this isn't off-by-one
             }
             return nil
         }
     }
     
-    private var symbolMatcher = PartialMatch()
+    private var symbolMatcher = PartialMatch() // (note: symbolMatcher.description should always be nil)
     
     
+    private func add(_ name: OperatorDefinition.Name, _ definition: OperatorDefinition) {
+        switch name {
+        case .word(let n):
+            assert(!n.isEmpty)
+            self.wordOperators[n] = definition
+        case .symbol(let n):
+            assert(!n.isEmpty)
+            self.symbolOperators[n] = definition
+            self.symbolMatcher.add(Substring(n), definition)
+        }
+    }
     
     func add(_ definition: OperatorDefinition) {
-        
+        self.add(definition.name, definition)
+        for name in definition.aliases { self.add(name, definition) }
     }
     
     
     // TO DO: should matchWord/matchSymbols take token and return tokens?
     
     func matchWord(_ value: Substring) -> OperatorDefinition? {
+        assert(!value.isEmpty)
         return self.wordOperators[value.lowercased()]
     }
     
     func matchSymbols(_ value: Substring) -> [(Substring, OperatorDefinition)] { // returned substrings should be slices of same underlying string as value
+        assert(!value.isEmpty)
         if let result = self.symbolOperators[String(value)] { return [(value, result)] }
         var symbols = value
         var result = [(Substring, OperatorDefinition)]()
-        while symbols != "" {
+        while !symbols.isEmpty {
             if let (endIndex, definition) = self.symbolMatcher.match(symbols) {
                 result.append((symbols.prefix(upTo: endIndex), definition))
                 symbols = symbols.suffix(from: endIndex)
@@ -171,7 +195,7 @@ struct OperatorReader: TokenReader {
         // TO DO: ignore token
         case .letters where !(token.isRightContiguous && reader.next().0.form == .colon): // ignore if it's a field/argument `label:`
             if let definition = self.operators.matchWord(token.content) {
-                (token, reader) = (token.extract(.lexeme(definition)), reader)
+                token = token.extract(.lexeme(definition))
             }
         case .symbols:
             let matches = self.operators.matchSymbols(token.content)
@@ -186,10 +210,11 @@ struct OperatorReader: TokenReader {
                     reader = UnpopToken(token.extract(.lexeme(definition), from: substr.startIndex, to: substr.endIndex), reader)
                     idx = substr.startIndex
                 }
-                if idx == token.content.startIndex { // put any non-operator symbols before first operator back onto token stream
+                
+                if idx != token.content.startIndex { // return non-operator .symbols that appears before first operator
+                    token = token.extract(.symbols, from: token.content.startIndex, to: idx)
+                } else { // return first operator
                     (token, reader) = reader.next()
-                } else {
-                    (token, reader) = (token.extract(.symbols, from: token.content.startIndex, to: idx), reader)
                 }
             }
         default: ()

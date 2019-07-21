@@ -228,7 +228,18 @@ struct InternalError: NativeError {
 
 enum BadSyntax: NativeError { // while tokens containing invalid code are marked as bad syntax, they do not constitute syntax errors if they appear within a string or annotation literal; however, this can only be determined when the script is parsed in full - all a single-line lexer can do is mark it as a potential issue and move on to the next token
     
-    var description: String { return String(describing: self) }
+    var description: String {
+        switch self {
+        case .unterminatedAnnotation:   return "unterminated annotation"
+        case .unterminatedList:         return "unterminated list"
+        case .unterminatedRecord:       return "unterminated record"
+        case .unterminatedGroup:        return "unterminated group"
+        case .unterminatedQuotedName:   return "unterminated quotedname"
+        case .unterminatedQuotedString: return "unterminated quoted string"
+        case .missingExpression:        return "missing expression"
+        case .missingName:              return "missing name"
+        }
+    }
     
     // TBC: case names and human-readable descriptions
     

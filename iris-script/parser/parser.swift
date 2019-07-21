@@ -16,6 +16,13 @@
 
 // Q. how will libraries regulate operator injection, to provide safe, predictable namespace customization even when an older/newer version of a library is imported [since library developers may need/wish to add/remove/modify operator definitions]; one option is to version library's operator definitons separately to library releases, e.g. `«include: @com.example.foo(>1.2).syntax[.1], @net.example.bar.syntax.3»` (or `«exclude: @stdlib.syntax»`)
 
+
+// TO DO: `foo-1` is ambiguous: could be `foo{-1}` or `(foo)-(1)`; decide which is likelier representation (probably `foo - 1`) and have pretty printer+autocorrect normalize (marking for approval), or mark for user to clarify, with `foo -1` and `foo - 1` as the available choices
+
+// TO DO: also need to decide how grouping parens `(…)` are represented in AST: for efficiency we want to eliminate [parens-based] Block values where not required (single expr, where parens is used to adjust operator precedence/argument associative or provide cosmetic clarity), but should annotate the AST node (e.g. Command value) so that pp knows to put it back in (particularly elective parens; pp should automatically refer to operator tables to determine where parens are required for precedence)
+
+
+
 /*
  
 1. reserved punctuation (part of core language, hardcoded into lexer):

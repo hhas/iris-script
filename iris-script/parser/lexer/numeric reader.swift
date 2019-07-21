@@ -64,7 +64,7 @@ struct NumericReader: TokenReader {
                 if case .digits = token3.form {
                     endToken = token3
                     nextReader = reader3
-                    // TO DO: also optional exponent
+                    // TO DO: also optional exponent (caution: this will include matching +/-)
                 }
             }
             let content = self.code[startToken.content.startIndex..<endToken.content.endIndex]
@@ -77,6 +77,7 @@ struct NumericReader: TokenReader {
         return nil
     }
     
+    /*
     func readSignedNumber(_ token: Token, _ reader: TokenReader) -> (Token, TokenReader)? {
         // check for +/- sign
         if case .symbols = token.form, numericSignCharacters.contains(token.content.last!), token.isRightContiguous {
@@ -86,21 +87,28 @@ struct NumericReader: TokenReader {
             return self.readNumber(token, reader)
         }
     }
+    */
+    
+    // Q. how to read `1mod2` vs `1 mod2` vs `1mod 2` (only variation that isn't an issue is `1 mod 2`)
+    
+    // `foo1. 2` vs `foo 1.2` vs `foo 1. 2`
     
     
     func next() -> (Token, TokenReader) {
+        
+        // one possible solution: ignore the preceding token entirely, match .digits only, and read as unsigned number when found; that leaves parser to reduce unary +/- .sign followed by .number token to .number, negating its value as appropriate [i.e. the parser is constant-folding the unary `+`/`-` operator and the unsigned number, the only catch being that the parser shouldn't have any knowledge of operators that isn't provided by a library]
+        
         var (token, reader) = self.reader.next()
-        if token.isPunctuation { // punctuation as expr delimiter // TO DO: this is not ideal as this reader shouldn't need to examine preceding punctuation (all it wants to know is that the first token in number is left-delimited)
-            let (token1, reader1) = reader.next()
-            if let (token2, reader2) = self.readSignedNumber(token1, reader1) {
-                (token, reader) = (token, UnpopToken(token2, NumericReader(reader2))) // kludge: put the parsed number back on the token stream so that we can return the punctuation token as-is
-            }
-        } else if token.hasLeadingWhitespace { // whitespace as expr delimiter
-            if let (token1, reader1) = self.readSignedNumber(token, reader) {
+   //     if token.isPunctuation { // punctuation as expr delimiter // TO DO: this is not ideal as this reader shouldn't need to examine preceding punctuation (all it wants to know is that the first token in number is left-delimited) // TO DO: need better delimiter detection, e.g. an operator will also delimit, as should a fully parsed value; problem: +/- will be matched as operators when operator reader is first
+   //         let (token1, reader1) = reader.next()
+   //         if let (token2, reader2) = self.readSignedNumber(token1, reader1) {
+   //             (token, reader) = (token, UnpopToken(token2, NumericReader(reader2))) // kludge: put the parsed number back on the token stream so that we can return the punctuation token as-is
+   //         }
+   //     } else if token.hasLeadingWhitespace { // whitespace as expr delimiter
+            if let (token1, reader1) = self.readNumber(token, reader) {
                 (token, reader) = (token1, reader1)
             }
-        }
-        // TO DO: this smells, as it
+   //     }
         return (token, NumericReader(reader)) // important: each reader adapter is responsible for redecorating the next reader with itself; we could push this behind an API, thus ensuring result of next() is automatically redecorated [as opposed to having to redecorate at every `return`, as above], though that adds complexity (particularly if an adapter *doesn't* want to redecorate remaining token stream [really not sure if that's a good idea though, as only reason to switch decorators is when context-sensitive parsing the contents of a code block, which 1. requires multi-line support + 2. the means to reattach the original decorator once end of block is reached; given that composable linereaders' job is to fully tokenize the code, not to parse it (excepting where reducing composite token sequences such as those that comprise number literals to atomic form)])
     }
 }

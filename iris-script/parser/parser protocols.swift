@@ -67,7 +67,7 @@ let wordCharacters     = _coreCharacters.inverted.subtracting(symbolCharacters).
 
 // -/+ aren't part of core syntax, but do need to be recognized when processing numeric literals so define matchable symbols here
 // TO DO: should pretty printer replace ASCII +/- chars with true Unicode symbols?
-let minusCharacters    = CharacterSet(charactersIn: "-\u{2212}\u{FF0D}\u{FE63}")
+let minusCharacters    = CharacterSet(charactersIn: "-\u{2212}\u{FF0D}\u{FE63}") // ASCII hyphen, minus sign
 let plusCharacters     = CharacterSet(charactersIn: "+\u{FF0B}")
 let numericSignCharacters = minusCharacters.union(plusCharacters)
 
@@ -92,7 +92,7 @@ let exponentMarkerCharacters = CharacterSet(charactersIn: "eE") // scientific-no
 extension String {
 
     func conforms(to characters: CharacterSet) -> Bool { // checks string contains characters in given set only
-        return self != "" && CharacterSet(charactersIn: self).subtracting(characters) == []
+        return !self.isEmpty && CharacterSet(charactersIn: self).subtracting(characters).isEmpty
     }
 
 }

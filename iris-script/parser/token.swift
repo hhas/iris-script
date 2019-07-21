@@ -73,6 +73,9 @@ struct Token: CustomStringConvertible {
         
         // how is annotation represented? lexer may want to treat as atomic, with only rule being recursive balancing of nested `«…»` (caveat quoting?)
         
+//        case plus
+//        case minus
+        
         // other contiguous characters
         case digits             // 0-9 // Q. should this cover all numerals (e.g. Arabic, Thai, FE, etc scripts have their own numeric glyphs)
         
@@ -116,6 +119,8 @@ struct Token: CustomStringConvertible {
             case (.at, .at): return true
             case (.stringDelimiter, .stringDelimiter): return true
             case (.nameDelimiter, .nameDelimiter): return true
+//            case (.plus, .plus): return true
+//            case (.minus, .minus): return true
             case (.digits, .digits): return true
             case (.symbols, .symbols): return true
             case (.letters, .letters): return true
@@ -155,6 +160,14 @@ struct Token: CustomStringConvertible {
         "'": .nameDelimiter,
         "‘": .nameDelimiter,
         "’": .nameDelimiter,
+        /*
+        "+": .plus,
+ "\u{FF0B}": .plus,
+        "-": .minus,
+ "\u{2212}": .minus,
+ "\u{FF0D}": .minus,
+ "\u{FE63}": .minus,
+ */
     ]
     
     let form: Form   // enum

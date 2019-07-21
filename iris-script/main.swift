@@ -41,18 +41,25 @@ wibble {“hello”, 5}
 """
 
 
-script = "1a2" // '2' passes thru as .digits because numeric reader considers it not left-delimited (i.e. 'a2' is a valid command name)
+
+script = "‘foo’ 1*-2+a3" // note that `a3` is two tokens: <.letters "a"><.value(3) "3">; this'll require reducing to something like `.value(Command("a3"))` or `.lexeme(Identifier("a3"))`
+
+//script = "3𝓍²＋5𝓎－1" // this requires some custom lexing
+
 
 let operatorRegistry = OperatorRegistry()
-operatorRegistry.add(OperatorDefinition("*")!)
+operatorRegistry.add(OperatorDefinition("×", aliases: ["*"]))
+operatorRegistry.add(OperatorDefinition("÷", aliases: ["/"]))
+operatorRegistry.add(OperatorDefinition("\u{FF0B}", aliases: ["+"])) // full-width plus
+operatorRegistry.add(OperatorDefinition("\u{2212}", aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
 let operatorReader = newOperatorReader(for: operatorRegistry)
 
 
 let d1 = Date()
 
-//let doc = EditableScript(script, {operatorReader(NumericReader($0))})
+let doc = EditableScript(script, {NumericReader(operatorReader($0))})
 
-let doc = EditableScript(script)
+//let doc = EditableScript(script)
 let d2 = Date()
 
 
