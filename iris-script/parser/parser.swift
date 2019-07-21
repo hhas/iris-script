@@ -14,7 +14,7 @@
 
 // operator tables are populated when loading libraries (Q. could/should operator availability be scoped? if limited to a single, global operator table, operators must be imported at top of script, before any other code); need to decide how/when libraries are imported (e.g. operator definitions should be available while incrementally parsing, e.g. in code editor)
 
-// Q. how will libraries regulate operator injection, to provide safe, predictable namespace customization even when an older/newer version of a library is imported [since library developers may need/wish to add/remove/modify operator definitions]; one option is to version library's operator definitons separately to library releases, e.g. `«use: @com.example.foo(>1.2).syntax[.1], @net.example.bar.syntax.3»`
+// Q. how will libraries regulate operator injection, to provide safe, predictable namespace customization even when an older/newer version of a library is imported [since library developers may need/wish to add/remove/modify operator definitions]; one option is to version library's operator definitons separately to library releases, e.g. `«include: @com.example.foo(>1.2).syntax[.1], @net.example.bar.syntax.3»` (or `«exclude: @stdlib.syntax»`)
 
 /*
  

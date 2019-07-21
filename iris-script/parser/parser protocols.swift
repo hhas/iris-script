@@ -27,7 +27,7 @@ protocol TokenReader { // common API by which [partial] lexers and parsers can b
 
 
 
-protocol Lexeme { // the first-stage LineReader lexer is only concerned with identifying core punctuation and contiguous digits, and does not decompose or differentiate other content beyond .word tokens, leaving downstream readers to deal with those, e.g. when using library-defined operators, `OperatorLexeme` should describe the
+protocol Lexeme { // the first-stage LineReader lexer is only concerned with identifying core punctuation and contiguous digits, and does not decompose or differentiate other content beyond .letters tokens, leaving downstream readers to deal with those, e.g. when using library-defined operators, `OperatorLexeme` should describe the
     
     // TO DO: what common interface should Lexemes expose
 }
@@ -89,6 +89,13 @@ let exponentMarkerCharacters = CharacterSet(charactersIn: "eE") // scientific-no
 
 
 
+extension String {
+
+    func conforms(to characters: CharacterSet) -> Bool { // checks string contains characters in given set only
+        return self != "" && CharacterSet(charactersIn: self).subtracting(characters) == []
+    }
+
+}
 
 
 extension CharacterSet { // being UTF16-y, CharacterSet works with single codepoints, so won't work outside of base plane // TO DO: what to replace CharacterSet with?
@@ -114,6 +121,9 @@ extension CharacterSet { // convenience extension, allows CharacterSet instances
     static func ~= (a: CharacterSet, c: Character) -> Bool {
         guard let b = c.unicodeScalars.first, c.unicodeScalars.count == 1 else { return false }
         return a ~= b
+    }
+    static func ~= (a: CharacterSet, s: String) -> Bool {
+        return s.conforms(to: a)
     }
 }
 

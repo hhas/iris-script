@@ -24,7 +24,7 @@ import Foundation
 // for booleans, define true and false, with `nothing` coercing to false and everything else coercing to true? (is this sufficient to support Icon-style chaining, e.g. `3 < x < 6`?)
 
 
-protocol Value: Mutator, CustomStringConvertible { // TO DO:
+protocol Value: Mutator, CustomStringConvertible { // TO DO: Codable (Q. use Codable for AE bridging?)
     
     var description: String { get }
     

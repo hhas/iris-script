@@ -23,11 +23,11 @@ class EditableScript: CustomStringConvertible, CustomDebugStringConvertible { //
     
     var debugDescription: String { return self.lines.enumerated().map{ "\(String(format: "%4i", $0+1)). \($1.tokens.map{ "\($0)" }.joined(separator: "\n      "))" }.joined(separator: "\n") }
     
-    typealias LineReaderDecorator = (TokenReader) -> TokenReader // input is usually a LineReader struct, but could also be UnpopToken or other adapter (e.g. when autocorrect is attempting to find best-guess solutions)
+    typealias LineReaderAdapter = (TokenReader) -> TokenReader // input is usually a LineReader struct, but could also be UnpopToken or other adapter (e.g. when autocorrect is attempting to find best-guess solutions)
     
     private var counter: Int = 0
     
-    private let decorateLineReader: LineReaderDecorator
+    private let lineReaderAdapter: LineReaderAdapter
     
     // TO DO: how to make each line uniquely identifiable (e.g. include UUID or counter? or make Line a class and compare on object id?) e.g. when determining line no., need to get index of line within lines array each time (since edits may insert/remove lines)
     
@@ -51,8 +51,10 @@ class EditableScript: CustomStringConvertible, CustomDebugStringConvertible { //
     
     var code: String { return self.lines.map{ $0.code }.joined(separator: "\n") }
     
-    init(_ code: String, _ decorateLineReader: @escaping LineReaderDecorator = NumericReader.init) {
-        self.decorateLineReader = decorateLineReader
+    // TO DO: not sure how practical it is to fully tokenize all lines on initialization; we might want separate phases for reading top-level annotations (which include information needed to populate operator tables, localize literal value readers, set debug hooks, etc) vs reading code body (which requires the above config work to be completed first); obvious way to do this is to start with an AnnotationReader (if it's a single-line reader it'll need the parser to stitch together multiline annotations; if it's a multi-line reader it'll need applied before the main script reader, to which it supplies the parsed annotations and the offset at which to start reading code tokens; either way, it requires switching parsing modes at some point, although we can maybe limit switching points to a linebreak)
+    
+    init(_ code: String, _ lineReaderAdapter: @escaping LineReaderAdapter = NumericReader.init) { // default adapter will eventually be a composite of multiple adapters
+        self.lineReaderAdapter = lineReaderAdapter
         self.counter += 1
         let count = self.counter
         self.lines = code.split(omittingEmptySubsequences: false, whereSeparator: linebreakCharacters.contains).map({
@@ -60,7 +62,7 @@ class EditableScript: CustomStringConvertible, CustomDebugStringConvertible { //
             let code = String(line)
             var tokens = [Token]()
             if let lineReader = LineReader(code) {
-                var lexer: TokenReader = decorateLineReader(lineReader)
+                var lexer: TokenReader = lineReaderAdapter(lineReader)
                 var token: Token
                 repeat {
                     (token, lexer) = lexer.next()

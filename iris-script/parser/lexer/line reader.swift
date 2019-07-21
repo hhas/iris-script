@@ -40,7 +40,7 @@ import Foundation
  
 - non-whitespace control characters and illegal Unicode (.invalid)
 
-- all other contiguous chars (.word) (in future this might be inclusive [L*], rather than exclusive [everything but the above], with .invalid as the catchall)
+- all other contiguous chars (.letters) (in future this might be inclusive [L*], rather than exclusive [everything but the above], with .invalid as the catchall)
  
  */
 
@@ -162,7 +162,7 @@ struct LineReader: TokenReader { // don't think lexer should care if it's at sta
                 form = .digits
                 tokenEnd = self.advanceOver(digitCharacters)
             case wordCharacters:
-                form = .word
+                form = .letters
                 tokenEnd = self.advanceOver(wordCharacters)
             case symbolCharacters: // non-core punctuation and symbols (some chars might be aliased to core punctuation in future i18n support, some may be library-defined operator names; the rest will be [most likely] flagged as bad syntax and ignored/discarded); caution: this includes +/- characters, which may be prefixed to number literals
                 form = .symbols

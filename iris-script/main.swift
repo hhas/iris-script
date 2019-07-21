@@ -17,7 +17,7 @@ import Foundation
 // Q. what about dead code detection? (e.g. given the script `1, 2, 3.`, `1` and `2` [being side-effectless] are no-ops, while `3` is only relevant if the evaluator is connected to an output console); flagging 'useless' or 'suspect' code may be most useful in parenthesized groups, e.g. `(1,2+3)` will discard the 1 and return 5, but `(foo,2+3)` will return 5 while also performing a potentially effectful `foo` command; being parenthesized, that expr could be buried deep in a much larger expr (while the same effect can be achieved if a `foo` handler is defined that returns its input parameter as output while also performing its side-effect, that requires an explicit definition of `foo` whereas a parenthesized expr sequence works with any existing handler)
 
 
-let script = """
+var script = """
 
 123, 4.56, 789.
 -1.2345e7
@@ -41,7 +41,17 @@ wibble {“hello”, 5}
 """
 
 
+script = "1a2" // '2' passes thru as .digits because numeric reader considers it not left-delimited (i.e. 'a2' is a valid command name)
+
+let operatorRegistry = OperatorRegistry()
+operatorRegistry.add(OperatorDefinition("*")!)
+let operatorReader = newOperatorReader(for: operatorRegistry)
+
+
 let d1 = Date()
+
+//let doc = EditableScript(script, {operatorReader(NumericReader($0))})
+
 let doc = EditableScript(script)
 let d2 = Date()
 

@@ -6,6 +6,9 @@
 import Foundation
 
 
+// TO DO: where to define core punctuation's adjoining whitespace rules? (presumably full parser will digest these pattern-matching rules, along with pattern-matching rules for command grammar, and library-defined operator patterns)
+
+
 // TO DO: should lexer/parser be concerned with NFC/NFD?
 
 
@@ -27,6 +30,15 @@ struct Token: CustomStringConvertible {
         
         var isFirst: Bool { return self == .first || self == .full }
         var isLast: Bool { return self == .last || self == .full }
+        
+        func span(to endPosition: Position) -> Position {
+            switch (self, endPosition) {
+            case (.full, .full), (.first, .last): return .full
+            case (.first, .middle):               return .first
+            case (.middle, .last):                return .last
+            default:                              return .middle
+            }
+        }
     }
     
     enum Form: Equatable { // core punctuation, plus digits and non-digit text
@@ -66,9 +78,9 @@ struct Token: CustomStringConvertible {
         
         case symbols // non-core punctuation/symbol character
         
-        case word // undifferentiated text (may be command name, operator name, numeric prefix/suffix, etc, or a mixture of these; it's up to downstream readers to interpret as appropriate)
+        case letters // undifferentiated text (may be command name, operator name, numeric prefix/suffix, etc, or a mixture of these; it's up to downstream readers to interpret as appropriate) // TO DO: may want to rename 'letters', to avoid singular vs plural inconsistency with other names
         
-        case quotedName(String) // 'WORD' (quotes may be any of '‘’; WORD may be any character other than whitespace[?] or core punctuation) // single-quotes always appear on single line, without leading/trailing whitespace around the quoted text (the outer edges of the quotes should always be separator/delimiter punctuation or whitespace, although we do need to confirm this, e.g. it's probably reasonable [and sensible] to treat `'foo'mod'bar'` as bad syntax, but what about `'foo'*'bar'`? note that `'foo'.'bar'` is legal [if ugly], as `.` is core punctuation and has its own whitespace-based disambiguation rules)
+        case quotedName(String) // 'WORD' (quotes may be any of '‘’; WORD may be any character other than linebreaks or single/double/annotation quotes) // single-quotes always appear on single line, without leading/trailing whitespace around the quoted text (the outer edges of the quotes should always be separator/delimiter punctuation or whitespace, although we do need to confirm this, e.g. it's probably reasonable [and sensible] to treat `'foo'mod'bar'` as bad syntax, but what about `'foo'*'bar'`? note that `'foo'.'bar'` is legal [if ugly], as `.` is core punctuation and has its own whitespace-based disambiguation rules)
         
         // tokens created by single-task interim parsers
         case lexeme(Lexeme) // Swift enums are not runtime-extensible so we provide an 'extensibility' slot; used by OperatorReader (and, potentially, other partial readers) when decomposing words
@@ -78,7 +90,7 @@ struct Token: CustomStringConvertible {
         
         // TO DO: separate case for haltingError? (readers would return this to indicate it's not worth continuing; single-to-multiline readers would need to check the final token returned by each line reader and discard rest of job; alternatively, this check could be implemented as dedicated single-line and multi-line readers that are inserted into reader chains when needed, in which case it's probably simpler for it to detect .error tokens and decide which categories of error should trigger a halt)
         
-        case invalid // anything in CharacterSet.illegalCharacters, non-printing control characters [not counting whitespace/linebreaks] (Q. how many non-valid character constructs are there in Unicode standard/ObjC UTF16 NSStrings/Swift Strings; i.e. what do we need to look for, vs what can we trust Swift to reject outright before it ever gets to us?)
+        case invalid // characters that are not allowed anywhere in code: anything in CharacterSet.illegalCharacters, non-printing control characters [not counting whitespace/linebreaks] (Q. how many non-valid character constructs are there in Unicode standard/ObjC UTF16 NSStrings/Swift Strings; i.e. what do we need to look for, vs what can we trust Swift to reject outright before it ever gets to us?)
 
         case eol
         
@@ -86,14 +98,6 @@ struct Token: CustomStringConvertible {
         
         static func ==(lhs: Form, rhs: Form) -> Bool { // caution: this only indicates if two tokens have the same form; it does not compare content
             switch (lhs, rhs) {
-            case (.comma, .comma): return true
-            case (.semicolon, .semicolon): return true
-            case (.colon, .colon): return true
-            case (.period, .period): return true
-            case (.query, .query): return true
-            case (.exclamation, .exclamation): return true
-            case (.hash, .hash): return true
-            case (.at, .at): return true
             case (.startAnnotation, .startAnnotation): return true
             case (.endAnnotation, .endAnnotation): return true
             case (.startList, .startList): return true
@@ -102,10 +106,19 @@ struct Token: CustomStringConvertible {
             case (.endRecord, .endRecord): return true
             case (.startGroup, .startGroup): return true
             case (.endGroup, .endGroup): return true
+            case (.comma, .comma): return true
+            case (.semicolon, .semicolon): return true
+            case (.colon, .colon): return true
+            case (.period, .period): return true
+            case (.query, .query): return true
+            case (.exclamation, .exclamation): return true
+            case (.hash, .hash): return true
+            case (.at, .at): return true
             case (.stringDelimiter, .stringDelimiter): return true
+            case (.nameDelimiter, .nameDelimiter): return true
             case (.digits, .digits): return true
             case (.symbols, .symbols): return true
-            case (.word, .word): return true
+            case (.letters, .letters): return true
             case (.quotedName(_), .quotedName(_)): return true
             case (.lexeme(_), .lexeme(_)): return true
             case (.value(_), .value(_)): return true
@@ -161,6 +174,33 @@ struct Token: CustomStringConvertible {
         self.position = position
     }
     
+    func extract(_ form: Form, from startIndex: Substring.Index, to endIndex: Substring.Index) -> Token {
+        assert (startIndex != endIndex) // TO DO: or return nil?
+        let position: Position
+        switch self.position {
+        case .full:
+            if startIndex == self.content.startIndex {
+                position = endIndex == self.content.endIndex ? .full : .first
+            } else {
+                position = endIndex == self.content.endIndex ? .last : .middle
+            }
+        case .first where startIndex == self.content.startIndex:
+            position = .first
+        case .last where endIndex == self.content.endIndex:
+            position = .last
+        default:
+            position = .middle
+        }
+        return Token(form, (startIndex == self.content.startIndex ? self.whitespaceBefore : nil), self.content[startIndex..<endIndex],
+                           (endIndex == self.content.endIndex ? self.whitespaceAfter : nil), position)
+    }
+    
+    func extract(_ form: Form) -> Token {
+        return Token(form, self.whitespaceBefore, self.content, self.whitespaceAfter, self.position)
+    }
+    
+    // caution: these only indicate presence/absence of adjoining whitespace; they do not indicate if contiguous tokens are self-delimiting (e.g. `foo123` vs `foo]`; `123.45` vs `123. 45`); only parsers can determine that (this is a problem for e.g. numeric parser, which needs to know start of number match is left-delimited)
+    
     var hasLeadingWhitespace: Bool { return self.whitespaceBefore != nil || self.position.isFirst }
     var hasTrailingWhitespace: Bool { return self.whitespaceAfter != nil || self.position.isLast }
     
@@ -169,15 +209,10 @@ struct Token: CustomStringConvertible {
     
     var isContiguous: Bool { return self.isLeftContiguous && self.isRightContiguous }
 
-    var isPunctuation: Bool {
-        switch self.form {
-        case .startAnnotation, .endAnnotation, .startList, .endList, .startRecord, .endRecord, .startGroup, .endGroup,
-             .comma, .semicolon, .colon, .period, .query, .exclamation, .hash, .at: return true // caution: copied from corePunctuation; update this whenever corePunctuation is modified
-        default: return false
-        }
-    }
+    var isPunctuation: Bool { return Token.corePunctuation.values.contains(self.form) }
     var isDigits: Bool { if case .digits = self.form { return true } else { return false } }
-    var isWord: Bool { if case .word = self.form { return true } else { return false } }    
+    var isLetters: Bool { if case .letters = self.form { return true } else { return false } }
+    var isSymbols: Bool { if case .symbols = self.form { return true } else { return false } }
     var isEnd: Bool { if case .eol = self.form { return true } else { return false } }
 }
 
