@@ -16,13 +16,22 @@ struct Block: ComplexValue { // caution: this does not capture lexical scope
 
     let nominalType: Coercion = asBlock
     
-    let data: [Value]
+    enum Style {
+        case sentence(terminator: Token) // terminator may be .period, .query, .exclamation
+        case parenthesis
+        case custom(definition: OperatorDefinition, terminator: Token, delimiter: Token)
+    }
     
-    init(_ data: [Value]) {
+    let data: [Value]
+    let style: Style // pretty-printer should format blocks as-per user preference
+    
+    init(_ data: [Value], style: Style = .parenthesis) {
         self.data = data
+        self.style = style
     }
     
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
+        // TO DO: how to customize evaluation behavior when `?`/`!` modifiers are used
         var result: Value = nullValue
         for value in self.data {
             // TO DO: what should we do with result?

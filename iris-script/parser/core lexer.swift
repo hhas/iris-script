@@ -1,25 +1,20 @@
 //
-//  line reader.swift
+//  core lexer.swift
 //  iris-script
 //
 
-//  lexing is performed per-line and provides a degree of customization via adapters
+//  given a single line of code, separates core punctuation from .letters, .symbols, and .digits; any adjacent whitespace is attached to the returned Token
 
-//  - the basic LineReader lexer converts a single line of code into the initial token stream; it is solely concerned with distinguishing core punctuation (which has fixed meaning), digits, symbols, words, and whitespace; assigning additional meaning (e.g. identifying numbers and operators) is left to downstream adapters
+//
 
-//  - the NumericReader adapter is a single-task parser that matches contiguous token sequences representing complete numbers and reduces them to atomic .value tokens; e.g. the .symbol `-` followed by .digits `123` followed by .period `.` followed by .digits `45` is reduced to .value `Number(-123.45)`; all other tokens are passed thru unchanged
-
-//  - the OperatorReader adapter extends the basic LineReader lexer, adding the ability to identify library-defined operator names within undifferentiated symbols and word tokens and split them into their own tokens
-
-
-// be aware that not all lexed tokens will eventually reduce to code: tokens subsequently found to lie within string/annotation literals are ignored and discarded when the code is parsed in full
+// b e aware that not all lexed tokens will eventually reduce to code: tokens subsequently found to lie within string/annotation literals are ignored and discarded when the script is parsed in full
 
 
 
-// TO DO: how to handle +/- symbols? the numeric reader expects them to be categorized as .symbol, but the operator reader wants to recategorize them as lexemes (prefix/infix math operators)
+// TO DO: how to handle +/- symbols? the numeric reader expects them to be categorized as .symbol, but the operator reader wants to recategorize them as operators (prefix/infix math operators)
 
 
-// one advantage of componentizing lexer and parser is that we can create specialized parsers, e.g. a JSON-like pure-data format might use LineReader + NumericReader but omit OperatorReader, feeding into a much simplified document parser that treats all remaining words and symbols as syntax errors
+// one advantage of componentizing lexer and parser is that we can create specialized parsers, e.g. a JSON-like pure-data format might use CoreLexer + NumericReader but omit OperatorReader, feeding into a much simplified document parser that treats all remaining words and symbols as syntax errors
 
 
 // Q. how does this compare to mutable lexer than can backtrack over previously-built tokens? (i.e. while we don't pay any extra by creating new immutable lexer structs with incremented cursor indexes vs mutating the cursor index in a single class-based lexer object, we do lose the facility to cache tokens created during speculative lookaheads; i.e. backtracking to an earlier lexer state means discarded tokens must be recreated again [although, touch-wood, any backtracking we do in practice will be minimal, rarely discarding more than 1 or 2 tokens]; plus, of course, once an individual line is fully tokenized, those tokens are cached by EditableScript, and it's whole-script parsing where costs become significant)
@@ -28,7 +23,7 @@
 import Foundation
 
 
-/* the basic single-line lexer (LineReader) identifies:
+/* the basic single-line lexer (CoreLexer) identifies:
 
 - reserved (core) punctuation (expr separators and grouping delimiters)
 
@@ -81,10 +76,10 @@ import Foundation
 
 
 
-// TO DO: should next reader be bound to Token? (this'd make token structs a bit fatter, but has the benefit that interactive autosuggest/autocorrect can easily look at a line's unresolved tokens and try different solutions, to see which provides the best outcome; note: given that LineReader is scanning the original string, this might require some jiggery to step over the original, unwanted token[s], using UnpopToken to 'reinsert' our attempted 'fix' tokens, then get the whole thing re-reading as before - which means the unpop needs to be wrapped in the line reader's adapters as well, which means passing it thru EditableScript.reader())
+// TO DO: should next reader be bound to Token? (this'd make token structs a bit fatter, but has the benefit that interactive autosuggest/autocorrect can easily look at a line's unresolved tokens and try different solutions, to see which provides the best outcome; note: given that CoreLexer is scanning the original string, this might require some jiggery to step over the original, unwanted token[s], using UnpopToken to 'reinsert' our attempted 'fix' tokens, then get the whole thing re-reading as before - which means the unpop needs to be wrapped in the line reader's adapters as well, which means passing it thru EditableScript.reader())
 
 
-struct LineReader: TokenReader { // don't think lexer should care if it's at start of line or start of script; that's the parser's problem when reading multiline exprs (e.g. lists/records wrapped over multiple lines); note that trailing `.` after digits at EOL is expr separator; the numeric parser (which is strictly single-line) will detect the incomplete match for [e.g.] `123.` and split off the `.` to yield `.value(123)` and `.periodSeparator` tokens, leaving next [block] parser to deal with trailing period (comma and period separators describe blocks, e.g. `To foo{} do_this, do_that, do_the_other. 123.` should parse as `(to foo{} (do_this, do_that, do_the_other)) (123)`. Longer blocks may be delimited using `do…done` for readability, giving us 3 different syntaxes to write a block.)
+struct CoreLexer: LineReader { // don't think lexer should care if it's at start of line or start of script; that's the parser's problem when reading multiline exprs (e.g. lists/records wrapped over multiple lines); note that trailing `.` after digits at EOL is expr separator; the numeric parser (which is strictly single-line) will detect the incomplete match for [e.g.] `123.` and split off the `.` to yield `.value(123)` and `.periodSeparator` tokens, leaving next [block] parser to deal with trailing period (comma and period separators describe blocks, e.g. `To foo{} do_this, do_that, do_the_other. 123.` should parse as `(to foo{} (do_this, do_that, do_the_other)) (123)`. Longer blocks may be delimited using `do…done` for readability, giving us 3 different syntaxes to write a block.)
 
     let code: String // the entire script // TO DO: should probably be pre-split into single lines; that way, each single-line Lexer instance isn't affected when changes are made to other lines (only the modified lines need new lexers)
     let leadingWhitespace: Substring?
@@ -129,8 +124,8 @@ struct LineReader: TokenReader { // don't think lexer should care if it's at sta
         return self.code.index(after: self.offset)
     }
     
-    func next() -> (Token, TokenReader) {
-        if self.offset == self.code.endIndex { return (nullToken, nullReader) } // always return .eol once line reader is exhausted // caution: the EOL token is purely a marker; unlike other tokens it does not capture the line's trailing whitespace or endIndex // note: while we could eliminate .eof by returning `(Token,TokenReader)?`, the current arrangement arguably makes binding the result simpler (less `if let tmp =…` shuffling), and .eol tokens may well be needed anyway when recombining the output of multiple single-line lexers [with partial parsing of numerics and operators] in order to perform the final multi-line parse by which a complete AST (or completed partial sub-trees plus rebalancing 'bad syntax' tokens when the script's syntax is not 100% correct) is assembled
+    func next() -> (Token, LineReader) {
+        if self.offset == self.code.endIndex { return (nullToken, nullReader) } // always return .eol once line reader is exhausted // caution: the EOL token is purely a marker; unlike other tokens it does not capture the line's trailing whitespace or endIndex // note: while we could eliminate .eof by returning `(Token,LineReader)?`, the current arrangement arguably makes binding the result simpler (less `if let tmp =…` shuffling), and .eol tokens may well be needed anyway when recombining the output of multiple single-line lexers [with partial parsing of numerics and operators] in order to perform the final multi-line parse by which a complete AST (or completed partial sub-trees plus rebalancing 'bad syntax' tokens when the script's syntax is not 100% correct) is assembled
         // read one token (self.offset = first character of new token)
         let form: Token.Form
         let tokenEnd: String.Index
@@ -193,7 +188,7 @@ struct LineReader: TokenReader { // don't think lexer should care if it's at sta
         }
         let position: Token.Position = self.isFirst ? .first : nextOffset == self.code.endIndex ? .last : .middle
         let result = Token(form, self.leadingWhitespace, content, trailingWhitespace, position)
-        let lexer = LineReader(code: self.code, at: nextOffset, after: trailingWhitespace)
+        let lexer = CoreLexer(code: self.code, at: nextOffset, after: trailingWhitespace)
         return (result, lexer)
     }
     

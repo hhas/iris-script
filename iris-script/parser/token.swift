@@ -14,7 +14,7 @@ import Foundation
 
 struct Token: CustomStringConvertible {
     
-    // initial tokenization by LineReader is minimal, recognizing only core punctuation, contiguous digits, whitespace (as delimiter), and symbols and words (everything else); determining which tokens actually appear inside string literals and annotations [meaning they're not real tokens after all], assembling complete number literals from multiple tokens, distinguishing operator names from command names, etc is left to downstream consumers
+    // initial tokenization by CoreLexer is minimal, recognizing only core punctuation, contiguous digits, whitespace (as delimiter), and symbols and words (everything else); determining which tokens actually appear inside string literals and annotations [meaning they're not real tokens after all], assembling complete number literals from multiple tokens, distinguishing operator names from command names, etc is left to downstream consumers
     
     var description: String { // underscore before/after quoted token text indicates adjoining whitespace
         return "<.\(self.form) \(self.whitespaceBefore == nil ? "" : "_")\(self.content.debugDescription)\(self.whitespaceAfter == nil ? "" : "_")>"
@@ -66,15 +66,12 @@ struct Token: CustomStringConvertible {
         
         case stringDelimiter    // any of "“” // note: unlike other grouping delimiters (lists, records, parens, annotations), string quotes do not provide clear indication as to whether start of line is inside or outside quoted text; therefore we tokenize everything and leave the parser to figure out which it is (this is slower than tokenizing the full script, but better able to deal with extra/missing quotes, using both line-by-line balance counts and simple best-guess heuristics comparing relative frequencies of tell-tale characters and words [e.g. known command and operator names, punctuation])
         
-        case nameDelimiter      // any of '‘’ // LineReader will convert these to quotedName
+        case nameDelimiter      // any of '‘’ // CoreLexer will convert these to quotedName
         
         // no whitespace token as leading/trailing whitespace is associated with token
         // no linebreak token as lexer reads single lines only (Q. any use cases where we'd want a single lexer to scan all lines?)
         
         // how is annotation represented? lexer may want to treat as atomic, with only rule being recursive balancing of nested `«…»` (caveat quoting?)
-        
-//        case plus
-//        case minus
         
         // other contiguous characters
         case digits             // 0-9 // Q. should this cover all numerals (e.g. Arabic, Thai, FE, etc scripts have their own numeric glyphs)
@@ -86,8 +83,10 @@ struct Token: CustomStringConvertible {
         case quotedName(String) // 'WORD' (quotes may be any of '‘’; WORD may be any character other than linebreaks or single/double/annotation quotes) // single-quotes always appear on single line, without leading/trailing whitespace around the quoted text (the outer edges of the quotes should always be separator/delimiter punctuation or whitespace, although we do need to confirm this, e.g. it's probably reasonable [and sensible] to treat `'foo'mod'bar'` as bad syntax, but what about `'foo'*'bar'`? note that `'foo'.'bar'` is legal [if ugly], as `.` is core punctuation and has its own whitespace-based disambiguation rules)
         
         // tokens created by single-task interim parsers
-        case lexeme(Lexeme) // Swift enums are not runtime-extensible so we provide an 'extensibility' slot; used by OperatorReader (and, potentially, other partial readers) when decomposing words
+        case operatorName(OperatorClass) // Swift enums are not runtime-extensible so we provide an 'extensibility' slot; used by OperatorReader (and, potentially, other partial readers) when decomposing words
         case value(Value) // holds any completed value; this'd allow chained parsers to convert token stream from lexer tokens to parsed nodes, with the expectation that the final parser in chain emits a single .value containing the entire AST as a single Value [caveat the whole single-line lexing thing, which'll require some kind of 'stitcher' that tries to balance lines as best it can, inserting best-guess 'fixers' to rebalance where unbalanced]; having a pure token stream for each line is, on the one hand, a bit inefficient (string and annotation literals are presented as sequences of tokens instead of just one atomic .stringLiteral [we could optimize a bit by keeping a per-line list of where the .stringDelimiter tokens appear, allowing us to splice the string's entire content from the original code using beginning and end string indices [caution: if `""` indicates escaped quote, there will be some extra wrangling involved as the splices won't be contiguous]])
+        
+        case annotation(String) // TO DO: need to decide how/where to put annotations, and how to encode them (annotation content follows its own syntactic rules, which are specific to annotation type, e.g. structural headings and dev/user docs are in Markdown, includes/excludes are comma-delimited lists of superglobal [library] names with optional syntax version suffix), TODOs and comments are unstructured plaintext; Q. what about disabled/macro'd code? (might want to retain tokens for pretty printing)
         
         case error(NativeError) // TO DO: need one or more cases to encapsulate the various possible syntax errors that may be encountered: unbalanced quoting/grouping punctuation, missing/surplus delimiter punctuation (probably one case that takes an Error enum describing the exact issue; whether syntax errors are also Values, allowing them to appear directly in AST, or whether they should be encapsulated in a shim value (for some categories of syntax errors, a mutable shim would allow the user to correct the error in-place, e.g. adding a missing expr into the wrapper or rebalancing an unbalanced group at the wrapper's proposed best-guess boundary, enabling the captured tokens to be reduced to the final Value, without having to disturb the rest of the AST)
         
@@ -96,6 +95,7 @@ struct Token: CustomStringConvertible {
         case invalid // characters that are not allowed anywhere in code: anything in CharacterSet.illegalCharacters, non-printing control characters [not counting whitespace/linebreaks] (Q. how many non-valid character constructs are there in Unicode standard/ObjC UTF16 NSStrings/Swift Strings; i.e. what do we need to look for, vs what can we trust Swift to reject outright before it ever gets to us?)
 
         case eol
+        case eof
         
         // TO DO: associated values on enums significantly increase complexity (e.g. no automatic Equatable); would it be better to move the details to a separate Content enum? // Q. should we also consolidate expr separators and grouping delimiters into two Form cases (.separator + .grouping), with SeparatorForms and GroupingForms enums under Content?
         
@@ -119,17 +119,16 @@ struct Token: CustomStringConvertible {
             case (.at, .at): return true
             case (.stringDelimiter, .stringDelimiter): return true
             case (.nameDelimiter, .nameDelimiter): return true
-//            case (.plus, .plus): return true
-//            case (.minus, .minus): return true
             case (.digits, .digits): return true
             case (.symbols, .symbols): return true
             case (.letters, .letters): return true
             case (.quotedName(_), .quotedName(_)): return true
-            case (.lexeme(_), .lexeme(_)): return true
+            case (.operatorName(_), .operatorName(_)): return true
             case (.value(_), .value(_)): return true
             case (.error(_), .error(_)): return true
             case (.invalid, .invalid): return true
             case (.eol, .eol): return true
+            case (.eof, .eof): return true
             default: return false // caution: this will mask missing cases, but Swift compiler insists on it; make sure these cases are updated whenever Form enum is modified
             }
         }
@@ -160,14 +159,7 @@ struct Token: CustomStringConvertible {
         "'": .nameDelimiter,
         "‘": .nameDelimiter,
         "’": .nameDelimiter,
-        /*
-        "+": .plus,
- "\u{FF0B}": .plus,
-        "-": .minus,
- "\u{2212}": .minus,
- "\u{FF0D}": .minus,
- "\u{FE63}": .minus,
- */
+        // Q. what about Unicode apostrophes, given their visual similarity? (main thing is to ensure code that has been chewed by e.g. TextEdit's standard autocorrect still parses correctly; more testing needed)
     ]
     
     let form: Form   // enum
@@ -204,8 +196,11 @@ struct Token: CustomStringConvertible {
         default:
             position = .middle
         }
-        return Token(form, (startIndex == self.content.startIndex ? self.whitespaceBefore : nil), self.content[startIndex..<endIndex],
-                           (endIndex == self.content.endIndex ? self.whitespaceAfter : nil), position)
+        return Token(form,
+                     (startIndex == self.content.startIndex ? self.whitespaceBefore : nil),
+                     self.content[startIndex..<endIndex],
+                     (endIndex == self.content.endIndex ? self.whitespaceAfter : nil),
+                     position)
     }
     
     func extract(_ form: Form) -> Token {
@@ -227,6 +222,16 @@ struct Token: CustomStringConvertible {
     var isLetters: Bool { if case .letters = self.form { return true } else { return false } }
     var isSymbols: Bool { if case .symbols = self.form { return true } else { return false } }
     var isEnd: Bool { if case .eol = self.form { return true } else { return false } }
+    
+    var isOperatorName: Bool { if case .operatorName(_) = self.form { return true } else { return false } }
+    
+    var isCommandName: Bool {
+        switch self.form {
+        case .letters, .symbols, .quotedName: return true
+        default:                              return false
+        }
+    }
+    
 }
 
 let nullToken = Token(.eol, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source

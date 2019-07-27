@@ -15,6 +15,18 @@ import Foundation
 // TO DO: making line readers polymorphic for String or Substring may improve parsing times when reading for execution only
 
 
+class ImmutableScript {
+    
+    let lines: [EditableScript.Line]
+    let code: String
+    
+    init(lines: [EditableScript.Line], code: String) {
+        self.lines = lines
+        self.code = code
+    }
+}
+
+
 class EditableScript: CustomStringConvertible, CustomDebugStringConvertible { // TO DO: also cache parsed lines?
     
     // TO DO: pretty printer should read tokens (Q. what about ability to pretty print only lines that have changed? e.g. this suggests Line should use counter; each time pp is called, it returns reprinted lines plus an opaque counter token; passing token back on next pp call, only lines that have a higher count need be reprinted); note: pp itself needs to be fully customizable, able to generate multiple representations of the same code (e.g. basic pp would highlight keywords and literals; literate pp would highlight heading annotations and handler definitions; structural pp would emphasize nesting; debug pp would highlight commands known to be effectful along with expr sequences ending in `?`/`!` modifiers; visual pp would output GUI form controls [need to look into SwiftUI for this]; pps should also be composable)
@@ -23,29 +35,40 @@ class EditableScript: CustomStringConvertible, CustomDebugStringConvertible { //
     
     var debugDescription: String { return self.lines.enumerated().map{ "\(String(format: "%4i", $0+1)). \($1.tokens.map{ "\($0)" }.joined(separator: "\n      "))" }.joined(separator: "\n") }
     
-    typealias LineReaderAdapter = (TokenReader) -> TokenReader // input is usually a LineReader struct, but could also be UnpopToken or other adapter (e.g. when autocorrect is attempting to find best-guess solutions)
+    typealias LineReaderAdapter = (LineReader) -> LineReader // input is usually a CoreLexer struct, but could also be UnpopToken or other adapter (e.g. when autocorrect is attempting to find best-guess solutions)
     
-    private var counter: Int = 0
+    private var lineIDCount: Int = 0 // every line of code has a unique ID, representing the order in which it was initially read/subsequently inserted; this should allow code editor to modify sections of script while preserving unmodified sections (this'll probably require an API for inserting new lines before[?] a given line no., and replacing/deleting existing lines given a Range of line nos., as well as an array of line nos when performing automatic refactorings (e.g. renamings); these line nos. corresponding to indexes and slices of self.lines, so unlike line IDs are transient; line IDs OTOH allow Lines to be located anywhere within script at any time [assuming they haven't been invalidated by edits], e.g. renaming engine would search all Lines for a given name [with some assistance from EditableScript to distinguish matches within code from matches within quotes], then replace those lines with new lines [which would be constructed from a modified version of the previous line's tokens array, rather than a modified source string])
     
     private let lineReaderAdapter: LineReaderAdapter
     
-    // TO DO: how to make each line uniquely identifiable (e.g. include UUID or counter? or make Line a class and compare on object id?) e.g. when determining line no., need to get index of line within lines array each time (since edits may insert/remove lines)
-    
-    struct Line { // TO DO: Equatable (this might be done by comparing counts; comparing lines for [in]significant text changes is a separate task vs looking up the line no. of an existing line)
+    struct Line: Sequence, CustomDebugStringConvertible { // TO DO: Equatable (this might be done by comparing counts; comparing lines for [in]significant text changes is a separate task vs looking up the line no. of an existing line)
+        
+        var debugDescription: String { return self.code.debugDescription } // TO DO: what to show?
+        
+        var isEmpty: Bool { return self.tokens.isEmpty }
+        
+        typealias Element = Token
+        typealias Iterator = Array<Element>.Iterator
+        
+        // TO DO: each line wants to know if it starts inside code, string literal, or annotation [including its nesting depth]; this info may change independent of the line itself when preceding lines are modified; in addition, each line probably wants to keep a summary of the code's nesting order+depth within parens/brackets/braces/block keywords, enabling imbalances to be quickly checked for and fixes proposed (bearing in mind that checks only need to be performed outward from newly inserted/deleted lines [i.e. if adjoining lines were correctly balanced before, any fresh imbalances are assumed to lie in or at edges of the edited section, with proposed fixers appearing in or at edges of that section [users can, of course, move those fixers inward or outward to encompass less or more code, with live non-destructive checking of how those moves affect balancing until the user approves/undos the edit]]); this suggests that lines array should contain a semi-mutable struct which encapsulates both the immutable Line and mutable balancing/editing info; alternatively, we might keep the edits in a separate data structure that can express multi-line information, increasing available information while decreasing the number of elements being iterated when analyzing that info (albeit more complex to implement); in theory we might even store all lines within such structures, allowing those structures to extend and divide themselves without having to track their Lines separately; it remains to be seen (a hybrid solution would be to make the lines array polymorphic for single Lines and grouped Chunks of lines, allowing sections of script the editor is confident are correct [either because they are unchanged since the last successful 'full parse' or because heuristics say they are highly consistent with code/non-code content and can pinch them off as 'presumed correct'])
+        
         
         let code: String
-        let tokens: [Token]
-        let count: Int
+        let tokens: [Token] // TO DO: var? (parser may need to insert 'fixers' for bad syntax); or just replace line?
+        let id: Int
         
         // TO DO: also need to record carryForward + bringForward, which record the opening/closing/delimiter tokens that preceding and subsequent lines need to correctly balance the opening/closing/delimiter tokens that appear on this line
         
-        init(_ code: String, _ tokens: [Token], _ count: Int) {
+        init(_ code: String, _ tokens: [Token], _ id: Int) {
             self.code = code
             self.tokens = tokens
-            self.count = count
+            self.id = id
+        }
+        
+        __consuming func makeIterator() -> Iterator {
+            return self.tokens.makeIterator()
         }
     }
-    
     
     private(set) var lines: [Line] // TO DO: what API for inserting/deleting/replacing lines? (this may include placeholder lines whose only role is to re-balance parens during edits [i.e. lines before and after will indicate carryForward and bringForward])
     
@@ -55,14 +78,16 @@ class EditableScript: CustomStringConvertible, CustomDebugStringConvertible { //
     
     init(_ code: String, _ lineReaderAdapter: @escaping LineReaderAdapter = NumericReader.init) { // default adapter will eventually be a composite of multiple adapters
         self.lineReaderAdapter = lineReaderAdapter
-        self.counter += 1
-        let count = self.counter
+        // need some fiddling here as swiftc won't allow map closure to capture self[.lineIDCount]
+        var lineID = self.lineIDCount
+        let lineCounter = { () -> Int in lineID += 1; return lineID }
+        // TO DO: how much work to make tokenization lazy? (i.e. split the string, but defer reading it until first use, caching the result when done) [kinda depends on whether `lazy var tokens: Tokens = {…}}()` works with following closure]
         self.lines = code.split(omittingEmptySubsequences: false, whereSeparator: linebreakCharacters.contains).map({
             (line: Substring) -> Line in
             let code = String(line)
             var tokens = [Token]()
-            if let lineReader = LineReader(code) {
-                var lexer: TokenReader = lineReaderAdapter(lineReader)
+            if let lineReader = CoreLexer(code) {
+                var lexer: LineReader = lineReaderAdapter(lineReader)
                 var token: Token
                 repeat {
                     (token, lexer) = lexer.next()
@@ -75,10 +100,10 @@ class EditableScript: CustomStringConvertible, CustomDebugStringConvertible { //
                     
                 } while !token.isEnd
             }
-            return Line(code, tokens, count) // TO DO: also capture next reader?
+            return Line(code, tokens, lineCounter()) // TO DO: also capture next reader?
         })
+        self.lineIDCount = lineID
     }
     
 }
-
 

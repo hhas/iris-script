@@ -29,13 +29,13 @@ import Foundation
  */
 
 
-struct NumericReader: TokenReader {
+struct NumericReader: LineReader {
     
-    let reader: TokenReader
+    let reader: LineReader
     
     var code: String { return self.reader.code }
     
-    init(_ reader: TokenReader) {
+    init(_ reader: LineReader) {
         self.reader = reader
     }
 
@@ -54,7 +54,7 @@ struct NumericReader: TokenReader {
     
     // TO DO: unsigned
     
-    func readNumber(_ token1: Token, _ reader1: TokenReader, sign: Token? = nil) -> (Token, TokenReader)? {
+    func readNumber(_ token1: Token, _ reader1: LineReader, sign: Token? = nil) -> (Token, LineReader)? {
         if case .digits = token1.form {
             let startToken = sign ?? token1 // TO DO: fix this; if sign token contains more than a single +/- at end, trim all +/- chars from end, keeping tally of whether or not number is negative (caution: watch out for, e.g. `foo+-1`, which is a legal if ambiguous expr [it could mean `(foo) + (-1)` or `foo {+-1}`, though in practice we rely on contiguous whitespace and any operator definitions to figure it out]; might be safer just to take the last char to determine number literal's sign, and throw the rest back onto the token stream); any chars left after end trim needs to go back on token stream (i.e. nextReader needs to be wrapped in UnpopToken before returning it)
             var (endToken, nextReader) = (token1, reader1)
@@ -77,24 +77,12 @@ struct NumericReader: TokenReader {
         return nil
     }
     
-    /*
-    func readSignedNumber(_ token: Token, _ reader: TokenReader) -> (Token, TokenReader)? {
-        // check for +/- sign
-        if case .symbols = token.form, numericSignCharacters.contains(token.content.last!), token.isRightContiguous {
-            let (token1, reader1) = reader.next()
-            return self.readNumber(token1, reader1, sign: token)
-        } else { // read unsigned number
-            return self.readNumber(token, reader)
-        }
-    }
-    */
-    
     // Q. how to read `1mod2` vs `1 mod2` vs `1mod 2` (only variation that isn't an issue is `1 mod 2`)
     
     // `foo1. 2` vs `foo 1.2` vs `foo 1. 2`
     
     
-    func next() -> (Token, TokenReader) {
+    func next() -> (Token, LineReader) {
         
         // one possible solution: ignore the preceding token entirely, match .digits only, and read as unsigned number when found; that leaves parser to reduce unary +/- .sign followed by .number token to .number, negating its value as appropriate [i.e. the parser is constant-folding the unary `+`/`-` operator and the unsigned number, the only catch being that the parser shouldn't have any knowledge of operators that isn't provided by a library]
         

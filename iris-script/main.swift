@@ -41,20 +41,78 @@ wibble {“hello”, 5}
 """
 
 
+// TO DO: how would lexer adapter for multiline strings/annotations work? (upon detecting opening quote, it would return a lexer (or lexer adapter?) that knows how to find the end of that quote [Q. what token would it return in meantime?]) challenge is how to carry that reader forward from end of one line to process next, and finally swap out the quote reader for the standard token reader when done (TBH, it may not be worth the effort when parsing for editing; while slower, having everything tokenized regardless of whether it's code or quoted text gives the auto3cs lots more data to analyze, particularly when best-guessing where missing quotes/closing braces should appear)
 
-script = "‘foo’ 1*-2+a3" // note that `a3` is two tokens: <.letters "a"><.value(3) "3">; this'll require reducing to something like `.value(Command("a3"))` or `.lexeme(Identifier("a3"))`
+
+script = "‘foo’ -1*-2+a3" // note that `a3` is two tokens: <.letters "a"><.value(3) "3">; this'll require reducing to something like `.value(Command("a3"))` or `.identifier("a3")` [or should that be .commandName("a3")? this reduction should probably be performed as CoreLexer]
+
+//script = " “blah blah”"
 
 //script = "3𝓍²＋5𝓎－1" // this requires some custom lexing
 
 
 let operatorRegistry = OperatorRegistry()
-operatorRegistry.add(OperatorDefinition("×", aliases: ["*"]))
-operatorRegistry.add(OperatorDefinition("÷", aliases: ["/"]))
-operatorRegistry.add(OperatorDefinition("\u{FF0B}", aliases: ["+"])) // full-width plus
-operatorRegistry.add(OperatorDefinition("\u{2212}", aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
+operatorRegistry.add(OperatorDefinition("×", .infix, aliases: ["*"]))
+operatorRegistry.add(OperatorDefinition("÷", .infix, aliases: ["/"]))
+operatorRegistry.add(OperatorDefinition("\u{FF0B}", .infix, aliases: ["+"])) // full-width plus
+operatorRegistry.add(OperatorDefinition("\u{2212}", .infix, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
+operatorRegistry.add(OperatorDefinition("\u{FF0B}", .prefix, aliases: ["+"])) // full-width plus
+operatorRegistry.add(OperatorDefinition("\u{2212}", .prefix, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
 let operatorReader = newOperatorReader(for: operatorRegistry)
 
+//print(operatorRegistry)
 
+//let doc = EditableScript(script)
+let doc = EditableScript(script, {NumericReader(operatorReader($0))})
+
+
+var tokenStream: ScriptReader? = QuoteReader(doc.tokenStream!)
+
+
+func test(_ operatorRegistry: OperatorRegistry) {
+    let pr = PatternRegistry(operatorRegistry: operatorRegistry)
+    
+    pr.add(LIST)
+    pr.add(RECORD)
+    pr.add(GROUP) // parens
+    pr.add(FULL_PUNC_COMMAND)
+    pr.add(ATOMICOP)
+    pr.add(PREFIXOP)
+//    pr.add(INFIXOP) // might want to rework infix and postfix matchers as we really don't want to start a match pattern on .expr (since left recursion is a pig); instead, combine OP patterns into one, starting with opname and immediately followed by an action that looks back along the stack to see if opname was preceded by an expr before deciding if/how to continue matching (this'll require giving action func control over PartialMatch result as well as stack)
+//    pr.add(POSTFIXOP)
+    
+    // TO DO: commas are a bugger, since they must be treated differently when reading list/record vs expr seq; or rather, we need a way to prevent [a,b,c] being read as a single-item list containing a sentence-style block; probably easiest way to avoid this is to use list builder 'substack' to capture values and commas when inside []; rest of the time values and commas go straight onto main stack, leaving sentence terminators (.?! or LF without preceding comma/semicolon/colon) to trigger the reduction to block
+    
+    let doc = EditableScript("[1]", {NumericReader(operatorReader($0))})
+    
+    
+    let reader = doc.tokenStream!
+    
+    let stack = ASTBuilder()
+    
+    var pr1 = pr.startMatch(reader.token, stack: stack)
+    print("startMatch returned")
+    if let p = pr1 { print(p.patterns[0].pattern.map{"        \($0)"}.joined(separator: "\n")) }
+    while let pr = pr1 {
+        print()
+        let reader = reader.next()!
+        pr1 = pr.continueMatch(reader.token)
+        print("contineMatch returned")
+        if let p = pr1 { print(p.patterns[0].pattern.map{"        \($0)"}.joined(separator: "\n")) }
+    }
+}
+
+
+
+
+test(operatorRegistry)
+
+
+//while let current = tokenStream { print(current.location, current.token); tokenStream = current.next() }
+
+
+
+/*
 let d1 = Date()
 
 let doc = EditableScript(script, {NumericReader(operatorReader($0))})
@@ -62,14 +120,11 @@ let doc = EditableScript(script, {NumericReader(operatorReader($0))})
 //let doc = EditableScript(script)
 let d2 = Date()
 
-
-
-
 print(doc)
 print("parsed in \(String(format: "%0.2f", d2.timeIntervalSince(d1)*1000))ms")
 
 print(doc.debugDescription)
-
+*/
 
 
 /*
@@ -78,8 +133,8 @@ let scriptLines = script.split(omittingEmptySubsequences: false, whereSeparator:
 print(scriptLines)
 
 for line in scriptLines {
-    if let lineReader = LineReader(String(line)) {
-        var lexer: TokenReader = NumericReader(lineReader)
+    if let lineReader = CoreLexer(String(line)) {
+        var lexer: LineReader = NumericReader(lineReader)
         var token: Token
         repeat {
             (token, lexer) = lexer.next()

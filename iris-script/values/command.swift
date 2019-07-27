@@ -76,7 +76,7 @@ class Command: ComplexValue {
 
     let nominalType: Coercion = asCommand
     
-    // TO DO: what about a slot for storing optional operator definition?
+    // TO DO: what about a slot for storing optional operator definition? (or general 'annotations' slot?) we also need to indicate when pp should wrap a command in elective parens (as opposed to required parens, which pp should add automatically as operator precedence dictates)
     
     let name: Symbol
     let arguments: [Argument] // TO DO: single, optional argument which is coerced to record and pattern-matched against HandlerInterface.Parameter

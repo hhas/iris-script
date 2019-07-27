@@ -6,6 +6,9 @@
 import Foundation
 
 
+// TO DO: might want to implement as enum, allowing specialized null values (e.g. `did_nothing`, `test_failed`) to be expressed
+
+
 struct NullValue: Value { // expanding `nothing` always throws transient NullCoercionError; this may be intercepted by coercion modifiers to supply default value, otherwise it'll be rethrown as permanent EvaluationError
     
     var description: String { return "nothing" }
