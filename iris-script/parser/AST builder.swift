@@ -6,6 +6,7 @@
 import Foundation
 
 
+// TO DO: whereas token readers allow easy rollback to an earlier state simply by storing the [immutable] reader at that position and restoring it later on, ASTBuilder is a shared stateful object
 
 
 class ASTBuilder {
@@ -38,6 +39,10 @@ class ASTBuilder {
                 self.stack.append(.token(token))
             }
         }
+    }
+    
+    func annotate(_ annotation: Token) {
+        print("TO DO: attach \(annotation)")
     }
     
     func reduce(by count: Int) { // TO DO: pop n tokens, pass to pattern's reducer func, and put resulting value back on stack

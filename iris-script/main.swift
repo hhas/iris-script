@@ -83,20 +83,26 @@ func test(_ operatorRegistry: OperatorRegistry) {
     
     // TO DO: commas are a bugger, since they must be treated differently when reading list/record vs expr seq; or rather, we need a way to prevent [a,b,c] being read as a single-item list containing a sentence-style block; probably easiest way to avoid this is to use list builder 'substack' to capture values and commas when inside []; rest of the time values and commas go straight onto main stack, leaving sentence terminators (.?! or LF without preceding comma/semicolon/colon) to trigger the reduction to block
     
-    let doc = EditableScript("[1]", {NumericReader(operatorReader($0))})
+    let doc = EditableScript("[1, []]", {NumericReader(operatorReader($0))}) 
     
     
-    let reader = doc.tokenStream!
+    var reader: ScriptReader = doc.tokenStream!
     
     let stack = ASTBuilder()
     
-    var pr1 = pr.startMatch(reader.token, stack: stack)
+    // TO DO: if startMatch/continueMatch are responsible for shifting token to stack, they need to return a Bool indicating when they've done so, so that calling code knows to advance to next token
+    
+    var (sh, pr1) = pr.startMatch(reader.token, stack: stack)
     print("startMatch returned")
     if let p = pr1 { print(p.patterns[0].pattern.map{"        \($0)"}.joined(separator: "\n")) }
-    while let pr = pr1 {
+    
+    while let pr = pr1 { // token-pumping loop; continueMatch matches one token then returns control to here; thus we can trivially convert this loop to a Swift Iterator, allowing parsing to be suspended while an interactive console (e.g. REPL/IDE) waits for new input
         print()
-        let reader = reader.next()!
-        pr1 = pr.continueMatch(reader.token)
+        if sh {
+            guard let r = reader.next() else { print("out of tokens"); break } // TO DO: this should only advance to next token if match method indicates previous token should be/has been shifted to stack (it might be better to leave calling code to manage stack itself; however, that'd require returning action funcs as well rather than just invoking them directly)
+            reader = r
+        }
+        (sh, pr1) = pr.continueMatch(reader.token)
         print("contineMatch returned")
         if let p = pr1 { print(p.patterns[0].pattern.map{"        \($0)"}.joined(separator: "\n")) }
     }

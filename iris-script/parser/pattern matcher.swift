@@ -39,9 +39,13 @@
 // TO DO: might operator patterns be replaced with [.operatorName, .action]?
 
 
+// TO DO: partial matching might be easier if composite patterns were flattened with .failure and/or .completion markers at end of flattened sequence indicating the action to take (e.g. rollback) if the preceding patterns are [not] fully matched (this is not unlike a kiwi pipeline, where a composite rule is 'flattened' by injecting its rules into the parent pipeline for evaluation)
+
+
 //Comparable,
 
-indirect enum Pattern: ExpressibleByArrayLiteral, CustomDebugStringConvertible {
+indirect enum Pattern: Equatable, ExpressibleByArrayLiteral, CustomDebugStringConvertible {
+    
     // TO DO: might be better as structs with common Pattern protocol (bearing in mind it needs to be introspectable by tooling as well)
 
     typealias Action = (_ stack: ASTBuilder) -> () // TO DO: this breaks Equatable
@@ -61,6 +65,23 @@ indirect enum Pattern: ExpressibleByArrayLiteral, CustomDebugStringConvertible {
         case .expr: return ".expr"
         case .contiguous(let before, let pattern, let after): return ".contiguous(\(before), \(pattern), \(after))"
         case .action(_): return ".action"
+        }
+    }
+    
+    static func == (lhs: Pattern, rhs: Pattern) -> Bool {
+        switch (lhs, rhs) {
+        case (.form(let f1), .form(let f2)):                    return f1 == f2
+        case (.optional(let p1), .optional(let p2)):            return p1 == p2
+        case (.zeroPlus(let p1), .zeroPlus(let p2)):            return p1 == p2
+        case (.onePlus(let p1), .onePlus(let p2)):              return p1 == p2
+        case (.sequence(let p1), .sequence(let p2)):            return p1 == p2
+        case (.oneOf(let p1), .oneOf(let p2)):                  return p1 == p2
+        case (.not(let p1), .not(let p2)):                      return p1 == p2
+        case (.operatorName(let f1), .operatorName(let f2)):    return f1 == f2
+        case (.commandName, .commandName):                      return true
+        case (.expr, .expr):                                    return true
+        case (.contiguous(let b1, let p1, let a1), .contiguous(let b2, let p2, let a2)): return b1 == b2 && p1 == p2 && a1 == a2
+        default: return false
         }
     }
     
@@ -138,6 +159,7 @@ indirect enum Pattern: ExpressibleByArrayLiteral, CustomDebugStringConvertible {
         case completed // indicates a complete sequence match (e.g. `comma expr`); as-per longest-match rule, if matchable patterns remain then a longer match may still be made, but if that fails then the stack is only rolled back to last .complete // TO DO: is it worth distinguishing 'completedSubMatch' from 'completedFullMatch'?
         case partial
         case failed
+        case new
     }
     
     typealias MatchResult = (result: MatchStatus, shift: Bool, remaining: [Pattern])
@@ -158,8 +180,18 @@ indirect enum Pattern: ExpressibleByArrayLiteral, CustomDebugStringConvertible {
             // an .optional match shifts all tokens (if pattern matches) or shifts none
             // if it fails to match, stack should rollback and restart matching with next pattern in parent seq
             // a failure within sequence means discard shifted tokens and restart matching with next pattern in parent seq
+            print(">>> matching \(token) to .optional \(pattern) …")
             (matchStatus, shouldShift, r) = pattern.match(token: token, precedence: precedence)
-            if matchStatus == .partial { remainingPatterns = [.optional(.sequence(r))] }
+            if matchStatus == .new { // TO DO: move this test to return statement below? i.e. on successful completion, the new match returns a reduced .value which can now be re-matched against the same pattern
+                remainingPatterns = [self]
+            } else if matchStatus != .failed {
+                if !r.isEmpty {
+                    // TO DO: don't box r as a sequence if it's already [.sequence] as that's redundant - just unwrap it instead
+                    remainingPatterns = [.optional(.sequence(r))]
+                    matchStatus = .partial
+                }
+            }
+            print(">>> …matched", (matchStatus, shouldShift, remainingPatterns))
             
         case .zeroPlus(let pattern):
             
@@ -169,6 +201,7 @@ indirect enum Pattern: ExpressibleByArrayLiteral, CustomDebugStringConvertible {
             case .completed: remainingPatterns = [self]
             case .partial:  remainingPatterns = r // TO DO: we need to make sure that a failure on remaining patterns triggers rollback
             case .failed:   matchStatus = .completed
+            case .new:      remainingPatterns = [self]
             }
             
         case .onePlus(let pattern):
@@ -178,19 +211,24 @@ indirect enum Pattern: ExpressibleByArrayLiteral, CustomDebugStringConvertible {
             case .completed: remainingPatterns = [.zeroPlus(pattern)]
             case .partial:  remainingPatterns = r
             case .failed:   () // failed to match pattern once
+            case .new:      remainingPatterns = [self]
             }
             
         case .sequence(let patterns): // this should probably only be used for optional/repeating sub-sequences that are not themselves exprs (or are parsing context-sensitive code, e.g. handler interface in `to`/`when` operator) // see also PatternRegistry.add, which flattens a top-level .sequence into a chain of PartialMatches
             assert(!patterns.isEmpty)
             (matchStatus, shouldShift, r) = patterns.first!.match(token: token, precedence: precedence)
             remainingPatterns += r + patterns.dropFirst(1)
+            if matchStatus == .completed && !remainingPatterns.isEmpty { matchStatus = .partial }
             
-        case .oneOf(let patterns): // TO DO: this is a bugger should given patterns be different lengths (should it try to consume the longest, or just take the shortest? or should we just reject patterns that are >1 token)
+        case .oneOf(let patterns): // TO DO: this is a bugger should given patterns be different lengths (should it try to consume the longest, or just take the shortest? or should we just reject patterns that are >1 token); most common use would be in groupings, e.g. `[.form(.startList), .oneOf([.endList, [.expr, .zeroPlus([.comma, .expr]), .endList]]), .action]`
+            // this is, essentially, the same algorithm used by startMatch: solution is to do breadth-first, returning remaining patterns
+            var remaining = [[Pattern]]()
             for pattern in patterns {
                 let r: [Pattern]
                 (matchStatus, shouldShift, r) = pattern.match(token: token, precedence: precedence)
-                assert(r.isEmpty) // single-token patterns only
-                if matchStatus == .completed { break }
+                if !r.isEmpty { remaining.append(r) }
+                if matchStatus == .completed { break } // TO DO: this halts on shortest-match
+                if matchStatus == .new { fatalError("not yet implemented") }
             }
             
         case .not(let pattern):
@@ -209,12 +247,16 @@ indirect enum Pattern: ExpressibleByArrayLiteral, CustomDebugStringConvertible {
                 shouldShift = true
             }
             
-        case .expr:
-            //fatalError("not yet implemented")
-            matchStatus = .partial
-            shouldShift = false
-            remainingPatterns = [.expr] // bit snaky, but we need to kick the problem back to pattern registry
-            // this needs to match an expr, so punt back to match tree
+        case .expr: // important: this will only match the token if it's already a complete expression (i.e. it's a .value); if not, it triggers a new match to reduce it to one, after which the same pattern can be successfully re-applied (while this is more work than simply recursing, it avoids taking control away from the external token-pumping loop)
+            print("matching .expr")
+            if case .value(_) = token.form { // already reduced to an expression
+                matchStatus = .completed
+                shouldShift = true
+            } else { // signal to registry to start a new expression match; once that's reduced a value, resume
+                matchStatus = .new
+                shouldShift = false
+                remainingPatterns = [.expr] // bit snaky, but we need to kick the problem back to pattern registry // TO DO: this is insufficient; all that happens is it gets boxed up
+            }
             
         case .contiguous(let before, let pattern, let after):
             if before.match(token.hasLeadingWhitespace) {
@@ -231,7 +273,7 @@ indirect enum Pattern: ExpressibleByArrayLiteral, CustomDebugStringConvertible {
                         remainingPatterns.append(.contiguous(.any, lastPattern, after))
                     }
                     
-                default: () // failed
+                default: () // failed/new
                 }
             
             }
@@ -249,6 +291,9 @@ indirect enum Pattern: ExpressibleByArrayLiteral, CustomDebugStringConvertible {
 
 class PatternRegistry {
     
+    typealias MatchResult = (shifted: Bool, next: PartialMatch?)
+    
+    
     struct PartialMatch: CustomDebugStringConvertible {
         
         var debugDescription: String { return "<PartialMatch for \(self.patterns.map{$0.name})>" }
@@ -259,11 +304,16 @@ class PatternRegistry {
         let registry: PatternRegistry
         let stack: ASTBuilder
         
-        func continueMatch(_ token: Token, precedence: Int = 0) -> PartialMatch? { // TO DO: returning nil isn't sufficient
-            
+        
+        func continueMatch(_ token: Token, precedence: Int = 0) -> MatchResult {
+            if case .annotation(_) = token.form {
+                self.stack.annotate(token)
+                return (true, nil)
+            }
             // try all matches at this step; if >1 is matched, keep going until a single longest-match remains (note: this may involve rollback where the last pattern fails to match last token[s])
             
             var remainingPatterns = [(String,[Pattern])]()
+            var shift: Bool?
             
             for (name, pattern) in self.patterns {
                 
@@ -278,17 +328,37 @@ class PatternRegistry {
                 } else {
                     let (m, s, r) = pattern.match(token: token, precedence: precedence)
                     print("#", m, "matching", token, "to", name, "pattern", pattern, "shifting", s)
-                    
-                    
-                    if m == .partial && !s && r.count == 1, case .expr = r[0] { // start new expression match
-                        print(">> start new expression match")
-                        // TO DO: what about remaining?
+
+                    if m == .new { // start a new expression match (this is not invoked if token is already a .value)
+                        assert(!s)
+                        print("continueMatch is starting a new match…")
+                        let (shifted, r2) = registry.startMatch(token, precedence: precedence, stack: stack)
+                        print("…continueMatch started a new match, r2 =", (r2 ?? nil) as Any)
+                        // TO DO: need to append r to r2 so that once r2 is exhausted, r resumes (it may be best to chain via a `var previousMatch: PartialMatch?`, rather than trying to merge the two sets of patterns; it should make its behavior easier to reason about if nothing else)
+                        
+                        // TO DO: another challenge is how to get the newly reduced .value (which is [presumably] now on top of stack, so requires an 'unshift') so we can match it against r2+r (plus we need to do this within an existing match cycle, as we don't have any control over the token stream)
+                        
+                        if !r.isEmpty {
+                            
+                        }
+                        
+                        // big problem: we need to get r2's remaining matches and prefix them to r, then put that into remainingPatterns; in theory we could do this using .oneOf, but that doesn't do multi-token matches well, so gets nuts really quickly (plus `name` applies to the outer match, not the inner)
+                        
+                        // we're also going to have problems with left-recursive patterns (basically, any pattern that represents a complete expression while itself starting with .expr, e.g. infix/postfix operators)
+                        
+                        return (shifted, r2) // WRONG!!
                     } else if m != .failed {
-                        remainingPatterns.append((name, remaining + r))
+                        if shift == nil {
+                            shift = s
+                        } else if shift != s {
+                            // if >1 pattern matches, they must all return the same value for shouldShift (in theory, we could put non-shifted matches into a separate array within PartialMatch along with a queue for the unshifted tokens, and let partial match resynchronise these 'trailing' token streams in its own time, but for now we just want to get something working; it's also unclear how often such 'desynchronizations' will occur in real-world use, so not worth the extra effort unless/until it becomes an issue)
+                            fatalError("shift/no-shift conflict between \(name) and \(remainingPatterns.map{$0.0}) patterns")
+                        }
+                        remainingPatterns.append((name, r + remaining ))
                     }
                 }
             }
-            return remainingPatterns.isEmpty ? nil : PartialMatch(patterns: remainingPatterns, registry: self.registry, stack: self.stack)
+            return (shift ?? false, remainingPatterns.isEmpty ? nil : PartialMatch(patterns: remainingPatterns, registry: self.registry, stack: self.stack))
         }
     }
     
@@ -306,14 +376,19 @@ class PatternRegistry {
         self.patterns.append(pattern)
     }
     
-    func startMatch(_ token: Token, precedence: Int = 0, stack: ASTBuilder) -> PartialMatch? {
-        
+    // TO DO: should startMatch/continueMatch take the token's stream rather than just the token? this'd allow them to put the stream on the stack during shifting; if reduction fails and the stack is rolled back, the token stream from the point at which the failed match began can be returned (this object includes the token's line and position, which can be used e.g. to highlight the problem code)
+    
+    func startMatch(_ token: Token, precedence: Int = 0, stack: ASTBuilder) -> (Bool, PartialMatch?) {
+        if case .annotation(_) = token.form {
+            stack.annotate(token)
+            return (true, nil)
+        }
         // try all matches at this step; if >1 is matched, keep going until a single longest-match remains (note: this may involve rollback where the last pattern fails to match last token[s]) // TO DO: don't re-match already tested patterns, e.g. infix and postfix operator patterns both start by trying to match .expr; this only needs done once, and only if another pattern hasn't already done so (list/record literal or already-reduced value); might be an idea to start by sorting self.patterns by specificity so that narrowest definitions come first: if the narrowest definition matches then the broader definitions must logically also match, obviating need for explicit tests
         
         // Q. how well will this design cope with left-recursion (e.g. `A = A b c`)?
         
         var remainingPatterns = [(String,[Pattern])]()
-        
+        var shift: Bool?
         for pattern in self.patterns {
             let (name, pattern) = (pattern.name, pattern.pattern)
             if case .action(let action) = pattern {
@@ -322,17 +397,24 @@ class PatternRegistry {
             } else {
                 let (m, s, r) = pattern.match(token: token, precedence: precedence)
                 print("#", m, "matching", token, "to", name, "shifting", s)
-                
                 if m == .partial && !s && r.count == 1, case .expr = r[0] { // start new expression match
                     print(">> start new expression match")
                     
                 } else if m != .failed {
+                    if shift == nil {
+                        shift = s
+                    } else if shift != s {
+                        fatalError("shift/no-shift conflict between \(name) and \(remainingPatterns.map{$0.0}) patterns")
+                    }
                     remainingPatterns.append((name,r))
                 }
             }
         }
+        
+        // TO DO: how to reconcile `shouldShift`s when >1 pattern is matched? for now, just check they're all true/all false
+        
         //print("remaining:", remainingPatterns)
-        return remainingPatterns.isEmpty ? nil : PartialMatch(patterns: remainingPatterns, registry: self, stack: stack)
+        return (shift ?? false, remainingPatterns.isEmpty ? nil : PartialMatch(patterns: remainingPatterns, registry: self, stack: stack))
     }
     
 }

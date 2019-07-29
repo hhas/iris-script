@@ -42,7 +42,7 @@ func ofForm(_ forms: Token.Form...) -> Pattern {
 
 
 let LF: Pattern = .form(.eol)
-let anyLF: Pattern = .zeroPlus(LF) // optional line breaks
+let anyLF: Pattern = .zeroPlus(LF) // optional line breaks // TO DO: how best to record positions of elective linebreaks for pretty printer? (e.g. make lists/records/groups annotatable? would prefer not to annotate individual items); we also need a way to annotate exprs [or at least commands] with line no. for error reporting purposes
 
 
 // TO DO: Q. a chain of `expr, expr, expr, … , expr TERMINATOR` tends to match recursively (since it is itself an expr); should we define `exprseq = [.expr, .comma, .expr]`? or could that blow up? another problem with this: the commas are context-sensitive, having subtly different meaning inside list and record literals
@@ -52,7 +52,7 @@ let field: Pattern = [.form(.letters), .form(.colon), .expr] // record/argument 
 let itemSep: Pattern = [.contiguous(.yes, .form(.comma), .no), anyLF] // right-side could be .any, with pp annotation to insert space, but this would be inadequate if also using `,` as thousands separator in numbers (or as decimal separator in Euro-localized numbers)
 let exprSep: Pattern = [.contiguous(.yes, ofForm(.comma, .semicolon, .period, .query, .exclamation), .no), anyLF] // not sure about this
 
-let LIST = PatternDefinition("list", block(.form(.startList), .expr, itemSep, .form(.endList), .action({ _ in print("reduce list") })))   // […]
+let LIST = PatternDefinition("list", block(.form(.startList), .expr, itemSep, .form(.endList), .action({ (builder: ASTBuilder) in print("reduce list", builder.stack) })))   // […]
 let RECORD = PatternDefinition("record", block(.form(.startRecord), field, itemSep, .form(.endRecord), .action({ _ in print("reduce record") }))) // (…)
 
 let GROUP = PatternDefinition("group", block(.form(.startGroup), .expr, exprSep, .form(.endGroup), .action({ _ in print("reduce group") }))) // (…)
