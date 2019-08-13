@@ -20,7 +20,7 @@ struct Record: Value, Accessor {
     
     var description: String { return "{\(self.fields.map{ $0 == nullSymbol ? "\($1)" : "\($0): \($1)"}.joined(separator: ", "))}" }
     
-    typealias Field = (name: Symbol, value: Value) // nullSymbol = unnamed field
+    typealias Field = (label: Symbol, value: Value) // nullSymbol = unnamed field
 
     let nominalType: Coercion = asRecord
     
@@ -49,6 +49,10 @@ struct Record: Value, Accessor {
         }
         self.isMemoizable = isMemoizable
         self.constrainedType = isMemoizable ? AsRecord(nominalFields) : asRecord
+    }
+    
+    init() {
+        self.init([], as: asRecord)
     }
     
     internal init(_ fields: [Field], as coercion: RecordCoercion) {

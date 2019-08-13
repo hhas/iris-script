@@ -60,7 +60,7 @@ extension Double: NumericValue {
 
 
 
-enum Number: NumericValue {
+enum Number: NumericValue { // what about fractions? (this may require `indirect` to allow nested composition; alternatively, might be best to implement as PrecisionNumber struct/class, possibly in optional library)
     
     static func ==(lhs: Number, rhs: Number) -> Bool {
         do {

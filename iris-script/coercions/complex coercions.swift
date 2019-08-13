@@ -25,9 +25,9 @@ struct AsComplex<T: Value>: SwiftCoercion { // T must be concrete struct or clas
 }
 
 
-struct AsName: SwiftCoercion {
+struct AsSymbol: SwiftCoercion {
     
-    var name: Symbol { return Symbol("name") } // avoid creating cycle between Symbol and AsName when initializing them
+    var name: Symbol { return Symbol("name") } // avoid creating cycle between Symbol and AsSymbol when initializing them
     
     typealias SwiftType = Symbol
     
@@ -75,10 +75,40 @@ struct AsHandler: SwiftCoercion { // (can't use AsComplex<Handler> as Handler is
 
 // TO DO (complex types generally only coerce to Any or Self)
 let asCommand = AsComplex<Command>(name: "command")
-let asName = AsName()
+let asSymbol = AsSymbol()
 let asHandlerInterface = AsComplex<HandlerInterface>(name: "handler_interface") // TO DO: handler interface can be coerced to/from Record
 let asHandler = AsHandler()
 let asBlock = AsComplex<Block>(name: "block")
+
+let asPair = AsComplex<Pair>(name: "pair")
+
+
+
+
+
+struct AsHashableValue: SwiftCoercion {
+    
+    let name: Symbol = "key"
+    
+    typealias SwiftType = HashableValue
+    
+    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+        guard let result = try? asAnything.coerce(value: value, in: scope) as? HashableValue else {
+            throw UnsupportedCoercionError(value: value, coercion: self)
+        }
+        return result
+    }
+    
+    // TO DO: these should be supplied by SwiftCoercion extension, but aren't; why?
+    func coerce(value: Value, in scope: Scope) throws -> Value {
+        return try self.unbox(value: value, in: scope)
+    }
+    
+    func box(value: SwiftType, in scope: Scope) -> Value {
+        return value
+    }
+}
+let asHashableValue = AsHashableValue()
 
 
 

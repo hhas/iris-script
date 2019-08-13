@@ -94,8 +94,8 @@ struct Token: CustomStringConvertible {
         
         case invalid // characters that are not allowed anywhere in code: anything in CharacterSet.illegalCharacters, non-printing control characters [not counting whitespace/linebreaks] (Q. how many non-valid character constructs are there in Unicode standard/ObjC UTF16 NSStrings/Swift Strings; i.e. what do we need to look for, vs what can we trust Swift to reject outright before it ever gets to us?)
 
-        case eol
-        case eof
+        case lineBreak
+        case endOfScript
         
         // TO DO: associated values on enums significantly increase complexity (e.g. no automatic Equatable); would it be better to move the details to a separate Content enum? // Q. should we also consolidate expr separators and grouping delimiters into two Form cases (.separator + .grouping), with SeparatorForms and GroupingForms enums under Content?
         
@@ -127,15 +127,65 @@ struct Token: CustomStringConvertible {
             case (.value(_), .value(_)): return true
             case (.error(_), .error(_)): return true
             case (.invalid, .invalid): return true
-            case (.eol, .eol): return true
-            case (.eof, .eof): return true
+            case (.lineBreak, .lineBreak): return true
+            case (.endOfScript, .endOfScript): return true
             default: return false // caution: this will mask missing cases, but Swift compiler insists on it; make sure these cases are updated whenever Form enum is modified
+            }
+        }
+
+        var precedence: Int { // Int16 should be sufficient
+            switch self {
+//            case .startAnnotation: return 0
+//            case .endAnnotation: return 0
+//            case .startList: return 0
+//            case .endList: return 0
+//            case .startRecord: return 0
+//            case .endRecord: return 0
+//            case .startGroup: return 0
+//            case .endGroup: return 0
+            case .comma: return -60
+            case .semicolon: return 10
+            case .colon: return 70
+            case .period: return -50
+            case .query: return -50
+            case .exclamation: return -50
+            case .hash: return 1000
+            case .at: return 1000
+ //           case .stringDelimiter: return 0
+ //           case .nameDelimiter: return 0
+ //           case .digits: return 0
+            case .symbols: return 0
+            case .letters: return 0
+            case .quotedName(_): return 0
+            case .operatorName(let operatorClass): // Q. what range to use for operators? 100-999?
+                // e.g. v1 o1 v2 o2 … -- once v2 is parsed, peek ahead to o2 to determine if v2 is operand to o2 or o1
+                if let a = operatorClass.infix, let b = operatorClass.postfix, a.precedence != b.precedence {
+                    print("warning: mismatched precedences for \(a) vs \(b)")
+                }
+                return operatorClass.infix?.precedence ?? operatorClass.postfix?.precedence ?? 0
+            case .value(_): return 0
+//            case .error(_): return 0
+//            case .invalid: return 0
+//            case .lineBreak: return 0
+//            case .endOfScript: return 0
+            default: return 0 // caution: this will mask missing cases, but Swift compiler insists on it; make sure these cases are updated whenever Form enum is modified
             }
         }
     }
     
-    static let corePunctuation: [Character:Form] = [
+    static let predefinedSymbols: [Character:Form] = [
         // TO DO: which punctuation chars need associated whitespace rules; e.g. `.` has different meanings depending on whether it has no leading/trailing whitespace, or has trailing whitespace only (note: whitespace before the `.` should probably be considered a typo and removed by pretty printer, although we should consider whether `.` at start of a line may indicate a legal cosmetic linewrap within a long expr; e.g. Swift allows this, although it's of less interest to us as `A.B` is generally only used for reverse domain names, with `B of A` being the standard form for attribute selection)
+        // punctuation (separators/terminators)
+        ",": .comma,
+        ";": .semicolon,
+        ":": .colon,
+        ".": .period,
+        "?": .query,
+        "!": .exclamation,
+        // name modifiers
+        "#": .hash,
+        "@": .at,
+        // quotes
         "«": .startAnnotation,
         "»": .endAnnotation,
         "[": .startList,
@@ -144,14 +194,6 @@ struct Token: CustomStringConvertible {
         "}": .endRecord,
         "(": .startGroup,
         ")": .endGroup,
-        ",": .comma,
-        ";": .semicolon,
-        ":": .colon,
-        ".": .period,
-        "?": .query,
-        "!": .exclamation,
-        "#": .hash,
-        "@": .at,
         // unlike annotation/list/record/group delimiters, single/double quotes do not reliably indicate start/end
        "\"": .stringDelimiter,
         "“": .stringDelimiter,
@@ -217,22 +259,24 @@ struct Token: CustomStringConvertible {
     
     var isContiguous: Bool { return self.isLeftContiguous && self.isRightContiguous }
 
-    var isPunctuation: Bool { return Token.corePunctuation.values.contains(self.form) }
-    var isDigits: Bool { if case .digits = self.form { return true } else { return false } }
-    var isLetters: Bool { if case .letters = self.form { return true } else { return false } }
-    var isSymbols: Bool { if case .symbols = self.form { return true } else { return false } }
-    var isEnd: Bool { if case .eol = self.form { return true } else { return false } }
+//    var isPunctuation: Bool { return Token.predefinedSymbols.values.contains(self.form) }
+//    var isDigits: Bool { if case .digits = self.form { return true } else { return false } }
+//    var isLetters: Bool { if case .letters = self.form { return true } else { return false } }
+//    var isSymbols: Bool { if case .symbols = self.form { return true } else { return false } }
     
+    // TO DO: these are currently unused
     var isOperatorName: Bool { if case .operatorName(_) = self.form { return true } else { return false } }
     
     var isCommandName: Bool {
         switch self.form {
-        case .letters, .symbols, .quotedName: return true
-        default:                              return false
+        case .letters, .symbols, .quotedName(_): return true
+        default:                                 return false
         }
     }
     
 }
 
-let nullToken = Token(.eol, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source
+let nullToken = Token(.lineBreak, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source
+
+let eofToken = Token(.endOfScript, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source
 

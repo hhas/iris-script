@@ -125,12 +125,12 @@ struct CoreLexer: LineReader { // don't think lexer should care if it's at start
     }
     
     func next() -> (Token, LineReader) {
-        if self.offset == self.code.endIndex { return (nullToken, nullReader) } // always return .eol once line reader is exhausted // caution: the EOL token is purely a marker; unlike other tokens it does not capture the line's trailing whitespace or endIndex // note: while we could eliminate .eof by returning `(Token,LineReader)?`, the current arrangement arguably makes binding the result simpler (less `if let tmp =…` shuffling), and .eol tokens may well be needed anyway when recombining the output of multiple single-line lexers [with partial parsing of numerics and operators] in order to perform the final multi-line parse by which a complete AST (or completed partial sub-trees plus rebalancing 'bad syntax' tokens when the script's syntax is not 100% correct) is assembled
+        if self.offset == self.code.endIndex { return (nullToken, nullReader) } // always return .lineBreak once line reader is exhausted // caution: the EOL token is purely a marker; unlike other tokens it does not capture the line's trailing whitespace or endIndex // note: while we could eliminate .endOfScript by returning `(Token,LineReader)?`, the current arrangement arguably makes binding the result simpler (less `if let tmp =…` shuffling), and .lineBreak tokens may well be needed anyway when recombining the output of multiple single-line lexers [with partial parsing of numerics and operators] in order to perform the final multi-line parse by which a complete AST (or completed partial sub-trees plus rebalancing 'bad syntax' tokens when the script's syntax is not 100% correct) is assembled
         // read one token (self.offset = first character of new token)
         let form: Token.Form
         let tokenEnd: String.Index
         let firstCharacter = self.code[self.offset]
-        if let punctuationForm = Token.corePunctuation[firstCharacter] { // core punctuation character
+        if let punctuationForm = Token.predefinedSymbols[firstCharacter] { // core punctuation character
             if case .nameDelimiter = punctuationForm { // found a single quote
                 let start = self.advanceByOne() // step over opening quote
                 // find the closing quote (string/annotation/linbreak)

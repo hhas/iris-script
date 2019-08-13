@@ -47,7 +47,7 @@ let linebreakCharacters     = CharacterSet.newlines
 let whitespaceCharacters    = CharacterSet.whitespaces // TO DO: how to treat vtab, nbsp?
 let nonWhitespaceCharacters = whitespaceCharacters.inverted
 let digitCharacters         = CharacterSet.decimalDigits // 0-9; parsing
-let punctuationCharacters   = CharacterSet(Token.corePunctuation.keys.map{ $0.unicodeScalars.first! })
+let punctuationCharacters   = CharacterSet(Token.predefinedSymbols.keys.map{ $0.unicodeScalars.first! })
 
 
 
@@ -72,7 +72,7 @@ let minusCharacters    = CharacterSet(charactersIn: "-\u{2212}\u{FF0D}\u{FE63}")
 let plusCharacters     = CharacterSet(charactersIn: "+\u{FF0B}")
 let numericSignCharacters = minusCharacters.union(plusCharacters)
 
-// TO DO: these should really be calculated from corePunctuation
+// TO DO: these should really be calculated from predefinedSymbols
 let quotedNameDelimiterCharacters = CharacterSet(charactersIn: "'‘’") // TO DO: what about Unicode apostrophes? (semantically distinct but visually similar)
 let quotedStringDelimiterCharacters = CharacterSet(charactersIn: "\"“”")
 let annotationDelimiterCharacters = CharacterSet(charactersIn: "«»")

@@ -66,46 +66,25 @@ let operatorReader = newOperatorReader(for: operatorRegistry)
 let doc = EditableScript(script, {NumericReader(operatorReader($0))})
 
 
-var tokenStream: ScriptReader? = QuoteReader(doc.tokenStream!)
+var tokenStream: ScriptReader = QuoteReader(doc.tokenStream)
+
 
 
 func test(_ operatorRegistry: OperatorRegistry) {
-    let pr = PatternRegistry(operatorRegistry: operatorRegistry)
     
-    pr.add(LIST)
-    pr.add(RECORD)
-    pr.add(GROUP) // parens
-    pr.add(FULL_PUNC_COMMAND)
-    pr.add(ATOMICOP)
-    pr.add(PREFIXOP)
-//    pr.add(INFIXOP) // might want to rework infix and postfix matchers as we really don't want to start a match pattern on .expr (since left recursion is a pig); instead, combine OP patterns into one, starting with opname and immediately followed by an action that looks back along the stack to see if opname was preceded by an expr before deciding if/how to continue matching (this'll require giving action func control over PartialMatch result as well as stack)
-//    pr.add(POSTFIXOP)
-    
-    // TO DO: commas are a bugger, since they must be treated differently when reading list/record vs expr seq; or rather, we need a way to prevent [a,b,c] being read as a single-item list containing a sentence-style block; probably easiest way to avoid this is to use list builder 'substack' to capture values and commas when inside []; rest of the time values and commas go straight onto main stack, leaving sentence terminators (.?! or LF without preceding comma/semicolon/colon) to trigger the reduction to block
     
     let doc = EditableScript("[1, []]", {NumericReader(operatorReader($0))}) 
     
     
-    var reader: ScriptReader = doc.tokenStream!
-    
-    let stack = ASTBuilder()
-    
+    let p = Parser(tokenStream: doc.tokenStream, operatorRegistry: operatorRegistry)
+    do {
+        let script = try p.parseScript()
+        print(script)
+    } catch {
+        print(error)
+    }
     // TO DO: if startMatch/continueMatch are responsible for shifting token to stack, they need to return a Bool indicating when they've done so, so that calling code knows to advance to next token
     
-    var (sh, pr1) = pr.startMatch(reader.token, stack: stack)
-    print("startMatch returned")
-    if let p = pr1 { print(p.patterns[0].pattern.map{"        \($0)"}.joined(separator: "\n")) }
-    
-    while let pr = pr1 { // token-pumping loop; continueMatch matches one token then returns control to here; thus we can trivially convert this loop to a Swift Iterator, allowing parsing to be suspended while an interactive console (e.g. REPL/IDE) waits for new input
-        print()
-        if sh {
-            guard let r = reader.next() else { print("out of tokens"); break } // TO DO: this should only advance to next token if match method indicates previous token should be/has been shifted to stack (it might be better to leave calling code to manage stack itself; however, that'd require returning action funcs as well rather than just invoking them directly)
-            reader = r
-        }
-        (sh, pr1) = pr.continueMatch(reader.token)
-        print("contineMatch returned")
-        if let p = pr1 { print(p.patterns[0].pattern.map{"        \($0)"}.joined(separator: "\n")) }
-    }
 }
 
 
@@ -145,7 +124,7 @@ for line in scriptLines {
         repeat {
             (token, lexer) = lexer.next()
             print(token)
-        } while !token.isEnd
+        } while !token.isEndOfLine
     } else {
         print("blank line")
     }

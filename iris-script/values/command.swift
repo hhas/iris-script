@@ -68,10 +68,10 @@ import Foundation
 
 class Command: ComplexValue {
     
-    typealias Argument = (label: Symbol?, value: Value)
+    typealias Argument = Record.Field
     
     var description: String {
-        return self.arguments.count == 0 ? self.name.label : "\(self.name.label) {\(self.arguments.map{ "\($0 == nil ? "" : "\($0!.label):")\($1)" }.joined(separator: ", "))}"
+        return self.arguments.count == 0 ? self.name.label : "\(self.name.label) {\(self.arguments.map{ "\($0.isEmpty ? "" : "\($0.label):")\($1)" }.joined(separator: ", "))}"
     }
 
     let nominalType: Coercion = asCommand
@@ -108,7 +108,7 @@ class Command: ComplexValue {
     private func value(at index: inout Int, named label: Symbol) -> Value {
         if index < self.arguments.count {
             let arg = self.arguments[index]
-            if arg.label == nil || arg.label == label {
+            if arg.label.isEmpty || arg.label == label {
                 index += 1
                 return arg.value
             }

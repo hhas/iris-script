@@ -38,13 +38,13 @@ struct AsRecord: RecordCoercion {
         var fields = [Record.Field]()
         var (key, value) = iter.next() ?? (nullSymbol, nullValue) // record may be empty record
         do {
-            for (asName, asType) in self.fields {
+            for (asSymbol, asType) in self.fields {
                 // catch and rethrow to indicate failed field?
-                if key == nullSymbol || key == asName {
-                    fields.append((asName, try value.eval(in: scope, as: asType)))
+                if key == nullSymbol || key == asSymbol {
+                    fields.append((asSymbol, try value.eval(in: scope, as: asType)))
                     (key, value) = iter.next() ?? (nullSymbol, nullValue)
                 } else { // assume missed field
-                    fields.append((asName, try nullValue.eval(in: scope, as: asType)))
+                    fields.append((asSymbol, try nullValue.eval(in: scope, as: asType)))
                 }
             }
             // think this logic is subtly wrong (i.e. what if record is `{1,2,nothing}`?) one option is to discard trailing `nothing`[s]

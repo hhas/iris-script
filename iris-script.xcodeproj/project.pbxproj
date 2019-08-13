@@ -14,7 +14,6 @@
 		4F1EA48922B2888400FFA4D2 /* ordered list.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F1EA48822B2888400FFA4D2 /* ordered list.swift */; };
 		4F1EA48E22B4E7C200FFA4D2 /* coercion modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F1EA48D22B4E7C200FFA4D2 /* coercion modifiers.swift */; };
 		4F1EA49022B4E8D700FFA4D2 /* complex coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F1EA48F22B4E8D700FFA4D2 /* complex coercions.swift */; };
-		4F25506322EA38A400B7034F /* node builders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25506222EA38A400B7034F /* node builders.swift */; };
 		4F25506522EA38F500B7034F /* script reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25506422EA38F500B7034F /* script reader.swift */; };
 		4F25553B22E5053E002FAE5E /* operator registry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25553A22E5053E002FAE5E /* operator registry.swift */; };
 		4F25553D22E5D3DE002FAE5E /* characters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25553C22E5D3DE002FAE5E /* characters.swift */; };
@@ -38,8 +37,7 @@
 		4F29320222E23AD700BC0AD4 /* misc line readers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F29320122E23AD700BC0AD4 /* misc line readers.swift */; };
 		4F29320422E25E7100BC0AD4 /* operator reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F29320322E25E7100BC0AD4 /* operator reader.swift */; };
 		4F2B81BF22CCD63E00FD1EB8 /* record coercion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B81BE22CCD63E00FD1EB8 /* record coercion.swift */; };
-		4F6D529322EADEC0009A15E7 /* patterns.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F6D529222EADEC0009A15E7 /* patterns.swift */; };
-		4F6D529522EAF21B009A15E7 /* AST builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F6D529422EAF21B009A15E7 /* AST builder.swift */; };
+		4F5B58852302098200B039DC /* pair.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B58842302098200B039DC /* pair.swift */; };
 		4F84D00122ADA0F200C9FD23 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00022ADA0F200C9FD23 /* main.swift */; };
 		4F84D00822ADA12A00C9FD23 /* value protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00722ADA12A00C9FD23 /* value protocols.swift */; };
 		4F84D00A22ADA13700C9FD23 /* coercion protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00922ADA13700C9FD23 /* coercion protocols.swift */; };
@@ -48,8 +46,8 @@
 		4F84D01222AE7E2C00C9FD23 /* handler protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D01122AE7E2C00C9FD23 /* handler protocols.swift */; };
 		4F84D01422AE7EEA00C9FD23 /* block.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D01322AE7EEA00C9FD23 /* block.swift */; };
 		4F84D01622AE819000C9FD23 /* errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D01522AE819000C9FD23 /* errors.swift */; };
+		4FAE769422FDBCCA00952994 /* parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FAE769322FDBCCA00952994 /* parser.swift */; };
 		4FFC6F2522D6818000D636B9 /* core lexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2422D6818000D636B9 /* core lexer.swift */; };
-		4FFC6F2722D6818C00D636B9 /* pattern matcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2622D6818C00D636B9 /* pattern matcher.swift */; };
 		4FFC6F2A22D7704D00D636B9 /* access protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2922D7704D00D636B9 /* access protocols.swift */; };
 /* End PBXBuildFile section */
 
@@ -73,7 +71,6 @@
 		4F1EA48822B2888400FFA4D2 /* ordered list.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ordered list.swift"; sourceTree = "<group>"; };
 		4F1EA48D22B4E7C200FFA4D2 /* coercion modifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "coercion modifiers.swift"; sourceTree = "<group>"; };
 		4F1EA48F22B4E8D700FFA4D2 /* complex coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "complex coercions.swift"; sourceTree = "<group>"; };
-		4F25506222EA38A400B7034F /* node builders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "node builders.swift"; sourceTree = "<group>"; };
 		4F25506422EA38F500B7034F /* script reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "script reader.swift"; sourceTree = "<group>"; };
 		4F25553A22E5053E002FAE5E /* operator registry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator registry.swift"; sourceTree = "<group>"; };
 		4F25553C22E5D3DE002FAE5E /* characters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = characters.swift; sourceTree = "<group>"; };
@@ -97,8 +94,7 @@
 		4F29320122E23AD700BC0AD4 /* misc line readers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "misc line readers.swift"; sourceTree = "<group>"; };
 		4F29320322E25E7100BC0AD4 /* operator reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator reader.swift"; sourceTree = "<group>"; };
 		4F2B81BE22CCD63E00FD1EB8 /* record coercion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record coercion.swift"; sourceTree = "<group>"; };
-		4F6D529222EADEC0009A15E7 /* patterns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = patterns.swift; sourceTree = "<group>"; };
-		4F6D529422EAF21B009A15E7 /* AST builder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AST builder.swift"; sourceTree = "<group>"; };
+		4F5B58842302098200B039DC /* pair.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pair.swift; sourceTree = "<group>"; };
 		4F84CFFD22ADA0F200C9FD23 /* iris-script */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "iris-script"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F84D00022ADA0F200C9FD23 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4F84D00722ADA12A00C9FD23 /* value protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "value protocols.swift"; sourceTree = "<group>"; };
@@ -108,8 +104,8 @@
 		4F84D01122AE7E2C00C9FD23 /* handler protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler protocols.swift"; sourceTree = "<group>"; };
 		4F84D01322AE7EEA00C9FD23 /* block.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = block.swift; sourceTree = "<group>"; };
 		4F84D01522AE819000C9FD23 /* errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = errors.swift; sourceTree = "<group>"; };
+		4FAE769322FDBCCA00952994 /* parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = parser.swift; sourceTree = "<group>"; };
 		4FFC6F2422D6818000D636B9 /* core lexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "core lexer.swift"; sourceTree = "<group>"; };
-		4FFC6F2622D6818C00D636B9 /* pattern matcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "pattern matcher.swift"; sourceTree = "<group>"; };
 		4FFC6F2922D7704D00D636B9 /* access protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "access protocols.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -165,12 +161,9 @@
 		4F25506122EA386400B7034F /* parser */ = {
 			isa = PBXGroup;
 			children = (
-				4F25506422EA38F500B7034F /* script reader.swift */,
 				4F2931FF22E2290B00BC0AD4 /* editable script.swift */,
-				4FFC6F2622D6818C00D636B9 /* pattern matcher.swift */,
-				4F6D529222EADEC0009A15E7 /* patterns.swift */,
-				4F25506222EA38A400B7034F /* node builders.swift */,
-				4F6D529422EAF21B009A15E7 /* AST builder.swift */,
+				4F25506422EA38F500B7034F /* script reader.swift */,
+				4FAE769322FDBCCA00952994 /* parser.swift */,
 			);
 			name = parser;
 			sourceTree = "<group>";
@@ -227,6 +220,7 @@
 			children = (
 				4F1EA48422B279B500FFA4D2 /* null.swift */,
 				4F26065722C015A30036D904 /* symbol.swift */,
+				4F5B58842302098200B039DC /* pair.swift */,
 				4F26065322BECD7B0036D904 /* record.swift */,
 				4F84D01322AE7EEA00C9FD23 /* block.swift */,
 			);
@@ -353,12 +347,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				4F1EA48722B27B8D00FFA4D2 /* text.swift in Sources */,
+				4F5B58852302098200B039DC /* pair.swift in Sources */,
 				4FFC6F2A22D7704D00D636B9 /* access protocols.swift in Sources */,
 				4F2B81BF22CCD63E00FD1EB8 /* record coercion.swift in Sources */,
 				4F26066222C017EF0036D904 /* command bindings.swift in Sources */,
 				4F1EA48522B279B500FFA4D2 /* null.swift in Sources */,
 				4F84D00A22ADA13700C9FD23 /* coercion protocols.swift in Sources */,
-				4F25506322EA38A400B7034F /* node builders.swift in Sources */,
 				4F25FB8A22B6AC82007EE7AE /* general funcs.swift in Sources */,
 				4F257CCC22BAD1FA00A51CF5 /* math funcs.swift in Sources */,
 				4F25553B22E5053E002FAE5E /* operator registry.swift in Sources */,
@@ -375,19 +369,17 @@
 				4F26065622C0158C0036D904 /* value modifiers.swift in Sources */,
 				4F25553D22E5D3DE002FAE5E /* characters.swift in Sources */,
 				4F1EA49022B4E8D700FFA4D2 /* complex coercions.swift in Sources */,
+				4FAE769422FDBCCA00952994 /* parser.swift in Sources */,
 				4F84D00822ADA12A00C9FD23 /* value protocols.swift in Sources */,
 				4F29320222E23AD700BC0AD4 /* misc line readers.swift in Sources */,
 				4F29320422E25E7100BC0AD4 /* operator reader.swift in Sources */,
-				4FFC6F2722D6818C00D636B9 /* pattern matcher.swift in Sources */,
 				4F2694D922E061AC009B8FC0 /* numeric reader.swift in Sources */,
 				4F2694DB22E06D24009B8FC0 /* parser protocols.swift in Sources */,
 				4FFC6F2522D6818000D636B9 /* core lexer.swift in Sources */,
 				4F84D01222AE7E2C00C9FD23 /* handler protocols.swift in Sources */,
-				4F6D529322EADEC0009A15E7 /* patterns.swift in Sources */,
 				4F1EA48E22B4E7C200FFA4D2 /* coercion modifiers.swift in Sources */,
 				4F26065822C015A30036D904 /* symbol.swift in Sources */,
 				4F1EA48322B2794400FFA4D2 /* collection coercions.swift in Sources */,
-				4F6D529522EAF21B009A15E7 /* AST builder.swift in Sources */,
 				4F1EA48922B2888400FFA4D2 /* ordered list.swift in Sources */,
 				4F26065422BECD7B0036D904 /* record.swift in Sources */,
 				4F29320022E2290B00BC0AD4 /* editable script.swift in Sources */,

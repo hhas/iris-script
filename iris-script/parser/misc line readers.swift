@@ -9,7 +9,7 @@ import Foundation
 // TO DO: need adapter for reducing #…, @…, A.B.C
 
 
-struct NullReader: LineReader { // returned once line reader is exhausted; always outputs .eol token
+struct NullReader: LineReader { // returned once line reader is exhausted; always outputs .lineBreak token
     
     let code = ""
     

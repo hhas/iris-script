@@ -10,7 +10,7 @@ import Foundation
 
 
 
-// TO DO: balance counting per line needs to pass forward both counts so that they are picked up from the last line reader (or perhaps store them as `.eol(bringForward:[Form], carryForward:[Form])`) // problem: what about string quotes? think all parens and quotes need to go on these lists - it's up to the rebalancer to count the string quotes and thus decide which parens to ignore as being inside quoted text
+// TO DO: balance counting per line needs to pass forward both counts so that they are picked up from the last line reader (or perhaps store them as `.lineBreak(bringForward:[Form], carryForward:[Form])`) // problem: what about string quotes? think all parens and quotes need to go on these lists - it's up to the rebalancer to count the string quotes and thus decide which parens to ignore as being inside quoted text
 
 // TO DO: making line readers polymorphic for String or Substring may improve parsing times when reading for execution only
 
@@ -98,7 +98,7 @@ class EditableScript: CustomStringConvertible, CustomDebugStringConvertible { //
                     
                     // TO DO: parse here to avoid iterating tokens twice (caveat what to do when a syntax error is encountered, e.g. insert smallest-possible 'fixer' for the immediate issue and move on [bearing in mind a naive fix may create more syntax problems than it solves];)
                     
-                } while !token.isEnd
+                } while token.form != .lineBreak
             }
             return Line(code, tokens, lineCounter()) // TO DO: also capture next reader?
         })

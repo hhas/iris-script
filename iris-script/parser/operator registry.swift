@@ -26,6 +26,8 @@ struct OperatorClass: CustomDebugStringConvertible {
     
     var isEmpty: Bool { return self.prefix == nil && self.infix == nil && self.postfix == nil && self.atom == nil }
     
+    var hasLeftOperand: Bool { return self.infix != nil || self.postfix != nil }
+    
     mutating func add(_ definition: OperatorDefinition) {
         if let d = self.definition(for: definition.form) { print("overwriting existing operator definition \(d) with \(definition)") }
         switch definition.form {

@@ -70,7 +70,7 @@ struct NumericReader: LineReader {
             let content = self.code[startToken.content.startIndex..<endToken.content.endIndex]
             // TO DO: Number should take individual components and construct best representation itself (or we could do that here and pass finished Int/Double/whatever to Number constructor); Q. should currency values automatically use Decimal rather than Double representation? how can we make these choices user-customizable via top-level annotations? (bearing in mind that any such customizations MUST have a known scope of influence; e.g. external libraries should still be parsed according to their own settings, but may adapt runtime behaviors such as numeric coercions when working with values supplied by main script)
             guard let n = try? Number(String(content)) else { fatalError("Couldn't parse number: '\(content)'") }
-            // TO DO: would be better if Token implemented `span(form,to:token)`, but that requires getting at underlying string to re-slice it (it also requires that end token is not .eol, or else handles that as a special case)
+            // TO DO: would be better if Token implemented `span(form,to:token)`, but that requires getting at underlying string to re-slice it (it also requires that end token is not .lineBreak, or else handles that as a special case)
             return (Token(.value(n), startToken.whitespaceBefore, content,
                                      endToken.whitespaceAfter, startToken.position.span(to: endToken.position)), nextReader)
         }

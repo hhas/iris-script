@@ -26,7 +26,7 @@ struct OrderedList: BoxedCollectionValue { // ExpressibleByArrayLiteral?
     
     let data: [Value] // TO DO: what about Array<Element>? boxing an array of Swift primitives and boxing each item upon use might have performance advantage in some situations (if so, we probably want to implement that as a GenericList<Element> struct which is natively polymorphic with OrderedList; however, that will mean chunk expressions and library commands can't operate directly on OrderedList.data all access to list contents must go via methods on CollectionValue/OrderedList, which adds an extra level of indirection to an already Swift-stack-heavy AST-walking interpreter)
     
-    init(_ data: [Value]) {
+    init(_ data: [Value] = []) {
         self.data = data
     }
     

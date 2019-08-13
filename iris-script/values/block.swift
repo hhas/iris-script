@@ -17,8 +17,8 @@ struct Block: ComplexValue { // caution: this does not capture lexical scope
     let nominalType: Coercion = asBlock
     
     enum Style {
-        case sentence(terminator: Token) // terminator may be .period, .query, .exclamation
-        case parenthesis
+        case sentence(terminator: Token) // terminator may be .period, .query, .exclamation; TO DO: how should `!`/`?` modify behavior? (e.g. environment hooks)
+        case parenthesis // TO DO: not sure about this; should parens be separate Group type which can hold blocks or other values?
         case custom(definition: OperatorDefinition, terminator: Token, delimiter: Token)
     }
     

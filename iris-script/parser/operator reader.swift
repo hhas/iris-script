@@ -53,12 +53,12 @@ struct OperatorReader: LineReader {
         var (token, reader) = self.reader.next()
         reader = OperatorReader(reader, for: self.operators)
         switch token.form {
-        // TO DO: ignore token
-        case .letters where !(token.isRightContiguous && reader.next().0.form == .colon): // ignore if it's a field/argument `label:` // TO DO: this does not account for annotations appearing between label and colon (however, that's probably best considered a syntax error)
+        // TO DO: `where` filter is problematic as letters/symbols followed by colon may be record or dict keys; we can get around this by restricting dictionary keys to scalar literals; it's very likely going to blow up if using pairs as arguments to prefix operators/commands, e.g. `if TEST: ACTION`; it might be better to let it be matched as operator name and disambiguate later when parsing command arguments/record labels
+        case .letters: // where !(token.isRightContiguous && reader.next().0.form == .colon): // ignore if it's a field/argument `label:` // TO DO: this does not account for annotations appearing between label and colon (however, that's probably best considered a syntax error)
             if let definition = self.operators.matchWord(token.content) {
                 token = token.extract(.operatorName(definition))
             }
-        case .symbols:
+        case .symbols: // where !(token.isRightContiguous && reader.next().0.form == .colon):
             let matches = self.operators.matchSymbols(token.content)
             // TO DO: this'd be simpler if matchSymbols built and returned the new token stream (only issue is that matches are made first to last whereas unpopping tokens needs to be done from last match to first; i.e. use recursion rather than loop)
             if matches.count > 0 {

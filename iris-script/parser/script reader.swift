@@ -21,7 +21,25 @@ protocol ScriptReader {
     var token: Token { get } // the current token
     var location: Location { get } // the current token's position
 
-    func next() -> ScriptReader?
+    func next() -> ScriptReader
+}
+
+struct EOFReader: ScriptReader {
+    
+    private let script: ImmutableScript
+    
+    var code: String { return script.code }
+
+    let token = eofToken
+    var location: Location { return (self.script.lines.count, 0) }
+    
+    init(_ script: ImmutableScript) {
+        self.script = script
+    }
+    
+    func next() -> ScriptReader {
+        return self
+    }
 }
 
 
@@ -41,12 +59,12 @@ struct TokenStream: ScriptReader {
         self.token = script.lines[lineIndex].tokens[tokenIndex]
     }
     
-    init?(_ script: ImmutableScript) {
-        guard let i = script.lines.firstIndex(where: { !$0.isEmpty }) else { return nil }
+    init(_ script: ImmutableScript) {
+        let i = script.lines.firstIndex(where: { !$0.isEmpty }) ?? script.lines.count
         self.init(script: script, lineIndex: i, tokenIndex: 0)
     }
     
-    func next() -> ScriptReader? { // returns a new TokenStream identifying the next token
+    func next() -> ScriptReader { // returns a new TokenStream identifying the next token
         if self.location.lineIndex < self.script.lines.count {
             let i = self.location.tokenIndex + 1
             if i < self.script.lines[self.location.lineIndex].tokens.count {
@@ -55,14 +73,14 @@ struct TokenStream: ScriptReader {
                 return TokenStream(script: script, lineIndex: i, tokenIndex: 0)
             }
         }
-        return nil
+        return EOFReader(self.script)
     }
 }
 
 
 extension EditableScript {
     
-    var tokenStream: TokenStream? { return TokenStream(ImmutableScript(lines: self.lines, code: self.code)) }
+    var tokenStream: TokenStream { return TokenStream(ImmutableScript(lines: self.lines, code: self.code)) }
     
 }
 
@@ -73,26 +91,25 @@ struct QuoteReader: ScriptReader { // reduces quoted text (string literal or ann
     
     typealias Location = (lineIndex: Int, tokenIndex: Int) // note: these will not be contiguous
     
-    let nextReader: ScriptReader?
+    let nextReader: ScriptReader
     
-    var code: String { return self.nextReader?.code ?? "" }
+    var code: String { return self.nextReader.code }
     
     let token: Token
     let location: Location
     
     
     init(_ reader: ScriptReader) {
-        var reader = reader
         let startToken = reader.token
         self.location = reader.location // start position only (not sure how to tell editable script about reductions)
+        var reader = reader.next()
         switch startToken.form {
         case .startAnnotation:
             var s = String(startToken.whitespaceAfter ?? "")
-            while let r = reader.next() {
-                reader = r
-                if r.token.form == .endAnnotation { break }
-                let t = reader.token
-                s += t.content + (t.whitespaceAfter ?? "")
+            while reader.token.form != .endAnnotation {
+                if reader.token.form == .endOfScript { fatalError("expected `»` but found end of code") }
+                s += reader.token.content + (reader.token.whitespaceAfter ?? "")
+                reader = reader.next()
             }
             let endToken = reader.token
             self.token = Token(.annotation(s),
@@ -103,11 +120,10 @@ struct QuoteReader: ScriptReader { // reduces quoted text (string literal or ann
             fatalError("found unbalanced `»`") // TO DO
         case .stringDelimiter:
             var s = String(startToken.whitespaceAfter ?? "")
-            while let r = reader.next() {
-                reader = r
-                if r.token.form == .stringDelimiter { break } // TO DO: need to check if there's a 2nd contiguous .stringDelimiter; if there is, continue
-                let t = reader.token
-                s += t.content + (t.whitespaceAfter ?? "")
+            while true {
+                if reader.token.form != .stringDelimiter { break } // TO DO: need to check if there's a 2nd contiguous .stringDelimiter; if there is, continue
+                s += reader.token.content + (reader.token.whitespaceAfter ?? "")
+                reader = reader.next()
             }
             let endToken = reader.token
             self.token = Token(.value(Text(s)),
@@ -122,9 +138,8 @@ struct QuoteReader: ScriptReader { // reduces quoted text (string literal or ann
     }
     
     
-    func next() -> ScriptReader? {
-        guard let reader = self.nextReader else { return nil }
-        return QuoteReader(reader)
+    func next() -> ScriptReader {
+        return QuoteReader(self.nextReader)
     }
 
 }
