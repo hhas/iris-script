@@ -52,14 +52,14 @@ script = "‘foo’ -1*-2+a3" // note that `a3` is two tokens: <.letters "a"><.v
 
 
 let operatorRegistry = OperatorRegistry()
-operatorRegistry.add(OperatorDefinition("true", .atom))
-operatorRegistry.add(OperatorDefinition("false", .atom))
-operatorRegistry.add(OperatorDefinition("×", .infix, aliases: ["*"]))
-operatorRegistry.add(OperatorDefinition("÷", .infix, aliases: ["/"]))
-operatorRegistry.add(OperatorDefinition("\u{FF0B}", .infix, aliases: ["+"])) // full-width plus
-operatorRegistry.add(OperatorDefinition("\u{2212}", .infix, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
-operatorRegistry.add(OperatorDefinition("\u{FF0B}", .prefix, aliases: ["+"])) // full-width plus
-operatorRegistry.add(OperatorDefinition("\u{2212}", .prefix, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
+operatorRegistry.add(OperatorDefinition("true", .atom, precedence: 0))
+operatorRegistry.add(OperatorDefinition("false", .atom, precedence: 0))
+operatorRegistry.add(OperatorDefinition("\u{FF0B}", .prefix, precedence: 990, aliases: ["+"])) // full-width plus
+operatorRegistry.add(OperatorDefinition("\u{2212}", .prefix, precedence: 990, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
+operatorRegistry.add(OperatorDefinition("×", .infix, precedence: 500, aliases: ["*"]))
+operatorRegistry.add(OperatorDefinition("÷", .infix, precedence: 500, aliases: ["/"]))
+operatorRegistry.add(OperatorDefinition("\u{FF0B}", .infix, precedence: 490, aliases: ["+"])) // full-width plus
+operatorRegistry.add(OperatorDefinition("\u{2212}", .infix, precedence: 490, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
 let operatorReader = newOperatorReader(for: operatorRegistry)
 
 //print(operatorRegistry)
@@ -74,19 +74,19 @@ func test(_ operatorRegistry: OperatorRegistry) {
     // TO DO: need underscore reader
     
     let script:String
-    script = "foo [1, 2,\n3\n [:]] arg: “yes” um: false."
-    //script = "1 + 2 / 4.6" // TO DO: operator parsing is still buggy
+    //script = "foo [1, 2,\n3\n [:]] arg: “yes” um: false."
+    script = "1 + 2 / 4.6" // TO DO: operator parsing is still buggy
     
     let doc = EditableScript(script) { NumericReader(operatorReader($0)) }
     
-    
+    /*
     var ts: BlockReader = QuoteReader(doc.tokenStream)
     while ts.token.form != .endOfScript {
         print(ts.token)
         ts = ts.next()
     }
     print()
-    
+    */
     
     let p = Parser(tokenStream: QuoteReader(doc.tokenStream), operatorRegistry: operatorRegistry)
     do {

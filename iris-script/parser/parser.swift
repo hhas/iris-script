@@ -228,6 +228,7 @@ class Parser {
                 value = Command(definition)
             } else {
                 guard let definition = operatorClass.prefix else { throw BadSyntax.unterminatedExpression }
+                self.advance() // step over operator name to read right-hand operand
                 value = Command(definition, right: try self.parseExpression(definition.precedence))
             }
         case .hash:
@@ -267,6 +268,7 @@ class Parser {
                 value = Command(definition, left: leftExpr)
             } else { // infix operator
                 guard let definition = operatorClass.infix else { throw BadSyntax.unterminatedExpression }
+                self.advance() // step over operator name to read right-hand operand
                 value = Command(definition, left: leftExpr, right: try self.parseExpression(definition.precedence))
             }
         case .colon:
@@ -294,8 +296,8 @@ class Parser {
     func parseExpression(_ precedence: Int = 0) throws -> Value { // TO DO: should this method be responsible for binding extracted annotations to adjacent Values?
         //print("BEGIN expr")
         var left = try self.parseAtom()
-        // TO DO: this peek won't work right if token is operatorName
-        // TO DO: this loop needs to break on separator punctuation
+        // this loop should always break on separator punctuation (this should happen automatically as punctuation uses -ve precedence, putting it lower than everything else)
+        //print("parseExpression", self.peek().token, (precedence, self.peek().token.form.precedence))
         while precedence < self.peek().token.form.precedence { // note: this disallows line breaks between operands and operator
             self.advance()
             left = try self.parseOperation(left)

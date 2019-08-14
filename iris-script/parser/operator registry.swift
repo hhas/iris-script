@@ -113,7 +113,7 @@ struct OperatorDefinition: CustomDebugStringConvertible {
     let associativity: Associativity
     // TO DO: token-matching patterns can generally be inferred from form, with caveat on more specialized operators - e.g. `as`, `if` - where it may be beneficial to supply custom pattern (i.e. if Pair is a native Value, it could wait until eval, or the pattern could express the required type; OTOH, if colon pair is pure syntax construct, it will need to be matched by a pattern [in which case need a `Pattern?` argument that allows default form-derived pattern to be overridden])
     
-    init(_ name: String, _ form: Form, precedence: Int = 0, associativity: Associativity = .left, aliases: [String] = []) { // native libraries should always use this API; primitive libraries will use it until they can build pre-validated, pre-optimized definitions, at which point they can skip these checks at load-time [except when running in troubleshooting mode]
+    init(_ name: String, _ form: Form, precedence: Int, associativity: Associativity = .left, aliases: [String] = []) { // native libraries should always use this API; primitive libraries will use it until they can build pre-validated, pre-optimized definitions, at which point they can skip these checks at load-time [except when running in troubleshooting mode]
         guard let n = Name(name) else { fatalError("Invalid operator name: \"\(name)\"") } // TO DO: throw instead?
         self.name = n
         self.form = form
