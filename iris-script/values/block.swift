@@ -10,7 +10,13 @@ import Foundation
 
 struct Block: ComplexValue { // caution: this does not capture lexical scope
     
-    var description: String { return "\(self.data)" }
+    var description: String { // TO DO: hand off to pp
+        switch self.style {
+        case .sentence(let t): return "\(self.data.map{$0.description}.joined(separator: ", "))\(t)"
+        case .parenthesis: return "(\(self.data.map{"\n\t\($0.description)"}.joined(separator: ""))\n)"
+        case .custom(let def, let t, let d): return "\(def.name)\n\(self.data.map{$0.description}.joined(separator: "\(d)")))\(t)"
+        }
+    }
     
     typealias ArrayLiteralElement = Value
 
@@ -19,7 +25,7 @@ struct Block: ComplexValue { // caution: this does not capture lexical scope
     enum Style {
         case sentence(terminator: Token) // terminator may be .period, .query, .exclamation; TO DO: how should `!`/`?` modify behavior? (e.g. environment hooks)
         case parenthesis // TO DO: not sure about this; should parens be separate Group type which can hold blocks or other values?
-        case custom(definition: OperatorDefinition, terminator: Token, delimiter: Token)
+        case custom(definition: OperatorDefinition, terminator: Token, delimiter: Token) // TO DO: definition should probably provide formatter
     }
     
     let data: [Value]

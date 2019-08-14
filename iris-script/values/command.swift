@@ -135,3 +135,25 @@ class Command: ComplexValue {
         }
     }
 }
+
+
+let leftOperand = Symbol("left")
+let rightOperand = Symbol("right")
+
+extension Command {
+    
+    // TO DO: also annotate Command instance with operator definition for use in error messages/pp
+    
+    convenience init(_ definition: OperatorDefinition) {
+        self.init(definition.name.name)
+    }
+    convenience init(_ definition: OperatorDefinition, left: Value) {
+        self.init(definition.name.name, [(leftOperand, left)])
+    }
+    convenience init(_ definition: OperatorDefinition, right: Value) {
+        self.init(definition.name.name, [(rightOperand, right)])
+    }
+    convenience init(_ definition: OperatorDefinition, left: Value, right: Value) {
+        self.init(definition.name.name, [(leftOperand, left), (rightOperand, right)])
+    }
+}

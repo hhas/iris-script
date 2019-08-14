@@ -14,38 +14,38 @@ import Foundation
 struct OperatorClass: CustomDebugStringConvertible {
     
     var debugDescription: String {
-        return "<\(self.name == nil ? "nil" : String(describing: self.name!)) \([self.prefix, self.infix, self.postfix, self.atom].map{$0 == nil ? "0" : "1"}.joined(separator: ""))>"
+        return "<\(self.name == nil ? "nil" : String(describing: self.name!)) \([self.atom, self.prefix, self.infix, self.postfix].map{$0 == nil ? "0" : "1"}.joined(separator: ""))>"
     }
     
     private(set) var name: OperatorDefinition.Name?
     
+    private(set) var atom: OperatorDefinition?      // `OPERATOR_NAME`
     private(set) var prefix: OperatorDefinition?    // `OPERATOR_NAME RIGHT_OPERAND`, e.g. `-expr`
     private(set) var infix: OperatorDefinition?     // `LEFT_OPERAND OPERATOR_NAME RIGHT_OPERAND`, e.g. `expr + expr`
     private(set) var postfix: OperatorDefinition?   // `LEFT_OPERAND OPERATOR_NAME`, e.g. ``
-    private(set) var atom: OperatorDefinition?      // `OPERATOR_NAME`
     
     var isEmpty: Bool { return self.prefix == nil && self.infix == nil && self.postfix == nil && self.atom == nil }
     
     var hasLeftOperand: Bool { return self.infix != nil || self.postfix != nil }
     
-    mutating func add(_ definition: OperatorDefinition) {
-        if let d = self.definition(for: definition.form) { print("overwriting existing operator definition \(d) with \(definition)") }
-        switch definition.form {
-        case .prefix: self.prefix = definition
-        case .infix: self.infix = definition
-        case .postfix: self.postfix = definition
-        case .atom: self.atom = definition
-        }
-        self.name = definition.name
-    }
-    
-    func definition(for form: OperatorDefinition.Form) -> OperatorDefinition? {
+    private func definition(for form: OperatorDefinition.Form) -> OperatorDefinition? { // used in add() above
         switch form {
+        case .atom: return self.atom
         case .prefix: return self.prefix
         case .infix: return self.infix
         case .postfix: return self.postfix
-        case .atom: return self.atom
         }
+    }
+    
+    mutating func add(_ definition: OperatorDefinition) {
+        if let d = self.definition(for: definition.form) { print("warning: overwriting existing operator definition \(d) with \(definition)") } // TO DO: should this be treated as implementation error if new definition != old definition (i.e. it's possible that two libraries will define the same custom operators to ensure availability whenever one of them is imported; assuming operators adhere to established semantics (e.g. arithmetic, algebraic symbols) then only predecences might mismatch, and assuming libraries are released sequentially then the 2nd library should just use the same precedence values as the first)
+        switch definition.form {
+        case .atom: self.atom = definition
+        case .prefix: self.prefix = definition
+        case .infix: self.infix = definition
+        case .postfix: self.postfix = definition
+        }
+        self.name = definition.name
     }
 }
 
@@ -64,6 +64,13 @@ struct OperatorDefinition: CustomDebugStringConvertible {
             switch self {
             case .word(let s):   return String(describing: s)
             case .symbol(let s): return String(describing: s)
+            }
+        }
+        
+        var name: Symbol {
+            switch self {
+            case .word(let name): return name
+            case .symbol(let name): return name
             }
         }
         

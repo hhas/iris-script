@@ -86,7 +86,7 @@ class EditableScript: CustomStringConvertible, CustomDebugStringConvertible { //
             (line: Substring) -> Line in
             let code = String(line)
             var tokens = [Token]()
-            if let lineReader = CoreLexer(code) {
+            if let lineReader = Tokenizer(code) {
                 var lexer: LineReader = lineReaderAdapter(lineReader)
                 var token: Token
                 repeat {

@@ -52,6 +52,8 @@ script = "‘foo’ -1*-2+a3" // note that `a3` is two tokens: <.letters "a"><.v
 
 
 let operatorRegistry = OperatorRegistry()
+operatorRegistry.add(OperatorDefinition("true", .atom))
+operatorRegistry.add(OperatorDefinition("false", .atom))
 operatorRegistry.add(OperatorDefinition("×", .infix, aliases: ["*"]))
 operatorRegistry.add(OperatorDefinition("÷", .infix, aliases: ["/"]))
 operatorRegistry.add(OperatorDefinition("\u{FF0B}", .infix, aliases: ["+"])) // full-width plus
@@ -66,17 +68,27 @@ let operatorReader = newOperatorReader(for: operatorRegistry)
 let doc = EditableScript(script, {NumericReader(operatorReader($0))})
 
 
-var tokenStream: ScriptReader = QuoteReader(doc.tokenStream)
-
-
 
 func test(_ operatorRegistry: OperatorRegistry) {
     
+    // TO DO: need underscore reader
     
-    let doc = EditableScript("[1, []]", {NumericReader(operatorReader($0))}) 
+    let script:String
+    script = "foo [1, 2,\n3\n [:]] arg: “yes” um: false."
+    //script = "1 + 2 / 4.6" // TO DO: operator parsing is still buggy
+    
+    let doc = EditableScript(script) { NumericReader(operatorReader($0)) }
     
     
-    let p = Parser(tokenStream: doc.tokenStream, operatorRegistry: operatorRegistry)
+    var ts: BlockReader = QuoteReader(doc.tokenStream)
+    while ts.token.form != .endOfScript {
+        print(ts.token)
+        ts = ts.next()
+    }
+    print()
+    
+    
+    let p = Parser(tokenStream: QuoteReader(doc.tokenStream), operatorRegistry: operatorRegistry)
     do {
         let script = try p.parseScript()
         print(script)

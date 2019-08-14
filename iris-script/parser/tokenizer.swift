@@ -1,13 +1,11 @@
 //
-//  core lexer.swift
+//  tokenizer.swift
 //  iris-script
 //
 
 //  given a single line of code, separates core punctuation from .letters, .symbols, and .digits; any adjacent whitespace is attached to the returned Token
 
-//
-
-// b e aware that not all lexed tokens will eventually reduce to code: tokens subsequently found to lie within string/annotation literals are ignored and discarded when the script is parsed in full
+// be aware that not all raw tokens will eventually reduce to code: tokens subsequently found to lie within string/annotation literals are ignored and discarded when the script is parsed in full
 
 
 
@@ -79,7 +77,7 @@ import Foundation
 // TO DO: should next reader be bound to Token? (this'd make token structs a bit fatter, but has the benefit that interactive autosuggest/autocorrect can easily look at a line's unresolved tokens and try different solutions, to see which provides the best outcome; note: given that CoreLexer is scanning the original string, this might require some jiggery to step over the original, unwanted token[s], using UnpopToken to 'reinsert' our attempted 'fix' tokens, then get the whole thing re-reading as before - which means the unpop needs to be wrapped in the line reader's adapters as well, which means passing it thru EditableScript.reader())
 
 
-struct CoreLexer: LineReader { // don't think lexer should care if it's at start of line or start of script; that's the parser's problem when reading multiline exprs (e.g. lists/records wrapped over multiple lines); note that trailing `.` after digits at EOL is expr separator; the numeric parser (which is strictly single-line) will detect the incomplete match for [e.g.] `123.` and split off the `.` to yield `.value(123)` and `.periodSeparator` tokens, leaving next [block] parser to deal with trailing period (comma and period separators describe blocks, e.g. `To foo{} do_this, do_that, do_the_other. 123.` should parse as `(to foo{} (do_this, do_that, do_the_other)) (123)`. Longer blocks may be delimited using `do…done` for readability, giving us 3 different syntaxes to write a block.)
+struct Tokenizer: LineReader { // don't think lexer should care if it's at start of line or start of script; that's the parser's problem when reading multiline exprs (e.g. lists/records wrapped over multiple lines); note that trailing `.` after digits at EOL is expr separator; the numeric parser (which is strictly single-line) will detect the incomplete match for [e.g.] `123.` and split off the `.` to yield `.value(123)` and `.periodSeparator` tokens, leaving next [block] parser to deal with trailing period (comma and period separators describe blocks, e.g. `To foo{} do_this, do_that, do_the_other. 123.` should parse as `(to foo{} (do_this, do_that, do_the_other)) (123)`. Longer blocks may be delimited using `do…done` for readability, giving us 3 different syntaxes to write a block.)
 
     let code: String // the entire script // TO DO: should probably be pre-split into single lines; that way, each single-line Lexer instance isn't affected when changes are made to other lines (only the modified lines need new lexers)
     let leadingWhitespace: Substring?
@@ -188,7 +186,7 @@ struct CoreLexer: LineReader { // don't think lexer should care if it's at start
         }
         let position: Token.Position = self.isFirst ? .first : nextOffset == self.code.endIndex ? .last : .middle
         let result = Token(form, self.leadingWhitespace, content, trailingWhitespace, position)
-        let lexer = CoreLexer(code: self.code, at: nextOffset, after: trailingWhitespace)
+        let lexer = Tokenizer(code: self.code, at: nextOffset, after: trailingWhitespace)
         return (result, lexer)
     }
     

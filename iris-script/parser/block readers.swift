@@ -12,7 +12,7 @@ import Foundation
 // Q. how to splice line edits into an existing reader stream? e.g. assume the script `A B C`, if B is 'edited' - i.e. replaced by D - then A and C are undisturbed; thus we restart parsing from end of A, now reading D instead of A, and on completion of D we want to reconcile with the previous parse of C, firstly by comparing the balance at end of D to balance at end of B/beginning of C (any difference means a correction or error has been introduced), then reusing as much as possible of A and C's previous parse sub-trees (AST nodes) in completing the `A D C` iteration's revised parse tree (for sake of sanity, we want to synchronize at the per-line level, not per-token; which is still a lot more precise than synchronizing at the top-level statement level, especially when determining where new syntax errors are introduced during interactive editing and limiting the scope of their effect)
 
 
-protocol ScriptReader {
+protocol BlockReader {
     
     typealias Location = (lineIndex: Int, tokenIndex: Int)
     
@@ -21,10 +21,10 @@ protocol ScriptReader {
     var token: Token { get } // the current token
     var location: Location { get } // the current token's position
 
-    func next() -> ScriptReader
+    func next() -> BlockReader
 }
 
-struct EOFReader: ScriptReader {
+struct EOFReader: BlockReader {
     
     private let script: ImmutableScript
     
@@ -37,14 +37,14 @@ struct EOFReader: ScriptReader {
         self.script = script
     }
     
-    func next() -> ScriptReader {
+    func next() -> BlockReader {
         return self
     }
 }
 
 
 
-struct TokenStream: ScriptReader {
+struct TokenStream: BlockReader {
     
     private let script: ImmutableScript
     
@@ -64,7 +64,7 @@ struct TokenStream: ScriptReader {
         self.init(script: script, lineIndex: i, tokenIndex: 0)
     }
     
-    func next() -> ScriptReader { // returns a new TokenStream identifying the next token
+    func next() -> BlockReader { // returns a new TokenStream identifying the next token
         if self.location.lineIndex < self.script.lines.count {
             let i = self.location.tokenIndex + 1
             if i < self.script.lines[self.location.lineIndex].tokens.count {
@@ -87,11 +87,11 @@ extension EditableScript {
 
 
 
-struct QuoteReader: ScriptReader { // reduces quoted text (string literal or annotation) to single token
+struct QuoteReader: BlockReader { // reduces quoted text (string literal or annotation) to single token
     
     typealias Location = (lineIndex: Int, tokenIndex: Int) // note: these will not be contiguous
     
-    let nextReader: ScriptReader
+    let nextReader: BlockReader
     
     var code: String { return self.nextReader.code }
     
@@ -99,7 +99,7 @@ struct QuoteReader: ScriptReader { // reduces quoted text (string literal or ann
     let location: Location
     
     
-    init(_ reader: ScriptReader) {
+    init(_ reader: BlockReader) { // TO DO: check this leaves cursor on correct token in all cases
         let startToken = reader.token
         self.location = reader.location // start position only (not sure how to tell editable script about reductions)
         var reader = reader.next()
@@ -116,12 +116,19 @@ struct QuoteReader: ScriptReader { // reduces quoted text (string literal or ann
                                startToken.whitespaceBefore,
                                reader.code[startToken.content.startIndex..<endToken.content.endIndex], endToken.whitespaceAfter,
                                startToken.position.span(to: endToken.position))
+            reader = reader.next()
         case .endAnnotation:
             fatalError("found unbalanced `»`") // TO DO
         case .stringDelimiter:
             var s = String(startToken.whitespaceAfter ?? "")
             while true {
-                if reader.token.form != .stringDelimiter { break } // TO DO: need to check if there's a 2nd contiguous .stringDelimiter; if there is, continue
+                if reader.token.form == .stringDelimiter { //
+                    if reader.token.isRightContiguous && reader.next().token.form == .stringDelimiter { // double-quote chars are self-escaping, e.g. "Bob says ""Hello"" to Jane."
+                        
+                    } else {
+                        break
+                    }
+                }
                 s += reader.token.content + (reader.token.whitespaceAfter ?? "")
                 reader = reader.next()
             }
@@ -131,14 +138,15 @@ struct QuoteReader: ScriptReader { // reduces quoted text (string literal or ann
                                reader.code[startToken.content.startIndex..<endToken.content.endIndex], // TO DO: confirm slicing original string with substrings' indexes is legal
                                endToken.whitespaceAfter,
                                startToken.position.span(to: endToken.position))
+            reader = reader.next()
         default:
             self.token = startToken
         }
-        self.nextReader = reader.next()
+        self.nextReader = reader
     }
     
     
-    func next() -> ScriptReader {
+    func next() -> BlockReader {
         return QuoteReader(self.nextReader)
     }
 

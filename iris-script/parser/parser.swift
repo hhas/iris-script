@@ -3,6 +3,8 @@
 //  iris-script
 //
 
+// TO DO: need to formalize delimiter rules (punctuation/linebreaks/operator names/quotes)
+
 
 import Foundation
 
@@ -15,16 +17,16 @@ import Foundation
 class Parser {
     
     private let operatorRegistry: OperatorRegistry
-    private var current: ScriptReader
+    private var current: BlockReader
     private var annotations = [Token]() // TO DO: parser needs to bind extracted annotations to AST nodes automatically (this may be easier once TokenInfo includes line numbers)
     
-    init(tokenStream: ScriptReader, operatorRegistry: OperatorRegistry) {
+    init(tokenStream: BlockReader, operatorRegistry: OperatorRegistry) {
         self.current = tokenStream
         self.operatorRegistry = operatorRegistry
     }
     
-    func peek(ignoringLineBreaks: Bool = false) -> ScriptReader {
-        var reader: ScriptReader = self.current.next()
+    func peek(ignoringLineBreaks: Bool = false) -> BlockReader {
+        var reader: BlockReader = self.current.next()
         while true {
             switch reader.token.form {
             case .annotation(_): () // TO DO: how to associate annotations with values?
@@ -62,9 +64,9 @@ class Parser {
             // TO DO: this is a bit wasteful
             var dict = [KeyedList.Key:Value]()
             var form = Form.undetermined
-            let items: [Value] = try self.readItems(until: { $0 == .endList}) { () throws -> Value in
+            let items = try self.readItems(until: { $0 == .endList}) { () throws -> Value in
                 let item = try self.parseExpression()
-                print("read list item", item, "now on", self.current)
+                //print("read list item", item, "now on", self.current)
                 switch form {
                 case .ordered:
                     if item is Pair { throw NotYetImplementedError() }
@@ -85,7 +87,7 @@ class Parser {
                         form = .ordered
                     }
                 }
-                print("got list item", item, "ended on", self.current)
+                //print("got list item", item, "ended on", self.current)
                 return item
             }
             if dict.count == 0 { // no items are unparenthesized Pairs, so it's a List
@@ -96,14 +98,14 @@ class Parser {
                 throw BadSyntax.unterminatedList //SyntaxError("Not a valid record (\(items.count - dict.count) missing/duplicate key[s]): \(items)")
             }
         }
-        print("list ended on", self.current)
+        //print("list ended on", self.current)
         return value // end on ']'
     }
     
     func readRecord() throws -> Record { // start on '{'
         assert(self.current.token.form == .startRecord)
         self.advance(ignoringLineBreaks: true) // step over '{' to first expression // TO DO: could do with knowing if linebreaks were skipped so that value can be annotated with formatting hints for pretty-printer
-        let items: [Record.Field] = try self.readItems(until: { $0 == .endRecord}) { () throws -> Record.Field in
+        let items = try self.readItems(until: { $0 == .endRecord}) { () throws -> Record.Field in
             let item = try self.parseExpression()
             guard let pair = item as? Pair else { return (nullSymbol, item) }
             guard let key = pair.key as? Symbol else { throw UnsupportedCoercionError(value: pair.key, coercion: asSymbol) }
@@ -120,7 +122,7 @@ class Parser {
         // upon calling readItems, cursor must be positioned on first token of first item (or on end token if no items found); upon return, cursor will be positioned on end token
         var items = [T]()
         loop: while !isEndToken(self.current.token.form) { // check for ')'/']'
-            print("read item")
+            //print("read item")
             do {
                 items.append(try parseItem()) // this starts on first token of expression and ends on last
             } catch { // TO DO: get rid of this once parser reports error locations
@@ -128,9 +130,9 @@ class Parser {
                 print("Failed to read item \(items.count+1):", error) // DEBUGGING
                 throw error
             }
-            print("appended", items.last!, "now on", self.current.token) // FIX: why is this on comma, not end of expr?
-            self.advance(ignoringLineBreaks: false) // next token should be .comma and/or .lineBreak, or end token
-            print("appended", items.last!, self.current.token)
+            //print("appended", items.last!, "now on", self.current.token) // FIX: why is this on comma, not end of expr?
+            self.advance() // next token should be .comma and/or .lineBreak, or end token
+            //print("appended", items.last!, self.current.token)
             switch self.current.token.form {
             case .comma, .lineBreak: // if it's a comma/linebreak then advance to next item
                 self.advance(ignoringLineBreaks: true) // step over ','
@@ -146,11 +148,62 @@ class Parser {
         return items // finish on ')'/']'
     }
     
+    func readLabel() -> Symbol? {
+        if self.current.token.isName && self.current.token.isRightContiguous && self.peek().token.form == .colon {
+            let name: String
+            switch self.current.token.form {
+            case .quotedName(let s): name = s
+            default:                 name = String(self.current.token.content)
+            }
+            self.advance() // step over name
+            self.advance() // step over colon
+            return Symbol(name)
+        } else {
+            return nil
+        }
+    }
+    
+    func readCommand() throws -> Command { // cursor is on first token on command (i.e. its name)
+        // peek ahead: if next token is `{`, read arguments record; if next token is expr sep punctuation/linebreak/eof or infix/postfix op, command has no args; otherwise read low-punctuation arg[s] as exprs - first arg may be Pair or Value; subsequent args must be Pairs with label keys
+        let name: String
+        var arguments: [Command.Argument]
+        if case .quotedName(let s) = self.current.token.form {
+            name = s
+        } else {
+            name = String(self.current.token.content)
+        }
+        let next = self.peek().token
+        if next.isRightDelimiter { // no argument
+            arguments = []
+        } else if case .startRecord = next.form { // explicit record argument
+            self.advance()
+            arguments = try self.readRecord().fields
+        } else { // low-punctuation command; first field may be unlabeled, subsequent fields must be labeled
+            arguments = [Command.Argument]()
+            self.advance()
+            if let label = self.readLabel() {
+                arguments.append((label, try self.parseExpression())) // TO DO: precedence?
+            } else {
+                arguments.append((nullSymbol, try self.parseExpression()))
+            }
+            print("read first arg:", arguments)
+            while !self.peek().token.isRightDelimiter {
+                self.advance()
+                print(self.current, self.peek())
+                guard let label = self.readLabel() else { throw BadSyntax.missingName }
+                arguments.append((label, try self.parseExpression()))
+                print("read labeled arg:", arguments)
+            }
+        }
+        print("completed command:", Command(Symbol(name), arguments), "ended on", self.current.token)
+        return Command(Symbol(name), arguments) // leaves cursor on last token of command
+    }
+    
     // token matching
     
     private func parseAtom() throws -> Value {
         let tokenInfo = self.current
-        print("parseAtom", tokenInfo)
+        //print("parseAtom", tokenInfo)
         let token = tokenInfo.token
         let value: Value
         switch token.form {
@@ -166,41 +219,17 @@ class Parser {
             // TO DO: need to annotate value in order to preserve elective parens when pretty printing; also to determine if a list literal represents a table or a list of arbitrary pairs (e.g. ["foo":1] = Record, [("foo":1)] = List)
             self.advance(ignoringLineBreaks: true) // step over ')'
             guard case .endGroup = self.current.token.form else { throw BadSyntax.unterminatedGroup } //SyntaxError("Expected end of precedence group, “)”, but found: \(self.this)") }
-        case .letters, .symbols: // found `NAME`
-            let commandName = Symbol(String(token.content))
-            // TO DO: read args
-            // peek ahead: if next token is `{`, read arguments record; if next token is expr sep punctuation/linebreak/eof or infix/postfix op, command has no args; otherwise read low-punctuation arg[s] as exprs - first arg may be Pair or Value; subsequent args must be Pairs with label keys
-            let arguments: [Command.Argument]
-            switch self.peek(ignoringLineBreaks: false).token.form {
-            case .startRecord: // explicit record argument
-                arguments = try self.readRecord().fields
-            case .lineBreak, .endOfScript, .semicolon, .comma, .period, .query, .exclamation, .endList, .endRecord, .endGroup: // no argument
-                arguments = []
-            case .operatorName(let operatorClass) where operatorClass.hasLeftOperand: // no argument
-                arguments = []
-            default: // low-punctuation command; first field may be unlabeled, subsequent fields must be labeled
-                arguments = [] // TO DO: read args
+        case .letters, .symbols, .quotedName(_): // found `NAME`/`'NAME'`
+            // TO DO: reading reverse domain names with optional `@` prefix, e.g. `com.example.foo`, is probably best done by a LineReader adapter; question is whether we should generalize this to allow commands with arguments within/at end
+            value = try self.readCommand()
+        case .operatorName(let operatorClass) where !operatorClass.hasLeftOperand: // atom/prefix operator
+            if self.peek().token.isRightDelimiter {
+                guard let definition = operatorClass.atom else { throw BadSyntax.missingExpression }
+                value = Command(definition)
+            } else {
+                guard let definition = operatorClass.prefix else { throw BadSyntax.unterminatedExpression }
+                value = Command(definition, right: try self.parseExpression(definition.precedence))
             }
-            
-            value = Command(commandName, arguments)
-            
-        case .quotedName(let name):
-            let commandName = Symbol(name)
-            value = Command(commandName)
-
-        case .operatorName(let operatorClass) where !operatorClass.hasLeftOperand:
-            
-            value = nullValue // TO DO: implement
-            
-           /*
-            switch definition!.parseFunc {
-            case .atom(let parseFunc), .prefix(let parseFunc):
-                // operator name is passed for convenience, though parsefunc could get .operatorToken itself
-                value = try parseFunc(self, name, definition!) // note: this does not prevent custom parseFuncs reading/not reading next token[s]; thus the distinction between .atom and .prefix (or .infix and .suffix) is informative only; some parsefuncs may even deliberately support both, peeking ahead to determine whether or not a trailing operand is present and outputting the appropriate .atom/.prefix (or .infix/.suffix) Command (although this is frowned on as it means the parsefunc must supply custom commands names itself rather than using canonical name from operator definition, which isn't something [currently/ever?] supported by auto-documentation tools)
-            default: // this should never happen
-                throw InternalError("OperatorRegistry bug: \(String(describing: definition)) found in atom/prefix table.")
-            }
-         */
         case .hash:
             if self.current.token.hasTrailingWhitespace { throw BadSyntax.missingName }
             self.advance(ignoringLineBreaks: true) // step over '#'
@@ -222,28 +251,24 @@ class Parser {
             throw BadSyntax.missingExpression //SyntaxError("Expected an expression but found \(token)")
         }
         //value.annotations[codeAnnotation] = CodeRange(start: tokenInfo.start, end: self.current.end)
-        print("ENDED parseAtom", value)
+        //print("ENDED parseAtom", value)
         return value
     } // important: this should always leave cursor on last token of expression
     
     private func parseOperation(_ leftExpr: Value) throws -> Value {
         let tokenInfo = self.current
-        print("BEGIN parseOperation", tokenInfo)
+        //print("BEGIN parseOperation", tokenInfo)
         let token = tokenInfo.token
         let value: Value
         switch token.form {
-        
-        // TO DO: case .period where token.isLeftContiguous && token.isRightContiguous and left and right exprs are letters/symbols/quotedText (TO DO: leftExpr will already be Value)
-            
-        case .operatorName(let operatorClass) where operatorClass.hasLeftOperand:
-            /*
-            switch definition!.parseFunc {
-            case .infix(let parseFunc), .postfix(let parseFunc):
-                value = try parseFunc(self, leftExpr, name, definition!)
-            default: // this should never happen
-                throw InternalError("OperatorRegistry bug: \(String(describing: definition)) found in infix/postfix table.")
-            }*/
-            value = nullValue // TO DO: implement
+        case .operatorName(let operatorClass) where operatorClass.hasLeftOperand: // TO DO: what errors if operator not found?
+            if self.peek().token.isRightDelimiter { // postfix operator
+                guard let definition = operatorClass.postfix else { throw BadSyntax.unterminatedExpression }
+                value = Command(definition, left: leftExpr)
+            } else { // infix operator
+                guard let definition = operatorClass.infix else { throw BadSyntax.unterminatedExpression }
+                value = Command(definition, left: leftExpr, right: try self.parseExpression(definition.precedence))
+            }
         case .colon:
             self.advance(ignoringLineBreaks: true) // skip over ":"
             value = Pair(leftExpr, try self.parseExpression(token.form.precedence - 1)) // pairs are right-associative
@@ -261,21 +286,21 @@ class Parser {
             throw BadSyntax.missingExpression//SyntaxError("Invalid token after \(leftExpr): \(token)")
         }
 //        value.annotations[codeAnnotation] = CodeRange(start: tokenInfo.start, end: self.current.end)
-        print("ENDED parseOperation", value)
+        //print("ENDED parseOperation", value)
         return value
     } // important: this should always leave cursor on last token of expression
     
     
     func parseExpression(_ precedence: Int = 0) throws -> Value { // TO DO: should this method be responsible for binding extracted annotations to adjacent Values?
-        print("BEGIN expr")
+        //print("BEGIN expr")
         var left = try self.parseAtom()
         // TO DO: this peek won't work right if token is operatorName
         // TO DO: this loop needs to break on separator punctuation
-        while precedence < self.peek(ignoringLineBreaks: false).token.form.precedence { // note: this disallows line breaks between operands and operator
-            self.advance(ignoringLineBreaks: false)
+        while precedence < self.peek().token.form.precedence { // note: this disallows line breaks between operands and operator
+            self.advance()
             left = try self.parseOperation(left)
         }
-        print("ENDED expr =", left, "now on token", self.current)
+        //print("ENDED expr =", left, "now on token", self.current)
         return left
     } // important: this should always leave cursor on last token of expression
     
@@ -289,8 +314,8 @@ class Parser {
             while self.current.token.form != .endOfScript { // skip if no expressions found (i.e. whitespace and/or annotations only)
                 //while self.current.token.form != .endOfScript {
                 result.append(try self.parseExpression())
-                print("parseScript read expr:", result.last!, "now on", self.current)
-                self.advance(ignoringLineBreaks: false) // move to first token after expression
+                print("parseScript read expr:", result.last!, "now on", self.current.token)
+                self.advance() // move to first token after expression
                 switch self.current.token.form {
                 case .comma: // TO DO: continue reading current sentence
                     self.advance(ignoringLineBreaks: true)

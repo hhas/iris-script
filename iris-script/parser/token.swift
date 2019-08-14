@@ -6,8 +6,11 @@
 import Foundation
 
 
+// TO DO: need `.underscore`, assuming we use a line reader to compose underscore-separated .letters into unquoted names (Q. where else might underscores appear?)
+
 // TO DO: where to define core punctuation's adjoining whitespace rules? (presumably full parser will digest these pattern-matching rules, along with pattern-matching rules for command grammar, and library-defined operator patterns)
 
+// Q. in jargon, should 'quotes' refer to braces, brackets, and/or parens (used to group record, list, and block content) in addition to single, double, and angle quotes (used to group name, text, and annotation content)
 
 // TO DO: should lexer/parser be concerned with NFC/NFD?
 
@@ -51,6 +54,7 @@ struct Token: CustomStringConvertible {
         case exclamation        // !
         case hash               // #
         case at                 // @
+        case underscore         // _
         
         // TO DO: is there any benefit to underscoreSeparator being a distinct case? (right now, it's part of undifferentiated words); e.g. does splitting phrases into discrete words (`'document' '_' 'file'` instead of `'document_file'`) provide any benefits to editor when fuzzy matching user's typed input to available domain knowledge; e.g. a user may type `document file` within a `tell @com.apple.Finder to: do…done` block, either accidentally or intentionally [if confident the editor's autocorrect can interpret their intent based on current context], which is certainly beneficial from a touch-typing perspective as Space Bar is much quicker and easier to hit than combined Shift+Minus keys
         
@@ -117,6 +121,7 @@ struct Token: CustomStringConvertible {
             case (.exclamation, .exclamation): return true
             case (.hash, .hash): return true
             case (.at, .at): return true
+            case (.underscore, .underscore): return true
             case (.stringDelimiter, .stringDelimiter): return true
             case (.nameDelimiter, .nameDelimiter): return true
             case (.digits, .digits): return true
@@ -182,6 +187,7 @@ struct Token: CustomStringConvertible {
         ".": .period,
         "?": .query,
         "!": .exclamation,
+        "_": .underscore,
         // name modifiers
         "#": .hash,
         "@": .at,
@@ -263,6 +269,24 @@ struct Token: CustomStringConvertible {
 //    var isDigits: Bool { if case .digits = self.form { return true } else { return false } }
 //    var isLetters: Bool { if case .letters = self.form { return true } else { return false } }
 //    var isSymbols: Bool { if case .symbols = self.form { return true } else { return false } }
+    
+    var isName: Bool {
+        switch self.form {
+        case .letters, .symbols, .quotedName(_): return true
+        default: return false
+        }
+    }
+    
+    var isRightDelimiter: Bool {
+        switch self.form {
+        case .lineBreak, .endOfScript, .semicolon, .colon, .comma, .period, .query, .exclamation, .endList, .endRecord, .endGroup:
+            return true
+        case .operatorName(let operatorClass) where operatorClass.hasLeftOperand:
+            return true
+        default:
+            return false
+        }
+    }
     
     // TO DO: these are currently unused
     var isOperatorName: Bool { if case .operatorName(_) = self.form { return true } else { return false } }

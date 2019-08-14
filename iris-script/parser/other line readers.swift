@@ -1,5 +1,5 @@
 //
-//  reader adapters.swift
+//  other line readers.swift
 //  iris-script
 //
 
