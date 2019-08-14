@@ -54,12 +54,12 @@ script = "‘foo’ -1*-2+a3" // note that `a3` is two tokens: <.letters "a"><.v
 let operatorRegistry = OperatorRegistry()
 operatorRegistry.add(OperatorDefinition("true", .atom, precedence: 0))
 operatorRegistry.add(OperatorDefinition("false", .atom, precedence: 0))
-operatorRegistry.add(OperatorDefinition("\u{FF0B}", .prefix, precedence: 990, aliases: ["+"])) // full-width plus
-operatorRegistry.add(OperatorDefinition("\u{2212}", .prefix, precedence: 990, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
-operatorRegistry.add(OperatorDefinition("×", .infix, precedence: 500, aliases: ["*"]))
-operatorRegistry.add(OperatorDefinition("÷", .infix, precedence: 500, aliases: ["/"]))
-operatorRegistry.add(OperatorDefinition("\u{FF0B}", .infix, precedence: 490, aliases: ["+"])) // full-width plus
-operatorRegistry.add(OperatorDefinition("\u{2212}", .infix, precedence: 490, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
+operatorRegistry.add(OperatorDefinition("\u{FF0B}", .prefix, precedence: 800, aliases: ["+"])) // full-width plus
+operatorRegistry.add(OperatorDefinition("\u{2212}", .prefix, precedence: 800, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
+operatorRegistry.add(OperatorDefinition("×", .infix, precedence: 600, aliases: ["*"]))
+operatorRegistry.add(OperatorDefinition("÷", .infix, precedence: 600, aliases: ["/"]))
+operatorRegistry.add(OperatorDefinition("\u{FF0B}", .infix, precedence: 590, aliases: ["+"])) // full-width plus
+operatorRegistry.add(OperatorDefinition("\u{2212}", .infix, precedence: 590, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
 let operatorReader = newOperatorReader(for: operatorRegistry)
 
 //print(operatorRegistry)
@@ -75,7 +75,8 @@ func test(_ operatorRegistry: OperatorRegistry) {
     
     let script:String
     //script = "foo [1, 2,\n3\n [:]] arg: “yes” um: false."
-    script = "1 + 2 / 4.6" // TO DO: operator parsing is still buggy
+    //script = "1 + 2 / 4.6" // TO DO: operator parsing is still buggy
+    script = "foo bar baz: fub zim: bip {dob} nag: 0"
     
     let doc = EditableScript(script) { NumericReader(operatorReader($0)) }
     

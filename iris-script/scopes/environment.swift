@@ -128,7 +128,7 @@ extension Environment {
 
 
 
-class TellScope: MutableScope {
+class TargetScope: MutableScope {
     
     internal let target: Accessor
     internal let parent: Environment
@@ -144,7 +144,7 @@ class TellScope: MutableScope {
     func set(_ name: Symbol, to value: Value) throws {
         try self.parent.set(name, to: value)
     }
-    func subscope(withWriteBarrier isLocked: Bool) -> MutableScope {
-        return TellScope(target: self.target, parent: self.parent.subscope(withWriteBarrier: isLocked) as! Environment)
+    func subscope(withWriteBarrier isLocked: Bool) -> MutableScope { // TO DO: what should this return?
+        return TargetScope(target: self.target, parent: self.parent.subscope(withWriteBarrier: isLocked) as! Environment)
     }
 }

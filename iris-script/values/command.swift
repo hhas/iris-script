@@ -71,7 +71,7 @@ class Command: ComplexValue {
     typealias Argument = Record.Field
     
     var description: String {
-        return self.arguments.count == 0 ? self.name.label : "\(self.name.label) {\(self.arguments.map{ "\($0.isEmpty ? "" : "\($0.label):")\($1)" }.joined(separator: ", "))}"
+        return self.arguments.count == 0 ? self.name.label : "\(self.name.label) {\(self.arguments.map{ "\($0.isEmpty ? "" : "\($0.label): ")\($1)" }.joined(separator: ", "))}"
     }
 
     let nominalType: Coercion = asCommand

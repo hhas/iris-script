@@ -69,7 +69,7 @@ func show(value: Value) { // primitive library function
 /******************************************************************************/
 
 
-func defineHandler(interface: HandlerInterface, action: Block, commandEnv: Scope) throws { // TO DO: need to check what, if any, command scopes are not Environment instances
+func defineHandler(interface: HandlerInterface, action: Block, commandEnv: Scope) throws { // TO DO: need to check what, if any, command scopes are not Environment instances (e.g. `tell` block's target scope)
     guard let commandEnv = commandEnv as? Environment else {
         throw InternalError(description: "Can't define handler on non-Environment scope.")
     }

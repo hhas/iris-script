@@ -13,6 +13,13 @@ import Foundation
 
 // if test: expr -- TO DO: assuming `if` is a command, `test: expr` looks like a labeled argument, rather than an unlabeled pair argument (OTOH, this shouldn't be an issue as long as `if` is an operator, as operands do not have labels)
 
+let argumentPrecedence: Precedence = 200 // TO DO: what, if any, precedence? e.g. given low-punctuation command: `foo 1 + 2 by: bar of baz` -- should the `by` argument be `bar of baz` or `bar`?
+
+// TO DO: need to finalize association rules for low-punctuation commands; given that 'variables' (i.e. arg-less commands) may frequently appear as arguments it may be preferable to bind trailing args to the outermost command; e.g. `foo bar baz: fub` -> `foo (bar) baz: fub` = `foo {bar, baz: fub}`, rather than most recent (`foo {bar {baz: fub}}`); the allowLooseArguments flag should produce this result, but needs some real-world usage tests to confirm it's the right choice
+
+// TO DO: also need decision on `foo {…} bar: baz`; while it can be inferred that record is first [direct] arg value, problem here is that treating the record as first arg value is inconsistent with `foo {…}`, so may be cleaner to treat it as syntax error
+
+// TO DO: we also need to nail down singular vs plural use of 'argument[s]' and 'parameter[s]' - while the internal implementation is closer to the traditional name coupled to N-ary tuple, we describe commands as unary prefix operators whose operand is always a record (if omitted, an empty record is inferred)
 
 class Parser {
     
@@ -163,7 +170,7 @@ class Parser {
         }
     }
     
-    func readCommand() throws -> Command { // cursor is on first token on command (i.e. its name)
+    func readCommand(_ allowLooseArguments: Bool) throws -> Command { // cursor is on first token on command (i.e. its name)
         // peek ahead: if next token is `{`, read arguments record; if next token is expr sep punctuation/linebreak/eof or infix/postfix op, command has no args; otherwise read low-punctuation arg[s] as exprs - first arg may be Pair or Value; subsequent args must be Pairs with label keys
         let name: String
         var arguments: [Command.Argument]
@@ -175,33 +182,34 @@ class Parser {
         let next = self.peek().token
         if next.isRightDelimiter { // no argument
             arguments = []
-        } else if case .startRecord = next.form { // explicit record argument
+        } else if case .startRecord = next.form { // explicit record argument; this always binds to command name
             self.advance()
             arguments = try self.readRecord().fields
-        } else { // low-punctuation command; first field may be unlabeled, subsequent fields must be labeled
+        } else if allowLooseArguments { // low-punctuation command; first field may be unlabeled, subsequent fields must be labeled
             arguments = [Command.Argument]()
             self.advance()
             if let label = self.readLabel() {
-                arguments.append((label, try self.parseExpression())) // TO DO: precedence?
+                arguments.append((label, try self.parseExpression(argumentPrecedence, allowLooseArguments: false))) // TO DO: precedence?
             } else {
-                arguments.append((nullSymbol, try self.parseExpression()))
+                arguments.append((nullSymbol, try self.parseExpression(argumentPrecedence, allowLooseArguments: false)))
             }
-            print("read first arg:", arguments)
+            //print("read first arg:", arguments)
             while !self.peek().token.isRightDelimiter {
                 self.advance()
-                print(self.current, self.peek())
                 guard let label = self.readLabel() else { throw BadSyntax.missingName }
-                arguments.append((label, try self.parseExpression()))
-                print("read labeled arg:", arguments)
+                arguments.append((label, try self.parseExpression(argumentPrecedence, allowLooseArguments: false)))
+                //print("read labeled arg:", arguments)
             }
+        } else {
+            arguments = []
         }
-        print("completed command:", Command(Symbol(name), arguments), "ended on", self.current.token)
+        //print("completed command:", Command(Symbol(name), arguments), "ended on", self.current.token)
         return Command(Symbol(name), arguments) // leaves cursor on last token of command
     }
     
     // token matching
     
-    private func parseAtom() throws -> Value {
+    private func parseAtom(_ allowLooseArguments: Bool = true) throws -> Value {
         let tokenInfo = self.current
         //print("parseAtom", tokenInfo)
         let token = tokenInfo.token
@@ -221,7 +229,7 @@ class Parser {
             guard case .endGroup = self.current.token.form else { throw BadSyntax.unterminatedGroup } //SyntaxError("Expected end of precedence group, “)”, but found: \(self.this)") }
         case .letters, .symbols, .quotedName(_): // found `NAME`/`'NAME'`
             // TO DO: reading reverse domain names with optional `@` prefix, e.g. `com.example.foo`, is probably best done by a LineReader adapter; question is whether we should generalize this to allow commands with arguments within/at end
-            value = try self.readCommand()
+            value = try self.readCommand(allowLooseArguments)
         case .operatorName(let operatorClass) where !operatorClass.hasLeftOperand: // atom/prefix operator
             if self.peek().token.isRightDelimiter {
                 guard let definition = operatorClass.atom else { throw BadSyntax.missingExpression }
@@ -293,9 +301,9 @@ class Parser {
     } // important: this should always leave cursor on last token of expression
     
     
-    func parseExpression(_ precedence: Int = 0) throws -> Value { // TO DO: should this method be responsible for binding extracted annotations to adjacent Values?
+    func parseExpression(_ precedence: Precedence = 0, allowLooseArguments: Bool = true) throws -> Value { // TO DO: should this method be responsible for binding extracted annotations to adjacent Values?
         //print("BEGIN expr")
-        var left = try self.parseAtom()
+        var left = try self.parseAtom(allowLooseArguments)
         // this loop should always break on separator punctuation (this should happen automatically as punctuation uses -ve precedence, putting it lower than everything else)
         //print("parseExpression", self.peek().token, (precedence, self.peek().token.form.precedence))
         while precedence < self.peek().token.form.precedence { // note: this disallows line breaks between operands and operator

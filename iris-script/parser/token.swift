@@ -14,6 +14,8 @@ import Foundation
 
 // TO DO: should lexer/parser be concerned with NFC/NFD?
 
+typealias Precedence = Int16
+
 
 struct Token: CustomStringConvertible {
     
@@ -138,7 +140,7 @@ struct Token: CustomStringConvertible {
             }
         }
 
-        var precedence: Int { // Int16 should be sufficient
+        var precedence: Precedence {
             switch self {
 //            case .startAnnotation: return 0
 //            case .endAnnotation: return 0
