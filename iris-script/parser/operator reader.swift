@@ -54,7 +54,7 @@ struct OperatorReader: LineReader {
         reader = OperatorReader(reader, for: self.operators)
         switch token.form {
         // TO DO: `where` filter is problematic as letters/symbols followed by colon may be record or dict keys; we can get around this by restricting dictionary keys to scalar literals; it's very likely going to blow up if using pairs as arguments to prefix operators/commands, e.g. `if TEST: ACTION`; it might be better to let it be matched as operator name and disambiguate later when parsing command arguments/record labels
-        case .letters: // where !(token.isRightContiguous && reader.next().0.form == .colon): // ignore if it's a field/argument `label:` // TO DO: this does not account for annotations appearing between label and colon (however, that's probably best considered a syntax error)
+        case .letters, .unquotedName(_): // where !(token.isRightContiguous && reader.next().0.form == .colon): // ignore if it's a field/argument `label:` // TO DO: this does not account for annotations appearing between label and colon (however, that's probably best considered a syntax error)
             if let definition = self.operators.matchWord(token.content) {
                 token = token.extract(.operatorName(definition))
             }

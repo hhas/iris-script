@@ -9,7 +9,7 @@ import Foundation
 
 struct Pair: BoxedSwiftValue {
     
-    var description: String { return "\(self.data.0):\(self.data.1)" }
+    var description: String { return "\(self.data.0): \(self.data.1)" }
     
     let nominalType: Coercion = asPair
     

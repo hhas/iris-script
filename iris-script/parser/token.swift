@@ -6,6 +6,10 @@
 import Foundation
 
 
+// TO DO: split punctuation and quotes into sub-enums? what about other 'raw' tokens (letters, symbols, underscores, etc)? if we're going to use partial lexers/parsers to assemble names, numbers, etc from raw tokens, then it'll simplify main parser if it never has to deal with unprocessed .letters/.digits/etc
+
+
+
 // TO DO: need `.underscore`, assuming we use a line reader to compose underscore-separated .letters into unquoted names (Q. where else might underscores appear?)
 
 // TO DO: where to define core punctuation's adjoining whitespace rules? (presumably full parser will digest these pattern-matching rules, along with pattern-matching rules for command grammar, and library-defined operator patterns)
@@ -54,8 +58,8 @@ struct Token: CustomStringConvertible {
         case period             // .
         case query              // ?
         case exclamation        // !
-        case hash               // #
-        case at                 // @
+        case hashtag            // #
+        case mentions           // @
         case underscore         // _
         
         // TO DO: is there any benefit to underscoreSeparator being a distinct case? (right now, it's part of undifferentiated words); e.g. does splitting phrases into discrete words (`'document' '_' 'file'` instead of `'document_file'`) provide any benefits to editor when fuzzy matching user's typed input to available domain knowledge; e.g. a user may type `document file` within a `tell @com.apple.Finder to: do…done` block, either accidentally or intentionally [if confident the editor's autocorrect can interpret their intent based on current context], which is certainly beneficial from a touch-typing perspective as Space Bar is much quicker and easier to hit than combined Shift+Minus keys
@@ -86,6 +90,7 @@ struct Token: CustomStringConvertible {
         
         case letters // undifferentiated text (may be command name, operator name, numeric prefix/suffix, etc, or a mixture of these; it's up to downstream readers to interpret as appropriate) // TO DO: may want to rename 'letters', to avoid singular vs plural inconsistency with other names
         
+        case unquotedName(String)
         case quotedName(String) // 'WORD' (quotes may be any of '‘’; WORD may be any character other than linebreaks or single/double/annotation quotes) // single-quotes always appear on single line, without leading/trailing whitespace around the quoted text (the outer edges of the quotes should always be separator/delimiter punctuation or whitespace, although we do need to confirm this, e.g. it's probably reasonable [and sensible] to treat `'foo'mod'bar'` as bad syntax, but what about `'foo'*'bar'`? note that `'foo'.'bar'` is legal [if ugly], as `.` is core punctuation and has its own whitespace-based disambiguation rules)
         
         // tokens created by single-task interim parsers
@@ -121,14 +126,15 @@ struct Token: CustomStringConvertible {
             case (.period, .period): return true
             case (.query, .query): return true
             case (.exclamation, .exclamation): return true
-            case (.hash, .hash): return true
-            case (.at, .at): return true
+            case (.hashtag, .hashtag): return true
+            case (.mentions, .mentions): return true
             case (.underscore, .underscore): return true
             case (.stringDelimiter, .stringDelimiter): return true
             case (.nameDelimiter, .nameDelimiter): return true
             case (.digits, .digits): return true
             case (.symbols, .symbols): return true
             case (.letters, .letters): return true
+            case (.unquotedName(_), .unquotedName(_)): return true
             case (.quotedName(_), .quotedName(_)): return true
             case (.operatorName(_), .operatorName(_)): return true
             case (.value(_), .value(_)): return true
@@ -140,6 +146,8 @@ struct Token: CustomStringConvertible {
             }
         }
 
+        
+        // 0 is default precedence (literal values)
         var precedence: Precedence {
             switch self {
 //            case .startAnnotation: return 0
@@ -150,20 +158,21 @@ struct Token: CustomStringConvertible {
 //            case .endRecord: return 0
 //            case .startGroup: return 0
 //            case .endGroup: return 0
-            case .comma: return -60
-            case .semicolon: return 10
-            case .colon: return 70
-            case .period: return -50
-            case .query: return -50
-            case .exclamation: return -50
-            case .hash: return 1000
-            case .at: return 1000
+            case .comma: return -10 // TO DO: +ve precedence means we need to treat comma as right-associative(?) infix operator; basically a cons-like operator for constructing expr sequences (list items/record fields/sentence blocks)
+            case .semicolon: return 60 // TO DO: what precedence?
+            case .colon: return 50 // TO DO: what precedence?
+            case .period: return -50        // expr seq terminator
+            case .query: return -50         // expr seq terminator
+            case .exclamation: return -50   // expr seq terminator
+            case .hashtag: return 1000      // name modifier; this must always bind to following name
+            case .mentions: return 1000     // name modifier; Q. what if the name is multipart (reverse domain name, aka UTI), e.g. `@com.example.my_lib`? (one option is to construct it as standard specifier, with pp annotations so that it prints as `A.B` instead of `B of A`; in this case, binding `@` to first part only means that `@com` is the superglobal's name; OTOH, binding `@` to entire name means that `com.example.my_lib` is the superglobal's name, thus `@` is effectively a prefix operator that switches the context in which the chunk expr is evaluated from current to superglobal; we could even implement this as a [non-maskable] command: `'@'{com.example.my_lib}`. It all comes down to how we want to evaluate chunk exprs in general and UTIs in particular)
  //           case .stringDelimiter: return 0
  //           case .nameDelimiter: return 0
  //           case .digits: return 0
-            case .symbols: return 0
-            case .letters: return 0
-            case .quotedName(_): return 0
+ //           case .symbols: return 0
+ //           case .letters: return 0
+  //          case .unquotedName(_): return 0
+ //           case .quotedName(_): return 0
             case .operatorName(let operatorClass): // Q. what range to use for operators? 100-999?
                 // e.g. v1 o1 v2 o2 … -- once v2 is parsed, peek ahead to o2 to determine if v2 is operand to o2 or o1
                 if let a = operatorClass.infix, let b = operatorClass.postfix, a.precedence != b.precedence {
@@ -191,8 +200,8 @@ struct Token: CustomStringConvertible {
         "!": .exclamation,
         "_": .underscore,
         // name modifiers
-        "#": .hash,
-        "@": .at,
+        "#": .hashtag,
+        "@": .mentions,
         // quotes
         "«": .startAnnotation,
         "»": .endAnnotation,
@@ -274,7 +283,7 @@ struct Token: CustomStringConvertible {
     
     var isName: Bool {
         switch self.form {
-        case .letters, .symbols, .quotedName(_): return true
+        case .letters, .symbols, .underscore, .quotedName(_), .unquotedName(_): return true
         default: return false
         }
     }
@@ -295,8 +304,8 @@ struct Token: CustomStringConvertible {
     
     var isCommandName: Bool {
         switch self.form {
-        case .letters, .symbols, .quotedName(_): return true
-        default:                                 return false
+        case .letters, .symbols, .underscore, .quotedName(_), .unquotedName(_): return true
+        default:                                                                return false
         }
     }
     
