@@ -3,6 +3,9 @@
 //  iris-lang
 //
 
+// TO DO: when `«include:…»` annotations are used, how to lazily inject individual handlers into script's [global] scope on first lookup? (one option is to pass specialized Environment subclass as parent, or else hide `frame`'s exact implementation behind a dictionary-like protocol, so that when initial lookup fails to find handler in script's own scope, all included scopes are searched and the returned handler[s] are composed into multimethods if needed and added to scope)
+
+
 // one advantage[?] of 'editable boxes' + write-once environment slots over 'write-many' environment slots is that set()-ing is primarily a get()-based operation, particularly when resolving chunk expressions which are essentially a chained series of get()-s that ultimately return a single struct that provides a single standardized API for performing all operations - get/set/delete/move/etc - on the selected value[s]; whereas if we have to implement get(), set(), delete(), etc on everything we're probably going to go nuts with implementation [bear in mind the chunk expr's result does not actually have to resolve everything itself; at minimum it only needs to capture the query as a first-class value, deferring the actual resolution until later - essential for Apple event IPC, and also open to collection-specific algorithms and query optimizers when applied to local values (e.g. applying a chunk expr to a String using string-specific scan&slice algorithms is far more efficient than a generic array-processing algorithm that would decompose the string to an Array of single-character strings before operating on that, as CocoaScripting.framework's standard Text Suite implementation seems wont to do)]
 
 

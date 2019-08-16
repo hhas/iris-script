@@ -36,6 +36,12 @@ struct OperatorClass: CustomDebugStringConvertible {
         case .prefix: return self.prefix
         case .infix: return self.infix
         case .postfix: return self.postfix
+            // TO DO: .doublePrefix, e.g. `if EXPR then EXPR`, `tell EXPR to EXPR`, `while EXPR repeat EXPR`
+            // TO DO: .doubleInfix?, e.g. `EXPR is_same_as EXPR comparing_as case_insensitive_text`
+            // or do we just use customPrefix(parseFunc)/customInfix(parseFunc) parsefuncs for now? (mind that all this gets replaced anyway when moving to table-driven bottom-up parser)
+            // also need to decide on comma vs word separator, given that `to foo, do…done` reads better than `to foo do do…done` or other conjugating word; note that we need to decide comma's precedence so that a single complete sentence is treated as right operand; Q. what about `else`?
+            // there is a lingering question here as to whether we should support library-defined Pascal-style `do…done` blocks, or whether we should use parens only  (using parens frees up the 'do' word for use in `to`/`when` operators, but does lead to more C-like block syntax and doesn't speak naturally)
+            //
         }
     }
     
@@ -76,7 +82,7 @@ struct OperatorDefinition: CustomDebugStringConvertible {
             }
         }
         
-        init?(_ name: String) { // TO DO: throw instead?
+        init?(_ name: String) { // returns nil if non-valid characters are found; TO DO: throw instead?
             switch name {
             case wordCharacters:    self = .word(Symbol(name))
             case symbolCharacters:  self = .symbol(Symbol(name))
@@ -96,7 +102,7 @@ struct OperatorDefinition: CustomDebugStringConvertible {
         }
     }
     
-    enum Form: Hashable {
+    enum Form {
         case prefix
         case infix
         case postfix

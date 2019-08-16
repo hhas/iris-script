@@ -52,34 +52,7 @@ script = "‘foo’ -1*-2+a3" // note that `a3` is two tokens: <.letters "a"><.v
 
 
 let operatorRegistry = OperatorRegistry()
-operatorRegistry.add(OperatorDefinition("true", .atom, precedence: 0))
-operatorRegistry.add(OperatorDefinition("false", .atom, precedence: 0))
-operatorRegistry.add(OperatorDefinition("\u{FF0B}", .prefix, precedence: 800, aliases: ["+"])) // full-width plus
-operatorRegistry.add(OperatorDefinition("\u{2212}", .prefix, precedence: 800, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
-operatorRegistry.add(OperatorDefinition("×", .infix, precedence: 600, aliases: ["*"]))
-operatorRegistry.add(OperatorDefinition("÷", .infix, precedence: 600, aliases: ["/"]))
-operatorRegistry.add(OperatorDefinition("\u{FF0B}", .infix, precedence: 590, aliases: ["+"])) // full-width plus
-operatorRegistry.add(OperatorDefinition("\u{2212}", .infix, precedence: 590, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
-operatorRegistry.add(OperatorDefinition("of", .infix, precedence: 900))
-
-//operatorRegistry.add(OperatorDefinition("at", .infix, precedence: 910)) // by index/range
-operatorRegistry.add(OperatorDefinition("thru", .infix, precedence: 920)) // range clause
-operatorRegistry.add(OperatorDefinition("named", .infix, precedence: 910)) // by name
-operatorRegistry.add(OperatorDefinition("id", .infix, precedence: 910)) // by ID // TO DO: what about `id` properties? either we define an "id" .atom, or we need some way to tell parser that only infix `id` should be treated as an operator and other forms should be treated as ordinary [command] name
-operatorRegistry.add(OperatorDefinition("where", .infix, precedence: 910, aliases: ["whose"])) // by test
-operatorRegistry.add(OperatorDefinition("first", .prefix, precedence: 930)) // absolute ordinal
-operatorRegistry.add(OperatorDefinition("middle", .prefix, precedence: 930))
-operatorRegistry.add(OperatorDefinition("last", .prefix, precedence: 930))
-operatorRegistry.add(OperatorDefinition("any", .prefix, precedence: 930))
-operatorRegistry.add(OperatorDefinition("every", .prefix, precedence: 930))
-operatorRegistry.add(OperatorDefinition("before", .infix, precedence: 930)) // relative
-operatorRegistry.add(OperatorDefinition("after", .infix, precedence: 930))
-operatorRegistry.add(OperatorDefinition("before", .prefix, precedence: 930)) // insertion
-operatorRegistry.add(OperatorDefinition("after", .prefix, precedence: 930))
-operatorRegistry.add(OperatorDefinition("beginning", .atom, precedence: 930))
-operatorRegistry.add(OperatorDefinition("end", .atom, precedence: 930))
-operatorRegistry.add(OperatorDefinition("tell", .prefix, precedence: 100))
- 
+stdlib_loadOperators(into: operatorRegistry)
 let operatorReader = newOperatorReader(for: operatorRegistry)
 
 //print(operatorRegistry)
@@ -101,14 +74,19 @@ func test(_ operatorRegistry: OperatorRegistry) {
     // TO DO: this is problematic as it's not clear if colon pair belongs to app{} or tell{}; alternative is not to use colon pairs, and either use `tell EXPR to EXPR`, `if EXPR then EXPR`, `while EXPR repeat EXPR`, etc operators, or leave them as commands and rely on labeled args
     
     
-    
+    // problem with specifiers not using explicit selector operators (e.g. `word 1` rather than `word at 1`) is that commands need lower precedence than `of` operator, in order to allow a complete chunk expression to be given as an argument without needing parenthesized; but without the `at` operator (which binds tighter than `of`) this means that `word 1 of document 1` parses as `word {1 of document {1}}`, not `word {1} of document {1}` as intended; using `as`, the resulting syntax is less natural, but unambiguous
     
     // TO DO: think nested lp commands still need to allow unlabeled direct arg
     
     
     // technically `app "TextEdit"` would be `@com.apple.TextEdit` (or however we mount 'application' resources in the superglobal namespace; we might need an extra suffix, e.g. '.file'/'.app'/'.web', or coercion, e.g. `@com.example.foo as file/app/webservice`, to specify the exact service; there's also the question of how to map different namespaces onto the same superglobal root, e.g. UTI vs FS vs WWW; though this is less of an issue if we crosscut resource location with content type negotiation)
-//    script = "tell app “TextEdit”: make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}"
+//    script = "tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}"
+    
+    
+    
     script = "make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}"
+    
+//    script = "get {name of file at 1 of home}"
     
     let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }
     

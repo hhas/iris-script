@@ -26,6 +26,8 @@ protocol LineReader { // common API by which [partial] lexers and parsers can be
     var code: String { get } // used when getting content substring spanning multiple tokens (caution: this includes raw whitespace between tokens; use e.g. matchedTokens.map{$0.content}.joined(separator:" ") to get whitespace-normalized content)
     
     func next() -> (Token, LineReader) // returns next token plus a reader for the remaining tokens (i.e. each reader represents a fixed point in the token stream, so to backtrack in next() just return the result token along with the tokenreader associated with the last token consumed)
+    
+    // TO DO: worth adding peek()? (while next() can safely be used for lookahead, it doesn't allow for, say, ignoring linebreaks or annotations)
 }
 
 

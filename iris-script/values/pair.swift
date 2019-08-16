@@ -5,6 +5,7 @@
 
 import Foundation
 
+// TBD: do we really want/need distinct Pair type? (it has benefit of being composable; OTOH, we need to limit its key type when used in code, to avoid creating serious complexity when parsing dict/record keys)
 
 
 struct Pair: BoxedSwiftValue {

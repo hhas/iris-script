@@ -90,13 +90,13 @@ class Parser {
                 case .keyed:
                     // TO DO: what if key is Command or other non-constant? (i.e. should dict literals require literal keys, or is there any use-cases where keys would be evaled on the fly?)
                     guard let pair = item as? Pair else { throw UnsupportedCoercionError(value: item, coercion: asPair) }
-                    guard let key = (pair.key as? HashableValue)?.hashKey else {
+                    guard let key = (pair.key as? HashableValue)?.hashKey else { // TO DO: see below
                         throw UnsupportedCoercionError(value: pair.key, coercion: asHashableValue)
                     }
                     dict[key] = pair.value
                 case .undetermined:
                     if let pair = item as? Pair {
-                        guard let key = (pair.key as? HashableValue)?.hashKey else {
+                        guard let key = (pair.key as? HashableValue)?.hashKey else { // TO DO: we want to restrict literal dictionary keys to literal values only (numbers, strings, symbols, etc); anything else - e.g. commands, operators, and other non-const exprs - should be explicitly rejected (these can still be used in `set item named EXPR of DICT to …`); this restriction should ensure that OperatorReader's `where` clauses can reliably escape record labels as context-free `NAME:`
                             throw UnsupportedCoercionError(value: pair.key, coercion: asHashableValue)
                         }
                         dict[key] = pair.value
@@ -161,7 +161,7 @@ class Parser {
         // make sure there's a closing ')'/']'
         if !isEndToken(self.current.token.form) {
             // TO DO: need to format items as partial list; right now it displays badly
-            print("Unexpected token after item \(items.count) of list: \(self.current)")
+            print("Unexpected token after item \(items.count) of sequence: \(self.current.token)")
             throw BadSyntax.unterminatedList //
         }
         return items // finish on ')'/']'
@@ -300,11 +300,18 @@ class Parser {
         let token = tokenInfo.token
         let value: Value
         switch token.form {
+            
+            // TO DO: include cases for comma separator and `.?!` terminators, where leftExpr is either an existing Block upon which to append the right-hand expr (if any), or a new block is started with leftExpr as its first element; this should allow us to read sentences without any special logic needed (currently parseScript() vomits on sentence punctuation, as it wants to read to end of script); need to give this a little more thought, but it should work (e.g. how best to encode multiple sentences - as a block of sentence blocks, or as a flat block with reverse-order `,.?!` evaluation modifier annotations [Q. how deep should modifiers apply? e.g. to all lexical exprs in a conditional? what about all exprs in invoked handlers' bodies?])
+            
         case .operatorName(let operatorClass) where operatorClass.hasLeftOperand: // TO DO: what errors if operator not found?
+            // TO DO: how to disambiguate `command expr postfixOpName: expr`, where an argument label is lexed as an operator name? note that lexer can't do label check itself, as `[expr postfixOpName:…]` is a valid construct (`expr postfixOpName` being a left-hand expression); if we forbid exprs in literal dict keys, is there anywhere else that `opName:` could be anything other than a label? (depends on where else Pairs might appear; the defining restriction for a pair seems to be that the left side is either a hashable value literal or an unquoted/quoted name or .symbol; if we impose that restriction, and possibly encode it in Pair, e.g. as Key enum, then pairs should be sufficiently context-free to allow 'dumb' line reader to detect and convert them to .value(Pair), or maybe .label(_), although we would still need to watch out when parsing [hence .label is safer than .value, as it won't be sucked up into an expression by accident]; also might be worth cleanly distinguishing Pair from Label: the former for use in dict literals, the latter for use in records and possibly blocks [if we use NAME:VALUE as shorthand for assignment/name binding, which is something we'll want for handler glues])
+            
             let nextToken = self.peek().token
-            if nextToken.isRightDelimiter { // postfix operator
+            if nextToken.isRightDelimiter { // no right operand, so current token needs to be a postfix operator
                 if token.isRightContiguous && nextToken.form == .colon {
-                    print("ambiguous operator/label name `\(token.content)`", operatorClass)
+                    // problem: having got here, e.g. due to `at:` label in lp command, we can't trivially rewrite token stream (changing .operatorName to .unquotedName) and backtrack (we can't just return leftExpr as that loses the `at` token); problem is that as long as `at` appears to be an operator, it wants to bind to preceding argument value; solution is to transform `operatorName colon` to `unquotedName colon`, or maybe even `label`; this BlockReader will also need to balance braces/brackets/parens and have some knowledge of commands
+                    
+                    print("ambiguous operator/label name `\(token.content)` after", leftExpr)
                     throw BadSyntax.unterminatedExpression
                 }
                 guard let definition = operatorClass.postfix else {

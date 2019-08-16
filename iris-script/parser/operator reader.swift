@@ -49,16 +49,19 @@ struct OperatorReader: LineReader {
         self.operators = operators
     }
     
+    // TO DO: what about .unquotedName? (NameReader needs to apply first to concatenate underscore-separated .letters; however, trailing digits are also concatenated with or without underscores, e.g. `ISO_8601` but also `int64`, so we need a policy on if/where OperatorReader should be allowed to split unquotedName into .operatorName and .digits; note that this gets a lot hairier if NameReader also gets to concat symbols with digits, so we probably want to forbid that; only NumericReader should be concating .symbols when reading currencies/quantities, e.g. `32°C`, `$21.40`, `5€`)
+    
     func next() -> (Token, LineReader) {
         var (token, reader) = self.reader.next()
         reader = OperatorReader(reader, for: self.operators)
         switch token.form {
-        // TO DO: `where` filter is problematic as letters/symbols followed by colon may be record or dict keys; we can get around this by restricting dictionary keys to scalar literals; it's very likely going to blow up if using pairs as arguments to prefix operators/commands, e.g. `if TEST: ACTION`; it might be better to let it be matched as operator name and disambiguate later when parsing command arguments/record labels
-        case .letters, .unquotedName(_): // where !(token.isRightContiguous && reader.next().0.form == .colon): // ignore if it's a field/argument `label:` // TO DO: this does not account for annotations appearing between label and colon (however, that's probably best considered a syntax error)
+            // `where` filter is problematic as letters/symbols followed by colon may be record or dict keys; we can get around this by restricting dictionary keys to scalar literals, allowing context-free matching of `NAME ':'` pattern
+        //
+        case .letters where reader.next().0.form != .colon, .unquotedName(_) where reader.next().0.form != .colon: // ignore if it's a field/argument `label:` // TO DO: this does not account for annotations appearing between label and colon (however, that's probably best considered a syntax error)
             if let definition = self.operators.matchWord(token.content) {
                 token = token.extract(.operatorName(definition))
             }
-        case .symbols: // where !(token.isRightContiguous && reader.next().0.form == .colon):
+        case .symbols where reader.next().0.form != .colon:
             let matches = self.operators.matchSymbols(token.content)
             // TO DO: this'd be simpler if matchSymbols built and returned the new token stream (only issue is that matches are made first to last whereas unpopping tokens needs to be done from last match to first; i.e. use recursion rather than loop)
             if matches.count > 0 {

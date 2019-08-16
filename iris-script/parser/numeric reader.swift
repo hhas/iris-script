@@ -29,6 +29,9 @@ import Foundation
  */
 
 
+// note: if OperatorReader precedes NumericReader, then numeric reader will need to check for .operatorName as well as .symbols when detecting +/- (particularly in exponent); also, while the below implementation allows for a leading +/-, we may want to move that to a separate reader (or at least enforce certain restrictions such as symbol and number being right-contiguous, and symbol being left-delimited by whitespace or punctuation to avoid capturing infix +/- operators; alternatively, ignoring trailing +/- symbols means that main parser can make its own decisions on whether to treat them as infix operators or as prefix operators which it can constant-fold into a literal number operand; `as integer/real/number` coercions can then use the same folding function directly with NumericReader when coercion numeric strings to numbers)
+
+
 struct NumericReader: LineReader {
     
     let reader: LineReader
@@ -38,7 +41,7 @@ struct NumericReader: LineReader {
     init(_ reader: LineReader) {
         self.reader = reader
     }
-
+    
     // when a possible numeric token is encountered, attempt to read it and subsequent tokens, otherwise pass thru
     
     // note: because readers are immutable, with each reader representing a fixed location in code, splitting a mixed-content word token into content of interest and other content is a matter of returning a token that captures one part and a reader that encapsulates the other; fully resolved content is returned as .value(Value), content still to be processed is returned as current/new token
@@ -53,6 +56,10 @@ struct NumericReader: LineReader {
     
     
     // TO DO: unsigned
+    
+    // TO DO: `±` is also a valid numeric prefix (this is probably best handled by QuantityReader)
+    
+    // TO DO: need to preserve leading zeroes (e.g. barcode numbers)
     
     func readNumber(_ token1: Token, _ reader1: LineReader, sign: Token? = nil) -> (Token, LineReader)? {
         if case .digits = token1.form {
@@ -77,7 +84,7 @@ struct NumericReader: LineReader {
         return nil
     }
     
-    // Q. how to read `1mod2` vs `1 mod2` vs `1mod 2` (only variation that isn't an issue is `1 mod 2`)
+    // Q. how to read `1mod2` vs `1 mod2` vs `1mod 2` (only variation that isn't an issue is `1 mod 2`) A. `mod2` is an identifier; `1mod` is a .value(Number) and contiguous .letters, which a downstream QuantityReader will attempt to match as weight/measure (note: if QuantityReader is not used, it should probably be treated as syntax error; need to check it gets rejected before/by main parser)
     
     // `foo1. 2` vs `foo 1.2` vs `foo 1. 2`
     

@@ -51,6 +51,9 @@ struct Token: CustomStringConvertible {
     }
     
     enum Form: Equatable { // core punctuation, plus digits and non-digit text
+        
+        // TO DO: restructure as .punctuation(), .unaryQuote(), .beginQuote(), .endQuote(), .letters(), .symbols(), .digits(), .lexeme() primitives, where primitives are progressively converted to .lexemes (.string(), .numeric(), .identifier(), etc)?
+        
         // expression separators
         case comma              // ,
         case semicolon          // ;

@@ -32,6 +32,7 @@
 		4F2694D722DF5607009B8FC0 /* token.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2694D622DF5607009B8FC0 /* token.swift */; };
 		4F2694D922E061AC009B8FC0 /* numeric reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2694D822E061AC009B8FC0 /* numeric reader.swift */; };
 		4F2694DB22E06D24009B8FC0 /* parser protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2694DA22E06D24009B8FC0 /* parser protocols.swift */; };
+		4F26F7182306C410002DD292 /* stdlib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26F7172306C410002DD292 /* stdlib_operators.swift */; };
 		4F27087622D9E584009F40B2 /* keyed list.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27087522D9E584009F40B2 /* keyed list.swift */; };
 		4F29320022E2290B00BC0AD4 /* editable script.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2931FF22E2290B00BC0AD4 /* editable script.swift */; };
 		4F29320222E23AD700BC0AD4 /* other line readers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F29320122E23AD700BC0AD4 /* other line readers.swift */; };
@@ -89,6 +90,7 @@
 		4F2694D622DF5607009B8FC0 /* token.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = token.swift; sourceTree = "<group>"; };
 		4F2694D822E061AC009B8FC0 /* numeric reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "numeric reader.swift"; sourceTree = "<group>"; };
 		4F2694DA22E06D24009B8FC0 /* parser protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "parser protocols.swift"; sourceTree = "<group>"; };
+		4F26F7172306C410002DD292 /* stdlib_operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = stdlib_operators.swift; sourceTree = "<group>"; };
 		4F27087522D9E584009F40B2 /* keyed list.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "keyed list.swift"; sourceTree = "<group>"; };
 		4F2931FF22E2290B00BC0AD4 /* editable script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "editable script.swift"; sourceTree = "<group>"; };
 		4F29320122E23AD700BC0AD4 /* other line readers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "other line readers.swift"; sourceTree = "<group>"; };
@@ -182,6 +184,7 @@
 				4F25FB8922B6AC82007EE7AE /* general funcs.swift */,
 				4F257CCB22BAD1FA00A51CF5 /* math funcs.swift */,
 				4F25FB8B22B6E561007EE7AE /* stdlib_handlers.swift */,
+				4F26F7172306C410002DD292 /* stdlib_operators.swift */,
 			);
 			path = stdlib;
 			sourceTree = "<group>";
@@ -371,6 +374,7 @@
 				4F1EA49022B4E8D700FFA4D2 /* complex coercions.swift in Sources */,
 				4FAE769422FDBCCA00952994 /* parser.swift in Sources */,
 				4F84D00822ADA12A00C9FD23 /* value protocols.swift in Sources */,
+				4F26F7182306C410002DD292 /* stdlib_operators.swift in Sources */,
 				4F29320222E23AD700BC0AD4 /* other line readers.swift in Sources */,
 				4F29320422E25E7100BC0AD4 /* operator reader.swift in Sources */,
 				4F2694D922E061AC009B8FC0 /* numeric reader.swift in Sources */,
