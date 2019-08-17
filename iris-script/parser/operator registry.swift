@@ -58,8 +58,6 @@ struct OperatorClass: CustomDebugStringConvertible {
 }
 
 
-let operatorPrecedences: Range<Int16> = 100..<1000 // TO DO: decide valid range
-
 
 struct OperatorDefinition: CustomDebugStringConvertible {
     

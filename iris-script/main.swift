@@ -83,6 +83,8 @@ func test(_ operatorRegistry: OperatorRegistry) {
     
     script = "1, [2, 3]! 4, 5."
     
+    script = "Foo, bar; baz to: bip; fub, bim."
+    
 //    script = "get {name of file at 1 of home}"
     
     let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }

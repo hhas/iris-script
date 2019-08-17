@@ -3,18 +3,16 @@
 //  iris-script
 //
 
-// problem with treating comma as infix operator is that parseOperation will call parseExpression which is liable to blow the call stack; that said, this parser is purely to prove the syntax works
 
+// TO DO: how to read blocks with custom delimiters, e.g. `do…done`? (not worth sweating it for POC implementation; just use custom operator parsefunc)
 
-// TO DO: need to formalize delimiter rules (punctuation/linebreaks/operator names/quotes)
-
-// TO DO: how to read multi-sentence blocks? (it might be easiest to read as flat array, with punctuation [modifiers] attached to each element/kept in parallel array; we need to give some more thought as to how `?` and `!` modify evaluation process, e.g. by creating a thin subscope with the appropriate behavioral hooks; however, all this really ties into how we describe accessor vs mutator operations, and access to external resources, as handler characteristics)
-// TO DO: how to read blocks with custom delimiters, e.g. `do…done`?
 // TO DO: how to deal with terminator punctuation (`.?!`)? also, what should be syntax rules for using terminator punctuation at end of list/record items? e.g. `(Foo, bar! Baz)` is perfectly legal (being a group of two sentences), but should `[foo, bar! baz]` require explicit parenthesization to avoid any ambiguity on where each list item begins and ends, e.g. `[foo, (bar!), baz]` or `[(foo, bar!), baz]`
 
 // should `tell`, `if`, `while` operators use `tell EXPR to EXPR`, `if EXPR then EXPR`, `while EXPR repeat EXPR` syntax? Q. what word should separate operands in `to`/`when`, e.g. `to perform_action {…} returning TYPE XXXX do … done.`
 
 // one more possibility for `tell`, `if`, etc: define them as prefix operators, and require comma separator between first and second operands; thus: `tell app "TextEdit", make new: #document.`, `if some_condition, do…done.`; this should read more naturally for `to`/`when` operators: `to perform_action {…} returning TYPE, do … done.`; OTOH, it doesn't read as well for `tell` which benefits from the pronouncable `to` preposition.
+
+// TO DO: pass Bool flag to parseOperation to indicate only current sentence should be read? (i.e. `if TEST …` should only read up to first `.?!` or first linebreak not preceded by comma/semicolon, assuming no explicit block delimiters.)
 
 // in case of to/when, the
 
@@ -35,6 +33,9 @@ import Foundation
 
 
 // commas bind tighter than `if`, `to`, `while`, etc; `if`, `while`, etc binds tighter than `else`; Q. if commas bind tighter than `if`, that makes `if` a unary prefix operator that takes at minimum two comma-separated exprs (the first expr is the test to perform; remaining exprs are the action to perform if the test succeeds); note that when `if` appears inside a comma sequence, it will want to take the rest of the sequence for itself (longest match). Q. can/should we use same binding rule here as in lp commands, where being directly inside a comma-delimited sequence switches the nested `if` to use shortest match? (otoh, if `if` is preceded a by linebreak without a preceding comma [or semicolon], it'll use longest match [i.e. a linebreak without a preceding comma is treated as sentence terminator, same as with `.?!`]; this clearly needs more thought as a small variation in punctuation will produce a large variation in behavior; aka the “eats, shoots, and leaves” dilemma)
+
+
+typealias ScriptAST = Block
 
 
 private class ExpressionSequence: Value { // internal collector for two or more comma- and/or linebreak-separated items
@@ -94,7 +95,7 @@ class Parser {
         var reader: BlockReader = self.current.next()
         while true {
             switch reader.token.form {
-            case .annotation(_): () // TO DO: how to associate annotations with values?
+            case .annotation(_): () // TO DO: how to associate annotations with values? (for now we just discard them)
             case .lineBreak where ignoringLineBreaks: ()
             default: return reader
             }
@@ -335,10 +336,14 @@ class Parser {
             self.advance(ignoringLineBreaks: true) // skip over ":"
             value = Pair(leftExpr, try self.parseExpression(token.form.precedence - 1, allowLooseArguments: false)) // pairs are right-associative
         case .semicolon:
+            let precedence = token.form.precedence
             self.advance(ignoringLineBreaks: true) // skip over ";"
-            let rightExpr = try self.parseExpression()
-            guard let command = rightExpr as? Command else { throw UnsupportedCoercionError(value: rightExpr, coercion: asCommand) } // TO DO: what error?
-            value = Command(command.name, [(nullSymbol, rightExpr)] + command.arguments)
+            let rightExpr = try self.parseExpression(precedence)
+            guard let command = rightExpr as? Command else {
+                print(leftExpr, rightExpr)
+                throw UnsupportedCoercionError(value: rightExpr, coercion: asCommand)
+            } // TO DO: what error?
+            value = Command(command.name, [(nullSymbol, leftExpr)] + command.arguments)
             // TO DO: annotate command for pp; i.e. `B {A, C}` should print as `A; B {C}`
             
         case .comma, .lineBreak, .period, .exclamation, .query:
@@ -383,15 +388,10 @@ class Parser {
     
     // main
     
-    typealias ScriptAST = Block
-    
     func parseScript() throws -> ScriptAST { // ASTDocument? (see above notes about defining standard ASTNode protocols); also provide public API for parsing a single data structure (c.f. JSON deserialization)
         var result: Value = nullValue
         do {
-            // TO DO: this is insufficient; need to handle .period/.query/.exclamation/.lineBreak terminators (maybe add a readBlock/readSentence[s] method for this)
-            
             result = try self.parseExpression()
-            
             assert(self.current.token.form == .endOfScript)
             let exprSeq: [Value]
             if let builder = result as? ExpressionSequence {
@@ -399,7 +399,6 @@ class Parser {
             } else {
                 exprSeq = [result]
             }
-            
             return ScriptAST(exprSeq) // TBH, should swap this around so ScriptAST initializer takes code as argument and lexes and parses it
         } catch { // TO DO: delete once syntax errors provide decent debugging info
             print("[DEBUG] Partially parsed script:", result)

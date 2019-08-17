@@ -8,10 +8,6 @@ import Foundation
 
 // TO DO: split punctuation and quotes into sub-enums? what about other 'raw' tokens (letters, symbols, underscores, etc)? if we're going to use partial lexers/parsers to assemble names, numbers, etc from raw tokens, then it'll simplify main parser if it never has to deal with unprocessed .letters/.digits/etc
 
-
-
-// TO DO: need `.underscore`, assuming we use a line reader to compose underscore-separated .letters into unquoted names (Q. where else might underscores appear?)
-
 // TO DO: where to define core punctuation's adjoining whitespace rules? (presumably full parser will digest these pattern-matching rules, along with pattern-matching rules for command grammar, and library-defined operator patterns)
 
 // Q. in jargon, should 'quotes' refer to braces, brackets, and/or parens (used to group record, list, and block content) in addition to single, double, and angle quotes (used to group name, text, and annotation content)
@@ -21,7 +17,9 @@ import Foundation
 typealias Precedence = Int16
 
 
-let argumentPrecedence: Precedence = 200 // used when parsing low-punctuation commands only // TO DO: what should argument precedence be? e.g. given `foo 1 + 2`, should it parse as `foo {1 + 2}` or `foo {1} + 2`
+let argumentPrecedence: Precedence = 300 // used when parsing low-punctuation commands only // important: this must have higher precedence than punctuation // TO DO: what should argument precedence be? e.g. given `foo 1 + 2`, should it parse as `foo {1 + 2}` or `foo {1} + 2`
+
+let operatorPrecedences: Range<Int16> = 100..<1000 // TO DO: decide valid range
 
 
 
@@ -157,33 +155,17 @@ struct Token: CustomStringConvertible {
         // 0 is default precedence (literal values)
         var precedence: Precedence {
             switch self {
-//            case .startAnnotation: return 0
-//            case .endAnnotation: return 0
-//            case .startList: return 0
-//            case .endList: return 0
-//            case .startRecord: return 0
-//            case .endRecord: return 0
-//            case .startGroup: return 0
-//            case .endGroup: return 0
-            
-            // expression sequence separators
-            case .lineBreak: return 10
-            case .comma: return 10
-            case .period: return 10
-            case .query: return 10
-            case .exclamation: return 10
+                // problem with parsing `if EXPR, EXPR, EXPR. EXPR.` is that commas need to be higher precedence than `if` operator, but period needs to be lower than both. (`else` should have precedence between `if` and period.) (in this particular example, the PP should insert linebreak before the last sentence to make clear it's not part of `if`); it may be that we have ExprSeq consume all exprs and recompose them later, or we could pass an extra precedence modifier flag as argument to parse… funcs [we already pass a modifier flag for lp command parsing]; note: there is also a problem with `if` appearing inside lists/records, as it'll want to consume items for itself
                 
-            case .semicolon: return 60 // TO DO: what precedence?
-            case .colon: return 50 // TO DO: what precedence?
-            case .hashtag: return 1000      // name modifier; this must always bind to following name
-            case .mentions: return 1000     // name modifier; Q. what if the name is multipart (reverse domain name, aka UTI), e.g. `@com.example.my_lib`? (one option is to construct it as standard specifier, with pp annotations so that it prints as `A.B` instead of `B of A`; in this case, binding `@` to first part only means that `@com` is the superglobal's name; OTOH, binding `@` to entire name means that `com.example.my_lib` is the superglobal's name, thus `@` is effectively a prefix operator that switches the context in which the chunk expr is evaluated from current to superglobal; we could even implement this as a [non-maskable] command: `'@'{com.example.my_lib}`. It all comes down to how we want to evaluate chunk exprs in general and UTIs in particular)
- //           case .stringDelimiter: return 0
- //           case .nameDelimiter: return 0
- //           case .digits: return 0
- //           case .symbols: return 0
- //           case .letters: return 0
-  //          case .unquotedName(_): return 0
- //           case .quotedName(_): return 0
+            // expression sequence separators // TO DO: what about adjoining whitespace as precedence modifier? e.g. `com.example.foo` has different precedence to `com. example. foo`
+            case .lineBreak, .comma, .period, .query, .exclamation: return 200
+                
+            case .semicolon: return 260 // important: precedence needs to be higher than expr sep punctuation (comma, period, etc), but lower than lp command’s argument label
+            case .colon: return 250 // TO DO: what precedence?
+                
+            case .hashtag: return 2000      // name modifier; this must always bind to following name
+            case .mentions: return 2000     // name modifier; Q. what if the name is multipart (reverse domain name, aka UTI), e.g. `@com.example.my_lib`? one option is to construct it as standard specifier, with pp annotations so that it prints as `A.B` instead of `B of A`; in this case, binding `@` to first part only means that `@com` is the superglobal's name; OTOH, binding `@` to entire name means that `com.example.my_lib` is the superglobal's name, thus `@` is effectively a prefix operator that switches the context in which the chunk expr is evaluated from current to superglobal; we could even implement this as a [non-maskable] command: `'@'{com.example.my_lib}`. It all comes down to how we want to evaluate chunk exprs in general and UTIs in particular; e.g. if we use a partial LineReader to extract UTIs to value representation, binding the `@` to the entire UTI later on will occur naturally. Also note that .period form's precedence is that of expr sep punctuation; if we want full parser to treat .period differently when left-and-right-contiguous (property selector) vs left- and/or right-delimited (expr sep) then we'll need to move `Form.precedence` to `Token`. Thus question becomes: do we want contiguous .period to act as a general Swift/JS/etc-style 'dot' operator (which can be used even when stdlib's `of` operator/command isn't loaded)? (if so, it needs to play nice with parameterized commands, e.g. `foo.item{at:1}.item{named:"bar"}`? or does that run too far counter to "speakable-friendly" syntax? after all, UTI pronounciation is simple enough - e.g. "com dot example dot foo" - but using "dot" when speaking commands is likely to get awkward, especially as it won't play well with lp command syntax). Think we should look at UTI literal syntax in same way as we should look at, say, date and time literals, e.g. `2019-07-12` should be directly extractable using a 'DateTime' LineReader.
+
             case .operatorName(let operatorClass): // Q. what range to use for operators? 100-999?
                 // e.g. v1 o1 v2 o2 … -- once v2 is parsed, peek ahead to o2 to determine if v2 is operand to o2 or o1
                 if let a = operatorClass.infix, let b = operatorClass.postfix, a.precedence != b.precedence {
@@ -193,9 +175,8 @@ struct Token: CustomStringConvertible {
             case .value(_): return 0
 //            case .error(_): return 0
 //            case .invalid: return 0
-//            case .lineBreak: return 0
             case .endOfScript: return -10000
-            default: return 0 // caution: this will mask missing cases, but Swift compiler insists on it; make sure these cases are updated whenever Form enum is modified
+            default: return 0
             }
         }
     }
