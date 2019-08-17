@@ -21,6 +21,10 @@ import Foundation
 typealias Precedence = Int16
 
 
+let argumentPrecedence: Precedence = 200 // used when parsing low-punctuation commands only // TO DO: what should argument precedence be? e.g. given `foo 1 + 2`, should it parse as `foo {1 + 2}` or `foo {1} + 2`
+
+
+
 struct Token: CustomStringConvertible {
     
     // initial tokenization by CoreLexer is minimal, recognizing only core punctuation, contiguous digits, whitespace (as delimiter), and symbols and words (everything else); determining which tokens actually appear inside string literals and annotations [meaning they're not real tokens after all], assembling complete number literals from multiple tokens, distinguishing operator names from command names, etc is left to downstream consumers
@@ -161,12 +165,16 @@ struct Token: CustomStringConvertible {
 //            case .endRecord: return 0
 //            case .startGroup: return 0
 //            case .endGroup: return 0
-            case .comma: return -10 // TO DO: +ve precedence means we need to treat comma as right-associative(?) infix operator; basically a cons-like operator for constructing expr sequences (list items/record fields/sentence blocks)
+            
+            // expression sequence separators
+            case .lineBreak: return 10
+            case .comma: return 10
+            case .period: return 10
+            case .query: return 10
+            case .exclamation: return 10
+                
             case .semicolon: return 60 // TO DO: what precedence?
             case .colon: return 50 // TO DO: what precedence?
-            case .period: return -50        // expr seq terminator
-            case .query: return -50         // expr seq terminator
-            case .exclamation: return -50   // expr seq terminator
             case .hashtag: return 1000      // name modifier; this must always bind to following name
             case .mentions: return 1000     // name modifier; Q. what if the name is multipart (reverse domain name, aka UTI), e.g. `@com.example.my_lib`? (one option is to construct it as standard specifier, with pp annotations so that it prints as `A.B` instead of `B of A`; in this case, binding `@` to first part only means that `@com` is the superglobal's name; OTOH, binding `@` to entire name means that `com.example.my_lib` is the superglobal's name, thus `@` is effectively a prefix operator that switches the context in which the chunk expr is evaluated from current to superglobal; we could even implement this as a [non-maskable] command: `'@'{com.example.my_lib}`. It all comes down to how we want to evaluate chunk exprs in general and UTIs in particular)
  //           case .stringDelimiter: return 0
@@ -186,7 +194,7 @@ struct Token: CustomStringConvertible {
 //            case .error(_): return 0
 //            case .invalid: return 0
 //            case .lineBreak: return 0
-//            case .endOfScript: return 0
+            case .endOfScript: return -10000
             default: return 0 // caution: this will mask missing cases, but Swift compiler insists on it; make sure these cases are updated whenever Form enum is modified
             }
         }

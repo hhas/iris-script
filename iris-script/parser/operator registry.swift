@@ -58,6 +58,8 @@ struct OperatorClass: CustomDebugStringConvertible {
 }
 
 
+let operatorPrecedences: Range<Int16> = 100..<1000 // TO DO: decide valid range
+
 
 struct OperatorDefinition: CustomDebugStringConvertible {
     
@@ -125,6 +127,7 @@ struct OperatorDefinition: CustomDebugStringConvertible {
         guard let n = Name(name) else { fatalError("Invalid operator name: \"\(name)\"") } // TO DO: throw instead?
         self.name = n
         self.form = form
+        if form != .atom && !operatorPrecedences.contains(precedence) { fatalError("Invalid operator precedence: \(precedence)") }
         self.precedence = precedence
         self.associativity = associativity
         self.aliases = aliases.map{ if let name = Name($0) { return name } else { fatalError("Invalid operator name: \"\($0)\"") }} // TO DO: throw instead?

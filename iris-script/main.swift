@@ -66,25 +66,22 @@ func test(_ operatorRegistry: OperatorRegistry) {
     
     // TO DO: need underscore reader
     
-    let script:String
+    var script:String = "1 + 1"
     //script = "foo [1, 2,\n3\n [:]] arg: “yes” um: false."
     //script = "1 + 2 / 4.6" // TO DO: operator parsing is still buggy
     //script = "foo bar baz: fub zim: bip {dob} nag: 0"
     
-    // TO DO: this is problematic as it's not clear if colon pair belongs to app{} or tell{}; alternative is not to use colon pairs, and either use `tell EXPR to EXPR`, `if EXPR then EXPR`, `while EXPR repeat EXPR`, etc operators, or leave them as commands and rely on labeled args
-    
-    
-    // problem with specifiers not using explicit selector operators (e.g. `word 1` rather than `word at 1`) is that commands need lower precedence than `of` operator, in order to allow a complete chunk expression to be given as an argument without needing parenthesized; but without the `at` operator (which binds tighter than `of`) this means that `word 1 of document 1` parses as `word {1 of document {1}}`, not `word {1} of document {1}` as intended; using `as`, the resulting syntax is less natural, but unambiguous
-    
-    // TO DO: think nested lp commands still need to allow unlabeled direct arg
-    
-    
     // technically `app "TextEdit"` would be `@com.apple.TextEdit` (or however we mount 'application' resources in the superglobal namespace; we might need an extra suffix, e.g. '.file'/'.app'/'.web', or coercion, e.g. `@com.example.foo as file/app/webservice`, to specify the exact service; there's also the question of how to map different namespaces onto the same superglobal root, e.g. UTI vs FS vs WWW; though this is less of an issue if we crosscut resource location with content type negotiation)
-//    script = "tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}"
+
+    //    script = "tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}"
     
     
+    //
+    script = "[1, 2, 3, 4, 5, 6], 7."
     
-    script = "make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}"
+    script = "make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}."
+    
+    script = "1, [2, 3]! 4, 5."
     
 //    script = "get {name of file at 1 of home}"
     
@@ -106,8 +103,6 @@ func test(_ operatorRegistry: OperatorRegistry) {
     } catch {
         print(error)
     }
-    // TO DO: if startMatch/continueMatch are responsible for shifting token to stack, they need to return a Bool indicating when they've done so, so that calling code knows to advance to next token
-    
 }
 
 

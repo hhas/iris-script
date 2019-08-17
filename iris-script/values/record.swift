@@ -28,7 +28,7 @@ struct Record: Value, Accessor {
 
     let constrainedType: RecordCoercion
     
-    let fields: [Field]
+    let fields: [Field] // TO DO: why is this not named data as per BoxedSwiftValue?
     private var namedFields = [Symbol: Value]() // Q. any performance benefit over `first(where:…)`? (bearing in mind a typical record would have <20 slots) if not, get rid of this
     
     init(_ fields: [Field]) throws { // field names may be omitted, but must be unique

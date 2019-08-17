@@ -11,14 +11,14 @@ import Foundation
 
 
 protocol HashableValue: Value {
-    var hashKey: KeyedList.Key { get }
+    var dictionaryKey: KeyedList.Key { get }
 }
 
 protocol KeyConvertible: HashableValue, Hashable { } // Values that can be used as hash keys (Int, Double, Text, Symbol, etc) must implement Hashable+Equatable and adopt KeyConvertible
 
 extension KeyConvertible {
     
-    var hashKey: KeyedList.Key { return KeyedList.Key(self) } // TO DO: how/where do we perform normalizations (e.g. case-sensitivity) defined by Record's key Coercion
+    var dictionaryKey: KeyedList.Key { return KeyedList.Key(self) } // TO DO: how/where do we perform normalizations (e.g. case-sensitivity) defined by Record's key Coercion
 }
 
 

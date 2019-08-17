@@ -8,7 +8,7 @@ import Foundation
 
 
 
-struct Block: ComplexValue { // caution: this does not capture lexical scope
+struct Block: BoxedComplexValue { // caution: this does not capture lexical scope
     
     var description: String { // TO DO: hand off to pp
         switch self.style {
@@ -22,7 +22,7 @@ struct Block: ComplexValue { // caution: this does not capture lexical scope
 
     let nominalType: Coercion = asBlock
     
-    enum Style {
+    enum Style { // TO DO: revise this as a single Block contains all contiguous sentences with all separator and terminator punctuation and linebreak info included, and the only thing that varies is how its boundaries are marked; therefore Style should be renamed Delimiters and .sentence(_) case should be renamed .none; for .custom(_) case we need to decide what it should hold (it may be that it uses start and end keywords, defined as .atom operators)
         case sentence(terminator: Token) // terminator may be .period, .query, .exclamation; TO DO: how should `!`/`?` modify behavior? (e.g. environment hooks)
         case parenthesis // TO DO: not sure about this; should parens be separate Group type which can hold blocks or other values?
         case custom(definition: OperatorDefinition, terminator: Token, delimiter: Token) // TO DO: definition should probably provide formatter
