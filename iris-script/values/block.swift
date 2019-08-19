@@ -10,11 +10,11 @@ import Foundation
 
 struct Block: BoxedComplexValue { // caution: this does not capture lexical scope
     
-    var description: String { // TO DO: hand off to pp
+    var description: String { // TO DO: hand off to pp; also need formatting hints from parser
         switch self.style {
         case .sentence(let t): return "\(self.data.map{$0.description}.joined(separator: ", "))\(t)"
-        case .parenthesis: return "(\(self.data.map{"\n\t\($0.description)"}.joined(separator: ""))\n)"
-        case .custom(let def, let t, let d): return "\(def.name)\n\(self.data.map{$0.description}.joined(separator: "\(d)")))\(t)"
+        case .parenthesis: return "(\(self.data.map{$0.description}.joined(separator: ", ")))"
+        case .custom(let def, let t, let d): return "\(def)\n\(self.data.map{$0.description}.joined(separator: "\(d)"))\n\(t)"
         }
     }
     
@@ -25,8 +25,10 @@ struct Block: BoxedComplexValue { // caution: this does not capture lexical scop
     enum Style { // TO DO: revise this as a single Block contains all contiguous sentences with all separator and terminator punctuation and linebreak info included, and the only thing that varies is how its boundaries are marked; therefore Style should be renamed Delimiters and .sentence(_) case should be renamed .none; for .custom(_) case we need to decide what it should hold (it may be that it uses start and end keywords, defined as .atom operators)
         case sentence(terminator: Token) // terminator may be .period, .query, .exclamation; TO DO: how should `!`/`?` modify behavior? (e.g. environment hooks)
         case parenthesis // TO DO: not sure about this; should parens be separate Group type which can hold blocks or other values?
-        case custom(definition: OperatorDefinition, terminator: Token, delimiter: Token) // TO DO: definition should probably provide formatter
+        case custom(definition: String, terminator: String, delimiter: String) // TO DO: definition should probably provide formatter
     }
+    
+    // Q. would it be simpler just to encapsulate ExpressionSequence?
     
     let data: [Value]
     let style: Style // pretty-printer should format blocks as-per user preference

@@ -141,7 +141,7 @@ struct Token: CustomStringConvertible {
             case (.letters, .letters): return true
             case (.unquotedName(_), .unquotedName(_)): return true
             case (.quotedName(_), .quotedName(_)): return true
-            case (.operatorName(_), .operatorName(_)): return true
+            case (.operatorName(let a), .operatorName(let b)): return a.name == b.name
             case (.value(_), .value(_)): return true
             case (.error(_), .error(_)): return true
             case (.invalid, .invalid): return true
@@ -272,6 +272,15 @@ struct Token: CustomStringConvertible {
 //    var isDigits: Bool { if case .digits = self.form { return true } else { return false } }
 //    var isLetters: Bool { if case .letters = self.form { return true } else { return false } }
 //    var isSymbols: Bool { if case .symbols = self.form { return true } else { return false } }
+    
+    var isEndOfSequence: Bool {
+        switch self.form {
+        case .endList, .endRecord, .endGroup: return true
+        case .operatorName(let operatorClass): return operatorClass.name == .word("done") // TO DO: kludge: 
+        case .endOfScript: return true
+        default: return false
+        }
+    }
     
     var isName: Bool {
         switch self.form {

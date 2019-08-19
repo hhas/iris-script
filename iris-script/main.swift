@@ -48,7 +48,7 @@ script = "‘foo’ -1*-2+a3" // note that `a3` is two tokens: <.letters "a"><.v
 
 //script = " “blah blah”"
 
-//script = "3𝓍²＋5𝓎－1" // this requires some custom lexing
+//script = "3𝓍²＋5𝓎－1" // this requires some custom lexing (needs transformed to `(3 * x ^ 2) + (5 * y) + (1)`; of course, the real question is, once transformed, how to manipulate it symbolically?)
 
 
 let operatorRegistry = OperatorRegistry()
@@ -79,22 +79,24 @@ func test(_ operatorRegistry: OperatorRegistry) {
     //
     script = "[1, 2, 3, 4, 5, 6], 7."
     
-    script = "make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}."
-    
     script = "1, [2, 3]! 4, 5."
     
-    script = "Foo, bar; baz to: bip; fub, bim."
+    script = "Foo, bar; baz to: bip; fub, bim." //     Foo, fub {baz {bar, to: bip}}, bim
+
     
-//    script = "get {name of file at 1 of home}"
+    script = "make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}."
+    
+    script = "get name of file at 1 of home"
+    
+    
+    
+    script = "1, do 2, 3, 4, 5 done \n 6" // note: no separator between `done` and `6` ends parsing prematurely; hopefully table-driven parser will be better at autocorrecting punctuation
     
     let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }
     
     /*
     var ts: BlockReader = QuoteReader(doc.tokenStream)
-    while ts.token.form != .endOfScript {
-        print(ts.token)
-        ts = ts.next()
-    }
+    while ts.token.form != .endOfScript { print(ts.token); ts = ts.next() }
     print()
     */
     
@@ -112,8 +114,6 @@ func test(_ operatorRegistry: OperatorRegistry) {
 
 test(operatorRegistry)
 
-
-//while let current = tokenStream { print(current.location, current.token); tokenStream = current.next() }
 
 
 

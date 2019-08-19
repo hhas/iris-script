@@ -12,11 +12,13 @@ import Foundation
 
 // eventually all operators defined in compiled libraries should be validated and reduced to quick-loading format; for now, we probably want to validate all operators as they're read (e.g. checking for reserved chars, name/definition collisions within/between libraries, mixed token types in names)
 
+typealias ParseFunc = (_ parser: Parser, _ definition: OperatorDefinition, _ leftExpr: Value?, _ allowLooseArguments: Bool) throws -> Value // TO DO: also pass operator name (e.g. for error reporting)? [not too worried about this as final implementation will be table driven, not recursive descent]
+
 
 struct OperatorClass: CustomDebugStringConvertible {
     
     var debugDescription: String {
-        return "<\(self.name == nil ? "nil" : String(describing: self.name!)) \([self.atom, self.prefix, self.infix, self.postfix].map{$0 == nil ? "0" : "1"}.joined(separator: ""))>"
+        return "<\(self.name == nil ? "nil" : String(describing: self.name!)) \([self.atom, self.prefix, self.infix, self.postfix, self.custom].map{$0 == nil ? "0" : "1"}.joined(separator: ""))>"
     }
     
     private(set) var name: OperatorDefinition.Name?
@@ -25,6 +27,7 @@ struct OperatorClass: CustomDebugStringConvertible {
     private(set) var prefix: OperatorDefinition?    // `OPERATOR_NAME RIGHT_OPERAND`, e.g. `-expr`
     private(set) var infix: OperatorDefinition?     // `LEFT_OPERAND OPERATOR_NAME RIGHT_OPERAND`, e.g. `expr + expr`
     private(set) var postfix: OperatorDefinition?   // `LEFT_OPERAND OPERATOR_NAME`, e.g. ``
+    private(set) var custom: OperatorDefinition?    // custom parsefunc
     
     var isEmpty: Bool { return self.prefix == nil && self.infix == nil && self.postfix == nil && self.atom == nil }
     
@@ -36,12 +39,7 @@ struct OperatorClass: CustomDebugStringConvertible {
         case .prefix: return self.prefix
         case .infix: return self.infix
         case .postfix: return self.postfix
-            // TO DO: .doublePrefix, e.g. `if EXPR then EXPR`, `tell EXPR to EXPR`, `while EXPR repeat EXPR`
-            // TO DO: .doubleInfix?, e.g. `EXPR is_same_as EXPR comparing_as case_insensitive_text`
-            // or do we just use customPrefix(parseFunc)/customInfix(parseFunc) parsefuncs for now? (mind that all this gets replaced anyway when moving to table-driven bottom-up parser)
-            // also need to decide on comma vs word separator, given that `to foo, do…done` reads better than `to foo do do…done` or other conjugating word; note that we need to decide comma's precedence so that a single complete sentence is treated as right operand; Q. what about `else`?
-            // there is a lingering question here as to whether we should support library-defined Pascal-style `do…done` blocks, or whether we should use parens only  (using parens frees up the 'do' word for use in `to`/`when` operators, but does lead to more C-like block syntax and doesn't speak naturally)
-            //
+        case .custom(_): return self.custom
         }
     }
     
@@ -52,6 +50,7 @@ struct OperatorClass: CustomDebugStringConvertible {
         case .prefix: self.prefix = definition
         case .infix: self.infix = definition
         case .postfix: self.postfix = definition
+        case .custom(_): self.custom = definition
         }
         self.name = definition.name
     }
@@ -102,11 +101,23 @@ struct OperatorDefinition: CustomDebugStringConvertible {
         }
     }
     
-    enum Form {
+    enum Form: Equatable {
         case prefix
         case infix
         case postfix
         case atom
+        case custom(ParseFunc)
+        
+        static func ==(lhs: Form, rhs: Form) -> Bool {
+            switch (lhs, rhs) { // TO DO: should custom prefix/infix forms also match standard prefix/infix forms?
+            case (.prefix, .prefix): return true
+            case (.infix, .infix): return true
+            case (.postfix, .postfix): return true
+            case (.atom, .atom): return true
+            case (.custom(_), .custom(_)): return true // TO DO: what result?
+            default: return false
+            }
+        }
     }
     
     enum Associativity {
@@ -125,7 +136,7 @@ struct OperatorDefinition: CustomDebugStringConvertible {
         guard let n = Name(name) else { fatalError("Invalid operator name: \"\(name)\"") } // TO DO: throw instead?
         self.name = n
         self.form = form
-        if form != .atom && !operatorPrecedences.contains(precedence) { fatalError("Invalid operator precedence: \(precedence)") }
+//        if form != .atom && !operatorPrecedences.contains(precedence) { fatalError("Invalid operator precedence: \(precedence)") }
         self.precedence = precedence
         self.associativity = associativity
         self.aliases = aliases.map{ if let name = Name($0) { return name } else { fatalError("Invalid operator name: \"\($0)\"") }} // TO DO: throw instead?
