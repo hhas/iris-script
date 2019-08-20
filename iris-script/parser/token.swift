@@ -267,16 +267,11 @@ struct Token: CustomStringConvertible {
     var isRightContiguous: Bool { return !self.hasTrailingWhitespace }
     
     var isContiguous: Bool { return self.isLeftContiguous && self.isRightContiguous }
-
-//    var isPunctuation: Bool { return Token.predefinedSymbols.values.contains(self.form) }
-//    var isDigits: Bool { if case .digits = self.form { return true } else { return false } }
-//    var isLetters: Bool { if case .letters = self.form { return true } else { return false } }
-//    var isSymbols: Bool { if case .symbols = self.form { return true } else { return false } }
     
     var isEndOfSequence: Bool {
         switch self.form {
         case .endList, .endRecord, .endGroup: return true
-        case .operatorName(let operatorClass): return operatorClass.name == .word("done") // TO DO: kludge: 
+        case .operatorName(let operatorClass): return operatorClass.name == .word("done") // kludge
         case .endOfScript: return true
         default: return false
         }
@@ -293,7 +288,7 @@ struct Token: CustomStringConvertible {
         switch self.form {
         case .lineBreak, .endOfScript, .semicolon, .colon, .comma, .period, .query, .exclamation, .endList, .endRecord, .endGroup:
             return true
-        case .operatorName(let operatorClass) where operatorClass.hasLeftOperand:
+        case .operatorName(_): // (i.e. `if` in `foo if` is a delimiter, just not valid syntax)
             return true
         default:
             return false

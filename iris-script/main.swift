@@ -92,6 +92,10 @@ func test(_ operatorRegistry: OperatorRegistry) {
     
     script = "1, do 2, 3, 4, 5 done \n 6" // note: no separator between `done` and `6` ends parsing prematurely; hopefully table-driven parser will be better at autocorrecting punctuation
     
+    script = "if 1 + 1 = 2 then beep, write “ok”! 5, 6, 7, 8, 9! 000."
+    
+    script = "tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}."
+    
     let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }
     
     /*
