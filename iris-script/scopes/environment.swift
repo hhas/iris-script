@@ -116,12 +116,19 @@ extension Environment {
     
     // unlike `set`, `define` adds a new item to the current frame so doesn't check for existing names in parent scopes
     
+    func define(_ name: Symbol, _ value: Value) {
+        self.bind(name: name, to: value)
+    }
+    func define(coercion: Coercion) {
+        self.bind(name: coercion.name, to: coercion)
+    }
+    
     func define(_ interface: HandlerInterface, _ action: @escaping PrimitiveHandler.Call) { // called by library glues
         // this assumes environment is initially empty so does not check for existing names
         self.bind(name: interface.name, to: PrimitiveHandler(interface: interface, action: action, in: self))
     }
     
-    func define(_ interface: HandlerInterface, _ action: Block) throws { // called by `to`/`when` handler
+    func define(_ interface: HandlerInterface, _ action: Value) throws { // called by `to`/`when` handler
         // this checks current frame and throws if slot is already occupied (even if EditableValue)
         if self.frame[interface.name] != nil { throw ExistingNameError(name: interface.name, in: self) }
         self.bind(name: interface.name, to: NativeHandler(interface: interface, action: action, in: self))

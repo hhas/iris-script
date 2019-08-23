@@ -4,6 +4,8 @@
 //
 
 
+// TO DO: need smarter handling of missing colons on command labels (an easy user error), e.g. `set x to y` instead of `set x to: y` (right now it just dumps out of parseExpression with unhelpful error message)
+
 // TO DO: how to read blocks with custom delimiters, e.g. `do…done`? (not worth sweating it for POC implementation; just use custom operator parsefunc)
 
 // TO DO: how to deal with terminator punctuation (`.?!`)? also, what should be syntax rules for using terminator punctuation at end of list/record items? e.g. `(Foo, bar! Baz)` is perfectly legal (being a group of two sentences), but should `[foo, bar! baz]` require explicit parenthesization to avoid any ambiguity on where each list item begins and ends, e.g. `[foo, (bar!), baz]` or `[(foo, bar!), baz]`
@@ -13,6 +15,8 @@
 // one more possibility for `tell`, `if`, etc: define them as prefix operators, and require comma separator between first and second operands; thus: `tell app "TextEdit", make new: #document.`, `if some_condition, do…done.`; this should read more naturally for `to`/`when` operators: `to perform_action {…} returning TYPE, do … done.`; OTOH, it doesn't read as well for `tell` which benefits from the pronouncable `to` preposition.
 
 // TO DO: pass Bool flag to parseOperation to indicate only current sentence should be read? (i.e. `if TEST …` should only read up to first `.?!` or first linebreak not preceded by comma/semicolon, assuming no explicit block delimiters.)
+
+// TO DO: need to watch out for parensed Pairs in records (e.g. when passing lambdas)
 
 
 import Foundation
@@ -82,7 +86,7 @@ internal class ExpressionSequence: Value { // internal collector for two or more
             } else if let key = pair.key as? HashableValue {
                 self.dictionary[key.dictionaryKey] = pair.value
             } else {
-                self.otherCount += 1 // TO DO: this can go away if parser enforces Pair keys as HashableValue or .[un]quotedName
+                self.otherCount += 1 // TO DO: this can go away if parser enforces Pair keys as HashableValue (KeyedList keys) or .[un]quotedName (record fields); except we also want Pair keys to be HandlerInterface when used in `to` operator; where else might pairs be used?
             }
         }
     }
@@ -140,7 +144,7 @@ class Parser {
         default:
             self.advance(ignoringLineBreaks: true) // step over `[`
             // TO DO: parseExpression->parseAtom fails on `.startList … .lineBreak .endList`
-            let content = try self.parseExpression(allowSequences: .elements)
+            let content = try self._parseExpression(allowLooseSequences: .elements)
             if let content = content as? ExpressionSequence {
                 if content.otherCount > 0 { throw UnsupportedCoercionError(value: content, coercion: asList) }
                 // TO DO: one problem here is that KeyedList won't preserve key order [unless Swift Dictionary preserves key order], which is a pain for pretty-printing; one option is to capture ordered items as well (though this'll require an extended version of KeyedList struct)
@@ -187,7 +191,7 @@ class Parser {
             value = Record()
         default:
             let fields: [Record.Field]
-            let content = try self.parseExpression(allowSequences: .elements)
+            let content = try self._parseExpression(allowLooseSequences: .elements)
             if let content = content as? ExpressionSequence {
                 fields = try content.items.map(self.readField)
             } else {
@@ -210,7 +214,7 @@ class Parser {
             case .unquotedName(let s): name = s
             default:                   name = String(self.current.token.content)
             }
-        } else if case .operatorName(_) = self.current.token.form, self.peek().token.form == .colon { // self.current.token.isRightContiguous // TO DO: not sure about contiguous checking; any whitespace before colon can be discarded by PP, but colon's meaning should stay the same, otherwise we're going to get some surprising parsing behavior (alternatively, we straight-up reject `whitespace .colon` as syntax error, but that seems excessive)
+        } else if case .operatorName(_) = self.current.token.form, self.peek().token.form == .colon { // self.current.token.isRightContiguous // TO DO: not sure about contiguous checking; any whitespace before colon can be discarded by PP, but colon's meaning should stay the same, otherwise we're going to get some surprising parsing behavior (alternatively, we straight-up reject `whitespace .colon` as syntax error, but that seems excessive) // TO DO: do we need this? (OperatorReader )
             name = String(self.current.token.content)
         } else {
             return nil
@@ -218,6 +222,12 @@ class Parser {
         self.advance() // step over name
         self.advance() // step over colon
         return Symbol(name)
+    }
+    
+    func readArgumentValue() throws -> Value {
+        // TO DO: allowLooseSequences is redundant as `argumentPrecedence` > punctuation
+        // note: argumentPrecedence is also higher than colon; how should Pair syntax parse?
+        return try self.parseExpression(argumentPrecedence, allowLooseArguments: false, allowLooseSequences: .no)
     }
     
     func readCommand(_ allowLooseArguments: Bool) throws -> Command { // cursor is on first token on command (i.e. its name)
@@ -244,9 +254,9 @@ class Parser {
             self.advance()
             if !self.current.token.isRightDelimiter {
                 if let label = self.readLabel() {
-                    arguments.append((label, try self.parseExpression(argumentPrecedence, allowLooseArguments: false))) // TO DO: precedence?
+                    arguments.append((label, try self.readArgumentValue()))
                 } else {
-                    arguments.append((nullSymbol, try self.parseExpression(argumentPrecedence, allowLooseArguments: false)))
+                    arguments.append((nullSymbol, try self.readArgumentValue()))
                 }
                 //print("read first arg:", arguments)
                 while !self.peek().token.isRightDelimiter {
@@ -254,7 +264,7 @@ class Parser {
                     self.advance()
                     guard let label = self.readLabel() else {
                         print("expected label in \(name) command but found", self.current.token); throw BadSyntax.missingName }
-                    arguments.append((label, try self.parseExpression(argumentPrecedence, allowLooseArguments: false)))
+                    arguments.append((label, try self.readArgumentValue()))
                     //print("read labeled arg:", arguments)
                 }
             }
@@ -281,12 +291,7 @@ class Parser {
             value = try self.readRecord()
         case .startGroup:     // `(…)`
             self.advance(ignoringLineBreaks: true) // step over '('
-            let content = try self.parseExpression() // this allows any punctuation
-            if let seq = content as? ExpressionSequence {
-                value = Block(seq.items)
-            } else {
-                value = content // TO DO: annotate value to preserve elective parens when pretty printing (there's also the question of how to treat `[(1:2)]` - as OrderedList of Pairs or as syntax error? currently the parens are ignored and a KeyedList is built)
-            }
+            value = try self.parseExpression() // this allows any punctuation // TO DO: annotate value to preserve elective parens when pretty printing (there's also the question of how to treat `[(1:2)]` - as OrderedList of Pairs or as syntax error? currently the parens are ignored and a KeyedList is built)
             
             self.advance(ignoringLineBreaks: true) // step onto ')'
             guard case .endGroup = self.current.token.form else { throw BadSyntax.unterminatedGroup } //SyntaxError("Expected end of precedence group, “)”, but found: \(self.this)") }
@@ -296,7 +301,7 @@ class Parser {
             value = try self.readCommand(allowLooseArguments)
         case .operatorName(let operatorClass) where !operatorClass.hasLeftOperand: // atom/prefix operator
             if let definition = operatorClass.custom, case .custom(let parseFunc) = definition.form {
-                value = try parseFunc(self, definition, nil, allowLooseArguments) // , allowSequences: allowSequences?
+                value = try parseFunc(self, definition, nil, allowLooseArguments) // , allowLooseSequences: allowLooseSequences?
             } else if self.peek().token.isRightDelimiter {
                 guard let definition = operatorClass.atom else { throw BadSyntax.missingExpression } // TO DO: if right-contiguous and next token is colon, then value should be label
                 value = Command(definition)
@@ -305,7 +310,7 @@ class Parser {
                     print("parseAtom bad operator:", operatorClass);
                     throw BadSyntax.unterminatedExpression }
                 self.advance() // step over operator name to read right-hand operand
-                value = Command(definition, right: try self.parseExpression(definition.precedence, allowLooseArguments: allowLooseArguments)) // comma, period, etc marks end of argument fields
+                value = Command(definition, right: try self.parseExpression(definition.precedence, allowLooseArguments: allowLooseArguments, allowLooseSequences: .no)) // comma, period, etc marks end of argument fields
             }
         case .hashtag:
             if self.current.token.hasTrailingWhitespace {
@@ -336,7 +341,7 @@ class Parser {
     
     
     // propagate allowLooseArguments through operators too (e.g. `duplicate document at 1 of documents to: end of documents`); only parens/brackets/braces should discard this flag
-    private func parseOperation(_ leftExpr: Value, allowLooseArguments: Bool = true, allowSequences: AllowSequence = .yes) throws -> Value {
+    private func parseOperation(_ leftExpr: Value, allowLooseArguments: Bool = true, allowLooseSequences: AllowSequence = .yes) throws -> Value {
         let tokenInfo = self.current
 //        print("BEGIN parseOperation", tokenInfo)
         let token = tokenInfo.token
@@ -360,15 +365,15 @@ class Parser {
                 }
                 self.advance() // step over operator name to read right-hand operand
                 let precedence = definition.associativity == .right ? definition.precedence - 1 : definition.precedence
-                value = Command(definition, left: leftExpr, right: try self.parseExpression(precedence, allowLooseArguments: allowLooseArguments))
+                value = Command(definition, left: leftExpr, right: try self.parseExpression(precedence, allowLooseArguments: allowLooseArguments, allowLooseSequences: .no))
             }
         case .colon:
             self.advance(ignoringLineBreaks: true) // skip over ":"
-            value = Pair(leftExpr, try self.parseExpression(token.form.precedence - 1, allowLooseArguments: false)) // pairs are right-associative // TO DO: allowSequences: .sentence?
+            value = Pair(leftExpr, try self.parseExpression(token.form.precedence - 1, allowLooseArguments: true, allowLooseSequences: .sentence)) // TO DO: where can Pair occur? keyed list, block (assignment shorthand)
         case .semicolon:
             let precedence = token.form.precedence
             self.advance(ignoringLineBreaks: true) // skip over ";"
-            let rightExpr = try self.parseExpression(precedence) // TO DO: allowSequences?
+            let rightExpr = try self.parseExpression(precedence, allowLooseSequences: .no) // TO DO: allowLooseSequences?
             guard let command = rightExpr as? Command else {
                 print(leftExpr, rightExpr)
                 throw UnsupportedCoercionError(value: rightExpr, coercion: asCommand)
@@ -380,13 +385,12 @@ class Parser {
             let form = self.current.token.form
             let builder = (leftExpr as? ExpressionSequence) ?? ExpressionSequence(leftExpr) // this is only place ExprSeq is instantiated; Q. if parseDoBlock was to create its own ExprSeq-like collector that halts on receiving `done`?
             builder.append(form)
-            if self.peek(ignoringLineBreaks: true).token.isEndOfSequence {
-                return leftExpr }
+            if self.peek(ignoringLineBreaks: true).token.isEndOfSequence { return leftExpr }
             self.advance(ignoringLineBreaks: true)
-            builder.append(try self.parseExpression(form.precedence, allowSequences: allowSequences))
+            builder.append(try self.parseExpression(form.precedence, allowLooseSequences: allowLooseSequences))
             value = builder
             //print("parseOperation got sequence:", builder)
-            // TO DO: `if [.yes, .sentence].contains(allowSequences)` we need to convert ExprSeq to Block; problem is we can't do it until recursive parseExpression has finished unspooling
+            // TO DO: `if [.yes, .sentence].contains(allowLooseSequences)` we need to convert ExprSeq to Block; problem is we can't do it until recursive parseExpression has finished unspooling
         case .endOfScript:
             print("Expected an operand after the following code but found end of code instead: \(leftExpr)")
             throw BadSyntax.missingExpression //SyntaxError("Expected an operand after the following code but found end of code instead: \(leftExpr)")
@@ -400,26 +404,34 @@ class Parser {
     
     
     
-    func parseExpression(_ precedence: Precedence = 0, allowLooseArguments: Bool = true, allowSequences: AllowSequence = .yes) throws -> Value {
+    func _parseExpression(_ precedence: Precedence = 0, allowLooseArguments: Bool = true, allowLooseSequences: AllowSequence = .yes) throws -> Value {
 //        print("BEGIN expr", self.current.token, precedence)
         if self.current.token.form == .endOfScript { print("parseExpression started on .endScript"); return nullValue } // TO DO: can this still happen?
         var left = try self.parseAtom(allowLooseArguments)
 //        print("LEFT", left, precedence, self.peek().token)
         //print("parseExpression", self.peek().token, (precedence, self.peek().token.form.precedence))
-        while precedence < self.peek().token.form.precedence && !allowSequences.isDisallowed(self.peek().token) { // note: this disallows line breaks between operands and operator (Q. do we need to change this there's when adjoining punctuation?)
+        while precedence < self.peek().token.form.precedence && !allowLooseSequences.isDisallowed(self.peek().token) { // note: this disallows line breaks between operands and operator (Q. do we need to change this there's when adjoining punctuation?)
             self.advance()
-            left = try self.parseOperation(left, allowLooseArguments: allowLooseArguments, allowSequences: allowSequences)
+            left = try self.parseOperation(left, allowLooseArguments: allowLooseArguments, allowLooseSequences: allowLooseSequences)
         }
 //        print("ENDED expr", self.current.token, "result =", left, (precedence, self.peek().token.form.precedence))
         return left
     } // important: this should always leave cursor on last token of expression
+    
+    func parseExpression(_ precedence: Precedence = 0, allowLooseArguments: Bool = true, allowLooseSequences: AllowSequence = .yes) throws -> Value {
+        let expr = try self._parseExpression(precedence, allowLooseArguments: allowLooseArguments, allowLooseSequences: allowLooseSequences)
+        if let seq = expr as? ExpressionSequence {
+            return Block(seq.items) //, style: .sentence(terminator: Token(.period, nil, ".", " ", .last)))
+        }
+        return expr
+    }
     
     // main
     
     func parseScript() throws -> ScriptAST { // ASTDocument? (see above notes about defining standard ASTNode protocols); also provide public API for parsing a single data structure (c.f. JSON deserialization)
         var result: Value = nullValue
         do {
-            result = try self.parseExpression()
+            result = try self._parseExpression()
             if case .lineBreak = self.current.token.form { self.advance(ignoringLineBreaks: true) }
             assert(self.current.token.form == .endOfScript, "Expected end of script but found \(self.current.token) then \(self.peek().token)")
             let exprSeq: [Value]

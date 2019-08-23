@@ -29,7 +29,7 @@ struct AsOptional: SwiftCoercion { // this returns native Value; for Optional<Va
     
     let name: Symbol = "optional"
     
-    var description: String { return "\(self.coercion) or nothing" }
+    var description: String { return self.coercion.name == "value" ? "anything" : "optional \(self.coercion)" } // kludge
     
     typealias SwiftType = Value
     

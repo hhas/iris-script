@@ -5,6 +5,8 @@
 
 import Foundation
 
+// TO DO: how to apply AND/OR/NOT to Coercion operands
+
 // TO DO: worth interning all/some coercions? (might have performance benefits when evaling lists and records, as membership tests/intersects for any pair of [class-based] Coercions can be calculated once and hashed by instance identity, reducing subsequent tests to hash lookup + null check [although this is still slower than compile-time type-checking])
 
 

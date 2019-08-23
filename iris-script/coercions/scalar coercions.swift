@@ -17,7 +17,7 @@ protocol SwiftScalarCoercion: SwiftCoercion {}
 
 struct AsValue: SwiftScalarCoercion {
     
-    let name: Symbol = "anything"
+    let name: Symbol = "value"
     
     typealias SwiftType = Value
     

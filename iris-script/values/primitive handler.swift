@@ -15,7 +15,7 @@ struct PrimitiveHandler: Handler {
     
     typealias Call = (_ command: Command, _ commandEnv: Scope, _ handler: Handler, _ handlerEnv: Scope, _ coercion: Coercion) throws -> Value
     
-    var description: String { return String(describing: self.interface) } // TO DO
+    var description: String { return "\(self.interface):…" } // TO DO
     
     let interface: HandlerInterface
     

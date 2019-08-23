@@ -6,6 +6,9 @@
 import Foundation
 
 
+typealias AttributedValue = Value & Accessor
+
+
 protocol Accessor { // slot access // TO DO: adopt Value protocol?
     
     func get(_ name: Symbol) -> Value?

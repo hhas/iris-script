@@ -17,28 +17,15 @@ import Foundation
 // Q. what about dead code detection? (e.g. given the script `1, 2, 3.`, `1` and `2` [being side-effectless] are no-ops, while `3` is only relevant if the evaluator is connected to an output console); flagging 'useless' or 'suspect' code may be most useful in parenthesized groups, e.g. `(1,2+3)` will discard the 1 and return 5, but `(foo,2+3)` will return 5 while also performing a potentially effectful `foo` command; being parenthesized, that expr could be buried deep in a much larger expr (while the same effect can be achieved if a `foo` handler is defined that returns its input parameter as output while also performing its side-effect, that requires an explicit definition of `foo` whereas a parenthesized expr sequence works with any existing handler)
 
 
-var script = """
+let e = Environment()
 
-123, 4.56, 789.
--1.2345e7
-[4,55,6]
+stdlib_loadHandlers(into: e)
+stdlib_loadConstants(into: e)
 
 
-to wibble {message, times: n as integer} returning nothing do
-    repeat n with: frogblast_the_ventcore message
-done
 
-«To call `wibble` using canonical[?] ‘low-punctuation’ command syntax:»
 
-wibble “hello” times: 5
-
-«The above command can also be written as:»
-
-wibble message: “hello” times: 5
-wibble {message: “hello”, times: 5}
-wibble {“hello”, 5}
-
-"""
+var script = "nothing"
 
 
 // TO DO: how would lexer adapter for multiline strings/annotations work? (upon detecting opening quote, it would return a lexer (or lexer adapter?) that knows how to find the end of that quote [Q. what token would it return in meantime?]) challenge is how to carry that reader forward from end of one line to process next, and finally swap out the quote reader for the standard token reader when done (TBH, it may not be worth the effort when parsing for editing; while slower, having everything tokenized regardless of whether it's code or quoted text gives the auto3cs lots more data to analyze, particularly when best-guessing where missing quotes/closing braces should appear)
@@ -96,6 +83,11 @@ func test(_ operatorRegistry: OperatorRegistry) {
     
     script = "tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}."
     
+    
+    script = "to foo: write “ok”, bar. baz, gub, guf."
+    
+    script = "To say_hello to: name: write “Hello, ” & name & “!”. Say_hello to: “World”."
+    
     let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }
     
     /*
@@ -108,9 +100,14 @@ func test(_ operatorRegistry: OperatorRegistry) {
     do {
         let script = try p.parseScript()
         print(script)
+        
+        print(try script.eval(in: e, as: asAnything))
+        
     } catch {
         print(error)
     }
+    
+    
 }
 
 
@@ -159,11 +156,6 @@ for line in scriptLines {
 
 
 /*
-let e = Environment()
-
-stdlib_loadHandlers(into: e)
-
-
 try e.define(
     HandlerInterface(name: "foo", parameters: [("number", nullSymbol, AsEditable(asNumber))], result: asNothing),
     Block([Command("show", [(nil, Command("bar"))])]))
@@ -213,8 +205,8 @@ struct AddHandler: Handler { // 5x faster than standard implementation (which is
     var isStaticBindable: Bool { return true }
     
     let interface = HandlerInterface(name: "add", parameters: [
-        (label: leftParameterLabel, nullSymbol, coercion: asNumber),
-        (label: rightParameterLabel, nullSymbol, coercion: asNumber)],
+        (label: leftOperand, nullSymbol, coercion: asNumber),
+        (label: rightOperand, nullSymbol, coercion: asNumber)],
                                      result: asNumber)
     
     func call(with command: Command, in commandScope: Scope, as coercion: Coercion) throws -> Value {

@@ -56,11 +56,12 @@ struct OperatorReader: LineReader {
         reader = OperatorReader(reader, for: self.operators)
         switch token.form {
             // `where` filter is problematic as letters/symbols followed by colon may be record or dict keys; we can get around this by restricting dictionary keys to scalar literals, allowing context-free matching of `NAME ':'` pattern
-        //
+        // TO DO: should OperatorReader require .letters to be already be reduced to .unquotedName?
         case .letters where reader.next().0.form != .colon, .unquotedName(_) where reader.next().0.form != .colon: // ignore if it's a field/argument `label:` // TO DO: this does not account for annotations appearing between label and colon (however, that's probably best considered a syntax error)
             if let definition = self.operators.matchWord(token.content) {
                 token = token.extract(.operatorName(definition))
             }
+        // TO DO [cont.]: if so, should .symbols also have a reduced form? (simplest would be to use modified version of OperatorDefinition.Name enum in .unquotedName(_))
         case .symbols where reader.next().0.form != .colon:
             let matches = self.operators.matchSymbols(token.content)
             // TO DO: this'd be simpler if matchSymbols built and returned the new token stream (only issue is that matches are made first to last whereas unpopping tokens needs to be done from last match to first; i.e. use recursion rather than loop)

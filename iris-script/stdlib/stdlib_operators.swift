@@ -45,7 +45,7 @@ func parsePrefixControlOperator(withConjunction operatorName: Symbol) -> ParseFu
         }
        // print("parse control", parser.current.token)
         parser.advance()
-        let leftExpr = try parser.parseExpression(allowSequences: .no)
+        let leftExpr = try parser.parseExpression(allowLooseSequences: .no)
         //print(leftExpr)
         parser.advance()
         //print("parse control", parser.current.token)
@@ -55,7 +55,7 @@ func parsePrefixControlOperator(withConjunction operatorName: Symbol) -> ParseFu
         default: print("expected comma or `\(operatorName.label)` keyword but found: `\(parser.current.token.content)`"); throw BadSyntax.unterminatedExpression
         }
         parser.advance()
-        let rightExpr = try parser.parseExpression(allowSequences: .sentence)
+        let rightExpr = try parser.parseExpression(allowLooseSequences: .sentence)
         // kludge
         // TO DO: how to pick up sentence terminator?
         //print("ended sentence on", parser.peek().token)
@@ -68,31 +68,35 @@ func parsePrefixControlOperator(withConjunction operatorName: Symbol) -> ParseFu
 
 
 func stdlib_loadOperators(into registry: OperatorRegistry) {
+    registry.add(OperatorDefinition("nothing", .atom, precedence: 0)) // TO DO: operator or command?
     registry.add(OperatorDefinition("true", .atom, precedence: 0))
     registry.add(OperatorDefinition("false", .atom, precedence: 0))
     registry.add(OperatorDefinition("\u{FF0B}", .prefix, precedence: 800, aliases: ["+"])) // full-width plus
-    registry.add(OperatorDefinition("\u{2212}", .prefix, precedence: 800, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
+    registry.add(OperatorDefinition("\u{FF0D}", .prefix, precedence: 800, aliases: ["-", "\u{2212}", "\u{FE63}"])) // full-width minus
     registry.add(OperatorDefinition("×", .infix, precedence: 600, aliases: ["*"]))
     registry.add(OperatorDefinition("÷", .infix, precedence: 600, aliases: ["/"]))
     registry.add(OperatorDefinition("\u{FF0B}", .infix, precedence: 590, aliases: ["+"])) // full-width plus
-    registry.add(OperatorDefinition("\u{2212}", .infix, precedence: 590, aliases: ["-", "\u{FF0D}", "\u{FE63}"])) // full-width minus
-    registry.add(OperatorDefinition("=", .infix, precedence: 580))
-    registry.add(OperatorDefinition("≠", .infix, precedence: 580)) // `!=` isn't a valid alias as `!` is reserved punctuation
+    registry.add(OperatorDefinition("\u{FF0D}", .infix, precedence: 590, aliases: ["-", "\u{2212}", "\u{FE63}"])) // full-width minus
+    registry.add(OperatorDefinition("=", .infix, precedence: 580, aliases: ["=="]))
+    registry.add(OperatorDefinition("≠", .infix, precedence: 580, aliases: ["<>"])) // can't alias "!=" as `!` is reserved punctuation
     registry.add(OperatorDefinition("<", .infix, precedence: 580))
-    registry.add(OperatorDefinition("≤", .infix, precedence: 580))
+    registry.add(OperatorDefinition("≤", .infix, precedence: 580, aliases: ["<="]))
     registry.add(OperatorDefinition(">", .infix, precedence: 580))
-    registry.add(OperatorDefinition("≥", .infix, precedence: 580))
+    registry.add(OperatorDefinition("≥", .infix, precedence: 580, aliases: [">="]))
+    
+    registry.add(OperatorDefinition("&", .infix, precedence: 550))
+    // TO DO: comparison operators for non-numeric values (is_same_as, is_before, etc); Q. should these have optional `as` clause, e.g. `a is_before b as case_insensitive_text`? this'd avoid scoping problems of AS's `considering`/`ignoring` blocks (Q. what to use as default if clause is not given?)
     // chunk expressions
     registry.add(OperatorDefinition("of", .infix, precedence: 900))
-    registry.add(OperatorDefinition("at", .infix, precedence: 940)) // by index/range
-    registry.add(OperatorDefinition("thru", .infix, precedence: 960)) // range clause
+    registry.add(OperatorDefinition("at", .infix, precedence: 940, aliases: ["at_index"])) // by index/range
+    registry.add(OperatorDefinition("thru", .infix, precedence: 960, aliases: ["through"])) // range clause
     registry.add(OperatorDefinition("named", .infix, precedence: 940)) // by name
     registry.add(OperatorDefinition("id", .infix, precedence: 940)) // by ID // TO DO: what about `id` properties? either we define an "id" .atom, or we need some way to tell parser that only infix `id` should be treated as an operator and other forms should be treated as ordinary [command] name
     registry.add(OperatorDefinition("where", .infix, precedence: 940, aliases: ["whose"])) // by test
     registry.add(OperatorDefinition("first", .prefix, precedence: 930)) // absolute ordinal
     registry.add(OperatorDefinition("middle", .prefix, precedence: 930))
     registry.add(OperatorDefinition("last", .prefix, precedence: 930))
-    registry.add(OperatorDefinition("any", .prefix, precedence: 930))
+    registry.add(OperatorDefinition("any", .prefix, precedence: 930, aliases: ["some"]))
     registry.add(OperatorDefinition("every", .prefix, precedence: 930))
     registry.add(OperatorDefinition("before", .infix, precedence: 930)) // relative
     registry.add(OperatorDefinition("after", .infix, precedence: 930))
@@ -101,24 +105,18 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.add(OperatorDefinition("beginning", .atom, precedence: 930))
     registry.add(OperatorDefinition("end", .atom, precedence: 930))
     // control structures
-    // TO DO: these all need to take two right-hand operands, either by using a custom parsefunc that looks for 'conjugating' word ('to', 'then', etc) or a comma delimiter, or by taking an array of conjugating words/symbols which standard parser will process; either way, these need encoded as .customPrefix(_) and .customInfix(_) [in principle, we could also have .customPrefix(parseFunc) where the parseFunc finishes on keyword `end` instead of an EXPR, which'd let us emulate AS's block statements, but loathe to do so as that breaks composability; it'd also require each word to include linebreaking/delimiting rules and just gets messy in general]
-    // note: if we want to keep this somewhat introspectable, we can't use custom parseFuncs; however, we could use an array of Pattern enums (.keyword, .expression, .delimiter/.lineBreak?; caveat we don't want to allow `keyword keyword` as a pattern, as in AS's `repeat while EXPR …`, or `expr expr` either given that that pattern overlaps command's `name expr`)
-    // TO DO: what about `do…done`? (technically that’s a customPrefix(parseFunc) job, since the content is an expr seq potentially containing multiple sentences, that only ends on a clearly delimited `done`)
-    // TO DO: how much does PP need to know in order to provide general 'keyword' (operatorName) highlighting?
-    
     // TO DO: what precedence for these operators?
     registry.add(OperatorDefinition("tell", .custom(parsePrefixControlOperator(withConjunction: "to")), precedence: 100))
-    
     registry.add(OperatorDefinition("if", .custom(parsePrefixControlOperator(withConjunction: "then")), precedence: 100))
     registry.add(OperatorDefinition("then", .custom(parseUnexpectedKeyword), precedence: -100))
-    
     registry.add(OperatorDefinition("while", .custom(parsePrefixControlOperator(withConjunction: "repeat")), precedence: 100))
     registry.add(OperatorDefinition("repeat", .custom(parseUnexpectedKeyword), precedence: -100))
-    
+    registry.add(OperatorDefinition("else", .infix, precedence: 90)) // lower precedence than `if`, etc
     // TO DO: .custom
-    registry.add(OperatorDefinition("to", .prefix, precedence: 100))
+    registry.add(OperatorDefinition("to", .prefix, precedence: 180))
     registry.add(OperatorDefinition("when", .prefix, precedence: 100))
-    
+    registry.add(OperatorDefinition("as", .infix, precedence: 350))
+    registry.add(OperatorDefinition("returning", .infix, precedence: 300))
     // block
     registry.add(OperatorDefinition("do", .custom(parseDoBlock), precedence: 100)) // `do…done` // precedence is unused
     registry.add(OperatorDefinition("done", .custom(parseUnexpectedKeyword), precedence: -100)) // being atom, precedence is ignored so won't break out of loop

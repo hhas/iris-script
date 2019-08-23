@@ -47,37 +47,11 @@ struct AsSymbol: SwiftCoercion {
 }
 
 
-struct AsHandler: SwiftCoercion { // (can't use AsComplex<Handler> as Handler isn't concrete type; however, we'll need some custom implementation anyway)
-    
-    let name: Symbol = "handler"
-    
-    typealias SwiftType = Handler
-    
-    // TO DO: when should handlers capture their lexical scope? and when should that capture be strongref vs weakref?
-    
-    func coerce(value: Value, in scope: Scope) throws -> Value {
-        if !(value is Handler) { throw UnsupportedCoercionError(value: value, coercion: self) }
-        // TO DO: return strongrefd handler?
-        return value
-    }
-    
-    func box(value: SwiftType, in scope: Scope) -> Value {
-        return value
-    }
-    
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let result = value as? SwiftType else { throw UnsupportedCoercionError(value: value, coercion: self) }
-        // TO DO: return strongrefd handler?
-        return result
-    }
-}
-
-
 // TO DO (complex types generally only coerce to Any or Self)
 let asCommand = AsComplex<Command>(name: "command")
 let asSymbol = AsSymbol()
-let asHandlerInterface = AsComplex<HandlerInterface>(name: "handler_interface") // TO DO: handler interface can be coerced to/from Record
-let asHandler = AsHandler()
+
+
 let asBlock = AsComplex<Block>(name: "block")
 
 let asPair = AsComplex<Pair>(name: "pair")

@@ -83,7 +83,7 @@ struct OperatorDefinition: CustomDebugStringConvertible {
         
         init?(_ name: String) { // returns nil if non-valid characters are found; TO DO: throw instead?
             switch name {
-            case wordCharacters:    self = .word(Symbol(name))
+            case nameCharacters:    self = .word(Symbol(name))
             case symbolCharacters:  self = .symbol(Symbol(name))
             default:                return nil
             }

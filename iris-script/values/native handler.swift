@@ -11,11 +11,11 @@ import Foundation
 
 struct NativeHandler: Handler {
     
-    var description: String { return "\(self.interface)" }
+    var description: String { return "\(self.interface):…" }
     
     let interface: HandlerInterface
     
-    let action: Block
+    let action: Value // usually a Block
     
     //let isStaticBindable = true // quick-n-dirty cheat // TO DO: check this
     
@@ -25,7 +25,7 @@ struct NativeHandler: Handler {
     
     internal var _lexicalScope_strong: Environment? = nil // this should be assigned only when handler is captured as closure (note: only the NativeHandler struct instance returned by eval strongly captures the lexical scope; the original instance in the lexical Environment does not; bear this in mind if converting NativeHandler to a class)
     
-    init(interface: HandlerInterface, action: Block, in lexicalScope: Environment) {
+    init(interface: HandlerInterface, action: Value, in lexicalScope: Environment) {
         self.interface = interface
         self.action = action
         self.lexicalScope = lexicalScope

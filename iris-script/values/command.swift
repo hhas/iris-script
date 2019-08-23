@@ -137,8 +137,8 @@ class Command: ComplexValue {
 }
 
 
-let leftOperand = Symbol("left")
-let rightOperand = Symbol("right")
+let leftOperand = Symbol("L")
+let rightOperand = Symbol("R")
 
 extension Command {
     
