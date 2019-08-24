@@ -369,7 +369,10 @@ class Parser {
             }
         case .colon:
             self.advance(ignoringLineBreaks: true) // skip over ":"
-            value = Pair(leftExpr, try self.parseExpression(token.form.precedence - 1, allowLooseArguments: true, allowLooseSequences: .sentence)) // TO DO: where can Pair occur? keyed list, block (assignment shorthand)
+            // if right-side of pair can be a comma-delimited sequence, we need to reduce the colon's precedence below comma's
+            let precedence = [.yes, .sentence].contains(allowLooseSequences) ? Token.Form.comma.precedence - 10 : token.form.precedence - 1
+            print(allowLooseSequences, precedence, leftExpr)
+            value = Pair(leftExpr, try self.parseExpression(precedence, allowLooseArguments: true, allowLooseSequences: allowLooseSequences)) // TO DO: where can Pair occur? keyed list, block (assignment shorthand) // TO DO: what should allowLooseSequences be? (.no?)
         case .semicolon:
             let precedence = token.form.precedence
             self.advance(ignoringLineBreaks: true) // skip over ";"

@@ -51,6 +51,8 @@
 		4F857703230D34AF002B47F2 /* state funcs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F857702230D34AE002B47F2 /* state funcs.swift */; };
 		4FAE769422FDBCCA00952994 /* parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FAE769322FDBCCA00952994 /* parser.swift */; };
 		4FC5C7F8230F380E007D694C /* handler coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7F7230F380E007D694C /* handler coercions.swift */; };
+		4FC5C7FD23110B1F007D694C /* quote reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FC23110B1F007D694C /* quote reader.swift */; };
+		4FC5C7FF23110B76007D694C /* name reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FE23110B76007D694C /* name reader.swift */; };
 		4FFC6F2522D6818000D636B9 /* tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2422D6818000D636B9 /* tokenizer.swift */; };
 		4FFC6F2A22D7704D00D636B9 /* access protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2922D7704D00D636B9 /* access protocols.swift */; };
 /* End PBXBuildFile section */
@@ -113,6 +115,10 @@
 		4F857702230D34AE002B47F2 /* state funcs.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "state funcs.swift"; sourceTree = "<group>"; };
 		4FAE769322FDBCCA00952994 /* parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = parser.swift; sourceTree = "<group>"; };
 		4FC5C7F7230F380E007D694C /* handler coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler coercions.swift"; sourceTree = "<group>"; };
+		4FC5C7FA23109824007D694C /* gluelib_handlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gluelib_handlers.swift; sourceTree = "<group>"; };
+		4FC5C7FB23109826007D694C /* gluelib_operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gluelib_operators.swift; sourceTree = "<group>"; };
+		4FC5C7FC23110B1F007D694C /* quote reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "quote reader.swift"; sourceTree = "<group>"; };
+		4FC5C7FE23110B76007D694C /* name reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "name reader.swift"; sourceTree = "<group>"; };
 		4FFC6F2422D6818000D636B9 /* tokenizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tokenizer.swift; sourceTree = "<group>"; };
 		4FFC6F2922D7704D00D636B9 /* access protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "access protocols.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -160,6 +166,7 @@
 			isa = PBXGroup;
 			children = (
 				4FFC6F2422D6818000D636B9 /* tokenizer.swift */,
+				4FC5C7FE23110B76007D694C /* name reader.swift */,
 				4F2694D822E061AC009B8FC0 /* numeric reader.swift */,
 				4F29320322E25E7100BC0AD4 /* operator reader.swift */,
 				4F29320122E23AD700BC0AD4 /* other line readers.swift */,
@@ -172,6 +179,7 @@
 			children = (
 				4F2931FF22E2290B00BC0AD4 /* editable script.swift */,
 				4F25506422EA38F500B7034F /* block readers.swift */,
+				4FC5C7FC23110B1F007D694C /* quote reader.swift */,
 				4FAE769322FDBCCA00952994 /* parser.swift */,
 			);
 			name = parser;
@@ -275,8 +283,18 @@
 				4F84D01522AE819000C9FD23 /* errors.swift */,
 				4F257CCA22BACB0D00A51CF5 /* chunk expressions */,
 				4F25FB8822B6AC57007EE7AE /* stdlib */,
+				4FC5C7F9231097FE007D694C /* gluelib */,
 			);
 			path = "iris-script";
+			sourceTree = "<group>";
+		};
+		4FC5C7F9231097FE007D694C /* gluelib */ = {
+			isa = PBXGroup;
+			children = (
+				4FC5C7FA23109824007D694C /* gluelib_handlers.swift */,
+				4FC5C7FB23109826007D694C /* gluelib_operators.swift */,
+			);
+			path = gluelib;
 			sourceTree = "<group>";
 		};
 		4FFC6F2322D6816F00D636B9 /* parser */ = {
@@ -380,6 +398,7 @@
 				4F84D01622AE819000C9FD23 /* errors.swift in Sources */,
 				4F25506522EA38F500B7034F /* block readers.swift in Sources */,
 				4F26065622C0158C0036D904 /* value modifiers.swift in Sources */,
+				4FC5C7FD23110B1F007D694C /* quote reader.swift in Sources */,
 				4F25553D22E5D3DE002FAE5E /* characters.swift in Sources */,
 				4F1EA49022B4E8D700FFA4D2 /* complex coercions.swift in Sources */,
 				4FAE769422FDBCCA00952994 /* parser.swift in Sources */,
@@ -389,6 +408,7 @@
 				4F857701230C9247002B47F2 /* stdlib_constants.swift in Sources */,
 				4FC5C7F8230F380E007D694C /* handler coercions.swift in Sources */,
 				4F29320422E25E7100BC0AD4 /* operator reader.swift in Sources */,
+				4FC5C7FF23110B76007D694C /* name reader.swift in Sources */,
 				4F2694D922E061AC009B8FC0 /* numeric reader.swift in Sources */,
 				4F2694DB22E06D24009B8FC0 /* parser protocols.swift in Sources */,
 				4FFC6F2522D6818000D636B9 /* tokenizer.swift in Sources */,

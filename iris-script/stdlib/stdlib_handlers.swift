@@ -811,38 +811,33 @@ func procedure_defineCommandHandler_handler_commandEnv(command: Command, command
     return result
 }
 
-
-/*
-// define_handler (name, parameters, return_type, action, is_event_handler)
-let type_defineHandler_interface_action_commandEnv = (
-    // TO DO: reduce `name+parameters+result` to single parameter of type asHandlerInterface?
-    param_0: (label: Symbol("interface"), coercion: asHandlerInterface),
-    param_1: (label: Symbol("action"), coercion: asBlock),
-    result: asNothing
+// set
+private let type_set_name_value = (
+    param_0: (label: Symbol("name"), coercion: asSymbol),
+    param_1: (label: Symbol("to"), coercion: asValue),
+    result: asValue
 )
-let interface_defineHandler_interface_action_commandEnv = HandlerInterface(
-    name: "define_handler",
+private let interface_set_name_value = HandlerInterface(
+    name: "set",
     parameters: [
-        (type_defineHandler_interface_action_commandEnv.param_0.label, nullSymbol, type_defineHandler_interface_action_commandEnv.param_0.coercion),
-        (type_defineHandler_interface_action_commandEnv.param_1.label, nullSymbol, type_defineHandler_interface_action_commandEnv.param_1.coercion),
- 
+        (type_set_name_value.param_0.label, nullSymbol, type_set_name_value.param_0.coercion),
+        (type_set_name_value.param_1.label, nullSymbol, type_set_name_value.param_1.coercion),
     ],
-    result: type_defineHandler_interface_action_commandEnv.result
+    result: type_set_name_value.result
 )
-func procedure_defineHandler_interface_action_commandEnv(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_set_name_value(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
     let arguments = command.arguments
-    let arg_0 = try command.swiftValue(at: &index, for: type_defineHandler_interface_action_commandEnv.param_0, in: commandEnv)
-    let arg_1 = try command.swiftValue(at: &index, for: type_defineHandler_interface_action_commandEnv.param_1, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_set_name_value.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_set_name_value.param_1, in: commandEnv)
     if arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
-    try defineHandler(
-        interface: arg_0,
-        action: arg_1,
+    let result = try set(
+        name: arg_0,
+        to: arg_1,
         commandEnv: commandEnv
     )
-    return nullValue
+    return type_set_name_value.result.box(value: result, in: handlerEnv)
 }
-*/
 
 
 

@@ -105,13 +105,13 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.add(OperatorDefinition("beginning", .atom, precedence: 930))
     registry.add(OperatorDefinition("end", .atom, precedence: 930))
     // control structures
-    // TO DO: what precedence for these operators?
+    // TO DO: what precedence for these operators? (also consider whether tell/if/while should just be commands; main reason to prefer operators is that operators can customize parsing for right operand to take a complete sentence, whereas a command only consumes up to the next comma)
     registry.add(OperatorDefinition("tell", .custom(parsePrefixControlOperator(withConjunction: "to")), precedence: 100))
     registry.add(OperatorDefinition("if", .custom(parsePrefixControlOperator(withConjunction: "then")), precedence: 100))
     registry.add(OperatorDefinition("then", .custom(parseUnexpectedKeyword), precedence: -100))
     registry.add(OperatorDefinition("while", .custom(parsePrefixControlOperator(withConjunction: "repeat")), precedence: 100))
     registry.add(OperatorDefinition("repeat", .custom(parseUnexpectedKeyword), precedence: -100))
-    registry.add(OperatorDefinition("else", .infix, precedence: 90)) // lower precedence than `if`, etc
+    registry.add(OperatorDefinition("else", .infix, precedence: 90)) // lower precedence than `if`, lp commands
     // TO DO: .custom
     registry.add(OperatorDefinition("to", .prefix, precedence: 180))
     registry.add(OperatorDefinition("when", .prefix, precedence: 100))

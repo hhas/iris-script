@@ -88,6 +88,18 @@ func test(_ operatorRegistry: OperatorRegistry) {
     
     script = "To say_hello to: name: write “Hello, ” & name & “!”. Say_hello to: “World”."
     
+    script = """
+    to ‘+’ {left as Number, right as Number} returning Number: do
+        can_error: true
+        swift_handler: #add « (if different to handler name) TODO: also need ability to include parameter labels if different »
+        operator: {form: #infix, precedence: 590, associativity: #left, aliases: ‘0uFF0B’} «TO DO: 0u… syntax for Unicode chars»
+        use_scopes: [] « if given, may be #command and/or #handler »
+    done
+
+    """
+    
+    //script = "foo; map ({i}: bar, baz); fub" // TO DO: this doesn't parse correctly (`pair needs to parse right side as sentence`)
+    
     let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }
     
     /*
@@ -101,7 +113,7 @@ func test(_ operatorRegistry: OperatorRegistry) {
         let script = try p.parseScript()
         print(script)
         
-        print(try script.eval(in: e, as: asAnything))
+       // print(try script.eval(in: e, as: asAnything))
         
     } catch {
         print(error)

@@ -23,7 +23,7 @@ func defineCommandHandler(handler: Handler, commandEnv: Scope) throws -> Value {
 
 
 
-func set(name: Symbol, value: Value, commandEnv: Scope) throws -> Value { // `set name to: expr`
+func set(name: Symbol, to value: Value, commandEnv: Scope) throws -> Value { // `set name to: expr`
     try (commandEnv as! Environment).set(name, to: value)
     return value
 }

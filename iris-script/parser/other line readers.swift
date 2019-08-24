@@ -6,7 +6,9 @@
 import Foundation
 
 
-// TO DO: need adapter for reducing #…, @…, A.B.C
+// TO DO: reader for 0uXXXX Unicode codepoints; these are probably best as UTF8 with implicit concatenation, e.g. `0u32 0u456 0u101DEF` would concat to 3-codepoint string; Q. how should they concat to string literals? (we don't really want to require an explicit `&` operator as e.g. data files may not have access to that; see also string interpolation)
+
+// TO DO: reader[s] for reducing #…, @…, A.B.C (note: hashtags are currently reduced by main parser, but wouldn't hurt to move this forward) // Q. should `com.example.foo` convert to `‘com.example.foo’` rather than `foo of example of com`? or should we define a `UTI`/`Namespace` struct that encodes it as linked list/array of symbols? (or convert to an objspec with PP annotation?)
 
 
 struct NullReader: LineReader { // returned once line reader is exhausted; always outputs .lineBreak token
@@ -25,8 +27,6 @@ let nullReader = NullReader()
 
 struct UnpopToken: LineReader { // analogous to pushing an existing/modified token back onto the head of the token stream
     
-    // e.g. given the token-reader tuple `(Token(.letters, "a*b"), R)`, where the "*" operator is written without delimiting whitespace, an operator disambiguating reader might output -> `(Token(.letters, "a"), UnpopToken(.operatorName("*"), UnpopToken(.letters "b", R)))`
-    
     var code: String { return reader.code }
     
     let token: Token
@@ -40,45 +40,4 @@ struct UnpopToken: LineReader { // analogous to pushing an existing/modified tok
     func next() -> (Token, LineReader) {
         return (self.token, self.reader)
     }
-}
-
-
-
-// TO DO: adapter for hashbang and mentions? (this might need to include UTI matching)
-
-
-// note: one reason for treating underscore as separate token is to facilitate context-aware matching of spoken phrases during incremental voice input (e.g. within tell Finder block, it's natural to say "get first document file of home"; a longest-match heuristic can reasonably assume that "document file" is a single name, given it appears in Finder's dictionary, `document_file`, and insert the underscore automatically; the less likely interpretation, `document {file}`, would require an explicit control to put `file` in argument to `document` command); Q. what, if anything, can emacs/vi teach us about good modal input UI design?
-
-
-struct NameReader: LineReader {
-    
-    let reader: LineReader
-    
-    var code: String { return self.reader.code }
-    
-    init(_ reader: LineReader) {
-        self.reader = reader
-    }
-
-    func next() -> (Token, LineReader) {
-        var (token, reader) = self.reader.next()
-        // TO DO: what about .symbols?
-        switch token.form {
-        case .letters, .underscore:
-            let startToken = token
-            var (nextToken, nextReader) = reader.next()
-            while token.isRightContiguous && [.letters, .underscore, .digits].contains(nextToken.form) {
-                (token, reader) = (nextToken, nextReader)
-                (nextToken, nextReader) = reader.next()
-            }
-            let endToken = token
-            let name = self.code[startToken.content.startIndex..<endToken.content.endIndex]
-            token = Token(.unquotedName(String(name)), startToken.whitespaceBefore, name,
-                endToken.whitespaceAfter, startToken.position.span(to: endToken.position))
-            //print("read name:", token, reader)
-        default: ()
-        }
-        return (token, NameReader(reader))
-    }
-
 }

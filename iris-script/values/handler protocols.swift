@@ -6,6 +6,10 @@
 import Foundation
 
 
+// TO DO: what jargon to use for an unbound handler? ('procedure'?) e.g. in `do…done catching {error}: do…done`, or `some_list; map {item, count}: do…done`
+
+// TO DO: need to decide where `isEventHandler` flag should go; whereas rest of HandlerInterface (name, parameters, return type) is constructed from left-side of Pair, whether to behave as command or event handler is determined by context to which proc is bound (e.g. in right-side of `catching` operator, the `error` param can be omitted; in right-side of `map` [or whatever it's called], the `count` param can be omitted [as can the `item` param])
+
 // Q. multimethods? (we may want to divorce param+return types from name, associating type sig with callable)
 
 

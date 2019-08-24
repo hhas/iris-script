@@ -24,22 +24,25 @@ func unpackSignature(_ value: Value, in env: Environment) throws -> (Symbol, [Ha
     return (name, parameters)
 }
 
+// TO DO: sort out errors; this should throw simple, descriptive errors indicating type of error; caller should raise full coercion error with complete signature
+
 func unpackParameters(_ parameters: [Record.Field], in env: Environment) throws -> [HandlerInterface.Parameter] {
-    return try parameters.map{ (label: Symbol, value: Value) throws -> HandlerInterface.Parameter in
+    var uniqueLabels = Set<Symbol>(), uniqueBindings = Set<Symbol>()
+    let result = try parameters.map{ (label: Symbol, value: Value) throws -> HandlerInterface.Parameter in
         // label may be nullSymbol, in which case use binding name
-        let binding: Symbol, coercion: Coercion
+        var label = label, binding: Symbol, coercion: Coercion
         switch value {
         case let command as Command:
             if command.name == "as" {
                 let args = command.arguments
                 guard args.count != 2, let cmd = args[0].value as? Command, cmd.arguments.isEmpty else {
-                    throw UnsupportedCoercionError(value: try Record(parameters), coercion: asHandlerInterface)
+                    throw UnsupportedCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
                 }
                 binding = cmd.name
                 coercion = try args[1].value.swiftEval(in: env, as: asCoercion)
             } else {
                 if !command.arguments.isEmpty {
-                    throw UnsupportedCoercionError(value: try Record(parameters), coercion: asHandlerInterface)
+                    throw UnsupportedCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
                 }
                 binding = command.name
                 coercion = asValue
@@ -47,9 +50,17 @@ func unpackParameters(_ parameters: [Record.Field], in env: Environment) throws 
         default:
             throw UnsupportedCoercionError(value: try Record(parameters), coercion: asHandlerInterface)
         }
+        if binding == nullSymbol { binding = label }
+        if label == nullSymbol { label = binding }
+        uniqueLabels.insert(label)
+        uniqueBindings.insert(binding)
         return (label, binding, coercion)
     }
     //
+    if uniqueLabels.contains(nullSymbol) || uniqueLabels.count != parameters.count || uniqueBindings.count != parameters.count {
+        throw UnsupportedCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
+    }
+    return result
 }
 
 func unpackCoercion(_ value: Value, in env: Environment) throws -> Coercion {
@@ -85,7 +96,7 @@ func unpackHandlerInterface(_ signature: Value, in env: Environment, isEventHand
 
 
 
-let asHandlerInterface = AsComplex<HandlerInterface>(name: "handler_interface") // TO DO: handler interface can be coerced to/from Record
+let asHandlerInterface = AsComplex<HandlerInterface>(name: "handler_interface") // TO DO: handler interface can be coerced to/from Record (problem: records may also describe argument list in minimal handler sig; if coercion matches {name:,input:,output:} as handler interface, user will need to include a handler name or `returning` clause if they want it treated as arg list; alternative is we always treat records as arg lists, and use a command or other constructor to build a signature from a record)
 
 
 
