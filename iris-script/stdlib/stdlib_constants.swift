@@ -15,7 +15,11 @@ func stdlib_loadConstants(into env: Environment) {
     env.define(coercion: asValue)
     env.define(coercion: asString)
     env.define(coercion: asBool)   // TO DO: need to decide if native Boolean representation should be `true`/`false` constants or non-empty/empty values
-    env.define(coercion: asDouble) // TO DO: really want `asNumber` and `asWholeNumber`
+    
+    env.define(coercion: asNumber)
+    
+    env.define(coercion: asInt)
+    env.define(coercion: asDouble)
     env.define(coercion: asList)
     env.define(coercion: asRecord)
     

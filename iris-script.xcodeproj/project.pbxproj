@@ -53,6 +53,11 @@
 		4FC5C7F8230F380E007D694C /* handler coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7F7230F380E007D694C /* handler coercions.swift */; };
 		4FC5C7FD23110B1F007D694C /* quote reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FC23110B1F007D694C /* quote reader.swift */; };
 		4FC5C7FF23110B76007D694C /* name reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FE23110B76007D694C /* name reader.swift */; };
+		4FC5C81E23129BCC007D694C /* handlers template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81B23129BCC007D694C /* handlers template.swift */; };
+		4FC5C81F23129BCC007D694C /* handlers glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81C23129BCC007D694C /* handlers glue.swift */; };
+		4FC5C82023129BCC007D694C /* text template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81D23129BCC007D694C /* text template.swift */; };
+		4FC5C82123129CAA007D694C /* gluelib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FA23109824007D694C /* gluelib_handlers.swift */; };
+		4FC5C82223129CAA007D694C /* gluelib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FB23109826007D694C /* gluelib_operators.swift */; };
 		4FFC6F2522D6818000D636B9 /* tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2422D6818000D636B9 /* tokenizer.swift */; };
 		4FFC6F2A22D7704D00D636B9 /* access protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2922D7704D00D636B9 /* access protocols.swift */; };
 /* End PBXBuildFile section */
@@ -119,6 +124,10 @@
 		4FC5C7FB23109826007D694C /* gluelib_operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gluelib_operators.swift; sourceTree = "<group>"; };
 		4FC5C7FC23110B1F007D694C /* quote reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "quote reader.swift"; sourceTree = "<group>"; };
 		4FC5C7FE23110B76007D694C /* name reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "name reader.swift"; sourceTree = "<group>"; };
+		4FC5C81B23129BCC007D694C /* handlers template.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "handlers template.swift"; sourceTree = "<group>"; };
+		4FC5C81C23129BCC007D694C /* handlers glue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "handlers glue.swift"; sourceTree = "<group>"; };
+		4FC5C81D23129BCC007D694C /* text template.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "text template.swift"; sourceTree = "<group>"; };
+		4FC5C8232312A06C007D694C /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		4FFC6F2422D6818000D636B9 /* tokenizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tokenizer.swift; sourceTree = "<group>"; };
 		4FFC6F2922D7704D00D636B9 /* access protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "access protocols.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -259,6 +268,7 @@
 		4F84CFF422ADA0F100C9FD23 = {
 			isa = PBXGroup;
 			children = (
+				4FC5C8232312A06C007D694C /* notes.txt */,
 				4F84CFFF22ADA0F200C9FD23 /* iris-script */,
 				4F84CFFE22ADA0F200C9FD23 /* Products */,
 			);
@@ -291,6 +301,9 @@
 		4FC5C7F9231097FE007D694C /* gluelib */ = {
 			isa = PBXGroup;
 			children = (
+				4FC5C81B23129BCC007D694C /* handlers template.swift */,
+				4FC5C81C23129BCC007D694C /* handlers glue.swift */,
+				4FC5C81D23129BCC007D694C /* text template.swift */,
 				4FC5C7FA23109824007D694C /* gluelib_handlers.swift */,
 				4FC5C7FB23109826007D694C /* gluelib_operators.swift */,
 			);
@@ -376,6 +389,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4FC5C82123129CAA007D694C /* gluelib_handlers.swift in Sources */,
+				4FC5C82223129CAA007D694C /* gluelib_operators.swift in Sources */,
 				4F1EA48722B27B8D00FFA4D2 /* text.swift in Sources */,
 				4F5B58852302098200B039DC /* pair.swift in Sources */,
 				4FFC6F2A22D7704D00D636B9 /* access protocols.swift in Sources */,
@@ -392,6 +407,7 @@
 				4F25FB8722B68530007EE7AE /* query values.swift in Sources */,
 				4F26065F22C016570036D904 /* primitive handler.swift in Sources */,
 				4F84D00C22ADA1AF00C9FD23 /* environment.swift in Sources */,
+				4FC5C81F23129BCC007D694C /* handlers glue.swift in Sources */,
 				4F84D01422AE7EEA00C9FD23 /* block.swift in Sources */,
 				4F84D00122ADA0F200C9FD23 /* main.swift in Sources */,
 				4F26065B22C015F10036D904 /* handler interface.swift in Sources */,
@@ -409,7 +425,9 @@
 				4FC5C7F8230F380E007D694C /* handler coercions.swift in Sources */,
 				4F29320422E25E7100BC0AD4 /* operator reader.swift in Sources */,
 				4FC5C7FF23110B76007D694C /* name reader.swift in Sources */,
+				4FC5C82023129BCC007D694C /* text template.swift in Sources */,
 				4F2694D922E061AC009B8FC0 /* numeric reader.swift in Sources */,
+				4FC5C81E23129BCC007D694C /* handlers template.swift in Sources */,
 				4F2694DB22E06D24009B8FC0 /* parser protocols.swift in Sources */,
 				4FFC6F2522D6818000D636B9 /* tokenizer.swift in Sources */,
 				4F84D01222AE7E2C00C9FD23 /* handler protocols.swift in Sources */,
