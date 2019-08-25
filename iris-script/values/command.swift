@@ -73,7 +73,8 @@ class Command: ComplexValue {
     typealias Argument = Record.Field
     
     var description: String {
-        return self.arguments.count == 0 ? self.name.label : "\(self.name.label) {\(self.arguments.map{ "\(["", "L", "R"].contains($0) ? "" : "\($0.label): ")\($1)" }.joined(separator: ", "))}"
+        // TO DO: PP needs to apply operator syntax/quote name if command's name matches an existing operator (Q. how should operator definitions be scoped? per originating library, or per main script? [if we annotate command in parser, it'll presumably capture originating library's operator syntax])
+        return "‘\(self.name.label)’" + (self.arguments.count == 0 ? "" : " {\(self.arguments.map{ "\(["", "L", "R"].contains($0) ? "" : "\($0.label): ")\($1)" }.joined(separator: ", "))}")
     }
 
     let nominalType: Coercion = asCommand
@@ -159,3 +160,12 @@ extension Command {
         self.init(definition.name.name, [(leftOperand, left), (rightOperand, right)])
     }
 }
+
+
+extension Value { // parser converts all names to commands; provide convenience method to convert back
+    
+    func asIdentifier() -> Symbol? {
+        if let cmd = self as? Command, cmd.arguments.isEmpty { return cmd.name } else { return nil }
+    }
+}
+

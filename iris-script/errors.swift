@@ -132,7 +132,7 @@ protocol CoercionError: NativeError {
 extension CoercionError {
     
     var description: String {
-        return "Can’t coerce the following value to \(self.coercion): `\(self.value)`"
+        return "Can’t coerce the following \(self.value.nominalType) value to \(self.coercion): `\(self.value)`"
     }
 }
     
@@ -165,7 +165,7 @@ protocol ArgumentError: NativeError {
 
 struct UnknownArgumentError: ArgumentError {
     
-    var description: String { return "Argument \(self.index+1) of command `\(self.command)` is not recognized." }
+    var description: String { return "Unknown value \(self.index+1) in command: `\(self.command)`" }
     
     let index: Int
     let command: Command
@@ -178,7 +178,7 @@ struct UnknownArgumentError: ArgumentError {
 
 struct BadArgumentError: ArgumentError {
     
-    var description: String { return "Argument \(self.index+1) of command `\(self.command)` is not acceptable." } // TO DO: change message to "is missing" if index >= command.arguments.count
+    var description: String { return "Bad value \(self.index+1) in command: `\(self.command)`" } // TO DO: change message to "is missing" if index >= command.arguments.count
     
     let index: Int
     let command: Command

@@ -19,12 +19,14 @@ func unpackSignature(_ value: Value, in env: Environment) throws -> (Symbol, [Ha
         name = nullSymbol
         parameters = try unpackParameters(record.fields, in: env)
     default:
+        print("unpackSignature failed on", type(of:value))
         throw UnsupportedCoercionError(value: value, coercion: asHandlerInterface)
     }
     return (name, parameters)
 }
 
 // TO DO: sort out errors; this should throw simple, descriptive errors indicating type of error; caller should raise full coercion error with complete signature
+
 
 func unpackParameters(_ parameters: [Record.Field], in env: Environment) throws -> [HandlerInterface.Parameter] {
     var uniqueLabels = Set<Symbol>(), uniqueBindings = Set<Symbol>()
@@ -35,19 +37,23 @@ func unpackParameters(_ parameters: [Record.Field], in env: Environment) throws 
         case let command as Command:
             if command.name == "as" {
                 let args = command.arguments
-                guard args.count != 2, let cmd = args[0].value as? Command, cmd.arguments.isEmpty else {
+                // TO DO: need simpler way to convert command to identifier
+                guard args.count == 2, let name = args[0].value.asIdentifier() else {
+                    print("Bad `as` operator.")
                     throw UnsupportedCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
                 }
-                binding = cmd.name
+                binding = name
                 coercion = try args[1].value.swiftEval(in: env, as: asCoercion)
             } else {
-                if !command.arguments.isEmpty {
+                guard let name = command.asIdentifier() else {
+                    print("Bad name:",command)
                     throw UnsupportedCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
                 }
-                binding = command.name
+                binding = name
                 coercion = asValue
             }
         default:
+            print("unpackParameters failed on", type(of:value),value)
             throw UnsupportedCoercionError(value: try Record(parameters), coercion: asHandlerInterface)
         }
         if binding == nullSymbol { binding = label }
@@ -58,6 +64,7 @@ func unpackParameters(_ parameters: [Record.Field], in env: Environment) throws 
     }
     //
     if uniqueLabels.contains(nullSymbol) || uniqueLabels.count != parameters.count || uniqueBindings.count != parameters.count {
+        print("unpackParameters found bad labels")
         throw UnsupportedCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
     }
     return result
@@ -77,6 +84,7 @@ func unpackHandlerInterface(_ signature: Value, in env: Environment, isEventHand
         if command.name == "returning" {
             let args = command.arguments
             if args.count != 2 {
+                print("Bad `returning` operator")
                 throw UnsupportedCoercionError(value: signature, coercion: asHandlerInterface)
             }
             (name, parameters) = try unpackSignature(args[0].value, in: env)
@@ -89,6 +97,7 @@ func unpackHandlerInterface(_ signature: Value, in env: Environment, isEventHand
         (name, parameters) = try unpackSignature(record, in: env)
         returnType = asAnything
     default:
+        print("unpackHandlerInterface failed on",type(of:signature), signature)
         throw UnsupportedCoercionError(value: signature, coercion: asHandlerInterface)
     }
     return HandlerInterface(name: name, parameters: parameters, result: returnType, isEventHandler: isEventHandler)
@@ -123,7 +132,9 @@ struct AsHandler: SwiftCoercion {
             return NativeHandler(interface: interface, action: pair.value, in: env)
         case let block as Block:
             return NativeHandler(interface: nullHandlerInterface, action: block, in: env)
-        default: throw UnsupportedCoercionError(value: value, coercion: self)
+        default:
+            print("AsHandler.unbox failed.")
+            throw UnsupportedCoercionError(value: value, coercion: self)
         }
     }
     

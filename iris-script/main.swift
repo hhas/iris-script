@@ -7,41 +7,26 @@ import Foundation
 
 
 do {
-    
-    // glue definition for primitive handler
-    
-    // TO DO: what about name/arg aliasing (including deprecated names)? (i.e. establishing a formal mechanism for amending an existing interface design enables automatic upgrading of user scripts)
-    
-     // TO DO: what about introspecting the Swift func's API, e.g. to extract parameter names and primitive types, `throws`, and primitive return type?
-    
-    // TO DO: need `swift` coercion modifier to indicate where arguments/results should be bridged to Swift primitives (String, Array<T>, etc) rather than passed as native Values
-    
     let script = """
 
     to ‘+’ {left as Number, right as Number} returning Number: do
         can_error: true « optional; false if omitted »
-        swift_handler: add  « optional; if different to native name »
+        swift_function: add  « optional; if different to native name »
         operator: {form: #infix, precedence: 590, associativity: #left, aliases: ‘0uFF0B’} «TO DO: 0u… syntax for Unicode chars»
         use_scopes: []  « optional; may be #command and/or #handler »
     done
 
+    to ‘-’ {left as Number, right as Number} returning Number: do
+        can_error: true
+        swift_function: subtract
+        operator: {form: #infix, precedence: 590, associativity: #left, aliases: ‘0uFF0D’}
+    done
+
     """
     
-    
-    let env = Environment()
-    gluelib_loadHandlers(into: env)
-    stdlib_loadConstants(into: env)
-    
-    let operatorRegistry = OperatorRegistry()
-    stdlib_loadOperators(into: operatorRegistry)
-    let operatorReader = newOperatorReader(for: operatorRegistry)
-    
-    let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }
-    let p = Parser(tokenStream: QuoteReader(doc.tokenStream), operatorRegistry: operatorRegistry)
     do {
-        let script = try p.parseScript()
-        print(script)
-        print(try script.eval(in: env, as: asAnything))
+        let code = try renderHandlerGlue(for: "stdlib", from: script)
+        print(code)
     } catch {
         print(error)
     }

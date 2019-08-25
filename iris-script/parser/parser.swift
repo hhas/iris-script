@@ -175,8 +175,8 @@ class Parser {
     
     func readField(_ content: Value) throws -> Record.Field { // used by readRecord()
         if let pair = content as? Pair {
-            guard let key = pair.key as? Command, key.arguments.isEmpty else { throw BadSyntax.missingName } // parser has already reduced field name to Command
-            return (key.name, pair.value)
+            guard let key = pair.key.asIdentifier() else { throw BadSyntax.missingName } // parser has already reduced field name to Command
+            return (key, pair.value)
         } else {
             return (nullSymbol, content)
         }

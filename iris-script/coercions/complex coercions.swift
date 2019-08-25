@@ -17,7 +17,9 @@ struct AsComplex<T: Value>: SwiftCoercion { // T must be concrete struct or clas
     typealias SwiftType = T
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let result = try value.swiftEval(in: scope, as: asAnything) as? SwiftType else {
+        // TO DO: this has issues
+        guard let result = try asAnything.unbox(value: value, in: scope) as? SwiftType else {
+        //guard let result = try value.swiftEval(in: scope, as: asAnything) as? SwiftType else {
             throw UnsupportedCoercionError(value: value, coercion: self)
         }
         return result

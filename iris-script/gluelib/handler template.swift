@@ -1,5 +1,5 @@
 //
-//  handlers template.swift
+//  handler template.swift
 //  template-renderer
 //
 
@@ -29,7 +29,7 @@ private let interface_««signatureName»» = HandlerInterface(
     name: "««nativeName»»",
     parameters: [
     ««+interfaceParameters»»
-		("««nativeName»»", "", type_««signatureName»».param_««count»»),
+		("««nativeName»»", "««bindingName»»", type_««signatureName»».param_««count»»),
     ««-interfaceParameters»»
     ],
     result: type_««signatureName»».result
@@ -76,7 +76,7 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
     tpl.defineHandler.map(args.handlerGlues) { (node: Node, glue: HandlerGlue) -> Void in
         node.signatureName.set(glue.signatureName)
         node.nativeName.set(glue.name)
-        node.nativeArgumentNames.set(glue.parameters.map{$0.label}.joined(separator: ", "))
+        node.nativeArgumentNames.set(glue.parameters.map{$0.name}.joined(separator: ", "))
         node.signatureParameters.map(glue.parameters.enumerated()) {
             (node: Node, item: (count: Int, param: HandlerGlue.Parameter)) -> Void in
             node.count.set(item.count)
@@ -85,8 +85,9 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
         node.returnType.set(glue.result)
         node.interfaceParameters.map(glue.parameters.enumerated()) {
             (node: Node, item: (count: Int, param: HandlerGlue.Parameter)) -> Void in
-            node.nativeName.set(item.param.label)
             node.signatureName.set(glue.signatureName)
+            node.nativeName.set(item.param.name)
+            node.bindingName.set(item.param.binding)
             node.count.set(item.count)
         }
         node.unboxArguments.map(0..<glue.parameters.count) { (node: Node, count: Int) -> Void in
@@ -104,7 +105,7 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
         if !glue.canError {
             node.tryKeyword.delete()
         }
-        node.functionName.set(glue.swiftName)
+        node.functionName.set(glue.swiftCode)
         node.functionArguments.map(glue.swiftParameters) { (node: Node, item: (label: String, param: String)) -> Void in
             node.label.set(item.label)
             node.value.set(item.param)
@@ -136,13 +137,13 @@ func camelCase(_ name: String) -> String { // convert underscored_name to camelC
 
 extension HandlerGlue {
     
-    var swiftName: String { return self.swiftFunction?.name ?? camelCase(self.name) }
+    var swiftCode: String { return self.swiftFunction?.name ?? camelCase(self.name) }
     
     var _swiftParameters: [String] {
         if let params = self.swiftFunction?.params, params.count == self.parameters.count {
             return params
         } else {
-            return self.parameters.map{camelCase($0.label)}
+            return self.parameters.map{camelCase($0.name)}
         }
     }
     
@@ -150,6 +151,6 @@ extension HandlerGlue {
         return self._swiftParameters.enumerated().map{("arg_\($0)", $1)} + self.useScopes.map{($0, $0)}
     }
     
-    var signatureName: String { return self.swiftName + "_" + self._swiftParameters.joined(separator: "_") }
+    var signatureName: String { return self.swiftCode + "_" + self._swiftParameters.joined(separator: "_") }
 }
 

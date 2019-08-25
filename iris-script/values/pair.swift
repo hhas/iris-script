@@ -25,12 +25,12 @@ struct Pair: BoxedSwiftValue {
     
     // TO DO: not sure about this; may be better for parser to transform Pairs in Blocks to `set` commands
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
-        guard let cmd = self.key as? Command, cmd.arguments.isEmpty else {
+        guard let name = self.key.asIdentifier() else {
             throw UnsupportedCoercionError(value: self.key, coercion: asSymbol)
         }
-        guard let context = scope as? MutableScope else { throw ImmutableScopeError(name: cmd.name, in: scope) }
+        guard let context = scope as? MutableScope else { throw ImmutableScopeError(name: name, in: scope) }
         let value = try self.value.eval(in: scope, as: asAnything)
-        try context.set(cmd.name, to: value)
+        try context.set(name, to: value)
         return nullValue
     }
 }

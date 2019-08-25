@@ -114,7 +114,7 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
     
     var description: String { return "\(self.coercion) or \(self.defaultValue)" }
     
-    typealias SwiftType = T.SwiftType?
+    typealias SwiftType = T.SwiftType
     
     let coercion: T
     let defaultValue: Value
@@ -140,7 +140,7 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
         }
     }
     func box(value: SwiftType, in scope: Scope) -> Value {
-        guard let value = value else { return nullValue }
+        //guard let value = value else { return nullValue }
         return self.coercion.box(value: value, in: scope)
     }
 }
