@@ -27,6 +27,8 @@ struct AsNothing: Coercion { // used in HandlerInterface.result to return `nothi
 
 struct AsOptional: SwiftCoercion { // this returns native Value; for Optional<Value> use MayBeNil
     
+    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.coercion.swiftLiteralDescription))" }
+    
     let name: Symbol = "optional"
     
     var description: String { return self.coercion.name == "value" ? "anything" : "optional \(self.coercion)" } // kludge
@@ -50,6 +52,8 @@ struct AsOptional: SwiftCoercion { // this returns native Value; for Optional<Va
 
 struct AsSwiftOptional<T: SwiftCoercion>: SwiftCoercion {
     
+    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.coercion.swiftLiteralDescription))" }
+
     let name: Symbol = "optional"
     
     var description: String { return "\(self.coercion) or nothing" }
@@ -87,6 +91,10 @@ struct AsSwiftOptional<T: SwiftCoercion>: SwiftCoercion {
 
 struct AsDefault: Coercion {
     
+    var swiftLiteralDescription: String {
+        return "\(type(of: self))(\(self.coercion.swiftLiteralDescription), defaultValue: \(self.defaultValue.swiftLiteralDescription))"
+    }
+    
     let name: Symbol = "default"
     
     var description: String { return "\(self.coercion) or \(self.defaultValue)" }
@@ -108,8 +116,13 @@ struct AsDefault: Coercion {
     }
 }
 
+
 struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
     
+    var swiftLiteralDescription: String {
+        return "\(type(of: self))(\(self.coercion.swiftLiteralDescription), defaultValue: \(formatSwiftLiteral(self.defaultValue)))"
+    }
+
     let name: Symbol = "default"
     
     var description: String { return "\(self.coercion) or \(self.defaultValue)" }
@@ -117,9 +130,9 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
     typealias SwiftType = T.SwiftType
     
     let coercion: T
-    let defaultValue: Value
+    let defaultValue: SwiftType
     
-    init(_ coercion: T, defaultValue: Value) {
+    init(_ coercion: T, defaultValue: SwiftType) {
         self.coercion = coercion
         self.defaultValue = defaultValue // TO DO: this should be member of coercion; how/where to check this? also need to consider how collections/exprs might be used here
     }
@@ -128,7 +141,7 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
         do {
             return try self.coercion.coerce(value: value, in: scope)
         } catch is NullCoercionError {
-            return try self.coercion.coerce(value: self.defaultValue, in: scope)
+            return self.coercion.box(value: self.defaultValue, in: scope) // TO DO: cache if memoizable
         }
     }
     
@@ -136,7 +149,7 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
         do {
             return try self.coercion.unbox(value: value, in: scope)
         } catch is NullCoercionError {
-            return try self.coercion.unbox(value: self.defaultValue, in: scope)
+            return self.defaultValue
         }
     }
     func box(value: SwiftType, in scope: Scope) -> Value {
@@ -155,6 +168,8 @@ let asAnything = AsOptional(asValue)
 
 
 struct AsEditable: SwiftCoercion {
+    
+    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.coercion.swiftLiteralDescription))" }
 
     // experimental; in effect, environment binds a box containing the actual value, giving behavior similar to Swift's pass-by-reference semantics using structs
     

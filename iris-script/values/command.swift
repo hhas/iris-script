@@ -70,13 +70,15 @@ import Foundation
 
 class Command: ComplexValue {
     
+    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.name.swiftLiteralDescription)\(self.arguments.isEmpty ? "" : ", [\(self.arguments.map{"(\($0.label.swiftLiteralDescription), \($0.value.swiftLiteralDescription))"}.joined(separator: ", "))]"))" }
+    
     typealias Argument = Record.Field
     
     var description: String {
         // TO DO: PP needs to apply operator syntax/quote name if command's name matches an existing operator (Q. how should operator definitions be scoped? per originating library, or per main script? [if we annotate command in parser, it'll presumably capture originating library's operator syntax])
         return "‘\(self.name.label)’" + (self.arguments.count == 0 ? "" : " {\(self.arguments.map{ "\(["", "L", "R"].contains($0) ? "" : "\($0.label): ")\($1)" }.joined(separator: ", "))}")
     }
-
+    
     let nominalType: Coercion = asCommand
     
     // TO DO: what about a slot for storing optional operator definition? (or general 'annotations' slot?) we also need to indicate when pp should wrap a command in elective parens (as opposed to required parens, which pp should add automatically as operator precedence dictates)

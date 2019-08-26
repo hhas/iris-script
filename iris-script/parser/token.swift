@@ -6,6 +6,7 @@
 import Foundation
 
 
+
 // TO DO: split punctuation and quotes into sub-enums? what about other 'raw' tokens (letters, symbols, underscores, etc)? if we're going to use partial lexers/parsers to assemble names, numbers, etc from raw tokens, then it'll simplify main parser if it never has to deal with unprocessed .letters/.digits/etc
 
 // TO DO: where to define core punctuation's adjoining whitespace rules? (presumably full parser will digest these pattern-matching rules, along with pattern-matching rules for command grammar, and library-defined operator patterns)
@@ -288,14 +289,19 @@ struct Token: CustomStringConvertible {
         }
     }
     
+    var isLeftDelimited: Bool {
+        // TO DO: this needs to be set by tokenizer based on preceding token's form and/or isRightContiguous, otherwise name/number/etc readers won't detect start of contiguous letter+digit sequences correctly, e.g. `a0u12` should read as identifier, not as `a` + `0u12`
+        return true
+    }
+    
     var isRightDelimiter: Bool {
         switch self.form {
         case .lineBreak, .endOfScript, .semicolon, .colon, .comma, .period, .query, .exclamation, .endList, .endRecord, .endGroup:
             return true
-        case .operatorName(_): // (i.e. `if` in `foo if` is a delimiter, just not valid syntax)
+        case .operatorName(_): // (i.e. `if` in `foo if` is a delimiter, just not valid syntax) // TO DO: by same logic, should `([{` be treated as righ-hand delimiters
             return true
         default:
-            return false
+            return false // TO DO: what about [leading] whitespace? or is preceding token expected to check its own hasTrailingWhitespace property?
         }
     }
     

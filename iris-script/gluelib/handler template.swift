@@ -105,7 +105,7 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
         if !glue.canError {
             node.tryKeyword.delete()
         }
-        node.functionName.set(glue.swiftCode)
+        node.functionName.set(glue.swiftLiteralDescription)
         node.functionArguments.map(glue.swiftParameters) { (node: Node, item: (label: String, param: String)) -> Void in
             node.label.set(item.label)
             node.value.set(item.param)
@@ -137,7 +137,7 @@ func camelCase(_ name: String) -> String { // convert underscored_name to camelC
 
 extension HandlerGlue {
     
-    var swiftCode: String { return self.swiftFunction?.name ?? camelCase(self.name) }
+    var swiftLiteralDescription: String { return self.swiftFunction?.name ?? camelCase(self.name) }
     
     var _swiftParameters: [String] {
         if let params = self.swiftFunction?.params, params.count == self.parameters.count {
@@ -151,6 +151,6 @@ extension HandlerGlue {
         return self._swiftParameters.enumerated().map{("arg_\($0)", $1)} + self.useScopes.map{($0, $0)}
     }
     
-    var signatureName: String { return self.swiftCode + "_" + self._swiftParameters.joined(separator: "_") }
+    var signatureName: String { return self.swiftLiteralDescription + "_" + self._swiftParameters.joined(separator: "_") }
 }
 

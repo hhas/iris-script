@@ -14,7 +14,7 @@ import Foundation
 // Q. need to decide on interpolated strings - should they be a distinct datatype with literal representation, or library-defined `format_text {template, …}`; it may help to compare 'interpolated' lists, where list items may be resolved at runtime by commands, e.g. `["foo",bar,"baz",fub-2]`
 
 
-struct Text: BoxedScalarValue, ExpressibleByStringLiteral { // 
+struct Text: BoxedScalarValue, ExpressibleByStringLiteral {
     
     public var description: String { return self.data.debugDescription } // temporary
     

@@ -25,6 +25,8 @@ extension KeyConvertible {
 
 struct KeyedList: BoxedCollectionValue { // ExpressibleByDictionaryLiteral? // TO DO: what should be its native name?
     
+    var swiftLiteralDescription: String { return self.data.isEmpty ? "[:]" : "[\(self.data.map{"\($0.key): \($0.value)"}.joined(separator: ", "))]" } // TO DO: will type be inferred, or should it be explicit?
+
     typealias KeyConvertibleValue = Value & KeyConvertible
     
     typealias SwiftType = [Key: Value]

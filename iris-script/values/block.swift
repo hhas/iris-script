@@ -9,7 +9,7 @@ import Foundation
 
 
 struct Block: BoxedComplexValue { // caution: this does not capture lexical scope
-    
+        
     var description: String { // TO DO: hand off to pp; also need formatting hints from parser
         switch self.style {
         case .sentence(let t): return "\(self.data.map{$0.description}.joined(separator: ", "))\(t.content)"
@@ -33,9 +33,13 @@ struct Block: BoxedComplexValue { // caution: this does not capture lexical scop
     let data: [Value]
     let style: Style // pretty-printer should format blocks as-per user preference
     
-    init(_ data: [Value], style: Style = .parenthesis) {
+    init(_ data: [Value], style: Style) {
         self.data = data
         self.style = style
+    }
+    
+    init(_ data: [Value]) {
+        self.init(data, style: .parenthesis)
     }
     
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value {

@@ -27,8 +27,8 @@ struct HandlerGlue: Value {
     let interface: HandlerInterface
     
     var name: String { return self.interface.name.label }
-    var parameters: [Parameter] { return self.interface.parameters.map{($0.name.label, $0.binding.label, $0.coercion.swiftCode)} }
-    var result: String { return self.interface.result.swiftCode } // coercion name
+    var parameters: [Parameter] { return self.interface.parameters.map{($0.name.label, $0.binding.label, $0.coercion.swiftLiteralDescription)} }
+    var result: String { return self.interface.result.swiftLiteralDescription } // coercion name
     
     let canError: Bool
     let useScopes: [String] // commandEnv, handlerEnv // TO DO: any use-cases for per-invocation sub-env?

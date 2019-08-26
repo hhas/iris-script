@@ -14,6 +14,8 @@ import Foundation
 
 struct OrderedList: BoxedCollectionValue { // ExpressibleByArrayLiteral?
     
+    var swiftLiteralDescription: String { return "[\(self.data.map{$0.swiftLiteralDescription}.joined(separator: ", "))]" }
+
     var description: String { return "\(self.data)" }
     
     let nominalType: Coercion = asList

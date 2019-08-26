@@ -11,6 +11,8 @@ import Foundation
 
 public struct Symbol: ComplexValue, KeyConvertible, Comparable, ExpressibleByStringLiteral {
     
+    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.label.debugDescription))" } 
+    
     public var description: String { return "#‘\(self.label)’" } // note: pp should only quote label if it's an operator name
     
     public var isEmpty: Bool { return self.label.isEmpty }

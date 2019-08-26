@@ -296,7 +296,8 @@ class Parser {
             self.advance(ignoringLineBreaks: true) // step onto ')'
             guard case .endGroup = self.current.token.form else { throw BadSyntax.unterminatedGroup } //SyntaxError("Expected end of precedence group, “)”, but found: \(self.this)") }
         
-        case .letters, .symbols, .quotedName(_), .unquotedName(_): // found `NAME`/`'NAME'`
+        // TO DO: should .letters/.symbols/.digits be rejected here, on grounds that upstream readers should already have transformed all of these primitive tokens to name/operator/number
+        case .letters, .symbols, .quotedName(_), .unquotedName(_): // found `NAME`/`'NAME'` // TO DO: merge .quotedName(_) and .unquotedName(_) into .name(String,isQuoted:Bool)?
             // TO DO: reading reverse domain names with optional `@` prefix, e.g. `com.example.foo`, is probably best done by a LineReader adapter; question is whether we should generalize this to allow commands with arguments within/at end
             value = try self.readCommand(allowLooseArguments)
         case .operatorName(let operatorClass) where !operatorClass.hasLeftOperand: // atom/prefix operator

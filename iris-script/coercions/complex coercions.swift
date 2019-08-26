@@ -105,6 +105,8 @@ let asIs = AsIs()
 
 extension Bool: Value {
     
+    var swiftLiteralDescription: String { return String(self) }
+    
     var nominalType: Coercion { return asBool }
     
     func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool {

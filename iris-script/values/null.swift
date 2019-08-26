@@ -11,6 +11,8 @@ import Foundation
 
 struct NullValue: Value { // expanding `nothing` always throws transient NullCoercionError; this may be intercepted by coercion modifiers to supply default value, otherwise it'll be rethrown as permanent EvaluationError
     
+    var swiftLiteralDescription: String { return "nullValue" }
+    
     var description: String { return "nothing" }
     
     let nominalType: Coercion = asNothing

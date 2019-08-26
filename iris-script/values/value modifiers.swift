@@ -25,6 +25,8 @@ import Foundation
 
 class EditableValue: Handler, Mutator {
     
+    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.data.swiftLiteralDescription), as: \(self.coercion.swiftLiteralDescription))" }
+    
     // get() and call() behaviors are pass-thrus to the underlying Value; set() replaces the current Value with a new Value
     
     let nominalType: Coercion = asEditable

@@ -21,6 +21,8 @@ protocol NumericValue: ScalarValue, KeyConvertible {}
 
 extension Int: NumericValue {
     
+    var swiftLiteralDescription: String { return String(self) }
+    
     var nominalType: Coercion { return asInt }
     
     func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
@@ -39,6 +41,8 @@ extension Int: NumericValue {
 }
 
 extension Double: NumericValue {
+    
+    var swiftLiteralDescription: String { return String(self) }
     
     var nominalType: Coercion { return asDouble }
     
@@ -61,6 +65,14 @@ extension Double: NumericValue {
 
 
 enum Number: NumericValue { // what about fractions? (this may require `indirect` to allow nested composition; alternatively, might be best to implement as PrecisionNumber struct/class, possibly in optional library)
+    
+    var swiftLiteralDescription: String {
+        switch self {
+        case .integer(let n, radix: let r): return "Number(\(n)\(r == 10 ? "" : ", radix: \(r)"))"
+        case .floatingPoint(let n): return "Number(\(n))"
+        default: fatalError("Number.swiftLiteralDescription not supported for \(self)")
+        }
+    }
     
     static func ==(lhs: Number, rhs: Number) -> Bool {
         do {

@@ -10,6 +10,8 @@ import Foundation
 
 struct Pair: BoxedSwiftValue {
     
+    var swiftLiteralDescription: String { return "Pair(\(self.key.swiftLiteralDescription), \(self.value.swiftLiteralDescription))" }
+    
     var description: String { return "(\(self.data.0): \(self.data.1))" } // TO DO: not ideal
     
     let nominalType: Coercion = asPair
@@ -17,10 +19,16 @@ struct Pair: BoxedSwiftValue {
     var key: Value { return self.data.key }
     var value: Value { return self.data.value }
     
-    let data: (key: Value, value: Value) // in a record, key is Symbol (field name); in keyed list (dictionary), key is any hashable Value
+    typealias SwiftType = (key: Value, value: Value)
+    
+    let data: SwiftType // in a record, key is Symbol (field name); in keyed list (dictionary), key is any hashable Value
     
     init(_ key: Value, _ value: Value) {
         self.data = (key, value)
+    }
+    
+    init(_ data: SwiftType) { // TO DO: [Swift bug] swiftc breaks without details if SwiftType isn't explicitly declared above (in theory the BoxedSwiftValue protocol should infer SwiftType from the data constant's type, but clearly there are [unplanned] limits)
+        self.data = data
     }
     
     // TO DO: not sure about this; may be better for parser to transform Pairs in Blocks to `set` commands

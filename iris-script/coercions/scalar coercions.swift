@@ -64,6 +64,13 @@ struct AsInt: SwiftScalarCoercion {
 
 struct AsConstrainedInt: SwiftScalarCoercion {
     
+    var swiftLiteralDescription: String {
+        let min: String, max: String
+        if let n = self.min { min = String(n) } else { min = "nil" }
+        if let n = self.max { max = String(n) } else { max = "nil" }
+        return "\(type(of: self))(min: \(min), max: \(max))"
+    }
+    
     let name: Symbol = "integer"
     
     var description: String { // TO DO: code or descriptive text? (if descriptive, how to localize?)

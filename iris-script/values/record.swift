@@ -15,6 +15,8 @@ import Foundation
 
 
 struct Record: Value, Accessor {
+
+    var swiftLiteralDescription: String { return "(try! Record([\(self.fields.map{ "(\($0.swiftLiteralDescription), \($1.swiftLiteralDescription))" }.joined(separator: ", "))])" }
     
     // TO DO: `description` should return Swift representation (we need a separate visitor-style API for pretty-printing native values, as formatting needs to be customizable [e.g. when reformatting script's code, where line-wrapping and reindentation is automatic, command arguments can omit record punctuation for low-noise AS-like appearance, and commands can be formatted with or without using custom operator syntax; plus, of course, literate formatting where visual emphasis is assigned to high-level structures rather than low-level token types]; TBH generating Swift representations should probably also be done using same PP API, e.g. for use by cross-compiler when generating [human-readable] Swift code, with `description` invoking that with default formatting options when displaying values for debugging/troubleshooting)
     

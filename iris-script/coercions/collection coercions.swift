@@ -3,6 +3,9 @@
 //  iris-lang
 //
 
+// TO DO: AsDict (AsKeyedList?), AsDictionary<T> keys will always be scalar and/or symbol (Q. define `Atom` to represent scalar, symbol, bool, and nothing; this makes sense as scalars describe variable quantities whereas the others are absolutes)
+
+
 import Foundation
 
 
@@ -12,7 +15,7 @@ protocol CollectionCoercion: Coercion {
 
 
 
-struct AsList: CollectionCoercion {
+struct AsList: CollectionCoercion { // TO DO: rename AsOrderedList?
     
     let name: Symbol = "list"
     
@@ -40,6 +43,8 @@ protocol SwiftCollectionCoercion: SwiftCoercion {
 
 struct AsArray<ElementCoercion: SwiftCoercion>: SwiftCollectionCoercion {
     
+    var swiftLiteralDescription: String { return "AsArray(\(self.item.swiftLiteralDescription))" }
+    
     let name: Symbol = "list" // TO DO
     
     typealias SwiftType = [ElementCoercion.SwiftType]
@@ -63,8 +68,6 @@ struct AsArray<ElementCoercion: SwiftCoercion>: SwiftCollectionCoercion {
     }
 }
 
-
-// AsTable/AsDictionary<T>; keys will always be scalar and/or symbol (Q. define `Atom` to represent scalar, symbol, bool, and nothing; this makes sense as scalars describe variable quantities whereas the others are absolutes)
 
 
 

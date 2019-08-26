@@ -38,6 +38,7 @@
 		4F29320222E23AD700BC0AD4 /* other line readers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F29320122E23AD700BC0AD4 /* other line readers.swift */; };
 		4F29320422E25E7100BC0AD4 /* operator reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F29320322E25E7100BC0AD4 /* operator reader.swift */; };
 		4F2B81BF22CCD63E00FD1EB8 /* record coercion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B81BE22CCD63E00FD1EB8 /* record coercion.swift */; };
+		4F5B24AF231405B8001C1941 /* swift literal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24AE231405B8001C1941 /* swift literal.swift */; };
 		4F5B58852302098200B039DC /* pair.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B58842302098200B039DC /* pair.swift */; };
 		4F84D00122ADA0F200C9FD23 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00022ADA0F200C9FD23 /* main.swift */; };
 		4F84D00822ADA12A00C9FD23 /* value protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00722ADA12A00C9FD23 /* value protocols.swift */; };
@@ -107,6 +108,7 @@
 		4F29320122E23AD700BC0AD4 /* other line readers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "other line readers.swift"; sourceTree = "<group>"; };
 		4F29320322E25E7100BC0AD4 /* operator reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator reader.swift"; sourceTree = "<group>"; };
 		4F2B81BE22CCD63E00FD1EB8 /* record coercion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record coercion.swift"; sourceTree = "<group>"; };
+		4F5B24AE231405B8001C1941 /* swift literal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "swift literal.swift"; sourceTree = "<group>"; };
 		4F5B58842302098200B039DC /* pair.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pair.swift; sourceTree = "<group>"; };
 		4F84CFFD22ADA0F200C9FD23 /* iris-script */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "iris-script"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F84D00022ADA0F200C9FD23 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -268,6 +270,14 @@
 			name = collections;
 			sourceTree = "<group>";
 		};
+		4F5B24B0231405C8001C1941 /* formatting */ = {
+			isa = PBXGroup;
+			children = (
+				4F5B24AE231405B8001C1941 /* swift literal.swift */,
+			);
+			path = formatting;
+			sourceTree = "<group>";
+		};
 		4F84CFF422ADA0F100C9FD23 = {
 			isa = PBXGroup;
 			children = (
@@ -293,6 +303,7 @@
 				4F1EA48B22B4E71300FFA4D2 /* values */,
 				4F1EA48C22B4E72F00FFA4D2 /* coercions */,
 				4FFC6F2822D7703000D636B9 /* scopes */,
+				4F5B24B0231405C8001C1941 /* formatting */,
 				4F84D01522AE819000C9FD23 /* errors.swift */,
 				4F257CCA22BACB0D00A51CF5 /* chunk expressions */,
 				4F25FB8822B6AC57007EE7AE /* stdlib */,
@@ -451,6 +462,7 @@
 				4F29320022E2290B00BC0AD4 /* editable script.swift in Sources */,
 				4F25FB8C22B6E561007EE7AE /* stdlib_handlers.swift in Sources */,
 				4F25FB8522B64B58007EE7AE /* numeric.swift in Sources */,
+				4F5B24AF231405B8001C1941 /* swift literal.swift in Sources */,
 				4F84D01022AE7E2500C9FD23 /* command.swift in Sources */,
 				4F27087622D9E584009F40B2 /* keyed list.swift in Sources */,
 				4F1EA48122B2793800FFA4D2 /* scalar coercions.swift in Sources */,

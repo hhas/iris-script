@@ -43,7 +43,7 @@ struct UnicodeReader: LineReader { // needs applied before NumericReader
         let startToken = token
         var result = ""
         var (endToken, endReader) = (token, reader)
-        while case .digits = token.form, !token.isLeftContiguous, token.isRightContiguous, token.content == "0" {
+        while case .digits = token.form, token.isLeftDelimited, token.isRightContiguous, token.content == "0" {
             guard let (c, t, r) = self.readCodepoint(reader) else { break }
             result += String(c)
             (endToken, endReader) = (t, r)
@@ -53,6 +53,7 @@ struct UnicodeReader: LineReader { // needs applied before NumericReader
             // TO DO: what about annotating Text for PP?
             // TO DO: also need to decide if/where contiguous string literals and/or 0u sequences should be merged into single Text value
             endToken = Token(.value(Text(result)), startToken.whitespaceBefore, self.code[startToken.content.startIndex..<endToken.content.endIndex], endToken.whitespaceAfter, startToken.position.span(to: endToken.position))
+            //print(endToken)
         }
         return (endToken, UnicodeReader(endReader))
     }
