@@ -12,14 +12,14 @@ do {
     to ‘+’ {left as Number, right as Number} returning Number: do
         can_error: true « optional; false if omitted »
         swift_function: add  « optional; if different to native name »
-        operator: {form: #infix, precedence: 590, associativity: #left, aliases: ‘0uFF0B’} «TO DO: 0u… syntax for Unicode chars»
+        operator: {form: #infix, precedence: 590, associativity: #left, aliases: 0uFF0B}
         use_scopes: []  « optional; may be #command and/or #handler »
     done
 
     to ‘-’ {left as Number, right as Number} returning Number: do
         can_error: true
         swift_function: subtract
-        operator: {form: #infix, precedence: 590, associativity: #left, aliases: ‘0uFF0D’}
+        operator: {form: #infix, precedence: 590, associativity: #left, aliases: [0uFF0D, 0u2212, 0uFE63]}
     done
 
     """

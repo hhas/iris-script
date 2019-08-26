@@ -130,7 +130,7 @@ func renderHandlerGlue(for libraryName: String, from script: String) throws -> S
     stdlib_loadOperators(into: operatorRegistry)
     let operatorReader = newOperatorReader(for: operatorRegistry)
     
-    let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }
+    let doc = EditableScript(script) { NumericReader(operatorReader(NameReader(UnicodeReader($0)))) }
     let p = Parser(tokenStream: QuoteReader(doc.tokenStream), operatorRegistry: operatorRegistry)
     do {
         let script = try p.parseScript()

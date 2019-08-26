@@ -200,7 +200,7 @@ class Parser {
             value = try Record(fields)
             self.advance(ignoringLineBreaks: true) // advance onto `}`
         }
-        assert(self.current.token.form == .endRecord)
+        assert(self.current.token.form == .endRecord, "Expected .endRecord but found \(self.current.token)")
         return value // end on '}'
     }
     
