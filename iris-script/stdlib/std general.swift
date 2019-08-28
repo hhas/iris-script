@@ -1,5 +1,5 @@
 //
-//  stdlib/handlers/general.swift
+//  general stdlib.swift
 //
 
 /*
@@ -21,23 +21,10 @@
 
 // for now, implement for string only; longer term, these should accept optional coercion:Coercion parameter (e.g. `A eq B as list of caseSensitiveText`) to standardize argument types before comparison, and call coercion-specific comparison methods on Values (ideally a default coercion would be inferred where practical, e.g. if it is known that two lists of text are being compared, the default coercion would be `list(text)`); the goal is to avoid inconsistent behavior during comparisons, particularly lt/le/gt/ge; a typical example would be in sorting a mixed list where comparison behavior changes from item to item according to operand coercion(s)
 
-// comparison // TO DO: text comparisons are case-insensitive by default; how to cache lowercased strings on repeated use? (would require extending backing store); alternative is to use Foundation string comparison, which normalizes on the fly
-
-// left.elementsEqual(right, by areEquivalent: (a: Character, b: Character) throws -> Bool) rethrows -> Bool
-//
-
-func lt(left: String, right: String) throws -> Bool { return left.lowercased() <  right.lowercased() }
-func le(left: String, right: String) throws -> Bool { return left.lowercased() <= right.lowercased() }
-func eq(left: String, right: String) throws -> Bool { return left.lowercased() == right.lowercased() }
-func ne(left: String, right: String) throws -> Bool { return left.lowercased() != right.lowercased() }
-func gt(left: String, right: String) throws -> Bool { return left.lowercased() >  right.lowercased() }
-func ge(left: String, right: String) throws -> Bool { return left.lowercased() >= right.lowercased() }
 
 
-
-func isA(value: Value, ofType: Coercion) -> Bool {
-    // TO DO: try coercing value to specified coercion and return 'true' if it succeeds or 'false' if it fails (an extra trick is to cache successful Coercions within the value, allowing subsequent tests to compare coercion objects instead of coercing the value itself, though of course this cache will be invalidated if the value is mutated) // note: there is difference between using coercions to test coercion suitability ('protocol-ness') of a Value vs checking its canonical coercion (e.g. `coercion of someValue == text`); allowing the latter may prove troublesome (novice users tend to check canonical coercion for equality when they should just check compatibility), so will need more thought (maybe use `EXPR isOfExactType TYPE`/`exactTypeOf EXPR`); plus it all gets extra thorny when values being checked are blocks, thunks, references, etc (should they be evaled and the result checked [which can cause issues where expression has side-effects or its result is non-idempotent], or should their current coercion [`codeBlock`, `lazyValue`, `reference`] be used? [note: AppleScript uses the former approach in an effort to appear simple and transparent to users, and frequently ends up causing confusion instead])
-    return false
+func isA(value: Value, coercion: Coercion) -> Bool {
+    return false // TO DO: try coercing value to specified coercion and return 'true' if it succeeds or 'false' if it fails (an extra trick is to cache successful Coercions within the value, allowing subsequent tests to compare coercion objects instead of coercing the value itself, though of course this cache will be invalidated if the value is mutated) // note: there is difference between using coercions to test coercion suitability ('protocol-ness') of a Value vs checking its canonical coercion (e.g. `coercion of someValue == text`); allowing the latter may prove troublesome (novice users tend to check canonical coercion for equality when they should just check compatibility), so will need more thought (maybe use `EXPR isOfExactType TYPE`/`exactTypeOf EXPR`); plus it all gets extra thorny when values being checked are blocks, thunks, references, etc (should they be evaled and the result checked [which can cause issues where expression has side-effects or its result is non-idempotent], or should their current coercion [`codeBlock`, `lazyValue`, `reference`] be used? [note: AppleScript uses the former approach in an effort to appear simple and transparent to users, and frequently ends up causing confusion instead])
 }
 
 // TO DO: what about comparing object identities? (how often is that really needed? ideally it shouldn't be included as it doesn't fit with native "say what you need" [coerce before consuming] and "if it looks right, it is" [structural, not nominal, typing] idioms)

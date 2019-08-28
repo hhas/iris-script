@@ -54,7 +54,7 @@ let nullScope = NullScope()
 // Q. how should global scopes treat imported modules? (each native module is a read-locked environment populated with library-defined handlers and other values; Q. what about primitive modules? could use Environment subclass that populates frame dictionary)
 
 
-class Environment: MutableScope {
+public class Environment: MutableScope {
     
     internal let parent: Environment?
     

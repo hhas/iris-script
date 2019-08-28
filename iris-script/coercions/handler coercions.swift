@@ -115,7 +115,7 @@ let nullHandlerInterface = HandlerInterface(name: nullSymbol, parameters: [], re
 
 struct AsHandler: SwiftCoercion {
     
-    let name: Symbol = "handler"
+    let name: Symbol = "procedure"
     
     typealias SwiftType = Handler
     

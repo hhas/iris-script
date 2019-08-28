@@ -33,11 +33,11 @@ struct AsList: CollectionCoercion { // TO DO: rename AsOrderedList?
 
 // TO DO: what should AsDictionary's SwiftType be? (c.f. Dictionary.Element, which is a `(key:Key,value:Value)` tuple)
 
-protocol SwiftCollectionCoercion: SwiftCoercion {
+protocol SwiftCollectionCoercion: SwiftCoercion, CollectionCoercion {
     
     associatedtype ElementCoercion: SwiftCoercion
     
-    var item: ElementCoercion { get }
+    var swiftItem: ElementCoercion { get }
 }
 
 
@@ -49,22 +49,24 @@ struct AsArray<ElementCoercion: SwiftCoercion>: SwiftCollectionCoercion {
     
     typealias SwiftType = [ElementCoercion.SwiftType]
     
-    let item: ElementCoercion
+    let swiftItem: ElementCoercion
+    
+    var item: Coercion { return self.swiftItem }
     
     init(_ item: ElementCoercion) { // TO DO: optional min/max length constraints
-        self.item = item
+        self.swiftItem = item
     }
     
     func coerce(value: Value, in scope: Scope) throws -> Value {
-        throw NotYetImplementedError()
+        return try value.toList(in: scope, as: self)
     }
     
     func box(value: SwiftType, in scope: Scope) -> Value {
-        fatalError()
+        return OrderedList(value.map{ self.swiftItem.box(value: $0, in: scope) })
     }
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        throw NotYetImplementedError()
+        return try value.toArray(in: scope, as: self)
     }
 }
 

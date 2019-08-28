@@ -8,14 +8,22 @@ import Foundation
 
 // TO DO: sort 'name' vs 'label' naming convention for all args+params
 
+// TO DO: what about name/arg aliasing (including deprecated names)? (i.e. establishing a formal mechanism for amending an existing interface design enables automatic upgrading of user scripts)
+
+// TO DO: what about introspecting the Swift func's API, e.g. to extract parameter names and primitive types, `throws`, and primitive return type?
+
+// TO DO: need `swift` coercion modifier to indicate where arguments/results should be bridged to Swift primitives (String, Array<T>, etc) rather than passed as native Values
+
 
 var _handlerGlues = [HandlerGlue]()
 
 
+// TO DO: glue definitions could be constructed by running the glue definition script with a custom Environment and custom/standard `to` handler, where evaluating the `to` operator's procedure operand populates a sub-scope that is a wrapper around/extension of HandlerGlue (for now we use a custom `to` handler that directly disassembles the procedure body, but this approach doesn't allow for metaprogramming); one caveat to evaluation strategy is that pair values need to be lazily evaluated - not entirely sure how to distinguish a command that returns the value to be used (e.g. when factoring out common information such as arithmetic operator definitions into a shared handler) from a command that is the value to be used (e.g. as in swift_function)
+
 
 struct HandlerGlue: Value {
     
-    var description: String { return "«HandlerGlue»"}
+    var description: String { return "«HandlerGlue \(self.interface) \(self.canError), \(self.useScopes), \(String(describing: self.swiftFunction)), \(String(describing: self.operatorSyntax))»"}
     let nominalType: Coercion = AsComplex<HandlerGlue>(name: "HandlerGlue")
     
     // TO DO: also extract user documentation (from annotations); Q. where should user docs go? may be an idea to put them in separate data file that is loaded as needed (or just use the native glue def itself, assuming it isn't too slow to parse)
@@ -61,9 +69,17 @@ func unboxOption<T: SwiftCoercion>(_ options: Options, _ name: String, in scope:
     return try coercion.unbox(value: options[name] ?? nullValue, in: scope) // TO DO: slightly skeezy; we bypass swiftEval() as we don't want Command to look up handler (kludge it for now, but this is part of larger debate on double dispatch); nope, that doesn't work either as AsComplex calls swiftEval
 }
 
+
+let asOperatorSyntax = AsRecord([ // TO DO: given a native record/enum coercion, code generator should emit corresponding struct/enum definition and/or extension with static `unboxNativeValue()` method and primitive coercion
+    ("form", asSymbol),
+    ("precedence", asInt),
+    ("associativity", AsSwiftDefault(asSymbol, defaultValue: "left")), // TO DO: need AsEnum(ofType,options)
+    ("aliases", AsSwiftDefault(AsArray(asString), defaultValue: []))
+    ])
+
+
 func defineHandlerGlue(handler: Handler, commandEnv: Scope) throws {
     //print("making glue for", handler)
-    //print(glue)
     guard let body = (handler as! NativeHandler).action as? Block else { throw BadSyntax.missingExpression }
     var options = Options()
     try readOptions(body, &options)
@@ -79,55 +95,56 @@ func defineHandlerGlue(handler: Handler, commandEnv: Scope) throws {
     } else {
         swiftFunction = nil
     }
-    // TO DO: operators
+    let useScopes = try unpackOption(options, "use_scopes", in: commandEnv, as: AsSwiftDefault(AsArray(asSymbol), defaultValue: [])).map{"\($0.key)Env"}
     
-    let glue = HandlerGlue(interface: handler.interface, canError: canError, useScopes: [], swiftFunction: swiftFunction, operatorSyntax: nil)
+    let operatorSyntax: HandlerGlue.OperatorSyntax?
+    if let record = try unboxOption(options, "operator", in: commandEnv, as: AsOptional(asOperatorSyntax)) as? Record {
+        let form = record.fields[0].value as! Symbol
+        let precedence = try! asInt.unbox(value: record.fields[1].value, in: commandEnv) // native coercion may return Number
+        let associativity = record.fields[2].value as! Symbol
+        let aliases = try! AsArray(asString).unbox(value: record.fields[3].value, in: commandEnv)
+        if !["left", "right"].contains(associativity) {
+                print("malformed operator record", record)
+                throw BadSyntax.missingExpression
+        }
+        let formName: String
+        // kludge: to use .custom(…) form, pass a parsefunc name as symbol, e.g. #parseIfOperator, where `let parseIfOperator = parsePrefixControlOperator(withConjunction: "to")` is defined elsewhere [note: double-quotes cannot appear within quoted names; while we could avoid this limitation by accepting a string or command, it's not worth the effort as passing a parsefunc just a temporary workaround anyway] // TO DO: this'll be replaced when table-driven parser is implemented; presumably with the form field accepting the custom pattern to match
+        if ["atom", "prefix", "infix", "postfix"].contains(form) {
+            formName = ".\(form.key)"
+        } else {
+            formName = ".custom(\(form.label))"
+        }
+        operatorSyntax = (formName, precedence, associativity == "left", aliases)
+    } else {
+        operatorSyntax = nil
+    }
+    let glue = HandlerGlue(interface: handler.interface, canError: canError, useScopes: useScopes, swiftFunction: swiftFunction, operatorSyntax: operatorSyntax)
     
     //print(glue)
     
     _handlerGlues.append(glue) // ideally should append glues to editable list stored in commandEnv (or use an Environment subclass that captures glues directly, or pass collector array to defineHandlerGlue as an ExternalResource, but for now just chuck them all in a global and run renderer on that)
-
 }
-
-
-/*
-let libraryName = "stdlib"
-
-let handlerGlues = [
-    HandlerGlue(name: "add", parameters: [("left", "AsNumber()"), ("right", "AsNumber()")], result: "AsNumber()", canError: true, useScopes: [], swiftFunction: nil, operatorSyntax: (form: "+", precedence: 560, isLeftAssociative: false, aliases: [])),
-    HandlerGlue(name: "subtract", parameters: [("left", "AsNumber()"), ("right", "AsNumber()")], result: "AsNumber()", canError: true, useScopes: [], swiftFunction: nil, operatorSyntax: (form: "-", precedence: 560, isLeftAssociative: false, aliases: [])),]
-*/
-//print(template.render())
 
 
 
 func renderGlue(libraryName: String, handlerGlues: [HandlerGlue]) -> String {
-    return handlersTemplate.render((libraryName, handlerGlues))
+    // TO DO: what about defining operators for constants and other non-command structures (e.g. `do…done` block keywords) [for now, put them in handcoded function and call that separately]
+    return handlersTemplate.render((libraryName, handlerGlues)) + "\n\n" + operatorsTemplate.render((libraryName, handlerGlues))
 }
 
 
-//print(handlersTemplate.debugDescription)
-//print(source)
-
-
-
+// main
 
 func renderHandlerGlue(for libraryName: String, from script: String) throws -> String {
-    
-    // glue definition for primitive handler
-    
-    // TO DO: what about name/arg aliasing (including deprecated names)? (i.e. establishing a formal mechanism for amending an existing interface design enables automatic upgrading of user scripts)
-    
-    // TO DO: what about introspecting the Swift func's API, e.g. to extract parameter names and primitive types, `throws`, and primitive return type?
-    
-    // TO DO: need `swift` coercion modifier to indicate where arguments/results should be bridged to Swift primitives (String, Array<T>, etc) rather than passed as native Values
-    
+    // parse glue definitions for primitive handlers
     let env = Environment()
-    gluelib_loadHandlers(into: env)
+    gluelib_loadHandlers(into: env) // TO DO: what handlers must gluelib define? Q. what about loading stdlib handlers into a parent scope, for metaprogramming use?
     stdlib_loadConstants(into: env)
     
     let operatorRegistry = OperatorRegistry()
-    stdlib_loadOperators(into: operatorRegistry)
+    gluelib_loadOperators(into: operatorRegistry) // essential operators used in glue defs; these may be overwritten by stdlib operators
+    //stdlib_loadOperators(into: operatorRegistry)
+    //stdlib_loadKeywords(into: operatorRegistry) // temporary while we bootstrap stdlib + gluelib
     let operatorReader = newOperatorReader(for: operatorRegistry)
     
     let doc = EditableScript(script) { NumericReader(operatorReader(NameReader(UnicodeReader($0)))) }

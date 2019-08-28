@@ -331,6 +331,9 @@ class Parser {
         case .endOfScript:
             print("Expected an expression but found end of code instead.")
             throw BadSyntax.missingExpression //SyntaxError("Expected an expression but found end of code instead.")
+        
+        case .annotation(_): // TO DO: temporary (parser currently fails if script starts with an annotation)
+            value = nullValue
         default:
             print("parseAtom Expected an expression but found \(token)")
             throw BadSyntax.missingExpression //SyntaxError("Expected an expression but found \(token)")
@@ -446,6 +449,7 @@ class Parser {
             return ScriptAST(exprSeq) // TBH, should swap this around so ScriptAST initializer takes code as argument and lexes and parses it
         } catch { // TO DO: delete once syntax errors provide decent debugging info
             print("[DEBUG] Partially parsed script:", result)
+            print("failed on", self.current)
             throw error
         }
     }

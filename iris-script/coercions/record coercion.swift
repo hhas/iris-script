@@ -34,28 +34,31 @@ struct AsRecord: RecordCoercion {
     func coerce(value: Value, in scope: Scope) throws -> Value {
         let record = try value.toRecord(in: scope, as: self)
         if record.isMemoizable, record.constrainedType.isa(self) { return record } // TO DO: how to test if coercion is equal or superset of record's constrained type?
-        var iter = record.fields.makeIterator()
-        var fields = [Record.Field]()
-        var (key, value) = iter.next() ?? (nullSymbol, nullValue) // record may be empty record
+        var result = [Record.Field]()
         do {
-            for (asSymbol, asType) in self.fields {
-                // catch and rethrow to indicate failed field?
-                if key == nullSymbol || key == asSymbol {
-                    fields.append((asSymbol, try value.eval(in: scope, as: asType)))
-                    (key, value) = iter.next() ?? (nullSymbol, nullValue)
-                } else { // assume missed field
-                    fields.append((asSymbol, try nullValue.eval(in: scope, as: asType)))
+            if self.fields.isEmpty {
+                result = try record.fields.map{($0, try $1.eval(in: scope, as: asAnything))}
+            } else {
+                var iter = record.fields.makeIterator()
+                var (key, value) = iter.next() ?? (nullSymbol, nullValue) // record may be empty record
+                for (asSymbol, asType) in self.fields {
+                    // catch and rethrow to indicate failed field?
+                    if key == nullSymbol || key == asSymbol {
+                        result.append((asSymbol, try value.eval(in: scope, as: asType)))
+                        (key, value) = iter.next() ?? (nullSymbol, nullValue)
+                    } else { // assume missed field
+                        result.append((asSymbol, try nullValue.eval(in: scope, as: asType)))
+                    }
                 }
-            }
-            // think this logic is subtly wrong (i.e. what if record is `{1,2,nothing}`?) one option is to discard trailing `nothing`[s]
-            if !(key == nullSymbol && value is NullValue && iter.next() == nil) {
-                throw NotYetImplementedError() // record has unmatched field(s)
+                // think this logic is subtly wrong (i.e. what if record is `{1,2,nothing}`?) one option is to discard trailing `nothing`[s]
+                if !(key == nullSymbol && value is NullValue && iter.next() == nil) {
+                    throw InternalError(description: "record has unmatched field(s)") // TO DO: what error message?
+                }
             }
         } catch {
             throw ConstraintError(value: record, coercion: self).from(error)
         }
-        return Record(fields, as: self)
-
+        return Record(result, as: self)
     }
 }
 

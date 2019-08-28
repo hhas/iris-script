@@ -11,6 +11,8 @@ import Foundation
 
 struct NullValue: Value { // expanding `nothing` always throws transient NullCoercionError; this may be intercepted by coercion modifiers to supply default value, otherwise it'll be rethrown as permanent EvaluationError
     
+    // TO DO: need an easier way to rethrow NullCoercionError, regardless of which toTYPE method is called
+    
     var swiftLiteralDescription: String { return "nullValue" }
     
     var description: String { return "nothing" }
@@ -21,19 +23,7 @@ struct NullValue: Value { // expanding `nothing` always throws transient NullCoe
         throw NullCoercionError(value: self, coercion: coercion)
     }
     
-    func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue {
-        throw NullCoercionError(value: self, coercion: coercion)
-    }
-    
-    func toString(in scope: Scope, as coercion: Coercion) throws -> String {
-        throw NullCoercionError(value: self, coercion: coercion)
-    }
-    
-    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList {
-        throw NullCoercionError(value: self, coercion: coercion)
-    }
-    
-    func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
+    func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
         throw NullCoercionError(value: self, coercion: coercion)
     }
     

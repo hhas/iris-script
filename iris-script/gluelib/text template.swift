@@ -32,14 +32,14 @@ class MultipleNode: Node {
     let name: String
     let elements: [Node]
     
-    init(name: String, elements: [Node]) {
-        if elements.isEmpty { print("Warning: no `\(name)` elements found.") }
+    init(_ parent: Node, _ name: String, _ elements: [Node]) {
+        if elements.isEmpty { print("Warning: no `\(name)` elements found in `\(parent.name)` node.") }
         self.name = name
         self.elements = elements
     }
     
     subscript(dynamicMember name: String) -> Node {
-        return MultipleNode(name: name, elements: self.elements.map{ $0[dynamicMember: name] })
+        return MultipleNode(self, name, self.elements.map{ $0[dynamicMember: name] }) // TO DO: flatMap?
     }
     
     func set(_ content: String) {
@@ -99,7 +99,7 @@ class TextNode: Node, CustomDebugStringConvertible {
     
     subscript(dynamicMember name: String) -> Node {
         let nodes = self.elements.filter{ $0.name == name }
-        return nodes.count == 1 ? nodes[0] : MultipleNode(name: name, elements: nodes)
+        return nodes.count == 1 ? nodes[0] : MultipleNode(self, name, nodes)
     }
     
     func set(_ content: String) {

@@ -21,12 +21,12 @@ func mod(left: Double, right: Double) throws -> Double { return left.truncatingR
 
 // signature: isEqualTo(left: primitive(double), right: primitive(double)) returning primitive(boolean)
 
-func isLessThan(left: Double, right: Double) -> Bool { return left < right }
-func isLessThanOrEqualTo(left: Double, right: Double) -> Bool { return left <= right }
-func isEqualTo(left: Double, right: Double) -> Bool { return left == right }
-func isNotEqualTo(left: Double, right: Double) -> Bool { return left != right }
-func isGreaterThan(left: Double, right: Double) -> Bool { return left > right }
-func isGreaterThanOrEqualTo(left: Double, right: Double) -> Bool { return left >= right }
+func isLess(left: Double, right: Double) -> Bool { return left < right }
+func isLessOrEqual(left: Double, right: Double) -> Bool { return left <= right }
+func isEqual(left: Double, right: Double) -> Bool { return left == right }
+func isNotEqual(left: Double, right: Double) -> Bool { return left != right }
+func isGreater(left: Double, right: Double) -> Bool { return left > right }
+func isGreaterOrEqual(left: Double, right: Double) -> Bool { return left >= right }
 
 // Boolean logic
 func NOT(right: Bool) -> Bool { return !right }

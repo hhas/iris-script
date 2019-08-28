@@ -41,6 +41,8 @@ protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // T
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value
     func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType
     
+    func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T
+    
     func toValue(in scope: Scope, as coercion: Coercion) throws -> Value // any value except `nothing`
     func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue // text/number/date/URL
     func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number
@@ -93,51 +95,54 @@ extension Value { // default implementations
     
     //
     
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // concrete types should override this as necessary
         return self
     }
     
     // TO DO: should default implementations of toTYPE forward to one or more [@inlinable?] generic implementations? if we want to eliminate Value.eval/swiftEval then this will be easiest way to do it, as types that currently override eval can override the generic method[s] instead of every single one of the following
     
-    func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue {
+    func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
+        print("toTYPE: unsupported", self, coercion)
         throw UnsupportedCoercionError(value: self, coercion: coercion)
     }
+    
+    func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue {
+        return try self.toTYPE(in: scope, as: coercion)
+    }
     func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
-        throw UnsupportedCoercionError(value: self, coercion: coercion)
+        return try self.toTYPE(in: scope, as: coercion)
     }
     
     func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool { // TBC
-        throw UnsupportedCoercionError(value: self, coercion: coercion)
+        return try self.toTYPE(in: scope, as: coercion)
     }
     func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
-        throw UnsupportedCoercionError(value: self, coercion: coercion)
+        return try self.toTYPE(in: scope, as: coercion)
     }
     func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
-        throw UnsupportedCoercionError(value: self, coercion: coercion)
+        return try self.toTYPE(in: scope, as: coercion)
     }
     func toString(in scope: Scope, as coercion: Coercion) throws -> String {
-        throw UnsupportedCoercionError(value: self, coercion: coercion)
+        return try self.toTYPE(in: scope, as: coercion)
     }
     
-    // Q. implement toArray in terms of iterator (or possibly even `toIterator`?)
+    // Q. implement toArray in terms of iterator (or possibly even `toIterator`?); A. best not to, as cached/memoized values can be returned as-is
     
-    // TO DO: should probably provide default implementation for these
-    
-    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList { // Q. better to use iterator?
-        fatalError("must be overridden") // scalar returns single-item list; collection returns list; complex evals with coercion as return type
+    // note that these should be overridden in OrderedList, and possibly in KeyedList+UniqueList too; anywhere else?
+    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList {
+        return OrderedList([try self.eval(in: scope, as: coercion.item)])
     }
-    
     func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
-        fatalError("must be overridden")
+        return try [self.swiftEval(in: scope, as: coercion.swiftItem)]
     }
     
     //func toEditable(in scope: Scope, as coercion: AsEditable) throws -> EditableValue {
     //    return EditableValue(try coercion.coercion.coerce(value: self, in: scope))
     //}
     
-    // TO DO: is this appropriate? (probably, c.f. Value->OrderedList(Value), but need to check corner cases for command args/handler sigs - may need to distinguish record literals, as `foo`, `foo {}`, `foo nothing`, and `foo {nothing}` have different meanings)
+    // TO DO: is this appropriate? (probably, c.f. Value->OrderedList(Value), but need to check corner cases for command args/handler sigs - may need to distinguish record literals, as `foo`, `foo {}`, `foo nothing`, and `foo {nothing}` have different meanings) // as with toList/toArray, this implementation isn't suitable for commands/blocks; Q. what about pair?
     func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
-        return try Record([(nullSymbol, self)]) // TO DO: need to eval self; TO DO: this is also wrong for commands (move to ScalarValue extension?)
+        return try Record([(nullSymbol, self.eval(in: scope, as: asAnything))]) // TO DO: need to eval self; TO DO: this is also wrong for commands (move to ScalarValue extension?)
     }
 }
 
@@ -173,15 +178,6 @@ extension ScalarValue {
     
     func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue { // TO DO: toScalar? (as long as Text can represent all scalars, we should be OK; this does mean that boolean and symbol are not scalars though)
         return self
-    }
-    
-    // all scalars can coerce to single-item list/array/set
-    
-    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList {
-        return OrderedList([try self.eval(in: scope, as: coercion.item)])
-    }
-    func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
-        return try [self.swiftEval(in: scope, as: coercion.item)]
     }
 }
 

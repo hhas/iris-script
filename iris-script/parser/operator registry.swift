@@ -252,3 +252,10 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
 
 
 
+extension OperatorRegistry {
+    
+    func add(_ name: String, _ form: OperatorDefinition.Form, _ precedence: Precedence = -100,
+                             _ associativity: OperatorDefinition.Associativity = .left, _ aliases: [String] = []) {
+        self.add(OperatorDefinition(name, form, precedence: precedence, associativity: associativity, aliases: aliases))
+    }
+}

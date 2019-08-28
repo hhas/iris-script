@@ -45,7 +45,7 @@ struct OrderedList: BoxedCollectionValue { // ExpressibleByArrayLiteral?
     }
     
     func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
-        return try self.map{ try $0.swiftEval(in: scope, as: coercion.item) }
+        return try self.map{ try $0.swiftEval(in: scope, as: coercion.swiftItem) }
     }
     
 }

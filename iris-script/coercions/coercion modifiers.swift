@@ -114,6 +114,8 @@ struct AsDefault: Coercion {
             return try self.coercion.coerce(value: self.defaultValue, in: scope)
         }
     }
+    
+    // TO DO: implement call() for creating new instances natively
 }
 
 
@@ -125,7 +127,7 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
 
     let name: Symbol = "default"
     
-    var description: String { return "\(self.coercion) or \(self.defaultValue)" }
+    var description: String { return "\(self.coercion) default: \(self.defaultValue)" }
     
     typealias SwiftType = T.SwiftType
     
@@ -142,6 +144,9 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
             return try self.coercion.coerce(value: value, in: scope)
         } catch is NullCoercionError {
             return self.coercion.box(value: self.defaultValue, in: scope) // TO DO: cache if memoizable
+        } catch {
+            print("Coercion error «\(self)»", type(of:error), error)
+            throw error
         }
     }
     
@@ -150,6 +155,9 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
             return try self.coercion.unbox(value: value, in: scope)
         } catch is NullCoercionError {
             return self.defaultValue
+        } catch {
+            print("Coercion error", self, error)
+            throw error
         }
     }
     func box(value: SwiftType, in scope: Scope) -> Value {
@@ -162,7 +170,7 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
 
 let asNothing = AsNothing()
 
-let asAnything = AsOptional(asValue)
+let asAnything = AsOptional(asValue) // TO DO: also define native constant as Precis(AsOptional(asValue), "anything")
 
 
 

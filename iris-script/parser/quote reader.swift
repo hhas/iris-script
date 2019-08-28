@@ -34,7 +34,7 @@ struct QuoteReader: BlockReader { // reduces quoted text (string literal or anno
             self.token = Token(.annotation(s),
                                startToken.whitespaceBefore,
                                reader.code[startToken.content.startIndex..<endToken.content.endIndex], endToken.whitespaceAfter,
-                               startToken.position.span(to: endToken.position))
+                               startToken.position.span(to: endToken.position)) // TO DO: make sure this picks up entire content
             reader = reader.next()
         case .endAnnotation:
             fatalError("found unbalanced `»`") // TO DO

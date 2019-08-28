@@ -6,6 +6,7 @@
 import Foundation
 
 
+// TO DO: would be simpler if type def's parameter tuple could be passed directly to interface params, but Swift doesn't want to downcast it ("Cannot express tuple conversion…")
 
 private let templateSource = """
 //
@@ -19,25 +20,25 @@ import Foundation
 ««+defineHandler»»
 
 // ««nativeName»» {««nativeArgumentNames»»}
-private let type_««signatureName»» = (
-	««+signatureParameters»»
-    param_««count»»: ««coercion»»,
-	««-signatureParameters»»
+private let type_««signature»» = (
+	««+typeParameters»»
+    param_««count»»: (Symbol("««nativeName»»"), ««coercion»»),
+	««-typeParameters»»
     result: ««returnType»»
 )
-private let interface_««signatureName»» = HandlerInterface(
+private let interface_««signature»» = HandlerInterface(
     name: "««nativeName»»",
     parameters: [
     ««+interfaceParameters»»
-		("««nativeName»»", "««bindingName»»", type_««signatureName»».param_««count»»),
+		(type_««signature»».param_««count»».0, "««bindingName»»", type_««signature»».param_««count»».1),
     ««-interfaceParameters»»
     ],
-    result: type_««signatureName»».result
+    result: type_««signature»».result
 )
-private func procedure_««signatureName»»(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_««signature»»(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
     ««+unboxArguments»»
-    let arg_««count»» = try command.swiftValue(at: &index, for: type_««signatureName»».param_««count»», in: commandEnv)
+    let arg_««count»» = try command.swiftValue(at: &index, for: type_««signature»».param_««count»», in: commandEnv)
     ««-unboxArguments»»
 
     ««+checkForUnexpectedArguments»»
@@ -48,11 +49,11 @@ private func procedure_««signatureName»»(command: Command, commandEnv: Scope
     let result =
     ««-resultAssignment»»««+tryKeyword»» try ««-tryKeyword»» ««functionName»»(
     ««+functionArguments»»
-    	««label»»: ««value»» ««/functionArguments»»,
+    	««label»»: ««argument»» ««/functionArguments»»,
     ««-functionArguments»»
     )
     ««+returnIfResult»»
-    return try type_««signatureName»».result.box(value: result, env: handlerEnv)
+    return type_««signature»».result.box(value: result, in: handlerEnv)
     ««-returnIfResult»»
     ««+returnIfNoResult»»
     return nullValue
@@ -62,9 +63,9 @@ private func procedure_««signatureName»»(command: Command, commandEnv: Scope
 
 
 
-public func stdlib_loadHandlers(env: Environment) {
+public func stdlib_loadHandlers(into env: Environment) {
     ««+loadHandlers»»
-    env.define(interface_««signatureName»», procedure_««signatureName»»)
+    env.define(interface_««signature»», procedure_««signature»»)
     ««-loadHandlers»»
 }
 """
@@ -74,45 +75,43 @@ public func stdlib_loadHandlers(env: Environment) {
 let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (libraryName: String, handlerGlues: [HandlerGlue])) in
     tpl.libraryName.set(args.libraryName)
     tpl.defineHandler.map(args.handlerGlues) { (node: Node, glue: HandlerGlue) -> Void in
-        node.signatureName.set(glue.signatureName)
+        node.signature.set(glue.signature)
         node.nativeName.set(glue.name)
         node.nativeArgumentNames.set(glue.parameters.map{$0.name}.joined(separator: ", "))
-        node.signatureParameters.map(glue.parameters.enumerated()) {
+        node.typeParameters.map(glue.parameters.enumerated()) {
             (node: Node, item: (count: Int, param: HandlerGlue.Parameter)) -> Void in
             node.count.set(item.count)
+            node.nativeName.set(item.param.name)
             node.coercion.set(item.param.coercion)
         }
         node.returnType.set(glue.result)
         node.interfaceParameters.map(glue.parameters.enumerated()) {
             (node: Node, item: (count: Int, param: HandlerGlue.Parameter)) -> Void in
-            node.signatureName.set(glue.signatureName)
-            node.nativeName.set(item.param.name)
+            node.signature.set(glue.signature)
             node.bindingName.set(item.param.binding)
             node.count.set(item.count)
         }
         node.unboxArguments.map(0..<glue.parameters.count) { (node: Node, count: Int) -> Void in
-            node.signatureName.set(glue.signatureName)
+            node.signature.set(glue.signature)
             node.count.set(count)
         }
         if glue.result == "asNothing" {
             node.resultAssignment.delete()
             node.returnIfResult.delete()
-            node.returnIfNoResult.signatureName.set(glue.signatureName)
+            node.returnIfNoResult.signature.set(glue.signature)
         } else {
             node.returnIfNoResult.delete()
-            node.returnIfResult.signatureName.set(glue.signatureName)
+            node.returnIfResult.signature.set(glue.signature)
         }
-        if !glue.canError {
-            node.tryKeyword.delete()
-        }
+        if !glue.canError { node.tryKeyword.delete() }
         node.functionName.set(glue.swiftLiteralDescription)
         node.functionArguments.map(glue.swiftParameters) { (node: Node, item: (label: String, param: String)) -> Void in
             node.label.set(item.label)
-            node.value.set(item.param)
+            node.argument.set(item.param)
         }
     }
     tpl.loadHandlers.map(args.handlerGlues) { (node: Node, glue: HandlerGlue) -> Void in
-        node.signatureName.set(glue.signatureName)
+        node.signature.set(glue.signature)
     }
 }
 
@@ -148,9 +147,9 @@ extension HandlerGlue {
     }
     
     var swiftParameters: [(String, String)] {
-        return self._swiftParameters.enumerated().map{("arg_\($0)", $1)} + self.useScopes.map{($0, $0)}
+        return self._swiftParameters.enumerated().map{($1, "arg_\($0)")} + self.useScopes.map{($0, $0)}
     }
     
-    var signatureName: String { return self.swiftLiteralDescription + "_" + self._swiftParameters.joined(separator: "_") }
+    var signature: String { return self.swiftLiteralDescription + "_" + self._swiftParameters.joined(separator: "_") }
 }
 

@@ -4,10 +4,6 @@
 
 // TO DO: fix commandEnv, e.g. `tell` block creates thin non-env sub-scope over Env (might be best to put `environment` var on Scope)
 
-func defineHandler(interface: HandlerInterface, action: Value, commandEnv: Scope) throws { // `to/when interface: action`?
-    try (commandEnv as! Environment).define(interface, action)
-} // TO DO: how to set interface's isEventHandler flag?
-
 
 func returning(left: Value, right: Value) -> Value { // `returning` operator evaluates to self
     return Command("returning", [(leftOperand, left), (rightOperand, right)])
@@ -15,8 +11,13 @@ func returning(left: Value, right: Value) -> Value { // `returning` operator eva
 
 
 
-func defineCommandHandler(handler: Handler, commandEnv: Scope) throws -> Value {
+func defineCommandHandler(handler: Handler, commandEnv: Scope) throws -> Handler {
     try (commandEnv as! Environment).set(handler.interface.name, to: handler)
+    return handler
+}
+
+func defineEventHandler(handler: Handler, commandEnv: Scope) throws -> Handler {
+    try (commandEnv as! Environment).set(handler.interface.name, to: handler) // TO DO: implement Handler.copy(isEventHandler:Bool) method (also need to finish argument unpacking; whereas command handler throws on unconsumed arguments, event handler should silently discard them)
     return handler
 }
 
@@ -30,7 +31,7 @@ func set(name: Symbol, to value: Value, commandEnv: Scope) throws -> Value { // 
 
 
 
-func coerce(value: Value, coercion: Coercion, commandEnv: Scope) throws -> Value { // `expr as coercion`
+func coerce(value: Value, to coercion: Coercion, commandEnv: Scope) throws -> Value { // `expr as coercion`
     return try value.eval(in: commandEnv, as: coercion) // TO DO: check this
 }
 

@@ -10,9 +10,7 @@ import Foundation
 
 
 struct NativeHandler: Handler {
-    
-    var description: String { return "\(self.interface):…" }
-    
+        
     let interface: HandlerInterface
     
     let action: Value // usually a Block

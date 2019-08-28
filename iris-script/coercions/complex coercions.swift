@@ -10,7 +10,11 @@ import Foundation
 
 // TO DO: this is a little dicey as it assumes values cannot coerce to complex types; would be safer to implement Value.toComplex(in:as:), with the default implementation throwing if not same type (this allows values to implement their own toComplex where appropriate)
 
+// TO DO: need to rethink AsComplex, as it doesn't lend itself to code generation; for now, assume there is always a public `asTYPE` constant defined where TYPE T
+
 struct AsComplex<T: Value>: SwiftCoercion { // T must be concrete struct or class; abstract protocols aren't accepted
+    
+    var swiftLiteralDescription: String { return "as\(T.self)" }
     
     let name: Symbol
     
@@ -18,7 +22,7 @@ struct AsComplex<T: Value>: SwiftCoercion { // T must be concrete struct or clas
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         // TO DO: this has issues
-        guard let result = try asAnything.unbox(value: value, in: scope) as? SwiftType else {
+        guard let result = try asValue.unbox(value: value, in: scope) as? SwiftType else {
         //guard let result = try value.swiftEval(in: scope, as: asAnything) as? SwiftType else {
             throw UnsupportedCoercionError(value: value, coercion: self)
         }
@@ -29,13 +33,13 @@ struct AsComplex<T: Value>: SwiftCoercion { // T must be concrete struct or clas
 
 struct AsSymbol: SwiftCoercion {
     
-    var name: Symbol { return Symbol("name") } // avoid creating cycle between Symbol and AsSymbol when initializing them
+    var name: Symbol { return Symbol("symbol") } // TO DO: what to call this datatype; "name"/"symbol"/"hashtag"/…? (AS jargon uses "class" and "constant", both of which are misleading)
     
     typealias SwiftType = Symbol
     
     func coerce(value: Value, in scope: Scope) throws -> Value {
-        if !(value is Symbol) { throw UnsupportedCoercionError(value: value, coercion: self) }
-        return value
+        guard let result = try asValue.coerce(value: value, in: scope) as? Symbol else { throw UnsupportedCoercionError(value: value, coercion: self) }
+        return result
     }
     
     func box(value: SwiftType, in scope: Scope) -> Value {
@@ -43,8 +47,8 @@ struct AsSymbol: SwiftCoercion {
     }
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let name = value as? Symbol else { throw UnsupportedCoercionError(value: value, coercion: self) }
-        return name
+        guard let result = try asValue.unbox(value: value, in: scope) as? Symbol else { throw UnsupportedCoercionError(value: value, coercion: self) }
+        return result
     }
 }
 
@@ -90,6 +94,8 @@ let asHashableValue = AsHashableValue()
 
 struct AsIs: SwiftCoercion {
     
+    var swiftLiteralDescription: String { return "asIs" }
+
     let name: Symbol = "anything"
     
     typealias SwiftType = Value
@@ -115,6 +121,7 @@ extension Bool: Value {
 }
 
 let asBool = AsComplex<Bool>(name: "boolean")
+
 
 
 
