@@ -62,7 +62,7 @@ internal class ExpressionSequence: Value { // internal collector for two or more
     
     var description: String { return "<\(type(of: self)) \(self.items)>" }
     
-    var nominalType: Coercion = asValue // ExpressionSequence is used inside Parser only
+    static let nominalType: Coercion = asValue // ExpressionSequence is only used inside Parser, so this definition is purely to keep type checker happy
 
     private(set) var items = [Value]()
     private(set) var dictionary = KeyedList.SwiftType()// in keyed list, this must equal items.count; in ordered list this must be zero
@@ -439,7 +439,7 @@ class Parser {
         do {
             result = try self._parseExpression()
             if case .lineBreak = self.current.token.form { self.advance(ignoringLineBreaks: true) }
-            assert(self.current.token.form == .endOfScript, "Expected end of script but found \(self.current.token) then \(self.peek().token)")
+            assert(self.current.token.form == .endOfScript, "Parser prematurely exited after \(self.current.token) at \(self.current.location). This is either a syntax error or a parser bug. Next token is \(self.peek().token).")
             let exprSeq: [Value]
             if let builder = result as? ExpressionSequence {
                 exprSeq = builder.items

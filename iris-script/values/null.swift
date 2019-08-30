@@ -17,7 +17,7 @@ struct NullValue: Value { // expanding `nothing` always throws transient NullCoe
     
     var description: String { return "nothing" }
     
-    let nominalType: Coercion = asNothing
+    static let nominalType: Coercion = asNothing
     
     func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
         throw NullCoercionError(value: self, coercion: coercion)

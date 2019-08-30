@@ -5,242 +5,6 @@
 import Foundation
 
 
-// TO DO: AsLiteralName coercion?; this'd allow aliases to be written directly as names rather than strings; it might also handle 0u sequences more intelligently
-
-let script = """
-
-«= stdlib glue definition =»
-
-«== Arithmetic operators ==»
-
-to ‘^’ {left as number, right as number} returning number: do
-    can_error: true
-    swift_function: exponent
-operator: {form: #infix, precedence: 600, associativity: #right, aliases: [“to_the_power_of”]}
-done
-
-«TO DO: unary positive/negative should be defined as ‘+’ and ‘-’ (primary names), and loaded into env as multimethods that dispatch on argument fields (for now, we define "+"/"-" as secondary alias names)»
-
-«TO DO: what about plain text names (“add”, “subtract”, “multiply”, etc)? what about speakable names, e.g. “plus”, “minus”, “multiplied_by”? defining as aliases pollutes the global namespace; OTOH, these names are probably specific enough that they won't often collide with scripts’ own namings»
-
-to ‘positive’ {left as number} returning number: do
-    can_error: true
-    operator: {form: #prefix, precedence: 598} «, aliases: [“+”, 0uFF0B]}»
-done
-
-to ‘negative’ {left as number} returning number: do
-    can_error: true
-    operator: {form: #prefix, precedence: 598} «, aliases: [“-”, 0uFF0D, 0u2212, 0uFE63]}»
-done
-
-
-to ‘*’ {left as number, right as number} returning number: do
-    can_error: true
-    swift_function: multiply
-    operator: {form: #infix, precedence: 596, aliases: “×”}
-done
-
-to ‘/’ {left as number, right as number} returning number: do
-    can_error: true
-    swift_function: divide
-    operator: {form: #infix, precedence: 596, aliases: “÷”}
-done
-
-to ‘div’ {left as real, right as real} returning real: do
-    can_error: true
-    operator: {form: #infix, precedence: 596}
-done
-
-to ‘mod’ {left as real, right as real} returning real: do
-    can_error: true
-    operator: {form: #infix, precedence: 596}
-done
-
-
-
-to ‘+’ {left as Number, right as Number} returning Number: do
-    can_error: true
-    swift_function: add
-    operator: {form: #infix, precedence: 590, associativity: #left, aliases: 0uFF0B}
-done
-
-to ‘-’ {left as Number, right as Number} returning Number: do
-    can_error: true
-    swift_function: subtract
-    operator: {form: #infix, precedence: 590, associativity: #left, aliases: [0uFF0D, 0u2212, 0uFE63]}
-done
-
-
-
-to ‘<’ {left as real, right as real} returning boolean: do
-    swift_function: isLess
-    operator: {form: #infix, precedence: 540}
-done
-
-to ‘≤’ {left as real, right as real} returning boolean: do
-    swift_function: isLessOrEqual
-    operator: {form: #infix, precedence: 540, aliases: ”<=”}
-done
-
-to ‘=’ {left as real, right as real} returning boolean: do  «equality test, c.f. APL»
-    swift_function: isEqual
-    operator: {form: #infix, precedence: 540, aliases: ”==”}
-done
-
-to ‘≠’ {left as real, right as real} returning boolean: do
-    swift_function: isNotEqual
-    operator: {form: #infix, precedence: 540, aliases: “<>”}
-done
-
-to ‘>’ {left as real, right as real} returning boolean: do
-    swift_function: isGreater
-    operator: {form: #infix, precedence: 540}
-done
-
-to ‘≥’ {left as real, right as real} returning boolean: do
-    swift_function: isGreaterOrEqual
-    operator: {form: #infix, precedence: 540, aliases: “>=”}
-done
-
-
-«== Boolean operators ==»
-
-to ‘NOT’ {right as boolean} returning boolean: do
-    operator: {form: #prefix, precedence: 400}
-done
-
-to ‘AND’ {left as boolean, right as boolean} returning boolean: do
-    operator: {form: #infix, precedence: 398}
-done
-
-to ‘OR’ {left as boolean, right as boolean} returning boolean: do
-    operator: {form: #infix, precedence: 396}
-
-done
-
-to ‘XOR’ {left as boolean, right as boolean} returning boolean: do
-    operator: {form: #infix, precedence: 394}
-done
-
-
-«== String operators ==»
-
-«note: comparisons may throw if/when trinary `as` clause is added [unless we build extra smarts into glue generator to apply that coercion to the other args automatically, in which case glue code with throw so primitive funcs don't have to]»
-
-to ‘is_before’ {left as string, right as string} returning boolean: do
-    can_error: true
-    operator: {form: #infix, precedence: 540}
-done
-
-to ‘is_not_after’ {left as string, right as string} returning boolean: do
-    can_error: true
-    operator: {form: #infix, precedence: 540, aliases: “is_before_or_same_as”}
-done
-
-to ‘is_same_as’ {left as string, right as string} returning boolean: do
-    can_error: true
-    operator: {form: #infix, precedence: 540}
-done
-
-to ‘is_not_same_as’ {left as string, right as string} returning boolean: do
-    can_error: true
-    operator: {form: #infix, precedence: 540}
-done
-
-to ‘is_after’ {left as string, right as string} returning boolean: do
-    can_error: true
-    operator: {form: #infix, precedence: 540}
-done
-
-to ‘is_not_before’ {left as string, right as string} returning boolean: do
-    can_error: true
-    operator: {form: #infix, precedence: 540, aliases: “is_after_or_same_as”}
-done
-
-to ‘&’ {left as string, right as string} returning string: do
-    can_error: true
-    swift_function: joinValues
-    operator: {form: #infix, precedence: 340}
-done
-
-«== String commands ==»
-
-to uppercase {text as string} returning string: do
-done
-
-to lowercase {text as string} returning string: do
-done
-
-to format_code {value as optional} returning string: do
-done
-
-
-«== Type operators ==»
-
-to ‘is_a’ {value as anything, coercion as coercion} returning boolean: do
-    operator: {#infix, 540}
-done
-
-to ‘as’ {value as anything, to: coercion as coercion} returning anything: do
-    can_error: true
-    swift_function: coerce
-    operator: {#infix, 350}
-done
-
-
-«== Flow control ==»
-
-to ‘to’ {handler as procedure} returning procedure: do
-    can_error: true
-    use_scopes: #command
-    swift_function: defineCommandHandler
-    operator: {#prefix, 180}
-done
-
-to ‘when’ {handler as procedure} returning procedure: do
-    can_error: true
-    use_scopes: #command
-    swift_function: defineEventHandler
-    operator: {#prefix, 180}
-done
-
-to ‘set’ {name as Symbol, to: value} returning anything: do «assignment; TODO: name argument should be a chunk expression, not symbol»
-    can_error: true
-    use_scopes: #command
-«TODO: make this an operator, as in AS? (it's awfully easy to forget the colon after the `to` keyword, and mildly irritating to have to type it; in principle, a3c could insert the colon automatically, but it may be easier to visually read as an operator, particularly when the name operand is a lengthy expr)»
-done
-
-to ‘if’ {condition as boolean, action as expression} returning anything: do
-    can_error: true «TODO: would be better to distinguish errors thrown by arguments from errors thrown by handler itself»
-    use_scopes: #command
-    swift_function: ifTest
-    operator: {#parseIfOperator, 100}
-done
-
-to ‘else’ {left as expression, right as expression} returning anything: do
-    can_error: true
-    use_scopes: #command
-    swift_function: elseTest
-    operator: {#infix, 90} «lower precedence than `if`, lp commands; TO DO: adaptive precedence when `if` operators are nested; each `else` should bind to its closest left-hand `if`; alternative is that we handle optional `else` clause within parsefunc, although that lacks composability that an infix `else` provides [assuming we can make it parse]»
-done
-
-"""
-
-//print(handlersTemplate.debugDescription)
-
-do {
-    let code = try renderHandlerGlue(for: "stdlib", from: script)
-    print(code)
-} catch {
-    print(error)
-}
-
-
-
-
-
-
-
 let env = Environment()
 
 stdlib_loadHandlers(into: env)
@@ -253,7 +17,7 @@ let operatorReader = newOperatorReader(for: operatorRegistry)
 
 
 
-func test(_ operatorRegistry: OperatorRegistry) {
+func test() {
     
     // TO DO: need underscore reader
     
@@ -290,7 +54,13 @@ func test(_ operatorRegistry: OperatorRegistry) {
     
     script = "To say_hello to: name: write “Hello, ” & name & “!”. Say_hello to: “World”."
     
-    //script = "foo; map ({i}: bar, baz); fub" // TO DO: this doesn't parse correctly (`pair needs to parse right side as sentence`)
+   // script = "map {foo, using: {i}: bar}; fub" // this works and is unambiguous
+  //  script = "foo; map using: {i}: bar; fub" // this works [as long as proc has explicit label], but the right-side of colon pair captures `bar; fub` whereas the user may reasonably expect both colons to be top-level, as they are in `foo; bar; baz` (i.e. semicolons should probably terminate nested sentences)
+    //script = "foo; map {i}: bar; fub" // TO DO: reject this syntax as ambiguous? it parses as `((‘map’ {‘foo’, ‘i’}: ‘fub’ {‘bar’}))`, which isn't what's intended (left side of colon pair within a block expr should always be a literal name; thus any form of `cmd, name{…}:…` or `cmd; name:…` should be rejected due to existence of argument record)
+    //script = "foo; map ({i}: bar); fub" // this works: `(‘fub’ {‘map’ {‘foo’, ({‘i’}: ‘bar’)}})`
+    //script = "foo; map {{i}: bar}; fub" // TO DO: this needs to provide better error description (the procedure Pair needs to be parensed to distinguish it from a record field Pair [albeit one with an invalid label type])
+    //script = "foo; map {({i}: bar)}; fub" // TO DO: this fails due to parser bug (probably readRecord being unaware of parens)
+    //script = "if t1 then if t2 then a1 else a2 else a3" // TO DO: this doesn't parse correctly
     
     let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }
     
@@ -311,7 +81,7 @@ func test(_ operatorRegistry: OperatorRegistry) {
 }
 
 
-//test(operatorRegistry)
+test()
 
 /*
  

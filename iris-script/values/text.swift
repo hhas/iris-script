@@ -20,7 +20,7 @@ struct Text: BoxedScalarValue, ExpressibleByStringLiteral {
     
     public typealias StringLiteralType = String
     
-    public let nominalType: Coercion = asString
+    static let nominalType: Coercion = asString
     
     // TO DO: what about constrained type[s]?
     

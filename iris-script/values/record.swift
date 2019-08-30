@@ -24,7 +24,7 @@ struct Record: Value, Accessor {
     
     typealias Field = (label: Symbol, value: Value) // nullSymbol = unnamed field
 
-    let nominalType: Coercion = asRecord
+    static let nominalType: Coercion = asRecord
     
     let isMemoizable: Bool // true if all field names are given and all values are memoizable
 

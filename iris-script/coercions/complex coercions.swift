@@ -113,7 +113,7 @@ extension Bool: Value {
     
     var swiftLiteralDescription: String { return String(self) }
     
-    var nominalType: Coercion { return asBool }
+    static let nominalType: Coercion = asBool 
     
     func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool {
         return self

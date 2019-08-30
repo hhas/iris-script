@@ -17,6 +17,8 @@ struct AsNothing: Coercion { // used in HandlerInterface.result to return `nothi
     
     let name: Symbol = "nothing"
     
+    var swiftTypeDescription: String { return "" }
+    
     func coerce(value: Value, in scope: Scope) throws -> Value {
         let _ = try asAnything.coerce(value: value, in: scope) // this still needs to evaluate value asAnything, discarding result (if value is scalar, it can be discarded immediately) // Q. how necessary is this? (i.e. we want to make sure last expr in handler evaluates, which could get funky when intersecting AsNothing with other coercions)
         return nullValue
@@ -213,4 +215,28 @@ struct AsEditable: SwiftCoercion {
 
 
 let asEditable = AsEditable()
+
+
+
+
+// nominal type checks
+
+struct AsLiteral<T: Value>: SwiftCoercion {
+    
+    var swiftLiteralDescription: String { return "\(type(of: self))()" }
+
+    var name: Symbol { return T.nominalType.name } // TO DO: what should this be?
+    
+    var description: String { return "\(self.name.label) \(T.nominalType)" } 
+    
+    // if the input Value is an instance of T, it is passed thru as-is without evaluation, otherwise an error is thrown // TO DO: Value.eval() will bypass this (another reason it needs to go away)
+    
+    typealias SwiftType = T
+    
+    func unbox(value: Value, in env: Scope) throws -> SwiftType {
+        guard let result = value as? SwiftType else { throw UnsupportedCoercionError(value: value, coercion: self) }
+        return result
+    }
+}
+
 

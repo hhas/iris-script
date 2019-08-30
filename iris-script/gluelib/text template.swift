@@ -177,7 +177,7 @@ class TextTemplate<T>: TextNode {
         var stack: [TextNode] = [self]
         var start = 0
         var isSep = false
-        try! NSRegularExpression(pattern: "««([-+/]?)([a-z]+)»»", options: .caseInsensitive)
+        try! NSRegularExpression(pattern: "««([-+~]?)([a-z]+)»»", options: .caseInsensitive)
             .enumerateMatches(in: template, range: NSRange(location: 0, length: template.count)) {
             (match: NSTextCheckingResult?, flags: NSRegularExpression.MatchingFlags, _) -> Void in
             if let match = match {
@@ -203,8 +203,8 @@ class TextTemplate<T>: TextNode {
                         if node.name != name { fatalError("Mismatched tags: `+\(node.name)` and `-\(name)`") }
                         node.append(TextNode(head: prefix, name: ""))
                     }
-                case "/":
-                    if stack.last!.name != name { fatalError("Mismatched tags: `+\(stack.last!.name)` and `/\(name)`") }
+                case "~":
+                    if stack.last!.name != name { fatalError("Mismatched tags: `+\(stack.last!.name)` and `~\(name)`") }
                     isSep = true
                 default:
                     let node = TextNode(head: prefix, name: name)

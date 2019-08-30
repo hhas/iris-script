@@ -20,7 +20,10 @@ protocol Coercion: Value {
     
     var name: Symbol { get } // TO DO: canonical vs reified name? // TO DO: how to support localization?
     
+    // TO DO: how best to restrict/validate these? (i.e. generated code must be legal Swift syntax, and restricted to stated purpose [i.e. we need to avoid accidental/deliberate injection of arbitrary logic for obvious reasons])
     var swiftLiteralDescription: String { get }
+    
+    var swiftTypeDescription: String { get }
 
     func coerce(value: Value, in scope: Scope) throws -> Value
     
@@ -36,9 +39,11 @@ extension Coercion {
     
     var swiftLiteralDescription: String { return "\(type(of:self))()" } // TO DO: need to generate Swift source for instantiating a Coercion (also, how to handle Coercions that don't declare SwiftCoercion conformance? presumably these'll need to go in an AsValue-like wrapper, or else be rejected outright)
     
+    var swiftTypeDescription: String { return "Value" }
+    
     var description: String { return "\(self.name.label)" } // TO DO: decide what description/debugDescription should show, versus pretty printing; description should include any constraints (constraints aren't included in canonical name)
     
-    var nominalType: Coercion { return asCoercion }
+    static var nominalType: Coercion { return asCoercion }
     
     func isa(_ coercion: Coercion) -> Bool {
         return self.name == coercion.name // TO DO: implement (same or subset)
@@ -61,6 +66,11 @@ protocol SwiftCoercion: Coercion {
     func box(value: SwiftType, in scope: Scope) -> Value
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType
+}
+
+extension SwiftCoercion {
+
+    var swiftTypeDescription: String { return String(describing: SwiftType.self) }
 }
 
 

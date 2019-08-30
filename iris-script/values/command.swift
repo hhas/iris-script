@@ -79,7 +79,7 @@ class Command: ComplexValue {
         return "‘\(self.name.label)’" + (self.arguments.count == 0 ? "" : " {\(self.arguments.map{ "\(["", "L", "R"].contains($0) ? "" : "\($0.label): ")\($1)" }.joined(separator: ", "))}")
     }
     
-    let nominalType: Coercion = asCommand
+    static let nominalType: Coercion = asCommand
     
     // TO DO: what about a slot for storing optional operator definition? (or general 'annotations' slot?) we also need to indicate when pp should wrap a command in elective parens (as opposed to required parens, which pp should add automatically as operator precedence dictates)
     

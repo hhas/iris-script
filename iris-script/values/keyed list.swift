@@ -49,7 +49,7 @@ struct KeyedList: BoxedCollectionValue { // ExpressibleByDictionaryLiteral? // T
     
     var description: String { return "\(self.data)" }
     
-    let nominalType: Coercion = asList
+    static let nominalType: Coercion = asList
     
     // TO DO: rename `constrainedType` to `structuralType`/`reifiedType`? make it public on Value?
     

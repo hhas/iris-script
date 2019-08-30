@@ -31,6 +31,7 @@ protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // T
         
     var description: String { get }
     
+    static var nominalType: Coercion { get }
     var nominalType: Coercion { get }
     
     var isMemoizable: Bool { get }
@@ -66,6 +67,8 @@ protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // T
 extension Value { // default implementations
 
     var swiftLiteralDescription: String { fatalError("\(type(of: self)).swiftLiteralDescription is not supported.") } // TO DO: any use-cases where it should be?
+    
+    var nominalType: Coercion { return type(of: self).nominalType }
     
     var isMemoizable: Bool { return false }
     

@@ -757,7 +757,8 @@ private func procedure_isA_value_coercion(command: Command, commandEnv: Scope, h
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = isA(
         value: arg_0,
-        coercion: arg_1
+        coercion: arg_1,
+        commandEnv: commandEnv
     )
     return type_isA_value_coercion.result.box(value: result, in: handlerEnv)
 }
@@ -784,7 +785,7 @@ private func procedure_coerce_value_to(command: Command, commandEnv: Scope, hand
     let result = try coerce(
         value: arg_0,
         to: arg_1,
-        commandEnv:commandEnv
+        commandEnv: commandEnv
     )
     return type_coerce_value_to.result.box(value: result, in: handlerEnv)
 }
@@ -916,6 +917,87 @@ private func procedure_elseTest_left_right(command: Command, commandEnv: Scope, 
     return type_elseTest_left_right.result.box(value: result, in: handlerEnv)
 }
 
+// while {condition, action}
+private let type_whileRepeat_condition_action = (
+    param_0: (Symbol("condition"), asBool),
+    param_1: (Symbol("action"), asIs),
+    result: AsOptional(AsValue())
+)
+private let interface_whileRepeat_condition_action = HandlerInterface(
+    name: "while",
+    parameters: [
+        (type_whileRepeat_condition_action.param_0.0, "condition", type_whileRepeat_condition_action.param_0.1),
+        (type_whileRepeat_condition_action.param_1.0, "action", type_whileRepeat_condition_action.param_1.1),
+    ],
+    result: type_whileRepeat_condition_action.result
+)
+private func procedure_whileRepeat_condition_action(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_whileRepeat_condition_action.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_whileRepeat_condition_action.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try whileRepeat(
+        condition: arg_0,
+        action: arg_1,
+        commandEnv: commandEnv
+    )
+    return type_whileRepeat_condition_action.result.box(value: result, in: handlerEnv)
+}
+
+// repeat {action, condition}
+private let type_repeatWhile_action_condition = (
+    param_0: (Symbol("action"), asIs),
+    param_1: (Symbol("condition"), asBool),
+    result: AsOptional(AsValue())
+)
+private let interface_repeatWhile_action_condition = HandlerInterface(
+    name: "repeat",
+    parameters: [
+        (type_repeatWhile_action_condition.param_0.0, "action", type_repeatWhile_action_condition.param_0.1),
+        (type_repeatWhile_action_condition.param_1.0, "condition", type_repeatWhile_action_condition.param_1.1),
+    ],
+    result: type_repeatWhile_action_condition.result
+)
+private func procedure_repeatWhile_action_condition(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_repeatWhile_action_condition.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_repeatWhile_action_condition.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try repeatWhile(
+        action: arg_0,
+        condition: arg_1,
+        commandEnv: commandEnv
+    )
+    return type_repeatWhile_action_condition.result.box(value: result, in: handlerEnv)
+}
+
+// tell {target, action}
+private let type_tell_target_action = (
+    param_0: (Symbol("target"), AsValue()),
+    param_1: (Symbol("action"), asIs),
+    result: AsOptional(AsValue())
+)
+private let interface_tell_target_action = HandlerInterface(
+    name: "tell",
+    parameters: [
+        (type_tell_target_action.param_0.0, "target", type_tell_target_action.param_0.1),
+        (type_tell_target_action.param_1.0, "action", type_tell_target_action.param_1.1),
+    ],
+    result: type_tell_target_action.result
+)
+private func procedure_tell_target_action(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_tell_target_action.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_tell_target_action.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try tell(
+        target: arg_0,
+        action: arg_1,
+        commandEnv: commandEnv
+    )
+    return type_tell_target_action.result.box(value: result, in: handlerEnv)
+}
+
 
 
 public func stdlib_loadHandlers(into env: Environment) {
@@ -955,5 +1037,7 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_set_name_to, procedure_set_name_to)
     env.define(interface_ifTest_condition_action, procedure_ifTest_condition_action)
     env.define(interface_elseTest_left_right, procedure_elseTest_left_right)
+    env.define(interface_whileRepeat_condition_action, procedure_whileRepeat_condition_action)
+    env.define(interface_repeatWhile_action_condition, procedure_repeatWhile_action_condition)
+    env.define(interface_tell_target_action, procedure_tell_target_action)
 }
-

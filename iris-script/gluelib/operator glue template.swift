@@ -1,6 +1,6 @@
 //
 //  operator template.swift
-//  iris-script
+//  gluelib
 //
 
 import Foundation

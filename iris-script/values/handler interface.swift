@@ -37,7 +37,7 @@ struct HandlerInterface: ComplexValue { // native representation is a record; ho
     
     typealias Parameter = (name: Symbol, binding: Symbol, coercion: Coercion) // TO DO: include docstring? // binding is only needed in native handlers when different to label (e.g. in `foo(bar:baz as TYPE)`, bar is the parameter name and baz is the name under which the parameter value is stored in the handler's stack frame)
     
-    let nominalType: Coercion = asHandlerInterface
+    static let nominalType: Coercion = asHandlerInterface
     
     // TO DO: how/where to capture defining module's ID (e.g. for error reporting)
     let name: Symbol

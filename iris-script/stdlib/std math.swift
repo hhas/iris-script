@@ -6,6 +6,7 @@
 import Foundation
 import Darwin
 
+// TO DO: guard against divide-by-zero exceptions by using `AsDouble(nonZero:true)` in interfaces
 
 func exponent(left: Number, right: Number) throws -> Number { return try left.pow(right) }
 func positive(left: Number) throws -> Number { return left }

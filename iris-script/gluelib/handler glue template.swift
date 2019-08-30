@@ -1,6 +1,6 @@
 //
 //  handler template.swift
-//  template-renderer
+//  gluelib
 //
 
 import Foundation
@@ -49,7 +49,7 @@ private func procedure_««signature»»(command: Command, commandEnv: Scope, ha
     let result =
     ««-resultAssignment»»««+tryKeyword»» try ««-tryKeyword»» ««functionName»»(
     ««+functionArguments»»
-    	««label»»: ««argument»» ««/functionArguments»»,
+    	««label»»: ««argument»» ««~functionArguments»»,
     ««-functionArguments»»
     )
     ««+returnIfResult»»
@@ -104,7 +104,7 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
             node.returnIfResult.signature.set(glue.signature)
         }
         if !glue.canError { node.tryKeyword.delete() }
-        node.functionName.set(glue.swiftLiteralDescription)
+        node.functionName.set(glue.swiftName)
         node.functionArguments.map(glue.swiftParameters) { (node: Node, item: (label: String, param: String)) -> Void in
             node.label.set(item.label)
             node.argument.set(item.param)
@@ -136,7 +136,7 @@ func camelCase(_ name: String) -> String { // convert underscored_name to camelC
 
 extension HandlerGlue {
     
-    var swiftLiteralDescription: String { return self.swiftFunction?.name ?? camelCase(self.name) }
+    var swiftName: String { return self.swiftFunction?.name ?? camelCase(self.name) }
     
     var _swiftParameters: [String] {
         if let params = self.swiftFunction?.params, params.count == self.parameters.count {
@@ -150,6 +150,6 @@ extension HandlerGlue {
         return self._swiftParameters.enumerated().map{($1, "arg_\($0)")} + self.useScopes.map{($0, $0)}
     }
     
-    var signature: String { return self.swiftLiteralDescription + "_" + self._swiftParameters.joined(separator: "_") }
+    var signature: String { return self.swiftName + "_" + self._swiftParameters.joined(separator: "_") }
 }
 

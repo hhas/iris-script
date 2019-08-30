@@ -1,6 +1,6 @@
 
 //
-//  custom parsers.swift
+//  custom parsefuncs.swift
 //  iris-script
 //
 
@@ -10,29 +10,30 @@
 import Foundation
 
 
-private let doBlockStyle = Block.Style.custom(definition: "do", terminator: "done", delimiter: "\n")
-
 
 // kludge
-func parseDoBlock(_ parser: Parser, _ definition: OperatorDefinition, _ leftExpr: Value?, _ allowLooseArguments: Bool) throws -> Value {
-    parser.advance(ignoringLineBreaks: true) // step over `do`
-    switch parser.current.token.form {
-    case .comma, .lineBreak: parser.advance(ignoringLineBreaks: true)
-    case .operatorName(let operatorClass) where operatorClass.name == .word("done"): return Block([], style: doBlockStyle)
-    default: ()
-    }
-    let value = try parser.parseExpression()
-    if case .operatorName(let operatorClass) = parser.peek(ignoringLineBreaks: true).token.form, operatorClass.name == .word("done") {
-        parser.advance(ignoringLineBreaks: true)
-    } else {
-        print("Expected 'done' but found \(parser.current.token)")
-        throw BadSyntax.unterminatedGroup
-    }
-    // TO DO: `done` should also act as sentence terminator
-    if let seq = value as? ExpressionSequence {
-        return Block(seq.items, style: doBlockStyle)
-    } else {
-        return Block([value], style: doBlockStyle)
+func parseCustomBlock(withStyle blockStyle: Block.Style) -> ParseFunc {
+    guard case .custom(_, let terminator, _) = blockStyle else { fatalError("parseCustomBlock requires .custom(…) style.") }
+    return { (_ parser: Parser, _ definition: OperatorDefinition, _ leftExpr: Value?, _ allowLooseArguments: Bool) throws -> Value in
+        parser.advance(ignoringLineBreaks: true) // step over `do`
+        switch parser.current.token.form {
+        case .comma, .lineBreak: parser.advance(ignoringLineBreaks: true)
+        case .operatorName(let operatorClass) where operatorClass.name == .word(Symbol(terminator)): return Block([], style: blockStyle)
+        default: ()
+        }
+        let value = try parser.parseExpression()
+        if case .operatorName(let operatorClass) = parser.peek(ignoringLineBreaks: true).token.form, operatorClass.name == .word("done") {
+            parser.advance(ignoringLineBreaks: true)
+        } else {
+            print("Expected '\(terminator)' but found \(parser.current.token)")
+            throw BadSyntax.unterminatedGroup
+        }
+        // TO DO: `done` should also act as sentence terminator
+        if let seq = value as? ExpressionSequence {
+            return Block(seq.items, style: blockStyle)
+        } else {
+            return Block([value], style: blockStyle)
+        }
     }
 }
 
@@ -71,3 +72,5 @@ func parsePrefixControlOperator(withConjunction operatorName: Symbol) -> ParseFu
         return Command(definition, left: leftExpr, right: rightExpr)
     }
 }
+
+

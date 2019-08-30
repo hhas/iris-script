@@ -14,6 +14,8 @@ import Foundation
 
 // TO DO: need `swift` coercion modifier to indicate where arguments/results should be bridged to Swift primitives (String, Array<T>, etc) rather than passed as native Values
 
+// TO DO: would be helpful to validate swift function/binding names against list of known Swift keywords (and identifiers in Swift stdlib?) in order to reject/warn of any name conflicts
+
 
 var _handlerGlues = [HandlerGlue]()
 
@@ -24,7 +26,7 @@ var _handlerGlues = [HandlerGlue]()
 struct HandlerGlue: Value {
     
     var description: String { return "«HandlerGlue \(self.interface) \(self.canError), \(self.useScopes), \(String(describing: self.swiftFunction)), \(String(describing: self.operatorSyntax))»"}
-    let nominalType: Coercion = AsComplex<HandlerGlue>(name: "HandlerGlue")
+    static let nominalType: Coercion = AsComplex<HandlerGlue>(name: "HandlerGlue")
     
     // TO DO: also extract user documentation (from annotations); Q. where should user docs go? may be an idea to put them in separate data file that is loaded as needed (or just use the native glue def itself, assuming it isn't too slow to parse)
     typealias Parameter = (name: String, binding: String, coercion: String)
@@ -129,7 +131,7 @@ func defineHandlerGlue(handler: Handler, commandEnv: Scope) throws {
 
 func renderGlue(libraryName: String, handlerGlues: [HandlerGlue]) -> String {
     // TO DO: what about defining operators for constants and other non-command structures (e.g. `do…done` block keywords) [for now, put them in handcoded function and call that separately]
-    return handlersTemplate.render((libraryName, handlerGlues)) + "\n\n" + operatorsTemplate.render((libraryName, handlerGlues))
+    return handlersTemplate.render((libraryName, handlerGlues)) + "\n\n" + operatorsTemplate.render((libraryName, handlerGlues)) + "\n\n" + handlerStubsTemplate.render((libraryName, handlerGlues)) 
 }
 
 

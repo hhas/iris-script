@@ -29,7 +29,7 @@ class EditableValue: Handler, Mutator {
     
     // get() and call() behaviors are pass-thrus to the underlying Value; set() replaces the current Value with a new Value
     
-    let nominalType: Coercion = asEditable
+    static let nominalType: Coercion = asEditable
     
     var description: String { return "editable \(self.data)" }
     
@@ -99,6 +99,7 @@ struct ScopeLockedValue: Handler, Mutator { // experimental
     
     // Handler and Accessor behaviors are pass-thrus to the underlying Value
     
+    static let nominalType: Coercion = asValue
     let nominalType: Coercion
     
     var description: String { return "editable \(self.data)" }

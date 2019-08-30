@@ -23,7 +23,7 @@ extension Int: NumericValue {
     
     var swiftLiteralDescription: String { return String(self) }
     
-    var nominalType: Coercion { return asInt }
+    static let nominalType: Coercion = asInt
     
     func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
         return self
@@ -44,7 +44,7 @@ extension Double: NumericValue {
     
     var swiftLiteralDescription: String { return String(self) }
     
-    var nominalType: Coercion { return asDouble }
+    static let nominalType: Coercion = asDouble
     
     func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
         guard let result = Int(exactly: self) else { throw ConstraintError(value: self, coercion: coercion) }
@@ -93,7 +93,7 @@ enum Number: NumericValue { // what about fractions? (this may require `indirect
     
     var description: String { return self.literalRepresentation() }
     
-    var nominalType: Coercion { return asNumber }
+    static let nominalType: Coercion = asNumber 
     
     // represents a whole or fractional number (as Swift Int or Double); numbers that are valid but too large to represent using standard Swift types are held as strings
     
@@ -189,7 +189,7 @@ enum Number: NumericValue { // what about fractions? (this may require `indirect
     */
     //
     
-    func literalRepresentation() -> String { // get canonical code representation (note: this is currently implemented as a method to allow for formatting options to be passed in future) // TO DO: check these representations are always correct
+    func literalRepresentation() -> String { // get canonical native code representation (note: this is currently implemented as a method to allow for formatting options to be passed in future; TO DO: decide method name, e.g. `nativeLiteralDescription(…)`?, and add to Value protoco) // TO DO: check these representations are always correct
         switch self {
         case .integer(let n, _):
             return String(n)

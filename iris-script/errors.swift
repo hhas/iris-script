@@ -14,7 +14,7 @@ protocol NativeError: Value, Error {
 
 extension NativeError {
     
-    var nominalType: Coercion { return asError }
+    static var nominalType: Coercion { return asError }
 
     func from(_ parent: Error) -> Error {
         return ChainedError(error: self, parent: parent)

@@ -32,7 +32,7 @@ func repeatTimes(count: Int, action: Value, commandEnv: Scope) throws -> Value {
 }
 
 
-func repeatWhile(condition: Value, action: Value, commandEnv: Scope) throws -> Value {
+func whileRepeat(condition: Value, action: Value, commandEnv: Scope) throws -> Value {
     var result: Value = didNothing // TO DO: returning `didNothing` (implemented as subclass of NoValue?) will allow composition with infix `else` operator (ditto for `if`, etc); need to figure out precise semantics for this (as will NullCoercionErrors, the extent to which such a value can propagate must be strictly limited, with the value converting to noValue if not caught and handled immediately; one option is to define an `AsDidNothing(TYPE)` coercion which can unbox/coerce the nothing as a special case, e.g. returning a 2-case enum/returning didNothing rather than coercing it to noValue [which asAnything/asOptional/asDefault should do])
     while try asBool.unbox(value: condition, in: commandEnv) {
         result = try action.eval(in: commandEnv, as: asAnything)
@@ -40,10 +40,11 @@ func repeatWhile(condition: Value, action: Value, commandEnv: Scope) throws -> V
     return result
 }
 
+func repeatWhile(action: Value, condition: Value, commandEnv: Scope) throws -> Value {
+    var result: Value = didNothing // TO DO: returning `didNothing` (implemented as subclass of NoValue?) will allow composition with infix `else` operator (ditto for `if`, etc); need to figure out precise semantics for this (as will NullCoercionErrors, the extent to which such a value can propagate must be strictly limited, with the value converting to noValue if not caught and handled immediately; one option is to define an `AsDidNothing(TYPE)` coercion which can unbox/coerce the nothing as a special case, e.g. returning a 2-case enum/returning didNothing rather than coercing it to noValue [which asAnything/asOptional/asDefault should do])
+    repeat {
+        result = try action.eval(in: commandEnv, as: asAnything)
+    } while try asBool.unbox(value: condition, in: commandEnv)
+    return result
+}
 
-
-
-
-
-
-let parseIfOperator = parsePrefixControlOperator(withConjunction:"then")

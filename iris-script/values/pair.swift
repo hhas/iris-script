@@ -14,7 +14,7 @@ struct Pair: BoxedSwiftValue {
     
     var description: String { return "(\(self.data.0): \(self.data.1))" } // TO DO: not ideal
     
-    let nominalType: Coercion = asPair
+    static let nominalType: Coercion = asPair
     
     var key: Value { return self.data.key }
     var value: Value { return self.data.value }

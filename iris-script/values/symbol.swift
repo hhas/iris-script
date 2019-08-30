@@ -19,7 +19,7 @@ public struct Symbol: ComplexValue, KeyConvertible, Comparable, ExpressibleByStr
     
     public typealias StringLiteralType = String
     
-    let nominalType: Coercion = asSymbol
+    static let nominalType: Coercion = asSymbol
     
     public let label: String
     internal let key: String // interning symbols would enable more efficient key representation, but for now it's sufficient to use case-normalized string
