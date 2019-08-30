@@ -11,7 +11,7 @@ import Foundation
 
 private let templateSource = """
 //
-//  ««libraryName»» HANDLERS.swift
+//  ««libraryName»» HANDLER STUBS.swift
 //
 //  Swift functions that implement primitive handlers.
 //
@@ -21,7 +21,7 @@ import Foundation
 ««+defineHandler»»
 
 func ««functionName»»(««+functionParameters»»\
-««label»»««binding»»: ««argumentType»» ««~functionParameters»», \
+««label»»««binding»»: ««type»» ««~functionParameters»», \
 ««-functionParameters»») ««+canThrow»» throws ««-canThrow»» ««+hasReturnType»» -> ««returnType»» ««-hasReturnType»» {
     fatalError("Not yet implemented.")
 }
@@ -33,10 +33,11 @@ let handlerStubsTemplate = TextTemplate(templateSource) { (tpl: Node, args: (lib
     tpl.libraryName.set(args.libraryName)
     tpl.defineHandler.map(args.handlerGlues) { (node: Node, glue: HandlerGlue) -> Void in
         node.functionName.set(glue.swiftName)
-        node.functionParameters.map(glue.interface.parameters) { (node: Node, item: HandlerInterface.Parameter) -> Void in
-            node.label.set(item.name.label)
-            if item.binding != item.name { node.binding.set(" " + camelCase(item.binding.label)) }
-            node.argumentType.set(item.coercion.swiftTypeDescription)
+        let scopes = glue.useScopes.map{(Symbol($0), Symbol($0), asScope) as HandlerInterface.Parameter}
+        node.functionParameters.map(glue.swiftParameters) { (node: Node, item: (label: String, binding: String?, type: String)) -> Void in
+            node.label.set(item.label)
+            if let binding = item.binding { node.binding.set(" \(binding)") }
+            node.type.set(item.type)
         }
         if !glue.canError { node.canThrow.delete() }
         let returnType = glue.interface.result.swiftTypeDescription
@@ -45,10 +46,20 @@ let handlerStubsTemplate = TextTemplate(templateSource) { (tpl: Node, args: (lib
         } else {
             node.hasReturnType.returnType.set(returnType)
         }
-
-        
     }
-    
-    
-    
+}
+
+
+extension HandlerGlue {
+
+    var swiftParameters: [(label: String, binding: String?, type: String)] { // used in primitive handler function stubs; label may include binding name (TO DO: we should probably split binding name into separate String?)
+        let params: [(String, String, String)]
+        let nativeParameters = self.interface.parameters.map{(camelCase($0.name.label), camelCase($0.binding.label), $0.coercion.swiftTypeDescription)}
+        if let swiftParams = self.swiftFunction?.params, swiftParams.count == nativeParameters.count {
+            params = zip(swiftParams, nativeParameters).map{($0, $1.1, $1.2)}
+        } else {
+            params = nativeParameters
+        }
+        return params.map{($0, ($0 == $1 || $1.isEmpty ? nil : $1), $2)} + self.useScopes.map{($0, nil, "Scope")}
+    }
 }

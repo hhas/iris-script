@@ -16,6 +16,8 @@ import Foundation
 
 // TO DO: would be helpful to validate swift function/binding names against list of known Swift keywords (and identifiers in Swift stdlib?) in order to reject/warn of any name conflicts
 
+// TO DO: distinguish between swift_function, swift_struct, etc; this'll allow stub template to create appropriate skeleton (currently ElementRange stub renders as a func instead of struct+init)
+
 
 var _handlerGlues = [HandlerGlue]()
 
@@ -88,8 +90,9 @@ func defineHandlerGlue(handler: Handler, commandEnv: Scope) throws {
     
     let canError = try unpackOption(options, "can_error", in: commandEnv, as: AsSwiftDefault(asBool, defaultValue: false))
     let swiftFunction: HandlerGlue.SwiftFunction?
-    // TO DO: decide syntax for swift_function (name + parens syntax won't work without parser extension; probably simpler to use native syntax, but should Swift argument labels be given as labels or as values, e.g. `add{left,right}` vs `add{left:…,right:…}`)?
     if let cmd = try unboxOption(options, "swift_function", in: commandEnv, as: AsSwiftOptional(asCommand)) {
+        // TO DO: if given, swiftfunc's parameter record should be of form `{label,…}` and/or `{label:binding,…}`
+        // TO DO: error if no. of Swift params is neither 0 nor equal to no. of native params
         swiftFunction = (name: cmd.name.label, params: try cmd.arguments.map{
             guard let name = $0.value.asIdentifier() else { throw BadSyntax.missingName }
             return name.label
@@ -141,7 +144,7 @@ func renderHandlerGlue(for libraryName: String, from script: String) throws -> S
     // parse glue definitions for primitive handlers
     let env = Environment()
     gluelib_loadHandlers(into: env) // TO DO: what handlers must gluelib define? Q. what about loading stdlib handlers into a parent scope, for metaprogramming use?
-    stdlib_loadConstants(into: env)
+    stdlib_loadConstants(into: env) // mostly needed for coercions
     
     let operatorRegistry = OperatorRegistry()
     gluelib_loadOperators(into: operatorRegistry) // essential operators used in glue defs; these may be overwritten by stdlib operators

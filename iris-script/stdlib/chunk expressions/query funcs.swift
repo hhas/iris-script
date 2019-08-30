@@ -35,16 +35,15 @@ import Foundation
  */
 
 
-func ofClause(attribute: Value, target: Value, commandEnv: Scope) throws -> Value { // TO DO: see TODO on AsAnything re. limiting scope of `didNothing` result
-    // look up attribute (identifier/command) on value; all other evaluation (command arguments) is done in commandEnv as normal
-    // TO DO: what scope? (value?); args will be evaled in command's scope except where handler uses as-is, in which case it has choice
-    // this is all dubious
+func ofClause(attribute: Value, target value: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value { // TO DO: see TODO on AsAnything re. limiting scope of `didNothing` result
+    // look up command's name in target
     if let command = attribute as? Command {
-        if let selector = target.get(command.name) {
+        if let selector = value.get(command.name) {
             if let handler = selector as? Handler {
+                // command's arguments are evaled in commandEnv as normal (the Handler already contains a [strong]ref to its owner, )
                 return try handler.call(with: command, in: commandEnv, as: asAnything)
             } else if command.arguments.isEmpty {
-                return selector // TO DO: eval?
+                return selector
             } // fall thru
         }
     }
@@ -52,57 +51,62 @@ func ofClause(attribute: Value, target: Value, commandEnv: Scope) throws -> Valu
 }
 
 
+// TO DO: should element selection handlers be available at global level, or solely as 'methods' on collection-like values? e.g. `document at 1` at top level is a valid query, regardless of whether evaluating it succeeds or fails
 
 
-func indexSelector(element_type: Symbol,selector_data: Value) throws -> Value {
+func ofClause(attribute: Symbol,target value: Value,commandEnv: Scope,handlerEnv: Scope) throws -> Value {
     fatalError("Not yet implemented.")
 }
 
-func nameSelector(element_type: Symbol,selector_data: Value) throws -> Value {
+func atSelector(elementType: Symbol,selectorData: Value,commandEnv: Scope,handlerEnv: Scope) throws -> Value {
     fatalError("Not yet implemented.")
 }
 
-func idSelector(element_type: Symbol,selector_data: Value) throws -> Value {
+func nameSelector(elementType: Symbol,selectorData: Value,commandEnv: Scope) throws -> Value {
     fatalError("Not yet implemented.")
 }
 
-func testSelector(element_type: Symbol,selector_data: Value) throws -> Value {
+func idSelector(elementType: Symbol,selectorData: Value,commandEnv: Scope) throws -> Value {
     fatalError("Not yet implemented.")
 }
 
-func firstElement(element_type: Symbol) -> Value {
+func whereSelector(elementType: Symbol,selectorData: Value,commandEnv: Scope,handlerEnv: Scope) throws -> Value {
     fatalError("Not yet implemented.")
 }
 
-func middleElement(element_type: Symbol) -> Value {
+func firstElement(right elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func lastElement(element_type: Symbol) -> Value {
+func middleElement(right elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func randomElement(element_type: Symbol) -> Value {
+func lastElement(right elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func allElements(element_type: Symbol) -> Value {
+func randomElement(right elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func beforeElement(element_type: Symbol,expression: Value) -> Value {
+func allElements(right elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func afterElement(element_type: Symbol,expression: Value) -> Value {
+func beforeElement(left elementType: Symbol,right expression: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func insertBefore(expression: Value) -> Value {
+func afterElement(left elementType: Symbol,right expression: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func insertAfter(expression: Value) -> Value {
+func insertBefore(right expression: Value) -> Value {
+    fatalError("Not yet implemented.")
+}
+
+func insertAfter(right expression: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 

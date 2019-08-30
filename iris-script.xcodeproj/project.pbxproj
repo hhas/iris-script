@@ -19,7 +19,7 @@
 		4F25553D22E5D3DE002FAE5E /* characters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25553C22E5D3DE002FAE5E /* characters.swift */; };
 		4F257CCC22BAD1FA00A51CF5 /* std math.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F257CCB22BAD1FA00A51CF5 /* std math.swift */; };
 		4F25FB8522B64B58007EE7AE /* numeric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25FB8422B64B58007EE7AE /* numeric.swift */; };
-		4F25FB8722B68530007EE7AE /* query values.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25FB8622B68530007EE7AE /* query values.swift */; };
+		4F25FB8722B68530007EE7AE /* query funcs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25FB8622B68530007EE7AE /* query funcs.swift */; };
 		4F25FB8A22B6AC82007EE7AE /* std general.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25FB8922B6AC82007EE7AE /* std general.swift */; };
 		4F25FB8C22B6E561007EE7AE /* stdlib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25FB8B22B6E561007EE7AE /* stdlib_handlers.swift */; };
 		4F26065422BECD7B0036D904 /* record.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065322BECD7B0036D904 /* record.swift */; };
@@ -88,7 +88,6 @@
 		4F5B250323171EB9001C1941 /* environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00B22ADA1AF00C9FD23 /* environment.swift */; };
 		4F5B250423171EB9001C1941 /* swift literal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24AE231405B8001C1941 /* swift literal.swift */; };
 		4F5B250523171EB9001C1941 /* errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D01522AE819000C9FD23 /* errors.swift */; };
-		4F5B250623171EB9001C1941 /* query values.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25FB8622B68530007EE7AE /* query values.swift */; };
 		4F5B250723171EB9001C1941 /* std general.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25FB8922B6AC82007EE7AE /* std general.swift */; };
 		4F5B250823171EB9001C1941 /* std math.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F257CCB22BAD1FA00A51CF5 /* std math.swift */; };
 		4F5B250923171EB9001C1941 /* std text.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24B323156A8F001C1941 /* std text.swift */; };
@@ -96,8 +95,6 @@
 		4F5B250B23171EB9001C1941 /* std state.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F857702230D34AE002B47F2 /* std state.swift */; };
 		4F5B250C23171EB9001C1941 /* temp-keywords.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24CF23166414001C1941 /* temp-keywords.swift */; };
 		4F5B250D23171EB9001C1941 /* custom parsefuncs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24B523156B11001C1941 /* custom parsefuncs.swift */; };
-		4F5B250E23171EB9001C1941 /* stdlib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25FB8B22B6E561007EE7AE /* stdlib_handlers.swift */; };
-		4F5B250F23171EB9001C1941 /* stdlib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26F7172306C410002DD292 /* stdlib_operators.swift */; };
 		4F5B251023171EB9001C1941 /* stdlib_constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F857700230C9247002B47F2 /* stdlib_constants.swift */; };
 		4F5B251123171EB9001C1941 /* handler glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81C23129BCC007D694C /* handler glue.swift */; };
 		4F5B251223171EB9001C1941 /* handler glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81B23129BCC007D694C /* handler glue template.swift */; };
@@ -160,7 +157,7 @@
 		4F25553C22E5D3DE002FAE5E /* characters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = characters.swift; sourceTree = "<group>"; };
 		4F257CCB22BAD1FA00A51CF5 /* std math.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "std math.swift"; sourceTree = "<group>"; };
 		4F25FB8422B64B58007EE7AE /* numeric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = numeric.swift; sourceTree = "<group>"; };
-		4F25FB8622B68530007EE7AE /* query values.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "query values.swift"; sourceTree = "<group>"; };
+		4F25FB8622B68530007EE7AE /* query funcs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "query funcs.swift"; sourceTree = "<group>"; };
 		4F25FB8922B6AC82007EE7AE /* std general.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "std general.swift"; sourceTree = "<group>"; };
 		4F25FB8B22B6E561007EE7AE /* stdlib_handlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = stdlib_handlers.swift; sourceTree = "<group>"; };
 		4F26065322BECD7B0036D904 /* record.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = record.swift; sourceTree = "<group>"; };
@@ -290,7 +287,7 @@
 		4F257CCA22BACB0D00A51CF5 /* chunk expressions */ = {
 			isa = PBXGroup;
 			children = (
-				4F25FB8622B68530007EE7AE /* query values.swift */,
+				4F25FB8622B68530007EE7AE /* query funcs.swift */,
 				4F409193231876E600045E85 /* element range.swift */,
 			);
 			path = "chunk expressions";
@@ -299,12 +296,12 @@
 		4F25FB8822B6AC57007EE7AE /* stdlib */ = {
 			isa = PBXGroup;
 			children = (
-				4F257CCA22BACB0D00A51CF5 /* chunk expressions */,
 				4F25FB8922B6AC82007EE7AE /* std general.swift */,
 				4F257CCB22BAD1FA00A51CF5 /* std math.swift */,
 				4F5B24B323156A8F001C1941 /* std text.swift */,
 				4F5B24CD23165870001C1941 /* std control.swift */,
 				4F857702230D34AE002B47F2 /* std state.swift */,
+				4F257CCA22BACB0D00A51CF5 /* chunk expressions */,
 				4F5B24B723156B36001C1941 /* support */,
 				4F4091922317B28B00045E85 /* glues */,
 			);
@@ -595,7 +592,6 @@
 				4F5B250323171EB9001C1941 /* environment.swift in Sources */,
 				4F5B250423171EB9001C1941 /* swift literal.swift in Sources */,
 				4F5B250523171EB9001C1941 /* errors.swift in Sources */,
-				4F5B250623171EB9001C1941 /* query values.swift in Sources */,
 				4F5B250723171EB9001C1941 /* std general.swift in Sources */,
 				4F5B250823171EB9001C1941 /* std math.swift in Sources */,
 				4F5B250923171EB9001C1941 /* std text.swift in Sources */,
@@ -603,8 +599,6 @@
 				4F5B250B23171EB9001C1941 /* std state.swift in Sources */,
 				4F5B250C23171EB9001C1941 /* temp-keywords.swift in Sources */,
 				4F5B250D23171EB9001C1941 /* custom parsefuncs.swift in Sources */,
-				4F5B250E23171EB9001C1941 /* stdlib_handlers.swift in Sources */,
-				4F5B250F23171EB9001C1941 /* stdlib_operators.swift in Sources */,
 				4F5B251023171EB9001C1941 /* stdlib_constants.swift in Sources */,
 				4F5B251123171EB9001C1941 /* handler glue.swift in Sources */,
 				4F5B251223171EB9001C1941 /* handler glue template.swift in Sources */,
@@ -634,7 +628,7 @@
 				4F25553B22E5053E002FAE5E /* operator registry.swift in Sources */,
 				4F26065D22C0161D0036D904 /* native handler.swift in Sources */,
 				4F2694D722DF5607009B8FC0 /* token.swift in Sources */,
-				4F25FB8722B68530007EE7AE /* query values.swift in Sources */,
+				4F25FB8722B68530007EE7AE /* query funcs.swift in Sources */,
 				4F26065F22C016570036D904 /* primitive handler.swift in Sources */,
 				4F84D00C22ADA1AF00C9FD23 /* environment.swift in Sources */,
 				4F84D01422AE7EEA00C9FD23 /* block.swift in Sources */,

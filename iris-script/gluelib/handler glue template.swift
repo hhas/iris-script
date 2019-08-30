@@ -36,6 +36,7 @@ private let interface_««signature»» = HandlerInterface(
     result: type_««signature»».result
 )
 private func procedure_««signature»»(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    ««+procedureParameters»»
     var index = 0
     ««+unboxArguments»»
     let arg_««count»» = try command.swiftValue(at: &index, for: type_««signature»».param_««count»», in: commandEnv)
@@ -43,6 +44,11 @@ private func procedure_««signature»»(command: Command, commandEnv: Scope, ha
 
     ««+checkForUnexpectedArguments»»
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    ««-checkForUnexpectedArguments»»
+    ««-procedureParameters»»
+
+    ««+checkForUnexpectedArguments»»
+    if !command.arguments.isEmpty { throw UnknownArgumentError(at: 0, of: command) }
     ««-checkForUnexpectedArguments»»
 
     ««+resultAssignment»»
@@ -70,7 +76,7 @@ public func stdlib_loadHandlers(into env: Environment) {
 }
 """
 
-
+let nullParameters: [HandlerGlue.Parameter] = [("", "", "()")]
 
 let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (libraryName: String, handlerGlues: [HandlerGlue])) in
     tpl.libraryName.set(args.libraryName)
@@ -78,11 +84,15 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
         node.signature.set(glue.signature)
         node.nativeName.set(glue.name)
         node.nativeArgumentNames.set(glue.parameters.map{$0.name}.joined(separator: ", "))
-        node.typeParameters.map(glue.parameters.enumerated()) {
-            (node: Node, item: (count: Int, param: HandlerGlue.Parameter)) -> Void in
-            node.count.set(item.count)
-            node.nativeName.set(item.param.name)
-            node.coercion.set(item.param.coercion)
+        if glue.parameters.isEmpty {
+            node.typeParameters.set("\n\t_: (),") // swiftc doesn't like single-item (`result`-only) tuples, so add placeholder field
+        } else {
+            node.typeParameters.map(glue.parameters.enumerated()) {
+                (node: Node, item: (count: Int, param: HandlerGlue.Parameter)) -> Void in
+                node.count.set(item.count)
+                node.nativeName.set(item.param.name)
+                node.coercion.set(item.param.coercion)
+            }
         }
         node.returnType.set(glue.result)
         node.interfaceParameters.map(glue.parameters.enumerated()) {
@@ -91,12 +101,18 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
             node.bindingName.set(item.param.binding)
             node.count.set(item.count)
         }
-        node.unboxArguments.map(0..<glue.parameters.count) { (node: Node, count: Int) -> Void in
-            node.signature.set(glue.signature)
-            node.count.set(count)
+        if glue.parameters.isEmpty {
+            node.procedureParameters.delete()
+        } else {
+            node.checkForUnexpectedArguments.delete()
+            node.procedureParameters.unboxArguments.map(0..<glue.parameters.count) { (node: Node, count: Int) -> Void in
+                node.signature.set(glue.signature)
+                node.count.set(count)
+            }
+            if glue.interface.isEventHandler { node.procedureParameters.checkForUnexpectedArguments.delete() }
         }
-        if glue.result == "asNothing" {
-            node.resultAssignment.delete()
+        if glue.interface.result is AsNothing {
+            node.resultAssignment.set("\n\t")
             node.returnIfResult.delete()
             node.returnIfNoResult.signature.set(glue.signature)
         } else {
@@ -105,7 +121,7 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
         }
         if !glue.canError { node.tryKeyword.delete() }
         node.functionName.set(glue.swiftName)
-        node.functionArguments.map(glue.swiftParameters) { (node: Node, item: (label: String, param: String)) -> Void in
+        node.functionArguments.map(glue.swiftArguments) { (node: Node, item: (label: String, param: String)) -> Void in
             node.label.set(item.label)
             node.argument.set(item.param)
         }
@@ -138,7 +154,7 @@ extension HandlerGlue {
     
     var swiftName: String { return self.swiftFunction?.name ?? camelCase(self.name) }
     
-    var _swiftParameters: [String] {
+    var _swiftArguments: [String] {
         if let params = self.swiftFunction?.params, params.count == self.parameters.count {
             return params
         } else {
@@ -146,10 +162,10 @@ extension HandlerGlue {
         }
     }
     
-    var swiftParameters: [(String, String)] {
-        return self._swiftParameters.enumerated().map{($1, "arg_\($0)")} + self.useScopes.map{($0, $0)}
+    var swiftArguments: [(String, String)] {
+        return self._swiftArguments.enumerated().map{($1, "arg_\($0)")} + self.useScopes.map{($0, $0)}
     }
     
-    var signature: String { return self.swiftName + "_" + self._swiftParameters.joined(separator: "_") }
+    var signature: String { return self.swiftName + "_" + self._swiftArguments.joined(separator: "_") }
 }
 

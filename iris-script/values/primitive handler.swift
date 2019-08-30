@@ -13,7 +13,7 @@ import Foundation
 
 struct PrimitiveHandler: Handler {
     
-    typealias Call = (_ command: Command, _ commandEnv: Scope, _ handler: Handler, _ handlerEnv: Scope, _ coercion: Coercion) throws -> Value
+    typealias Call = (_ command: Command, _ commandEnv: Scope, _ handler: Handler, _ handlerEnv: Scope, _ coercion: Coercion) throws -> Value // all generated `procedure_NAME_PARAMS` functions in _handlers.swift glue have this signature
         
     let interface: HandlerInterface
     

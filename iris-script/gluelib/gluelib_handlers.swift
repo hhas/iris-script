@@ -36,9 +36,38 @@ func procedure_defineHandlerGlue_handler_commandEnv(command: Command, commandEnv
 
 
 
+
+struct AsScope: SwiftCoercion { // for now, this is purely to enable Swift func stubs to be generated with correct commandEnv/handlerEnv param types
+    
+    var swiftLiteralDescription: String { return "asScope" }
+    
+    let name: Symbol = "scope"
+    
+    typealias SwiftType = Scope
+    
+    func coerce(value: Value, in scope: Scope) throws -> Value {
+        fatalError("Not yet implemented.")
+    }
+    
+    func box(value: Scope, in scope: Scope) -> Value {
+        fatalError("Not yet implemented.")
+    }
+    
+    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+        fatalError("Not yet implemented.")
+    }
+}
+
+let asScope = AsScope()
+
+
+
+
 func gluelib_loadHandlers(into env: Environment) {
     
     env.define(interface_defineHandlerGlue_handler_commandEnv, procedure_defineHandlerGlue_handler_commandEnv)
     
     try! env.set("expression", to: asIs) // caution: AsIs outputs the input Value exactly as-is, without evaluating it or capturing its lexical scope; this coercion is suitable for use only within primitive handlers that eval the parameter themselves using commandEnv // TO DO: stdlib needs to implement a native `expression` Coercion which thunks the input value before returning it
+    
+    env.define(coercion: asScope)
 }

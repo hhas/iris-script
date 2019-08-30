@@ -76,7 +76,7 @@ class Command: ComplexValue {
     
     var description: String {
         // TO DO: PP needs to apply operator syntax/quote name if command's name matches an existing operator (Q. how should operator definitions be scoped? per originating library, or per main script? [if we annotate command in parser, it'll presumably capture originating library's operator syntax])
-        return "‘\(self.name.label)’" + (self.arguments.count == 0 ? "" : " {\(self.arguments.map{ "\(["", "L", "R"].contains($0) ? "" : "\($0.label): ")\($1)" }.joined(separator: ", "))}")
+        return "‘\(self.name.label)’" + (self.arguments.count == 0 ? "" : " {\(self.arguments.map{ "\(["", leftOperand, rightOperand].contains($0) ? "" : "\($0.label): ")\($1)" }.joined(separator: ", "))}")
     }
     
     static let nominalType: Coercion = asCommand
@@ -140,14 +140,14 @@ class Command: ComplexValue {
         do {
             return try self.value(at: &index, named: param.label).swiftEval(in: commandEnv, as: param.coercion)
         } catch {
-            throw BadArgumentError(at: i, of: self).from(error)
+            throw BadArgumentError(at: i, of: self).from(error) // TO DO: need better error description that compares expected labels to found labels, indicating mismatch
         }
     }
 }
 
 
-let leftOperand = Symbol("L")
-let rightOperand = Symbol("R")
+let leftOperand = Symbol("left")
+let rightOperand = Symbol("right")
 
 extension Command {
     

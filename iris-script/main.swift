@@ -74,7 +74,7 @@ func test() {
     do {
         let script = try p.parseScript()
         print(script)
-       // print(try script.eval(in: env, as: asAnything))
+        print(try script.eval(in: env, as: asAnything))
     } catch {
         print(error)
     }

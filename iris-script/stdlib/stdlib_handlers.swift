@@ -736,104 +736,125 @@ private func procedure_formatCode_value(command: Command, commandEnv: Scope, han
     return type_formatCode_value.result.box(value: result, in: handlerEnv)
 }
 
-// is_a {value, coercion}
-private let type_isA_value_coercion = (
+// write {value}
+private let type_write_value = (
     param_0: (Symbol("value"), AsOptional(AsValue())),
-    param_1: (Symbol("coercion"), AsCoercion()),
+    result: AsNothing()
+)
+private let interface_write_value = HandlerInterface(
+    name: "write",
+    parameters: [
+        (type_write_value.param_0.0, "value", type_write_value.param_0.1),
+    ],
+    result: type_write_value.result
+)
+private func procedure_write_value(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_write_value.param_0, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    write(
+        value: arg_0
+    )
+    return nullValue
+}
+// is_a {left, right}
+private let type_isA_left_right = (
+    param_0: (Symbol("left"), AsOptional(AsValue())),
+    param_1: (Symbol("right"), AsCoercion()),
     result: asBool
 )
-private let interface_isA_value_coercion = HandlerInterface(
+private let interface_isA_left_right = HandlerInterface(
     name: "is_a",
     parameters: [
-        (type_isA_value_coercion.param_0.0, "value", type_isA_value_coercion.param_0.1),
-        (type_isA_value_coercion.param_1.0, "coercion", type_isA_value_coercion.param_1.1),
+        (type_isA_left_right.param_0.0, "value", type_isA_left_right.param_0.1),
+        (type_isA_left_right.param_1.0, "coercion", type_isA_left_right.param_1.1),
     ],
-    result: type_isA_value_coercion.result
+    result: type_isA_left_right.result
 )
-private func procedure_isA_value_coercion(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_isA_left_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_isA_value_coercion.param_0, in: commandEnv)
-    let arg_1 = try command.swiftValue(at: &index, for: type_isA_value_coercion.param_1, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_isA_left_right.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_isA_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = isA(
-        value: arg_0,
-        coercion: arg_1,
+        left: arg_0,
+        right: arg_1,
         commandEnv: commandEnv
     )
-    return type_isA_value_coercion.result.box(value: result, in: handlerEnv)
+    return type_isA_left_right.result.box(value: result, in: handlerEnv)
 }
 
-// as {value, to}
-private let type_coerce_value_to = (
-    param_0: (Symbol("value"), AsOptional(AsValue())),
-    param_1: (Symbol("to"), AsCoercion()),
+// as {left, right}
+private let type_coerce_left_right = (
+    param_0: (Symbol("left"), AsOptional(AsValue())),
+    param_1: (Symbol("right"), AsCoercion()),
     result: AsOptional(AsValue())
 )
-private let interface_coerce_value_to = HandlerInterface(
+private let interface_coerce_left_right = HandlerInterface(
     name: "as",
     parameters: [
-        (type_coerce_value_to.param_0.0, "value", type_coerce_value_to.param_0.1),
-        (type_coerce_value_to.param_1.0, "coercion", type_coerce_value_to.param_1.1),
+        (type_coerce_left_right.param_0.0, "value", type_coerce_left_right.param_0.1),
+        (type_coerce_left_right.param_1.0, "coercion", type_coerce_left_right.param_1.1),
     ],
-    result: type_coerce_value_to.result
+    result: type_coerce_left_right.result
 )
-private func procedure_coerce_value_to(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_coerce_left_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_coerce_value_to.param_0, in: commandEnv)
-    let arg_1 = try command.swiftValue(at: &index, for: type_coerce_value_to.param_1, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_coerce_left_right.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_coerce_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try coerce(
-        value: arg_0,
-        to: arg_1,
+        left: arg_0,
+        right: arg_1,
         commandEnv: commandEnv
     )
-    return type_coerce_value_to.result.box(value: result, in: handlerEnv)
+    return type_coerce_left_right.result.box(value: result, in: handlerEnv)
 }
 
-// to {handler}
-private let type_defineCommandHandler_handler = (
-    param_0: (Symbol("handler"), AsHandler()),
+// to {right}
+private let type_defineCommandHandler_right = (
+    param_0: (Symbol("right"), AsHandler()),
     result: AsHandler()
 )
-private let interface_defineCommandHandler_handler = HandlerInterface(
+private let interface_defineCommandHandler_right = HandlerInterface(
     name: "to",
     parameters: [
-        (type_defineCommandHandler_handler.param_0.0, "handler", type_defineCommandHandler_handler.param_0.1),
+        (type_defineCommandHandler_right.param_0.0, "handler", type_defineCommandHandler_right.param_0.1),
     ],
-    result: type_defineCommandHandler_handler.result
+    result: type_defineCommandHandler_right.result
 )
-private func procedure_defineCommandHandler_handler(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_defineCommandHandler_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_defineCommandHandler_handler.param_0, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_defineCommandHandler_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try defineCommandHandler(
-        handler: arg_0,
+        right: arg_0,
         commandEnv: commandEnv
     )
-    return type_defineCommandHandler_handler.result.box(value: result, in: handlerEnv)
+    return type_defineCommandHandler_right.result.box(value: result, in: handlerEnv)
 }
 
-// when {handler}
-private let type_defineEventHandler_handler = (
-    param_0: (Symbol("handler"), AsHandler()),
+// when {right}
+private let type_defineEventHandler_right = (
+    param_0: (Symbol("right"), AsHandler()),
     result: AsHandler()
 )
-private let interface_defineEventHandler_handler = HandlerInterface(
+private let interface_defineEventHandler_right = HandlerInterface(
     name: "when",
     parameters: [
-        (type_defineEventHandler_handler.param_0.0, "handler", type_defineEventHandler_handler.param_0.1),
+        (type_defineEventHandler_right.param_0.0, "handler", type_defineEventHandler_right.param_0.1),
     ],
-    result: type_defineEventHandler_handler.result
+    result: type_defineEventHandler_right.result
 )
-private func procedure_defineEventHandler_handler(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_defineEventHandler_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_defineEventHandler_handler.param_0, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_defineEventHandler_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try defineEventHandler(
-        handler: arg_0,
+        right: arg_0,
         commandEnv: commandEnv
     )
-    return type_defineEventHandler_handler.result.box(value: result, in: handlerEnv)
+    return type_defineEventHandler_right.result.box(value: result, in: handlerEnv)
 }
 
 // set {name, to}
@@ -998,6 +1019,412 @@ private func procedure_tell_target_action(command: Command, commandEnv: Scope, h
     return type_tell_target_action.result.box(value: result, in: handlerEnv)
 }
 
+// of {left, right}
+private let type_ofClause_attribute_target = (
+    param_0: (Symbol("left"), AsSymbol()),
+    param_1: (Symbol("right"), AsValue()),
+    result: asIs
+)
+private let interface_ofClause_attribute_target = HandlerInterface(
+    name: "of",
+    parameters: [
+        (type_ofClause_attribute_target.param_0.0, "attribute", type_ofClause_attribute_target.param_0.1),
+        (type_ofClause_attribute_target.param_1.0, "value", type_ofClause_attribute_target.param_1.1),
+    ],
+    result: type_ofClause_attribute_target.result
+)
+private func procedure_ofClause_attribute_target(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_ofClause_attribute_target.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_ofClause_attribute_target.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try ofClause(
+        attribute: arg_0,
+        target: arg_1,
+        commandEnv: commandEnv,
+        handlerEnv: handlerEnv
+    )
+    return type_ofClause_attribute_target.result.box(value: result, in: handlerEnv)
+}
+
+// at {left, right}
+private let type_atSelector_elementType_selectorData = (
+    param_0: (Symbol("left"), AsSymbol()),
+    param_1: (Symbol("right"), asIs),
+    result: asIs
+)
+private let interface_atSelector_elementType_selectorData = HandlerInterface(
+    name: "at",
+    parameters: [
+        (type_atSelector_elementType_selectorData.param_0.0, "element_type", type_atSelector_elementType_selectorData.param_0.1),
+        (type_atSelector_elementType_selectorData.param_1.0, "selector_data", type_atSelector_elementType_selectorData.param_1.1),
+    ],
+    result: type_atSelector_elementType_selectorData.result
+)
+private func procedure_atSelector_elementType_selectorData(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_atSelector_elementType_selectorData.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_atSelector_elementType_selectorData.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try atSelector(
+        elementType: arg_0,
+        selectorData: arg_1,
+        commandEnv: commandEnv,
+        handlerEnv: handlerEnv
+    )
+    return type_atSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
+}
+
+// named {left, right}
+private let type_nameSelector_elementType_selectorData = (
+    param_0: (Symbol("left"), AsSymbol()),
+    param_1: (Symbol("right"), asIs),
+    result: asIs
+)
+private let interface_nameSelector_elementType_selectorData = HandlerInterface(
+    name: "named",
+    parameters: [
+        (type_nameSelector_elementType_selectorData.param_0.0, "element_type", type_nameSelector_elementType_selectorData.param_0.1),
+        (type_nameSelector_elementType_selectorData.param_1.0, "selector_data", type_nameSelector_elementType_selectorData.param_1.1),
+    ],
+    result: type_nameSelector_elementType_selectorData.result
+)
+private func procedure_nameSelector_elementType_selectorData(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_nameSelector_elementType_selectorData.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_nameSelector_elementType_selectorData.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try nameSelector(
+        elementType: arg_0,
+        selectorData: arg_1,
+        commandEnv: commandEnv
+    )
+    return type_nameSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
+}
+
+// id {left, right}
+private let type_idSelector_elementType_selectorData = (
+    param_0: (Symbol("left"), AsSymbol()),
+    param_1: (Symbol("right"), asIs),
+    result: asIs
+)
+private let interface_idSelector_elementType_selectorData = HandlerInterface(
+    name: "id",
+    parameters: [
+        (type_idSelector_elementType_selectorData.param_0.0, "element_type", type_idSelector_elementType_selectorData.param_0.1),
+        (type_idSelector_elementType_selectorData.param_1.0, "selector_data", type_idSelector_elementType_selectorData.param_1.1),
+    ],
+    result: type_idSelector_elementType_selectorData.result
+)
+private func procedure_idSelector_elementType_selectorData(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_idSelector_elementType_selectorData.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_idSelector_elementType_selectorData.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try idSelector(
+        elementType: arg_0,
+        selectorData: arg_1,
+        commandEnv: commandEnv
+    )
+    return type_idSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
+}
+
+// where {left, right}
+private let type_whereSelector_elementType_selectorData = (
+    param_0: (Symbol("left"), AsSymbol()),
+    param_1: (Symbol("right"), asIs),
+    result: asIs
+)
+private let interface_whereSelector_elementType_selectorData = HandlerInterface(
+    name: "where",
+    parameters: [
+        (type_whereSelector_elementType_selectorData.param_0.0, "element_type", type_whereSelector_elementType_selectorData.param_0.1),
+        (type_whereSelector_elementType_selectorData.param_1.0, "selector_data", type_whereSelector_elementType_selectorData.param_1.1),
+    ],
+    result: type_whereSelector_elementType_selectorData.result
+)
+private func procedure_whereSelector_elementType_selectorData(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_whereSelector_elementType_selectorData.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_whereSelector_elementType_selectorData.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try whereSelector(
+        elementType: arg_0,
+        selectorData: arg_1,
+        commandEnv: commandEnv,
+        handlerEnv: handlerEnv
+    )
+    return type_whereSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
+}
+
+// thru {left, right}
+private let type_ElementRange_from_to = (
+    param_0: (Symbol("left"), asIs),
+    param_1: (Symbol("right"), asIs),
+    result: asIs
+)
+private let interface_ElementRange_from_to = HandlerInterface(
+    name: "thru",
+    parameters: [
+        (type_ElementRange_from_to.param_0.0, "startSelector", type_ElementRange_from_to.param_0.1),
+        (type_ElementRange_from_to.param_1.0, "endSelector", type_ElementRange_from_to.param_1.1),
+    ],
+    result: type_ElementRange_from_to.result
+)
+private func procedure_ElementRange_from_to(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_ElementRange_from_to.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_ElementRange_from_to.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = ElementRange(
+        from: arg_0,
+        to: arg_1
+    )
+    return type_ElementRange_from_to.result.box(value: result, in: handlerEnv)
+}
+
+// first {right}
+private let type_firstElement_right = (
+    param_0: (Symbol("right"), AsSymbol()),
+    result: asIs
+)
+private let interface_firstElement_right = HandlerInterface(
+    name: "first",
+    parameters: [
+        (type_firstElement_right.param_0.0, "element_type", type_firstElement_right.param_0.1),
+    ],
+    result: type_firstElement_right.result
+)
+private func procedure_firstElement_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_firstElement_right.param_0, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = firstElement(
+        right: arg_0
+    )
+    return type_firstElement_right.result.box(value: result, in: handlerEnv)
+}
+
+// middle {right}
+private let type_middleElement_right = (
+    param_0: (Symbol("right"), AsSymbol()),
+    result: asIs
+)
+private let interface_middleElement_right = HandlerInterface(
+    name: "middle",
+    parameters: [
+        (type_middleElement_right.param_0.0, "element_type", type_middleElement_right.param_0.1),
+    ],
+    result: type_middleElement_right.result
+)
+private func procedure_middleElement_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_middleElement_right.param_0, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = middleElement(
+        right: arg_0
+    )
+    return type_middleElement_right.result.box(value: result, in: handlerEnv)
+}
+
+// last {right}
+private let type_lastElement_right = (
+    param_0: (Symbol("right"), AsSymbol()),
+    result: asIs
+)
+private let interface_lastElement_right = HandlerInterface(
+    name: "last",
+    parameters: [
+        (type_lastElement_right.param_0.0, "element_type", type_lastElement_right.param_0.1),
+    ],
+    result: type_lastElement_right.result
+)
+private func procedure_lastElement_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_lastElement_right.param_0, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = lastElement(
+        right: arg_0
+    )
+    return type_lastElement_right.result.box(value: result, in: handlerEnv)
+}
+
+// any {right}
+private let type_randomElement_right = (
+    param_0: (Symbol("right"), AsSymbol()),
+    result: asIs
+)
+private let interface_randomElement_right = HandlerInterface(
+    name: "any",
+    parameters: [
+        (type_randomElement_right.param_0.0, "element_type", type_randomElement_right.param_0.1),
+    ],
+    result: type_randomElement_right.result
+)
+private func procedure_randomElement_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_randomElement_right.param_0, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = randomElement(
+        right: arg_0
+    )
+    return type_randomElement_right.result.box(value: result, in: handlerEnv)
+}
+
+// every {right}
+private let type_allElements_right = (
+    param_0: (Symbol("right"), AsSymbol()),
+    result: asIs
+)
+private let interface_allElements_right = HandlerInterface(
+    name: "every",
+    parameters: [
+        (type_allElements_right.param_0.0, "element_type", type_allElements_right.param_0.1),
+    ],
+    result: type_allElements_right.result
+)
+private func procedure_allElements_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_allElements_right.param_0, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = allElements(
+        right: arg_0
+    )
+    return type_allElements_right.result.box(value: result, in: handlerEnv)
+}
+
+// before {left, right}
+private let type_beforeElement_left_right = (
+    param_0: (Symbol("left"), AsSymbol()),
+    param_1: (Symbol("right"), asIs),
+    result: asIs
+)
+private let interface_beforeElement_left_right = HandlerInterface(
+    name: "before",
+    parameters: [
+        (type_beforeElement_left_right.param_0.0, "element_type", type_beforeElement_left_right.param_0.1),
+        (type_beforeElement_left_right.param_1.0, "expression", type_beforeElement_left_right.param_1.1),
+    ],
+    result: type_beforeElement_left_right.result
+)
+private func procedure_beforeElement_left_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_beforeElement_left_right.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_beforeElement_left_right.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = beforeElement(
+        left: arg_0,
+        right: arg_1
+    )
+    return type_beforeElement_left_right.result.box(value: result, in: handlerEnv)
+}
+
+// after {left, right}
+private let type_afterElement_left_right = (
+    param_0: (Symbol("left"), AsSymbol()),
+    param_1: (Symbol("right"), asIs),
+    result: asIs
+)
+private let interface_afterElement_left_right = HandlerInterface(
+    name: "after",
+    parameters: [
+        (type_afterElement_left_right.param_0.0, "element_type", type_afterElement_left_right.param_0.1),
+        (type_afterElement_left_right.param_1.0, "expression", type_afterElement_left_right.param_1.1),
+    ],
+    result: type_afterElement_left_right.result
+)
+private func procedure_afterElement_left_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_afterElement_left_right.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_afterElement_left_right.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = afterElement(
+        left: arg_0,
+        right: arg_1
+    )
+    return type_afterElement_left_right.result.box(value: result, in: handlerEnv)
+}
+
+// before {right}
+private let type_insertBefore_right = (
+    param_0: (Symbol("right"), asIs),
+    result: asIs
+)
+private let interface_insertBefore_right = HandlerInterface(
+    name: "before",
+    parameters: [
+        (type_insertBefore_right.param_0.0, "expression", type_insertBefore_right.param_0.1),
+    ],
+    result: type_insertBefore_right.result
+)
+private func procedure_insertBefore_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_insertBefore_right.param_0, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = insertBefore(
+        right: arg_0
+    )
+    return type_insertBefore_right.result.box(value: result, in: handlerEnv)
+}
+
+// after {right}
+private let type_insertAfter_right = (
+    param_0: (Symbol("right"), asIs),
+    result: asIs
+)
+private let interface_insertAfter_right = HandlerInterface(
+    name: "after",
+    parameters: [
+        (type_insertAfter_right.param_0.0, "expression", type_insertAfter_right.param_0.1),
+    ],
+    result: type_insertAfter_right.result
+)
+private func procedure_insertAfter_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_insertAfter_right.param_0, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = insertAfter(
+        right: arg_0
+    )
+    return type_insertAfter_right.result.box(value: result, in: handlerEnv)
+}
+
+// beginning {}
+private let type_insertAtBeginning_ = (
+    _: (),
+    result: asIs
+)
+private let interface_insertAtBeginning_ = HandlerInterface(
+    name: "beginning",
+    parameters: [
+    ],
+    result: type_insertAtBeginning_.result
+)
+private func procedure_insertAtBeginning_(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    if !command.arguments.isEmpty { throw UnknownArgumentError(at: 0, of: command) }
+    let result = insertAtBeginning(
+    )
+    return type_insertAtBeginning_.result.box(value: result, in: handlerEnv)
+}
+
+// end {}
+private let type_insertAtEnd_ = (
+    _: (),
+    result: asIs
+)
+private let interface_insertAtEnd_ = HandlerInterface(
+    name: "end",
+    parameters: [
+    ],
+    result: type_insertAtEnd_.result
+)
+private func procedure_insertAtEnd_(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    if !command.arguments.isEmpty { throw UnknownArgumentError(at: 0, of: command) }
+    let result = insertAtEnd(
+    )
+    return type_insertAtEnd_.result.box(value: result, in: handlerEnv)
+}
+
 
 
 public func stdlib_loadHandlers(into env: Environment) {
@@ -1030,14 +1457,32 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_uppercase_text, procedure_uppercase_text)
     env.define(interface_lowercase_text, procedure_lowercase_text)
     env.define(interface_formatCode_value, procedure_formatCode_value)
-    env.define(interface_isA_value_coercion, procedure_isA_value_coercion)
-    env.define(interface_coerce_value_to, procedure_coerce_value_to)
-    env.define(interface_defineCommandHandler_handler, procedure_defineCommandHandler_handler)
-    env.define(interface_defineEventHandler_handler, procedure_defineEventHandler_handler)
+    env.define(interface_write_value, procedure_write_value)
+    env.define(interface_isA_left_right, procedure_isA_left_right)
+    env.define(interface_coerce_left_right, procedure_coerce_left_right)
+    env.define(interface_defineCommandHandler_right, procedure_defineCommandHandler_right)
+    env.define(interface_defineEventHandler_right, procedure_defineEventHandler_right)
     env.define(interface_set_name_to, procedure_set_name_to)
     env.define(interface_ifTest_condition_action, procedure_ifTest_condition_action)
     env.define(interface_elseTest_left_right, procedure_elseTest_left_right)
     env.define(interface_whileRepeat_condition_action, procedure_whileRepeat_condition_action)
     env.define(interface_repeatWhile_action_condition, procedure_repeatWhile_action_condition)
     env.define(interface_tell_target_action, procedure_tell_target_action)
+    env.define(interface_ofClause_attribute_target, procedure_ofClause_attribute_target)
+    env.define(interface_atSelector_elementType_selectorData, procedure_atSelector_elementType_selectorData)
+    env.define(interface_nameSelector_elementType_selectorData, procedure_nameSelector_elementType_selectorData)
+    env.define(interface_idSelector_elementType_selectorData, procedure_idSelector_elementType_selectorData)
+    env.define(interface_whereSelector_elementType_selectorData, procedure_whereSelector_elementType_selectorData)
+    env.define(interface_ElementRange_from_to, procedure_ElementRange_from_to)
+    env.define(interface_firstElement_right, procedure_firstElement_right)
+    env.define(interface_middleElement_right, procedure_middleElement_right)
+    env.define(interface_lastElement_right, procedure_lastElement_right)
+    env.define(interface_randomElement_right, procedure_randomElement_right)
+    env.define(interface_allElements_right, procedure_allElements_right)
+    env.define(interface_beforeElement_left_right, procedure_beforeElement_left_right)
+    env.define(interface_afterElement_left_right, procedure_afterElement_left_right)
+    env.define(interface_insertBefore_right, procedure_insertBefore_right)
+    env.define(interface_insertAfter_right, procedure_insertAfter_right)
+    env.define(interface_insertAtBeginning_, procedure_insertAtBeginning_)
+    env.define(interface_insertAtEnd_, procedure_insertAtEnd_)
 }

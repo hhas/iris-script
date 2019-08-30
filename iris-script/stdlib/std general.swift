@@ -23,7 +23,7 @@
 
 
 
-func isA(value: Value, coercion: Coercion, commandEnv: Scope) -> Bool { // TO DO: should this suppress side-effects? (or at least side-effects involving external resources, e.g. by evaling with a sub-scope that blocks access to [environment-bound] resources?)
+func isA(left value: Value, right coercion: Coercion, commandEnv: Scope) -> Bool { // TO DO: should this suppress side-effects? (or at least side-effects involving external resources, e.g. by evaling with a sub-scope that blocks access to [environment-bound] resources?)
     return (try? value.eval(in: commandEnv, as: coercion)) != nil // try coercing value to specified coercion and return 'true' if it succeeds or 'false' if it fails (an extra trick is to cache successful Coercions within the value, allowing subsequent tests to compare coercion objects instead of coercing the value itself, though of course this cache will be invalidated if the value is mutated) // note: there is difference between using coercions to test coercion suitability ('protocol-ness') of a Value vs checking its canonical coercion (e.g. `coercion of someValue == text`); allowing the latter may prove troublesome (novice users tend to check canonical coercion for equality when they should just check compatibility), so will need more thought (maybe use `EXPR isOfExactType TYPE`/`exactTypeOf EXPR`); plus it all gets extra thorny when values being checked are blocks, thunks, references, etc (should they be evaled and the result checked [which can cause issues where expression has side-effects or its result is non-idempotent], or should their current coercion [`codeBlock`, `lazyValue`, `reference`] be used? [note: AppleScript uses the former approach in an effort to appear simple and transparent to users, and frequently ends up causing confusion instead])
 }
 
@@ -44,11 +44,10 @@ func joinValues(left: String, right: String) throws -> String { return left + ri
 
 // TO DO: when working with streams, would it be better for bridging code to pass required pipes to call_NAME functions as explicit arguments? need to give some thought to read/write model: e.g. rather than implicitly accessing stdin/stdout/stderr/FS/network/etc pipes directly (as `print` does here), 'mount' them in local/global namespace as Values which can be manipulated via standard get/set operations (note: the value's 'coercion' should be inferred where practical, e.g. from filename extension/MIME coercion where available, or explicitly indicated in `attach` command, enabling appropriate transcoders to be automatically found and used) (TO DO: Q. could coercions be used to attach transcoders, avoiding need for special-purpose command? e.g. `let mountPoint = someURL as atomFeed`; i.e. closer we can keep to AEOM/REST semantics of standard verbs + arbitrary resource types, more consistent, composable, and learnable the whole system will be)
 
-// signature: show(value: anything)
+// signature: write(value: anything)
 // requires: stdout
 
-func show(value: Value) { // primitive library function
-    // TO DO: this should eventually be replaced with a native handler: `show(value){write(code(value),to:system.stdout)}`
+func write(value: Value) { // primitive library function // TO DO: this needs to take optional `to:` argument containing external resource to write to; if omitted default value is the host environment's standard 'console' (in shell environment, this'd be stdout)
     print(value)
 }
 
