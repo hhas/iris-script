@@ -234,9 +234,29 @@ struct AsLiteral<T: Value>: SwiftCoercion {
     typealias SwiftType = T
     
     func unbox(value: Value, in env: Scope) throws -> SwiftType {
-        guard let result = value as? SwiftType else { throw UnsupportedCoercionError(value: value, coercion: self) }
+        guard let result = value as? SwiftType else {
+            if value is NullValue { // TO DO: kludgy
+                throw NullCoercionError(value: value, coercion: self)
+            }
+            throw UnsupportedCoercionError(value: value, coercion: self)
+        }
         return result
     }
 }
 
+
+struct AsLiteralName: SwiftCoercion { // TO DO: as above, this currently won't work as Command.[swift]eval() intercepts and performs handler lookup, only applying this coercion to handler's result; moving Command evaluation down to toTYPE() should fix this
+    
+    var name: Symbol = "name" // TO DO: what to call this? "literal_name"? "identifier"?
+    
+    typealias SwiftType = Symbol
+    
+    func unbox(value: Value, in env: Scope) throws -> SwiftType {
+        guard let result = value.asIdentifier() else { throw BadSyntax.missingName }
+        return result
+    }
+}
+
+
+let asLiteralName = AsLiteralName()
 

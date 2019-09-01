@@ -33,6 +33,7 @@ protocol Coercion: Value {
     
     func swiftIntersect<T: SwiftCoercion>(with coercion: T) -> T
     
+    func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T
 }
 
 extension Coercion {
@@ -59,6 +60,28 @@ extension Coercion {
 }
 
 
+
+extension Coercion {
+    
+    func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T {
+        guard let result = try self.coerce(value: value, in: scope) as? T else {
+            throw UnsupportedCoercionError(value: value, coercion: self)
+        }
+        return result
+    }
+}
+
+extension SwiftCoercion {
+    
+    func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T {
+        guard let result = try self.unbox(value: value, in: scope) as? T else {
+            throw UnsupportedCoercionError(value: value, coercion: self)
+        }
+        return result
+    }
+}
+
+
 protocol SwiftCoercion: Coercion {
 
     associatedtype SwiftType
@@ -72,6 +95,13 @@ extension SwiftCoercion {
 
     var swiftTypeDescription: String { return String(describing: SwiftType.self) }
 }
+
+
+
+/*
+protocol NativeCoercion: SwiftCoercion where SwiftType == Value { // TO DO: stupid type checker still insists NativeCoercion can only be used in generic methods, even though associatedtype SwiftType is fixed as Value
+}*/
+
 
 
 // bridging coercions whose swift type is also a native value only need to implement unbox()

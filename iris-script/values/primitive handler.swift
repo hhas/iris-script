@@ -48,6 +48,7 @@ struct PrimitiveHandler: Handler {
         // TO DO: how will this intersect coercions? do we need a separate swiftFunc wrapper that supports generics? we could presumably sneak out the primitive result in a Value wrapper, relying on runtime casts rather than generics, but that's a kludge; the problem is that swiftEval code paths need to use unbox instead of coerce (trying to achieve a single unified code path for both native->native and native->primitive [c.f. kiwi] proved to be an endless rabbit hole in entoli, hence the switch to separate code paths; only way to reduce code duplication would be to pass the coerce/unbox step as a closure argument, but again that will likely get silly); the alternative, given that most Values are now nice cheap structs [caveat that collection values currently hold each element as a Value, not a Swift primitive, making full unboxing an O(n) operation; the swiftEval code path avoids creating this extra work], would be to use Value throughout, and only unbox at the very end (much depends on if/how iris implements sylvia-style Value annotations, as constructing and storing [relatively expensive] annotations is a waste of time if the end result is the unboxed Swift value)
         throw NotYetImplementedError()
     }
+    
 }
 
 

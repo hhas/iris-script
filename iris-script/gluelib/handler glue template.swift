@@ -114,7 +114,6 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
         if glue.interface.result is AsNothing {
             node.resultAssignment.set("\n\t")
             node.returnIfResult.delete()
-            node.returnIfNoResult.signature.set(glue.signature)
         } else {
             node.returnIfNoResult.delete()
             node.returnIfResult.signature.set(glue.signature)

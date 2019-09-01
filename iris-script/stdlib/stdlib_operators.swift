@@ -42,6 +42,23 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.add("while", .custom(parseWhileRepeatOperator), 100, .left, [])
     registry.add("repeat", .custom(parseRepeatWhileOperator), 100, .left, [])
     registry.add("tell", .custom(parseTellToOperator), 100, .left, [])
+    registry.add("of", .infix, 300, .left, [])
+    registry.add("at", .infix, 310, .left, [])
+    registry.add("named", .infix, 310, .left, [])
+    registry.add("id", .infix, 310, .left, [])
+    registry.add("where", .infix, 310, .left, [])
+    registry.add("thru", .infix, 330, .left, [])
+    registry.add("first", .prefix, 320, .left, [])
+    registry.add("middle", .prefix, 320, .left, [])
+    registry.add("last", .prefix, 320, .left, [])
+    registry.add("any", .prefix, 320, .left, ["some"])
+    registry.add("every", .prefix, 320, .left, ["all"])
+    registry.add("before", .infix, 320, .left, [])
+    registry.add("after", .infix, 320, .left, [])
+    registry.add("before", .prefix, 320, .left, [])
+    registry.add("after", .prefix, 320, .left, [])
+    registry.add("beginning", .atom, 320, .left, [])
+    registry.add("end", .atom, 320, .left, [])
 }
 
 

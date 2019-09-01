@@ -11,7 +11,7 @@
 import Foundation
 
 
-// Q. need to decide on interpolated strings - should they be a distinct datatype with literal representation, or library-defined `format_text {template, …}`; it may help to compare 'interpolated' lists, where list items may be resolved at runtime by commands, e.g. `["foo",bar,"baz",fub-2]`
+// Q. need to decide on interpolated strings - should they be a distinct datatype with literal representation, or library-defined `format_text {template, …}`; it may help to compare 'interpolated' lists, where list items may be resolved at runtime by commands, e.g. `["foo",bar,"baz",fub-2]` (also bear in mind that ScalarValues, being literal values, are meant to evaluate as themselves; an interpolated string value would be a non-literal expression whose value depends on where and when it's evaluated)
 
 
 struct Text: BoxedScalarValue, ExpressibleByStringLiteral {

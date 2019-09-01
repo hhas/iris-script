@@ -80,6 +80,7 @@ extension Value { // default implementations
         return try coercion.coerce(value: self, in: scope)
     }
     func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        //print("Value.swiftEval()", self, coercion, T.self)
         return try coercion.unbox(value: self, in: scope)
     }
     
@@ -98,7 +99,7 @@ extension Value { // default implementations
     
     //
     
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // concrete types should override this as necessary
+    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // evaluate value as its preferred type; important: concrete types that require evaluation override this as necessary // TO DO: having this as default behavior easily masks implementation bugs, move this to ScalarValue and other literal types that always return self, ensuring other types (lists, commands, etc) provide their own implementations [enforced by swiftc type checker]
         return self
     }
     

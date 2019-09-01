@@ -62,6 +62,7 @@ import Foundation
  */
 
 
+
 // TO DO: Identifier, aka argument-less command; performs lookup; if handler, calls it, else returns as-is; Q. what if it gets a block?
 
 // Q. mutability? if implementing `editable` as class wrapper with var
@@ -99,18 +100,44 @@ class Command: ComplexValue {
     
     // TO DO: problem: making the eval func mutating doesn't match Value protocol's eval; only solutions are to make Command a class, or for Command struct to use a class-based backing store as its cache
     // one possibility is for Environment.call() to return first call's result plus some sort of closure that can be cached by Command for making subsequent calls more efficiently (e.g. for a non-maskable read-only slot, it can return either handler's call method or a simple closure around constant value; for a non-maskable editable slot, it'd wrap Environment instance containing the slot and forward to that; for maskable slot, it'd return original Environment chain)
+    /*
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
-        return try self._handler.call(with: self, in: scope, as: coercion) // updates self._handler on first call
-        //return try coercion.coerce(value: self, in: scope)
-    }
-    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        return try self._handler.swiftCall(with: self, in: scope, as: coercion) // updates self._handler on first call
+        print("Command.eval:", self, "as", coercion)
+        return try coercion.coerce(value: self, in: scope)
+        //return try self._handler.call(with: self, in: scope, as: coercion) // updates self._handler on first call
         //return try coercion.coerce(value: self, in: scope)
     }
     
+    // TO DO: SwiftCoercion can only be used in generic methods, which is no use for native run-time coercions, where return type must always be Value
+    
+    // Q. what about monadic-like behavior, where swiftEval passes an object whose APIs guarantee to return a value of T
+    
+    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        //return try self._handler.swiftCall(with: self, in: scope, as: coercion) // updates self._handler on first call
+        return try coercion.unbox(value: self, in: scope)
+    }
+    */
+    
+    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+        return try self.toTYPE(in: scope, as: coercion)
+    }
+    
+    func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
+        //print("Command.toTYPE", self, "as", T.self, type(of:coercion))
+        if T.self is Value {
+            return try self._handler.call(with: self, in: scope, as: coercion) as! T
+        } else {
+            return try self._handler.swiftCallAs(with: self, in: scope, as: coercion)
+//            fatalError("TODO")
+        }
+    }
+
+    
+    /*
     func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record { // Command.eval currently intercepts all calls and dispatches them to handler; however, some code bypasses eval and calls Coercion.coerce directly, in which case this will be called; mostly we just need to make Value.eval go away and use Coercion as entry point for evaluation (it'd also help if we could unify coerce and unbox, relying on native vs primitive coercion definitions to indicate if return type is Value [native] or SwiftType [bridging])
         fatalError("Command.toRecord is not yet supported")
     }
+    */
     
     // TO DO: if handler is static bound, we don't need to go through all this every time; just check params once and store array of operations to perform: omitted and constant args can be evaluated once and memoized; only exprs need evaled every time, and coercions may be minimized where arg's input coercion is member of expr's output coercion
     
@@ -138,8 +165,10 @@ class Command: ComplexValue {
     func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
         let i = index
         do {
+            //print("Command.swiftValue() for:", param)
             return try self.value(at: &index, named: param.label).swiftEval(in: commandEnv, as: param.coercion)
         } catch {
+            print("Command.swiftValue() failed:", error)
             throw BadArgumentError(at: i, of: self).from(error) // TO DO: need better error description that compares expected labels to found labels, indicating mismatch
         }
     }

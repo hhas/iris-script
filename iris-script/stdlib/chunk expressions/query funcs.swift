@@ -58,8 +58,10 @@ func ofClause(attribute: Symbol,target value: Value,commandEnv: Scope,handlerEnv
     fatalError("Not yet implemented.")
 }
 
-func atSelector(elementType: Symbol,selectorData: Value,commandEnv: Scope,handlerEnv: Scope) throws -> Value {
-    fatalError("Not yet implemented.")
+func atSelector(elementType: Value,selectorData: Value,commandEnv: Scope,handlerEnv: Scope) throws -> Value {
+    //fatalError("Not yet implemented.")
+    print("at:", elementType, selectorData)
+    return nullValue
 }
 
 func nameSelector(elementType: Symbol,selectorData: Value,commandEnv: Scope) throws -> Value {

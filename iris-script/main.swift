@@ -54,6 +54,14 @@ func test() {
     
     script = "To say_hello to: name: write “Hello, ” & name & “!”. Say_hello to: “World”."
     
+    script = "write 2 + 2"
+    
+    script = "document at 1"
+    
+    script = "1 + 1 = 2" // -> true
+    
+    script = "if true then write “ok”."
+    
    // script = "map {foo, using: {i}: bar}; fub" // this works and is unambiguous
   //  script = "foo; map using: {i}: bar; fub" // this works [as long as proc has explicit label], but the right-side of colon pair captures `bar; fub` whereas the user may reasonably expect both colons to be top-level, as they are in `foo; bar; baz` (i.e. semicolons should probably terminate nested sentences)
     //script = "foo; map {i}: bar; fub" // TO DO: reject this syntax as ambiguous? it parses as `((‘map’ {‘foo’, ‘i’}: ‘fub’ {‘bar’}))`, which isn't what's intended (left side of colon pair within a block expr should always be a literal name; thus any form of `cmd, name{…}:…` or `cmd; name:…` should be rejected due to existence of argument record)

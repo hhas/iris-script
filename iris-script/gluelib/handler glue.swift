@@ -90,7 +90,7 @@ func defineHandlerGlue(handler: Handler, commandEnv: Scope) throws {
     
     let canError = try unpackOption(options, "can_error", in: commandEnv, as: AsSwiftDefault(asBool, defaultValue: false))
     let swiftFunction: HandlerGlue.SwiftFunction?
-    if let cmd = try unboxOption(options, "swift_function", in: commandEnv, as: AsSwiftOptional(asCommand)) {
+    if let cmd = try unboxOption(options, "swift_function", in: commandEnv, as: AsSwiftOptional(AsLiteral<Command>())) {
         // TO DO: if given, swiftfunc's parameter record should be of form `{label,…}` and/or `{label:binding,…}`
         // TO DO: error if no. of Swift params is neither 0 nor equal to no. of native params
         swiftFunction = (name: cmd.name.label, params: try cmd.arguments.map{
@@ -134,7 +134,9 @@ func defineHandlerGlue(handler: Handler, commandEnv: Scope) throws {
 
 func renderGlue(libraryName: String, handlerGlues: [HandlerGlue]) -> String {
     // TO DO: what about defining operators for constants and other non-command structures (e.g. `do…done` block keywords) [for now, put them in handcoded function and call that separately]
-    return handlersTemplate.render((libraryName, handlerGlues)) + "\n\n" + operatorsTemplate.render((libraryName, handlerGlues)) + "\n\n" + handlerStubsTemplate.render((libraryName, handlerGlues)) 
+    return handlersTemplate.render((libraryName, handlerGlues))
+        + "\n\n" + operatorsTemplate.render((libraryName, handlerGlues))
+        + "\n\n" + handlerStubsTemplate.render((libraryName, handlerGlues)) 
 }
 
 

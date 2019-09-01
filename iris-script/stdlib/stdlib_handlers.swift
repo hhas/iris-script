@@ -757,6 +757,7 @@ private func procedure_write_value(command: Command, commandEnv: Scope, handler:
     )
     return nullValue
 }
+
 // is_a {left, right}
 private let type_isA_left_right = (
     param_0: (Symbol("left"), AsOptional(AsValue())),
@@ -884,10 +885,10 @@ private func procedure_set_name_to(command: Command, commandEnv: Scope, handler:
     return type_set_name_to.result.box(value: result, in: handlerEnv)
 }
 
-// if {condition, action}
+// if {left, right}
 private let type_ifTest_condition_action = (
-    param_0: (Symbol("condition"), asBool),
-    param_1: (Symbol("action"), asIs),
+    param_0: (Symbol("left"), asBool),
+    param_1: (Symbol("right"), asIs),
     result: AsOptional(AsValue())
 )
 private let interface_ifTest_condition_action = HandlerInterface(
@@ -1021,7 +1022,7 @@ private func procedure_tell_target_action(command: Command, commandEnv: Scope, h
 
 // of {left, right}
 private let type_ofClause_attribute_target = (
-    param_0: (Symbol("left"), AsSymbol()),
+    param_0: (Symbol("left"), asIs),
     param_1: (Symbol("right"), AsValue()),
     result: asIs
 )
@@ -1049,7 +1050,7 @@ private func procedure_ofClause_attribute_target(command: Command, commandEnv: S
 
 // at {left, right}
 private let type_atSelector_elementType_selectorData = (
-    param_0: (Symbol("left"), AsSymbol()),
+    param_0: (Symbol("left"), AsLiteralName()),
     param_1: (Symbol("right"), asIs),
     result: asIs
 )
@@ -1077,7 +1078,7 @@ private func procedure_atSelector_elementType_selectorData(command: Command, com
 
 // named {left, right}
 private let type_nameSelector_elementType_selectorData = (
-    param_0: (Symbol("left"), AsSymbol()),
+    param_0: (Symbol("left"), AsLiteralName()),
     param_1: (Symbol("right"), asIs),
     result: asIs
 )
@@ -1104,7 +1105,7 @@ private func procedure_nameSelector_elementType_selectorData(command: Command, c
 
 // id {left, right}
 private let type_idSelector_elementType_selectorData = (
-    param_0: (Symbol("left"), AsSymbol()),
+    param_0: (Symbol("left"), AsLiteralName()),
     param_1: (Symbol("right"), asIs),
     result: asIs
 )
@@ -1131,7 +1132,7 @@ private func procedure_idSelector_elementType_selectorData(command: Command, com
 
 // where {left, right}
 private let type_whereSelector_elementType_selectorData = (
-    param_0: (Symbol("left"), AsSymbol()),
+    param_0: (Symbol("left"), AsLiteralName()),
     param_1: (Symbol("right"), asIs),
     result: asIs
 )
@@ -1185,7 +1186,7 @@ private func procedure_ElementRange_from_to(command: Command, commandEnv: Scope,
 
 // first {right}
 private let type_firstElement_right = (
-    param_0: (Symbol("right"), AsSymbol()),
+    param_0: (Symbol("right"), AsLiteralName()),
     result: asIs
 )
 private let interface_firstElement_right = HandlerInterface(
@@ -1207,7 +1208,7 @@ private func procedure_firstElement_right(command: Command, commandEnv: Scope, h
 
 // middle {right}
 private let type_middleElement_right = (
-    param_0: (Symbol("right"), AsSymbol()),
+    param_0: (Symbol("right"), AsLiteralName()),
     result: asIs
 )
 private let interface_middleElement_right = HandlerInterface(
@@ -1229,7 +1230,7 @@ private func procedure_middleElement_right(command: Command, commandEnv: Scope, 
 
 // last {right}
 private let type_lastElement_right = (
-    param_0: (Symbol("right"), AsSymbol()),
+    param_0: (Symbol("right"), AsLiteralName()),
     result: asIs
 )
 private let interface_lastElement_right = HandlerInterface(
@@ -1251,7 +1252,7 @@ private func procedure_lastElement_right(command: Command, commandEnv: Scope, ha
 
 // any {right}
 private let type_randomElement_right = (
-    param_0: (Symbol("right"), AsSymbol()),
+    param_0: (Symbol("right"), AsLiteralName()),
     result: asIs
 )
 private let interface_randomElement_right = HandlerInterface(
@@ -1273,7 +1274,7 @@ private func procedure_randomElement_right(command: Command, commandEnv: Scope, 
 
 // every {right}
 private let type_allElements_right = (
-    param_0: (Symbol("right"), AsSymbol()),
+    param_0: (Symbol("right"), AsLiteralName()),
     result: asIs
 )
 private let interface_allElements_right = HandlerInterface(
@@ -1295,7 +1296,7 @@ private func procedure_allElements_right(command: Command, commandEnv: Scope, ha
 
 // before {left, right}
 private let type_beforeElement_left_right = (
-    param_0: (Symbol("left"), AsSymbol()),
+    param_0: (Symbol("left"), AsLiteralName()),
     param_1: (Symbol("right"), asIs),
     result: asIs
 )
@@ -1321,7 +1322,7 @@ private func procedure_beforeElement_left_right(command: Command, commandEnv: Sc
 
 // after {left, right}
 private let type_afterElement_left_right = (
-    param_0: (Symbol("left"), AsSymbol()),
+    param_0: (Symbol("left"), AsLiteralName()),
     param_1: (Symbol("right"), asIs),
     result: asIs
 )

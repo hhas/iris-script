@@ -56,7 +56,7 @@ struct TokenStream: BlockReader {
     private init(script: ImmutableScript, lineIndex: Int, tokenIndex: Int) {
         self.script = script
         self.location = (lineIndex, tokenIndex)
-        self.token = script.lines[lineIndex].tokens[tokenIndex]
+        self.token = script.lines[lineIndex].tokens[tokenIndex] // TO DO: crashes on empty script
     }
     
     init(_ script: ImmutableScript) {

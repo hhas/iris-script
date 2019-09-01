@@ -144,7 +144,9 @@ struct AsCoercion: SwiftCoercion {
     }
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let result = value as? SwiftType else { throw UnsupportedCoercionError(value: value, coercion: self) }
+        guard let result = (try? asAnything.coerce(value: value, in: scope)) as? SwiftType else {
+            throw UnsupportedCoercionError(value: value, coercion: self)
+        }
         return result
     }
 }

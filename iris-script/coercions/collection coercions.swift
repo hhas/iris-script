@@ -15,7 +15,9 @@ protocol CollectionCoercion: Coercion {
 
 
 
-struct AsList: CollectionCoercion { // TO DO: rename AsOrderedList?
+struct AsList: CollectionCoercion {
+    
+    // TO DO: rename AsOrderedList?
     
     let name: Symbol = "list"
     

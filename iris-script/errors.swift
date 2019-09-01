@@ -132,7 +132,7 @@ protocol CoercionError: NativeError {
 extension CoercionError {
     
     var description: String {
-        return "Can’t coerce the following \(self.value.nominalType) value to \(self.coercion): `\(self.value)`"
+        return "Can’t coerce the following \(self.value.nominalType) to \(self.coercion): `\(self.value)`"
     }
 }
     
@@ -146,6 +146,11 @@ struct UnsupportedCoercionError: CoercionError { // cannot coerce value to speci
     
     let value: Value
     let coercion: Coercion
+    
+    init(value: Value, coercion: Coercion) {
+        self.value = value
+        self.coercion = coercion
+    }
 }
 
 struct ConstraintError: CoercionError { // value is correct type, but out of allowable range

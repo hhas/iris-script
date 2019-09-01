@@ -31,6 +31,7 @@ struct Pair: BoxedSwiftValue {
         self.data = data
     }
     
+    /*
     // TO DO: not sure about this; may be better for parser to transform Pairs in Blocks to `set` commands
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
         guard let name = self.key.asIdentifier() else {
@@ -40,6 +41,6 @@ struct Pair: BoxedSwiftValue {
         let value = try self.value.eval(in: scope, as: asAnything)
         try context.set(name, to: value)
         return nullValue
-    }
+    }*/
 }
 

@@ -38,7 +38,6 @@ struct AsInt: SwiftScalarCoercion {
     let name: Symbol = "integer"
     
     typealias NativeType = Int
-    
     typealias SwiftType = NativeType
     
     func coerce(value: Value, in scope: Scope) throws -> Value { // this implementation preserves original value type; is there any benefit to this? (e.g. a Text value coerced to asInt remains a Text value; only its validity as an integer is checked; its constrained type could be updated to reflect this [if that provides any benefit over recalculating], or it could be otherwise annotated)
@@ -81,7 +80,6 @@ struct AsConstrainedInt: SwiftScalarCoercion {
     }
     
     typealias NativeType = Int
-    
     typealias SwiftType = NativeType
     
     let min: NativeType?, max: NativeType?
@@ -113,7 +111,6 @@ struct AsDouble: SwiftScalarCoercion {
     let name: Symbol = "real"
     
     typealias NativeType = Double
-    
     typealias SwiftType = NativeType
     
     func coerce(value: Value, in scope: Scope) throws -> Value { // this implementation preserves original type; is there any benefit to this? (in case of text-based numbers, it preserves original data where converting to Double would add FP rounding errors; this may be an argument in favor of using Number or other boxed value for FP numbers, as the original string can be captured too)
@@ -138,7 +135,7 @@ struct AsString: SwiftScalarCoercion {
     
     func coerce(value: Value, in scope: Scope) throws -> Value {
         switch value {
-        case is ScalarValue: return value
+        case is ScalarValue: return value // int/double/string distinction should be invisible to users, so avoid potentially lossy conversions when manipulating data natively
         default: ()
         }
         return try value.toScalar(in: scope, as: self)

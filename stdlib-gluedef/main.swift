@@ -223,10 +223,10 @@ use_scopes: #command
 «TODO: make this an operator, as in AS? (it's awfully easy to forget the colon after the `to` keyword, and mildly irritating to have to type it; in principle, a3c could insert the colon automatically, but it may be easier to visually read as an operator, particularly when the name operand is a lengthy expr)»
 done
 
-to ‘if’ {condition as boolean, action as expression} returning anything: do
+to ‘if’ {left: condition as boolean, right: action as expression} returning anything: do
 can_error: true «TODO: would be better to distinguish errors thrown by arguments from errors thrown by handler itself»
 use_scopes: #command
-swift_function: ifTest
+swift_function: ifTest {condition, action}
 operator: {#parseIfThenOperator, 100}
 done
 
@@ -261,7 +261,7 @@ done
 
 «== Chunk expressions ==»
 
-to ‘of’ {left: attribute as symbol, right: value as value} returning expression: do
+to ‘of’ {left: attribute as expression, right: value as value} returning expression: do «TODO: is left operand always a command?»
 can_error: true
 use_scopes: [#command, #handler]
 swift_function: ofClause {attribute, target}
@@ -271,28 +271,28 @@ done
 
 «=== Element selectors ===»
 
-to ‘at’ {left: element_type as symbol, right: selector_data as expression} returning expression: do
+to ‘at’ {left: element_type as name, right: selector_data as expression} returning expression: do
 can_error: true
 use_scopes: [#command, #handler] «`elements at expr thru expr` will eval exprs in handler's scope, delegating to command scope»
 swift_function: atSelector {elementType, selectorData}
 operator: {#infix, 310}
 done
 
-to ‘named’ {left: element_type as symbol, right: selector_data as expression} returning expression: do
+to ‘named’ {left: element_type as name, right: selector_data as expression} returning expression: do
 can_error: true
 use_scopes: #command
 swift_function: nameSelector {elementType, selectorData}
 operator: {#infix, 310}
 done
 
-to ‘id’ {left: element_type as symbol, right: selector_data as expression} returning expression: do «TODO: what about ‘id’ properties? (easiest is to define id as .atom operator as well as .infix, with multimethod despatching on 0/2 operands; while operators could in principle fall back to commands when the operands found don't match any of the known operator definitions, it would be hard to distinguish an intended command from an operator with missing arguments [i.e. syntax error])»
+to ‘id’ {left: element_type as name, right: selector_data as expression} returning expression: do «TODO: what about ‘id’ properties? (easiest is to define id as .atom operator as well as .infix, with multimethod despatching on 0/2 operands; while operators could in principle fall back to commands when the operands found don't match any of the known operator definitions, it would be hard to distinguish an intended command from an operator with missing arguments [i.e. syntax error])»
 can_error: true
 use_scopes: #command
 swift_function: idSelector {elementType, selectorData}
 operator: {#infix, 310}
 done
 
-to ‘where’ {left: element_type as symbol, right: selector_data as expression} returning expression: do
+to ‘where’ {left: element_type as name, right: selector_data as expression} returning expression: do
 can_error: true
 use_scopes: [#command, #handler] «`elements where expr` will eval expr in handler's scope, delegating to command scope, allowing expr to refer to properties and elements without requiring an explicit `its`»
 swift_function: whereSelector {elementType, selectorData}
@@ -308,39 +308,39 @@ done
 
 «=== absolute ordinal ===»
 
-to ‘first’ {right: element_type as symbol} returning expression: do
+to ‘first’ {right: element_type as name} returning expression: do
 swift_function: firstElement
 operator: {#prefix, precedence: 320}
 done
 
-to ‘middle’ {right: element_type as symbol} returning expression: do
+to ‘middle’ {right: element_type as name} returning expression: do
 swift_function: middleElement
 operator: {#prefix, precedence: 320}
 done
 
-to ‘last’ {right: element_type as symbol} returning expression: do
+to ‘last’ {right: element_type as name} returning expression: do
 swift_function: lastElement
 operator: {#prefix, precedence: 320}
 done
 
-to ‘any’ {right: element_type as symbol} returning expression: do
+to ‘any’ {right: element_type as name} returning expression: do
 swift_function: randomElement
 operator: {#prefix, precedence: 320, aliases: “some”}
 done
 
-to ‘every’ {right: element_type as symbol} returning expression: do
+to ‘every’ {right: element_type as name} returning expression: do
 swift_function: allElements
 operator: {#prefix, precedence: 320, aliases: “all”}
 done
 
 «=== relative ordinal ===»
 
-to ‘before’ {left: element_type as symbol, right: expression as expression} returning expression: do
+to ‘before’ {left: element_type as name, right: expression as expression} returning expression: do
 swift_function: beforeElement
 operator: {#infix, precedence: 320}
 done
 
-to ‘after’ {left: element_type as symbol, right: expression as expression} returning expression: do
+to ‘after’ {left: element_type as name, right: expression as expression} returning expression: do
 swift_function: afterElement
 operator: {#infix, precedence: 320}
 done
