@@ -860,7 +860,7 @@ private func procedure_defineEventHandler_right(command: Command, commandEnv: Sc
 
 // set {name, to}
 private let type_set_name_to = (
-    param_0: (Symbol("name"), AsSymbol()),
+    param_0: (Symbol("name"), AsLiteralName()),
     param_1: (Symbol("to"), AsValue()),
     result: AsOptional(AsValue())
 )

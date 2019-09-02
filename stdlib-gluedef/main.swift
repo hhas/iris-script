@@ -217,7 +217,7 @@ swift_function: defineEventHandler
 operator: {#prefix, 180}
 done
 
-to ‘set’ {name as Symbol, to: value} returning anything: do «assignment; TODO: name argument should be a chunk expression, not symbol»
+to ‘set’ {name as name, to: value} returning anything: do «assignment; TODO: name argument should be a chunk expression»
 can_error: true
 use_scopes: #command
 «TODO: make this an operator, as in AS? (it's awfully easy to forget the colon after the `to` keyword, and mildly irritating to have to type it; in principle, a3c could insert the colon automatically, but it may be easier to visually read as an operator, particularly when the name operand is a lengthy expr)»

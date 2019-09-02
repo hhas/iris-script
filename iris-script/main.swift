@@ -60,8 +60,11 @@ func test() {
     
     script = "1 + 1 = 2" // -> true
     
-    script = "if true then write “ok”."
-    
+    script = "if 1 + 2 = 5 then write “ok”."
+    script = "set Bob to: 3. if 1 + 2 = 3 then write 6, write bob, write 9 ÷ 2." // TO DO: make sure operator definition + handler interface describes right-hand operand as an expr sequence ('sentence'?), esp. in documentation
+    //script = "if 1 + 2 = 3, 4 then 6, 8, 9." // this (correctly) reports parse error on unexpected `then` keyword
+    //script = "if 1 + 2 = 3, 4, 5, 6." // this does parse successfully (parser treats first comma as equivalent to `then` separator); PP should probably convert to canonical form
+    //script = "if (1 + 2 = 5, true) then write “ok”." // this also parses successfully; Q. should parser/pp have the smarts to flag the parensed sequence as "suspect", given that the `1+2=5` is effectively a no-op (bear in mind it's also a way to accidentally/deliberately hide effectful operations)
    // script = "map {foo, using: {i}: bar}; fub" // this works and is unambiguous
   //  script = "foo; map using: {i}: bar; fub" // this works [as long as proc has explicit label], but the right-side of colon pair captures `bar; fub` whereas the user may reasonably expect both colons to be top-level, as they are in `foo; bar; baz` (i.e. semicolons should probably terminate nested sentences)
     //script = "foo; map {i}: bar; fub" // TO DO: reject this syntax as ambiguous? it parses as `((‘map’ {‘foo’, ‘i’}: ‘fub’ {‘bar’}))`, which isn't what's intended (left side of colon pair within a block expr should always be a literal name; thus any form of `cmd, name{…}:…` or `cmd; name:…` should be rejected due to existence of argument record)
