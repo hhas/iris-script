@@ -61,7 +61,12 @@ func test() {
     script = "1 + 1 = 2" // -> true
     
     script = "if 1 + 2 = 5 then write “ok”."
-    script = "set Bob to: 3. if 1 + 2 = 3 then write 6, write bob, write 9 ÷ 2." // TO DO: make sure operator definition + handler interface describes right-hand operand as an expr sequence ('sentence'?), esp. in documentation
+    script = "set Bob to: “Tim”. if 1 + 2 = 3 then write 6, write bob, write 9 ÷ 2." // TO DO: make sure operator definition + handler interface describes right-hand operand as an expr sequence ('sentence'?), esp. in documentation
+    
+    script = "Set name to: “Bob”. If 1 + 2 = 3 then write true, write name, write [9 ÷ 2]."
+    
+    //script = "write true"
+
     //script = "if 1 + 2 = 3, 4 then 6, 8, 9." // this (correctly) reports parse error on unexpected `then` keyword
     //script = "if 1 + 2 = 3, 4, 5, 6." // this does parse successfully (parser treats first comma as equivalent to `then` separator); PP should probably convert to canonical form
     //script = "if (1 + 2 = 5, true) then write “ok”." // this also parses successfully; Q. should parser/pp have the smarts to flag the parensed sequence as "suspect", given that the `1+2=5` is effectively a no-op (bear in mind it's also a way to accidentally/deliberately hide effectful operations)
@@ -84,8 +89,8 @@ func test() {
     let p = Parser(tokenStream: QuoteReader(doc.tokenStream), operatorRegistry: operatorRegistry)
     do {
         let script = try p.parseScript()
-        print(script)
-        print(try script.eval(in: env, as: asAnything))
+        print("PARSED:", script)
+        print("RESULT:", try script.eval(in: env, as: asAnything))
     } catch {
         print(error)
     }
