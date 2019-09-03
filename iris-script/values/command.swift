@@ -161,15 +161,21 @@ class Command: ComplexValue {
         }
     }
     
-    
+    // TO DO: really need to attach handler (or at least its interface)
     func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
         let i = index
         do {
-            //print("Command.swiftValue() for:", param)
+            //print("Command.swiftValue() for:", param, "from", self.arguments)
             return try self.value(at: &index, named: param.label).swiftEval(in: commandEnv, as: param.coercion)
         } catch {
-            print("Command.swiftValue() failed:", error)
-            throw BadArgumentError(at: i, of: self).from(error) // TO DO: need better error description that compares expected labels to found labels, indicating mismatch
+            //print("Command.swiftValue() failed:", error)
+            let labels = self.arguments.map{$0.label}
+            if labels.contains(param.label) {
+                throw BadArgumentError(at: i, of: self).from(error) // TO DO: need better error description that compares expected labels to found labels, indicating mismatch
+            } else {
+                print("Couldn't match the handler parameter named `\(param.label.label)` to any of the `\(self.name.label)` command’s labeled arguments: `\(self.arguments.map{$0.label.label}.filter{!$0.isEmpty}.joined(separator: ", "))`")
+                throw UnknownArgumentError(at: i, of: self).from(error) // TO DO: need better error description that compares expected labels to found labels, indicating mismatch
+            }
         }
     }
 }

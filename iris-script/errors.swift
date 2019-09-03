@@ -68,7 +68,7 @@ struct MalformedRecordError: NativeError {
 
 struct UnknownNameError: NativeError {
     
-    var description: String { return "Can’t find `\(self.name.label)` in \(self.scope)" }
+    var description: String { return "Can’t find a handler named `\(self.name.label)` in \(self.scope)" }
     
     let name: Symbol
     let scope: Accessor
@@ -170,7 +170,7 @@ protocol ArgumentError: NativeError {
 
 struct UnknownArgumentError: ArgumentError {
     
-    var description: String { return "Unknown value \(self.index+1) in command: `\(self.command)`" }
+    var description: String { return "Can’t match argument field \(self.index+1) of command `\(self.command)`" }
     
     let index: Int
     let command: Command
@@ -183,7 +183,7 @@ struct UnknownArgumentError: ArgumentError {
 
 struct BadArgumentError: ArgumentError {
     
-    var description: String { return "Bad value \(self.index+1) in command: `\(self.command)`" } // TO DO: change message to "is missing" if index >= command.arguments.count
+    var description: String { return "Can’t evaluate argument field \(self.index+1) of command `\(self.command)`" } // TO DO: change message to "is missing" if index >= command.arguments.count
     
     let index: Int
     let command: Command

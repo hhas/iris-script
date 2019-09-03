@@ -26,9 +26,7 @@ struct AsValue: SwiftScalarCoercion {
     }
     
     func intersect(with coercion: Coercion) -> Coercion {
-        if let coercion = coercion as? AsOptional {
-            return coercion.coercion
-        }
+        if let coercion = coercion as? AsOptional { return coercion.coercion }
         return asValue
     }
 }

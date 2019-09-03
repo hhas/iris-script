@@ -294,16 +294,21 @@ struct Token: CustomStringConvertible {
         return true
     }
     
-    var isRightDelimiter: Bool {
+    // i.e. if operator takes left operand (infix/postfix), it must terminate the preceding expression in order to consume it; OTOH, if operator is prefix/atom, it's up to preceding tokens/parsefunc to know what to do with it (e.g. in `write true`, `true` is an atom that will be consumed as `write` command's argument) // caution: this is only a partial fix, as until the operator expression is fully parsed, we cannot be sure of this when dealing with operators that have >1 definition, while operators that use custom parsefuncs will always be treated as having no left operand even when they do; TO DO: fix this properly once table-driven parser is implemented (unlike parsefuncs, whose matching behaviors are opaque, matching tables can be independently inspected to determine the exact number and positions of their operands)
+    var isExpressionTerminator: Bool {
         switch self.form {
-        case .lineBreak, .endOfScript, .semicolon, .colon, .comma, .period, .query, .exclamation, .endList, .endRecord, .endGroup:
-            return true
-            // TO DO: need to give operators more thought; it may be safer to punt to parser
-        case .operatorName(let operatorClass) where operatorClass.hasLeftOperand: // i.e. if operator takes left operand (infix/postfix), it must terminate the preceding expression in order to consume it; OTOH, if operator is prefix/atom, it's up to preceding tokens/parsefunc to know what to do with it (e.g. in `write true`, `true` is an atom that will be consumed as `write` command's argument) // caution: this is only a partial fix, as until the operator expression is fully parsed, we cannot be sure of this when dealing with operators that have >1 definition, while operators that use custom parsefuncs will always be treated as having no left operand even when they do; TO DO: fix this properly once table-driven parser is implemented (unlike parsefuncs, whose matching behaviors are opaque, matching tables can be independently inspected to determine the exact number and positions of their operands)
+        case .semicolon, .colon, .comma, .period, .query, .exclamation,
+             .endList, .endRecord, .endGroup, .lineBreak, .endOfScript:
             return true
         default:
-            return false // TO DO: what about [leading] whitespace? or is preceding token expected to check its own hasTrailingWhitespace property?
+            return false
         }
+    }
+    
+    var requiresLeftOperand: Bool { return self.operatorClass?.requiresLeftOperand ?? false }
+    
+    var operatorClass: OperatorClass? {
+        if case .operatorName(let operatorClass) = self.form { return operatorClass } else { return nil }
     }
     
     // TO DO: these are currently unused

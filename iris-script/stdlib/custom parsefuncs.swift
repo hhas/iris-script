@@ -62,7 +62,7 @@ func parsePrefixControlOperator(withConjunction operatorName: Symbol) -> ParseFu
         default: print("expected comma or `\(operatorName.label)` keyword but found: `\(parser.current.token.content)`"); throw BadSyntax.unterminatedExpression
         }
         parser.advance()
-        let rightExpr = try parser.parseExpression(allowLooseSequences: .sentence)
+        let rightExpr = try parser.parseExpression(definition.precedence, allowLooseSequences: .sentence)
         // kludge
         // TO DO: how to pick up sentence terminator?
         //print("ended sentence on", parser.peek().token)

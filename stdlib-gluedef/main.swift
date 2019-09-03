@@ -23,14 +23,14 @@ done
 
 «TO DO: what about plain text names (“add”, “subtract”, “multiply”, etc)? what about speakable names, e.g. “plus”, “minus”, “multiplied_by”? defining as aliases pollutes the global namespace; OTOH, these names are probably specific enough that they won't often collide with scripts’ own namings»
 
-to ‘positive’ {left as number} returning number: do
+to ‘positive’ {right as number} returning number: do
 can_error: true
-operator: {form: #prefix, precedence: 598} «, aliases: [“+”, 0uFF0B]}»
+operator: {form: #prefix, precedence: 598, aliases: [“+”, 0uFF0B]}
 done
 
-to ‘negative’ {left as number} returning number: do
+to ‘negative’ {right as number} returning number: do
 can_error: true
-operator: {form: #prefix, precedence: 598} «, aliases: [“-”, 0uFF0D, 0u2212, 0uFE63]}»
+operator: {form: #prefix, precedence: 598, aliases: [“-”, 0uFF0D, 0u2212, 0uFE63]}
 done
 
 
@@ -203,6 +203,8 @@ done
 
 «== Flow control ==»
 
+«TODO: operator parsefuncs always label arguments `left` and/or `right`; this is not ideal, but we'll live with it until table-driven parser is implemented»
+
 to ‘to’ {right: handler as procedure} returning procedure: do
 can_error: true
 use_scopes: #command
@@ -237,24 +239,24 @@ swift_function: elseTest
 operator: {#infix, 90} «lower precedence than `if`, lp commands; TO DO: adaptive precedence when `if` operators are nested; each `else` should bind to its closest left-hand `if`; alternative is that we handle optional `else` clause within parsefunc, although that lacks composability that an infix `else` provides [assuming we can make it parse]; for example, how should/will following parse: `if t1 then if t2 then a1 else a2 else a3`? It should be `(if t1 then (if t2 then a1 else a2)) else (a3)`, so that outer `else` takes `if t1 then if t2 then a1 else a2` as its left operand, but currently parses as `if t1 then (if t2 then ((a1 else a2) else (a3)))`»
 done
 
-to ‘while’ {condition as boolean, action as expression} returning anything: do
+to ‘while’ {left: condition as boolean, right: action as expression} returning anything: do
 can_error: true
 use_scopes: #command
-swift_function: whileRepeat
+swift_function: whileRepeat {condition, action}
 operator: {#parseWhileRepeatOperator, 100}
 done
 
-to ‘repeat’ {action as expression, condition as boolean} returning anything: do
+to ‘repeat’ {left: action as expression, right: condition as boolean} returning anything: do
 can_error: true
 use_scopes: #command
-swift_function: repeatWhile
+swift_function: repeatWhile {action, condition}
 operator: {#parseRepeatWhileOperator, 100}
 done
 
-to ‘tell’ {target as value, action as expression} returning anything: do
+to ‘tell’ {left: target as value, right: action as expression} returning anything: do
 can_error: true
 use_scopes: #command
-swift_function: tell
+swift_function: tell {target, action}
 operator: {#parseTellToOperator, 100}
 done
 

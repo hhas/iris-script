@@ -34,7 +34,7 @@ private func procedure_exponent_left_right(command: Command, commandEnv: Scope, 
 
 // positive {left}
 private let type_positive_left = (
-    param_0: (Symbol("left"), AsNumber()),
+    param_0: (Symbol("right"), AsNumber()),
     result: AsNumber()
 )
 private let interface_positive_left = HandlerInterface(
@@ -56,7 +56,7 @@ private func procedure_positive_left(command: Command, commandEnv: Scope, handle
 
 // negative {left}
 private let type_negative_left = (
-    param_0: (Symbol("left"), AsNumber()),
+    param_0: (Symbol("right"), AsNumber()),
     result: AsNumber()
 )
 private let interface_negative_left = HandlerInterface(
@@ -939,10 +939,10 @@ private func procedure_elseTest_left_right(command: Command, commandEnv: Scope, 
     return type_elseTest_left_right.result.box(value: result, in: handlerEnv)
 }
 
-// while {condition, action}
+// while {left, right}
 private let type_whileRepeat_condition_action = (
-    param_0: (Symbol("condition"), asBool),
-    param_1: (Symbol("action"), asIs),
+    param_0: (Symbol("left"), asBool),
+    param_1: (Symbol("right"), asIs),
     result: AsOptional(AsValue())
 )
 private let interface_whileRepeat_condition_action = HandlerInterface(
@@ -966,10 +966,10 @@ private func procedure_whileRepeat_condition_action(command: Command, commandEnv
     return type_whileRepeat_condition_action.result.box(value: result, in: handlerEnv)
 }
 
-// repeat {action, condition}
+// repeat {left, right}
 private let type_repeatWhile_action_condition = (
-    param_0: (Symbol("action"), asIs),
-    param_1: (Symbol("condition"), asBool),
+    param_0: (Symbol("left"), asIs),
+    param_1: (Symbol("right"), asBool),
     result: AsOptional(AsValue())
 )
 private let interface_repeatWhile_action_condition = HandlerInterface(
@@ -993,10 +993,10 @@ private func procedure_repeatWhile_action_condition(command: Command, commandEnv
     return type_repeatWhile_action_condition.result.box(value: result, in: handlerEnv)
 }
 
-// tell {target, action}
+// tell {left, right}
 private let type_tell_target_action = (
-    param_0: (Symbol("target"), AsValue()),
-    param_1: (Symbol("action"), asIs),
+    param_0: (Symbol("left"), AsValue()),
+    param_1: (Symbol("right"), asIs),
     result: AsOptional(AsValue())
 )
 private let interface_tell_target_action = HandlerInterface(

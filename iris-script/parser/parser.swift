@@ -244,7 +244,7 @@ class Parser {
         }
         //print("reading args for command `\(name)`", allowLooseArguments)
         let next = self.peek().token
-        if next.isRightDelimiter { // no argument
+        if next.isExpressionTerminator || next.requiresLeftOperand { // no argument
             arguments = []
         } else if case .startRecord = next.form { // explicit record argument; this always binds to command name
             self.advance()
@@ -252,15 +252,15 @@ class Parser {
         } else if allowLooseArguments { // low-punctuation command; first field may be unlabeled, subsequent fields must be labeled
             arguments = [Command.Argument]()
             self.advance()
-            if !self.current.token.isRightDelimiter {
+            if !(self.current.token.isExpressionTerminator || self.current.token.requiresLeftOperand) {
                 if let label = self.readLabel() {
                     arguments.append((label, try self.readArgumentValue()))
                 } else {
                     arguments.append((nullSymbol, try self.readArgumentValue()))
                 }
                 //print("read first arg:", arguments)
-                while !self.peek().token.isRightDelimiter {
-                    //if case .operatorName(_) = self.peek().token.form { break }
+                while !(self.peek().token.isExpressionTerminator || self.peek().token.requiresLeftOperand) {
+                    if case .operatorName(_) = self.peek().token.form { break } // operator reader does not match `NAME:` pattern, so argument names should never appear as .operatorName(_) tokens
                     self.advance()
                     guard let label = self.readLabel() else {
                         print("expected label in \(name) command but found", self.current.token); throw BadSyntax.missingName }
@@ -300,10 +300,10 @@ class Parser {
         case .letters, .symbols, .quotedName(_), .unquotedName(_): // found `NAME`/`'NAME'` // TO DO: merge .quotedName(_) and .unquotedName(_) into .name(String,isQuoted:Bool)?
             // TO DO: reading reverse domain names with optional `@` prefix, e.g. `com.example.foo`, is probably best done by a LineReader adapter; question is whether we should generalize this to allow commands with arguments within/at end
             value = try self.readCommand(allowLooseArguments)
-        case .operatorName(let operatorClass) where !operatorClass.hasLeftOperand: // atom/prefix operator
+        case .operatorName(let operatorClass) where !operatorClass.requiresLeftOperand: // atom/prefix operator
             if let definition = operatorClass.custom, case .custom(let parseFunc) = definition.form {
                 value = try parseFunc(self, definition, nil, allowLooseArguments) // , allowLooseSequences: allowLooseSequences?
-            } else if self.peek().token.isRightDelimiter {
+            } else if self.peek().token.isExpressionTerminator || self.peek().token.requiresLeftOperand {
                 guard let definition = operatorClass.atom else { throw BadSyntax.missingExpression } // TO DO: if right-contiguous and next token is colon, then value should be label
                 value = Command(definition)
             } else {
@@ -353,9 +353,11 @@ class Parser {
         switch token.form {
         case .operatorName(let operatorClass) where operatorClass.hasLeftOperand: // TO DO: what errors if operator not found?
             let nextToken = self.peek().token
+            print("parsing", operatorClass, "next:", nextToken, (nextToken.isExpressionTerminator,nextToken.requiresLeftOperand))
             if let definition = operatorClass.custom, case .custom(let parseFunc) = definition.form {
                 value = try parseFunc(self, definition, leftExpr, allowLooseArguments)
-            } else if nextToken.isRightDelimiter { // no right operand, so current token needs to be a postfix operator
+            } else if nextToken.isExpressionTerminator || nextToken.requiresLeftOperand { // no right operand, so current token needs to be a postfix operator
+                print("next is right delimiter", nextToken)
                 assert(!(nextToken.form == .colon)) // OperatorReader should never match a name followed by a colon as an operator name
                 guard let definition = operatorClass.postfix else {
                     print("expected right-hand operand for:", operatorClass, "but found", nextToken.form) // TO DO: fix error message

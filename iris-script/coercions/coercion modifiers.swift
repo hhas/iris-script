@@ -12,6 +12,8 @@ import Foundation
 
 // TO DO: AsPrecis, AsVariant
 
+// important: when catching NullCoercionError in 'optional' modifiers, always return `nullValue`, not the value that originally threw the error (in principle, the catch block could return `error.value`, but the whole point of the special `did_nothing` value throwing NullCoercionError is to ensure it degenerates to a normal `nothing` if not immediately caught by an enclosing `else` clause, in which case it triggers evaluation of the `else` operator’s alternate action [right-hand expression])
+
 
 struct AsNothing: Coercion { // used in HandlerInterface.result to return `nothing`
     
@@ -26,6 +28,41 @@ struct AsNothing: Coercion { // used in HandlerInterface.result to return `nothi
 }
 
 //
+
+
+struct MayDoNothing: SwiftCoercion {
+    
+    // TO DO: what should these vars return?
+    
+    var swiftLiteralDescription: String { return self.coercion.swiftLiteralDescription }
+    
+    var name: Symbol { return self.coercion.name }
+    
+    var description: String { return self.coercion.description }
+    
+    typealias SwiftType = Value
+    
+    let coercion: Coercion
+    
+    init(_ coercion: Coercion) {
+        self.coercion = coercion
+    }
+    
+    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+        do {
+            //print("MayDoNothing evaling:", value)
+            let result = try self.coercion.coerce(value: value, in: scope)
+            //print("MayDoNothing got result:", result, type(of: result))
+            return result
+        } catch let e as NullCoercionError {
+            //print("MayDoNothing caught null coercion error:", e)
+            return e.value // important: whereas AsCoercion always returns nullValue, this returns the exact 'null' value that triggered the exception; thus if that value is `nullAction`, it will be passed back as-is rather than degraded to standard nullValue; on the flipside, we may want to rethrow if it's a standard nullValue as that should really be left to any AsOptional/AsDefault modifiers to deal with; at least for now it proves the mechanism by which flow control expressions (`if`, `while`, etc) may, upon not performing any action of their own, trigger the enclosing `else` operator to perform its alternate action
+        }
+    }
+}
+
+
+
 
 struct AsOptional: SwiftCoercion { // this returns native Value; for Optional<Value> use MayBeNil
     

@@ -31,7 +31,9 @@ struct OperatorClass: CustomDebugStringConvertible {
     
     var isEmpty: Bool { return self.prefix == nil && self.infix == nil && self.postfix == nil && self.atom == nil }
     
+    // TO DO: these do not work for .custom(_) where custom parsefunc takes a left operand (current custom parsefuncs do not, so this will do for now; sort out when implementing table-driven parser)
     var hasLeftOperand: Bool { return self.infix != nil || self.postfix != nil }
+    var requiresLeftOperand: Bool { return self.prefix == nil && self.atom == nil && self.custom == nil }
     
     private func definition(for form: OperatorDefinition.Form) -> OperatorDefinition? { // used in add() above
         switch form {

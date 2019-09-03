@@ -65,6 +65,12 @@ func test() {
     
     script = "Set name to: “Bob”. If 1 + 2 = 3 then write true, write name, write [9 ÷ 2]."
     
+    script = "if 1 + 1 = 5 then “BOO!”"
+    
+    script = "tell app “iTunes” to get name of current_track" // TO DO: readCommand should return on encountering `to` keyword but throws instead
+    
+    script = "if 1+1=4 then 1 else -1"
+    
     //script = "write true"
 
     //script = "if 1 + 2 = 3, 4 then 6, 8, 9." // this (correctly) reports parse error on unexpected `then` keyword

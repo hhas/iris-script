@@ -8,8 +8,8 @@ import Foundation
 
 func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.add("^", .infix, 600, .right, ["to_the_power_of"])
-    registry.add("positive", .prefix, 598, .left, [])
-    registry.add("negative", .prefix, 598, .left, [])
+    registry.add("positive", .prefix, 598, .left, ["+", "＋"])
+    registry.add("negative", .prefix, 598, .left, ["-", "－", "−", "﹣"])
     registry.add("*", .infix, 596, .left, ["×"])
     registry.add("/", .infix, 596, .left, ["÷"])
     registry.add("div", .infix, 596, .left, [])
