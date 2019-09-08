@@ -9,8 +9,8 @@ import Darwin
 // TO DO: guard against divide-by-zero exceptions by using `AsDouble(nonZero:true)` in interfaces
 
 func exponent(left: Number, right: Number) throws -> Number { return try left.pow(right) }
-func positive(left: Number) throws -> Number { return left }
-func negative(left: Number) throws -> Number { return try -left }
+func positive(right: Number) throws -> Number { return right }
+func negative(right: Number) throws -> Number { return try -right }
 func add(left: Number, right: Number) throws -> Number { return try left + right }
 func subtract(left: Number, right: Number) throws -> Number { return try left - right }
 func multiply(left: Number, right: Number) throws -> Number { return try left * right }

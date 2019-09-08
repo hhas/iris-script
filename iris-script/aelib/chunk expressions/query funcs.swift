@@ -37,47 +37,47 @@ import Foundation
 
 func ofClause(attribute: Value, target value: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value { // TO DO: see TODO on AsAnything re. limiting scope of `didNothing` result
     // look up command's name in target
+    //print("ofClause looking up", attribute, "on", value)
     if let command = attribute as? Command {
-        if let selector = value.get(command.name) {
+        if let selector = value.get(command.name) ?? commandEnv.get(command.name) { // TO DO: what lookup chain (e.g. reference form operators are defined in global namespace); or will target value always end up delegating lookups to that itself [e.g. document -> tell target, which extends global namespace]?
             if let handler = selector as? Handler {
                 // command's arguments are evaled in commandEnv as normal (the Handler already contains a [strong]ref to its owner, )
-                return try handler.call(with: command, in: commandEnv, as: asAnything)
+                return try handler.call(with: command, in: commandEnv, as: asAnything) // TO DO: what env?
             } else if command.arguments.isEmpty {
                 return selector
             } // fall thru
         }
     }
-    throw UnsupportedCoercionError(value: attribute, coercion: asHandler)
+    throw UnsupportedCoercionError(value: attribute, coercion: asHandler) // TO DO: what error?
 }
 
 
 // TO DO: should element selection handlers be available at global level, or solely as 'methods' on collection-like values? e.g. `document at 1` at top level is a valid query, regardless of whether evaluating it succeeds or fails
 
 
-func ofClause(attribute: Symbol,target value: Value,commandEnv: Scope,handlerEnv: Scope) throws -> Value {
-    fatalError("Not yet implemented.")
-}
-
-func atSelector(elementType: Value,selectorData: Value,commandEnv: Scope,handlerEnv: Scope) throws -> Value {
+func atSelector(elementType: Value, selectorData: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value {
     //fatalError("Not yet implemented.")
-    print("at:", elementType, selectorData)
-    return nullValue
+//    print("atSelector:", (elementType, selectorData))
+    fatalError("Not yet implemented.")
+//    return AEQuery(name: "«\(elementType) at \(selectorData)» of \(commandEnv)") // TO DO: this needs target
 }
 
-func nameSelector(elementType: Symbol,selectorData: Value,commandEnv: Scope) throws -> Value {
+func nameSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope) throws -> Value {
     fatalError("Not yet implemented.")
 }
 
-func idSelector(elementType: Symbol,selectorData: Value,commandEnv: Scope) throws -> Value {
+func idSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope) throws -> Value {
     fatalError("Not yet implemented.")
 }
 
-func whereSelector(elementType: Symbol,selectorData: Value,commandEnv: Scope,handlerEnv: Scope) throws -> Value {
+func whereSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value {
     fatalError("Not yet implemented.")
 }
 
-func firstElement(right elementType: Symbol) -> Value {
+func firstElement(right elementType: Symbol, commandEnv: Scope) -> Value {
     fatalError("Not yet implemented.")
+    //return AEQuery(name: "first \(elementType) of \(commandEnv)") // TO DO: this needs target (if we treat all selectors as methods [closures over] AEQuery, the handlerEnv will be parent AEQuery)
+    //fatalError("Not yet implemented.")
 }
 
 func middleElement(right elementType: Symbol) -> Value {

@@ -69,7 +69,12 @@ func test() {
     
     script = "tell app “iTunes” to get name of current_track" // TO DO: readCommand should return on encountering `to` keyword but throws instead
     
-    script = "if 1+1=4 then 1 else -1"
+    //script = "if 1+1=4 then 1 else -1"
+    
+    script = "document at 1"
+    
+    script = "tell app “com.apple.TextEdit” to get every word of text of document at 1"
+    // ["hello", "again"]
     
     //script = "write true"
 

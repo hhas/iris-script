@@ -132,15 +132,8 @@ class Command: ComplexValue {
         }
     }
 
-    
-    /*
-    func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record { // Command.eval currently intercepts all calls and dispatches them to handler; however, some code bypasses eval and calls Coercion.coerce directly, in which case this will be called; mostly we just need to make Value.eval go away and use Coercion as entry point for evaluation (it'd also help if we could unify coerce and unbox, relying on native vs primitive coercion definitions to indicate if return type is Value [native] or SwiftType [bridging])
-        fatalError("Command.toRecord is not yet supported")
-    }
-    */
-    
-    // TO DO: if handler is static bound, we don't need to go through all this every time; just check params once and store array of operations to perform: omitted and constant args can be evaluated once and memoized; only exprs need evaled every time, and coercions may be minimized where arg's input coercion is member of expr's output coercion
-    
+    // TO DO: if handler is static bound, we don't need to go through all this every time; just check params once and store array of operations to perform: omitted and constant args can be evaluated once and memoized; only exprs need evaled every time, and coercions may be minimized where arg's input coercion is member of expr's output coercion (this being said, it remains to be seen how much run-time optimization is warranted; e.g. if transpiling to Swift proves to be common practice then slow interpretation is much less of a concern)
+
     private func value(at index: inout Int, named label: Symbol) -> Value {
         if index < self.arguments.count {
             let arg = self.arguments[index]

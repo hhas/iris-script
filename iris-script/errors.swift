@@ -5,6 +5,10 @@
 
 // TO DO: localization
 
+// TO DO: how to generalize error throwing to provide interactive runtime hooks (e.g. rather than call [NativeError].init directly, call a function that allows a custom hook to be installed over default throw behavior; while AST-walking interpreter precludes halting evaluator and breaking out of its main loop, threaded code could block on interpreter thread while separate user-interaction thread allows user inspection of issue; in an ideal world, the user could directly amend problem state and resume execution, although that may be require a more sophisticated interpreter architecture to enable; however, even being able to inspect errors at point of origin without having to set explicit breakpoints manually throughout code may be of help in getting code to work right)
+
+// note that commands should use operator syntax when available (i.e. parser should annotate Command instance with OperatorDefinition); as with message localization, how to provide modifiable/live view onto error attributes? (might consider developing a native DSL for transformable data composition, c.f. glue generator; e.g. once we have a form library that transforms handler interfaces to GUI forms, it shouldn't be much of a step to define error constructors as native handlers, complete with PP hinting, canonical [interpolated] error messages with hand/machine localization support, etc)
+
 import Foundation
 
 
@@ -68,7 +72,7 @@ struct MalformedRecordError: NativeError {
 
 struct UnknownNameError: NativeError {
     
-    var description: String { return "Can’t find a handler named `\(self.name.label)` in \(self.scope)" }
+    var description: String { return "Can’t find `\(self.name.label)` in \(self.scope)" }
     
     let name: Symbol
     let scope: Accessor
@@ -82,7 +86,7 @@ struct UnknownNameError: NativeError {
 
 struct ImmutableScopeError: NativeError {
     
-    var description: String { return "Can’t modify value named `\(self.name.label)` in immutable \(self.scope)" }
+    var description: String { return "Can’t modify `\(self.name.label)` in immutable \(self.scope)" }
     
     let name: Symbol
     let scope: Accessor
@@ -170,7 +174,7 @@ protocol ArgumentError: NativeError {
 
 struct UnknownArgumentError: ArgumentError {
     
-    var description: String { return "Can’t match argument field \(self.index+1) of command `\(self.command)`" }
+    var description: String { return "Can’t match argument field \(self.index+1) in `\(self.command)`" }
     
     let index: Int
     let command: Command
@@ -183,7 +187,7 @@ struct UnknownArgumentError: ArgumentError {
 
 struct BadArgumentError: ArgumentError {
     
-    var description: String { return "Can’t evaluate argument field \(self.index+1) of command `\(self.command)`" } // TO DO: change message to "is missing" if index >= command.arguments.count
+    var description: String { return "Can’t evaluate argument field \(self.index+1) in `\(self.command)`" } // TO DO: change message to "is missing" if index >= command.arguments.count
     
     let index: Int
     let command: Command

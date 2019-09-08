@@ -35,10 +35,4 @@ func coerce(left value: Value, right coercion: Coercion, commandEnv: Scope) thro
     return try value.eval(in: commandEnv, as: coercion) // TO DO: check this
 }
 
-// TO DO: how to parameterize run-time return type?
-func tell(target: AttributedValue, action: Value, commandEnv: Scope) throws -> Value { // `tell expr to expr`
-    let env = TargetScope(target: target, parent: commandEnv as! Environment)
-    return try action.eval(in: env, as: asAnything) // TO DO: how to get coercion info?
-}
-
 

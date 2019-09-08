@@ -42,7 +42,7 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.add("while", .custom(parseWhileRepeatOperator), 100, .left, [])
     registry.add("repeat", .custom(parseRepeatWhileOperator), 100, .left, [])
     registry.add("tell", .custom(parseTellToOperator), 100, .left, [])
-    registry.add("of", .infix, 300, .left, [])
+    registry.add("of", .infix, 306, .right, [])
     registry.add("at", .infix, 310, .left, [])
     registry.add("named", .infix, 310, .left, [])
     registry.add("id", .infix, 310, .left, [])

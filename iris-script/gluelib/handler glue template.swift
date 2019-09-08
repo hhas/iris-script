@@ -8,6 +8,8 @@ import Foundation
 
 // TO DO: would be simpler if type def's parameter tuple could be passed directly to interface params, but Swift doesn't want to downcast it ("Cannot express tuple conversion…")
 
+// TO DO: how best to structure argument unpacking so that Command can best optimize? (e.g. length check really only needs to be performed once, and both it and argument-to-parameter matching could easily be moved up to first-run and/or parse-time); that said, current arrangement is unlikely to be major performance sink
+
 private let templateSource = """
 //
 //  ««libraryName»»_handlers.swift

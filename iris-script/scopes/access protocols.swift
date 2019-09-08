@@ -6,10 +6,10 @@
 import Foundation
 
 
-typealias AttributedValue = Value & Accessor
+typealias AttributedValue = Value //& Accessor // TO DO: all values adopt Mutator protocol, so AttributedValue is technically redundant (although it may still be worth defining a typealias that helps to clarify which values are primarily manipulated via selection, e.g. AEQuery, vs those which are generally manipulated by applying commands; alternatively, given that the default behavior of Value.get() is to return nil except when getting itself, it may be useful to define an AttributedValue protocol that declares conforming values to have one or more natively-accessible attributes)
 
 
-protocol Accessor { // slot access // TO DO: adopt Value protocol?
+protocol Accessor { // slot access
     
     func get(_ name: Symbol) -> Value?
 }

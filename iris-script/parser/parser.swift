@@ -353,11 +353,11 @@ class Parser {
         switch token.form {
         case .operatorName(let operatorClass) where operatorClass.hasLeftOperand: // TO DO: what errors if operator not found?
             let nextToken = self.peek().token
-            print("parsing", operatorClass, "next:", nextToken, (nextToken.isExpressionTerminator,nextToken.requiresLeftOperand))
+            //print("parsing", operatorClass, "next:", nextToken, (nextToken.isExpressionTerminator,nextToken.requiresLeftOperand))
             if let definition = operatorClass.custom, case .custom(let parseFunc) = definition.form {
                 value = try parseFunc(self, definition, leftExpr, allowLooseArguments)
             } else if nextToken.isExpressionTerminator || nextToken.requiresLeftOperand { // no right operand, so current token needs to be a postfix operator
-                print("next is right delimiter", nextToken)
+                //print("next is right delimiter", nextToken)
                 assert(!(nextToken.form == .colon)) // OperatorReader should never match a name followed by a colon as an operator name
                 guard let definition = operatorClass.postfix else {
                     print("expected right-hand operand for:", operatorClass, "but found", nextToken.form) // TO DO: fix error message
@@ -383,7 +383,7 @@ class Parser {
             self.advance(ignoringLineBreaks: true) // skip over ";"
             let rightExpr = try self.parseExpression(precedence, allowLooseSequences: .no) // TO DO: allowLooseSequences?
             guard let command = rightExpr as? Command else {
-                print(leftExpr, rightExpr)
+                //print(leftExpr, rightExpr)
                 throw UnsupportedCoercionError(value: rightExpr, coercion: asCommand)
             } // TO DO: what error?
             value = Command(command.name, [(nullSymbol, leftExpr)] + command.arguments)

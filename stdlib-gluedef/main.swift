@@ -264,10 +264,16 @@ done
 «== Chunk expressions ==»
 
 to ‘of’ {left: attribute as expression, right: value as value} returning expression: do «TODO: is left operand always a command?»
-can_error: true
+can_error: true «TODO: throw immediately, or wait until query if fully constructed?»
 use_scopes: [#command, #handler]
 swift_function: ofClause {attribute, target}
-operator: {#infix, 300}
+operator: {#infix, 304} «binds tighter than commands»
+done
+
+
+to ‘app’ {bundle_identifier as string} returning value: do
+can_error: false «errors should only occur upon use, not creation»
+swift_function: Application
 done
 
 
@@ -277,7 +283,7 @@ to ‘at’ {left: element_type as name, right: selector_data as expression} ret
 can_error: true
 use_scopes: [#command, #handler] «`elements at expr thru expr` will eval exprs in handler's scope, delegating to command scope»
 swift_function: atSelector {elementType, selectorData}
-operator: {#infix, 310}
+operator: {#infix, 310, #right, “index”}
 done
 
 to ‘named’ {left: element_type as name, right: selector_data as expression} returning expression: do

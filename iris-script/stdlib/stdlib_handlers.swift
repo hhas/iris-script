@@ -32,48 +32,48 @@ private func procedure_exponent_left_right(command: Command, commandEnv: Scope, 
     return type_exponent_left_right.result.box(value: result, in: handlerEnv)
 }
 
-// positive {left}
-private let type_positive_left = (
+// positive {right}
+private let type_positive_right = (
     param_0: (Symbol("right"), AsNumber()),
     result: AsNumber()
 )
-private let interface_positive_left = HandlerInterface(
+private let interface_positive_right = HandlerInterface(
     name: "positive",
     parameters: [
-        (type_positive_left.param_0.0, "left", type_positive_left.param_0.1),
+        (type_positive_right.param_0.0, "right", type_positive_right.param_0.1),
     ],
-    result: type_positive_left.result
+    result: type_positive_right.result
 )
-private func procedure_positive_left(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_positive_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_positive_left.param_0, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_positive_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try positive(
-        left: arg_0
+        right: arg_0
     )
-    return type_positive_left.result.box(value: result, in: handlerEnv)
+    return type_positive_right.result.box(value: result, in: handlerEnv)
 }
 
-// negative {left}
-private let type_negative_left = (
+// negative {right}
+private let type_negative_right = (
     param_0: (Symbol("right"), AsNumber()),
     result: AsNumber()
 )
-private let interface_negative_left = HandlerInterface(
+private let interface_negative_right = HandlerInterface(
     name: "negative",
     parameters: [
-        (type_negative_left.param_0.0, "left", type_negative_left.param_0.1),
+        (type_negative_right.param_0.0, "right", type_negative_right.param_0.1),
     ],
-    result: type_negative_left.result
+    result: type_negative_right.result
 )
-private func procedure_negative_left(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_negative_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_negative_left.param_0, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_negative_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try negative(
-        left: arg_0
+        right: arg_0
     )
-    return type_negative_left.result.box(value: result, in: handlerEnv)
+    return type_negative_right.result.box(value: result, in: handlerEnv)
 }
 
 // * {left, right}
@@ -1048,6 +1048,28 @@ private func procedure_ofClause_attribute_target(command: Command, commandEnv: S
     return type_ofClause_attribute_target.result.box(value: result, in: handlerEnv)
 }
 
+// app {bundle_identifier}
+private let type_AEApplication_bundleID = (
+    param_0: (Symbol("bundle_identifier"), AsString()),
+    result: AsValue()
+)
+private let interface_AEApplication_bundleID = HandlerInterface(
+    name: "app",
+    parameters: [
+        (type_AEApplication_bundleID.param_0.0, "bundle_identifier", type_AEApplication_bundleID.param_0.1),
+    ],
+    result: type_AEApplication_bundleID.result
+)
+private func procedure_AEApplication_bundleID(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_AEApplication_bundleID.param_0, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = Application(
+        bundleIdentifier: arg_0
+    )
+    return type_AEApplication_bundleID.result.box(value: result, in: handlerEnv)
+}
+
 // at {left, right}
 private let type_atSelector_elementType_selectorData = (
     param_0: (Symbol("left"), AsLiteralName()),
@@ -1201,7 +1223,8 @@ private func procedure_firstElement_right(command: Command, commandEnv: Scope, h
     let arg_0 = try command.swiftValue(at: &index, for: type_firstElement_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = firstElement(
-        right: arg_0
+        right: arg_0,
+        commandEnv: commandEnv
     )
     return type_firstElement_right.result.box(value: result, in: handlerEnv)
 }
@@ -1430,8 +1453,8 @@ private func procedure_insertAtEnd_(command: Command, commandEnv: Scope, handler
 
 public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_exponent_left_right, procedure_exponent_left_right)
-    env.define(interface_positive_left, procedure_positive_left)
-    env.define(interface_negative_left, procedure_negative_left)
+    env.define(interface_positive_right, procedure_positive_right)
+    env.define(interface_negative_right, procedure_negative_right)
     env.define(interface_multiply_left_right, procedure_multiply_left_right)
     env.define(interface_divide_left_right, procedure_divide_left_right)
     env.define(interface_div_left_right, procedure_div_left_right)
@@ -1470,6 +1493,7 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_repeatWhile_action_condition, procedure_repeatWhile_action_condition)
     env.define(interface_tell_target_action, procedure_tell_target_action)
     env.define(interface_ofClause_attribute_target, procedure_ofClause_attribute_target)
+    env.define(interface_AEApplication_bundleID, procedure_AEApplication_bundleID)
     env.define(interface_atSelector_elementType_selectorData, procedure_atSelector_elementType_selectorData)
     env.define(interface_nameSelector_elementType_selectorData, procedure_nameSelector_elementType_selectorData)
     env.define(interface_idSelector_elementType_selectorData, procedure_idSelector_elementType_selectorData)

@@ -3,6 +3,8 @@
 //  iris-script
 //
 
+//  TO DO: if we treat «…» and «TODO:…» as developer comments (private), how should user documentation be indicated? alternatively, we could treat «…» as either depending on context (e.g. in handler definitions, the operator syntax provides natural attach points for command [name], argument [parameter], and result descriptions)
+
 import Foundation
 
 
