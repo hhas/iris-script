@@ -2,8 +2,6 @@
 //  element range.swift
 //  iris-script
 //
-//  Created by Hamish Sanderson on 29/08/2019.
-//
 
 import Foundation
 

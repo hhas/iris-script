@@ -60,7 +60,8 @@ class NativeAppData: AppData {
     }
     
     
-    required init(target: TargetApplication, launchOptions: LaunchOptions, relaunchMode: RelaunchMode, glueClasses: GlueClasses) { // TO DO: nasty
+    required init(target: TargetApplication, launchOptions: LaunchOptions, relaunchMode: RelaunchMode, glueClasses: GlueClasses) { // TO DO: nasty (also, we really want ability to supply TargetApplication ourselves, e.g. when creating an app object using name/bundle ID/process ID instead of absolute path/remote address [file/eppc URL])
+        // TO DO: having to pass GlueClasses argument (even if it's only the default static AEApplication glue) is annoying; how much useful functionality does AppData really provide us with, versus rolling an independent DynamicAppData class containing only what we need? [question is whether we need to bridge native dynamic queries to static SwiftAutomation APIs, e.g. when writing primitive libraries, embedding native runtime in Swift apps, or transpiling native code to Swift]
         fatalError()
     }
     

@@ -7,6 +7,8 @@
 
 // for now, implement on top of AppleEvents.framework (i.e. solve for a specific case); extract to protocols/general behaviors that can apply to strings and lists later on
 
+// TO DO: decide public naming convention: "query" vs "reference" vs "specifier" vs whatever else
+
 
 import Foundation
 
@@ -20,14 +22,6 @@ import SwiftAutomation
 
 
 let asDescriptor = asValue // TO DO: implement
-
-
-
-// TO DO: how to parameterize run-time return type?
-func tell(target: AttributedValue, action: Value, commandEnv: Scope) throws -> Value { // `tell expr to expr`
-    let env = TargetScope(target: target, parent: commandEnv as! Environment) // TO DO: fix (TBH, APIs that currently require Environment should really take [Mutable]Scope)
-    return try action.eval(in: env, as: asAnything) // TO DO: how to get coercion info?
-}
 
 
 

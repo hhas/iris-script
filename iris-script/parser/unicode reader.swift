@@ -5,7 +5,7 @@
 
 import Foundation
 
-// TO DO: how to treat an 0u sequence that appears where a name is expected (e.g. handler name)
+// TO DO: if an 0u sequence appears where a literal name is expected, convert to Symbol rather than Text? or should we limit it to strings, in which case some sort of cast is required (we can't put 0u sequences in single-quotes, as that would be inconsistent with double-quoted text's behavior; while a dedicated annotation type could work, that'd be inconsistent with unquoted 0u sequences)
 
 
 struct UnicodeReader: LineReader { // needs applied before NumericReader

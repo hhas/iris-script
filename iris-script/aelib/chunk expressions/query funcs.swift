@@ -3,6 +3,9 @@
 //  iris-lang
 //
 
+// TO DO: what to do with reference form operators that don't appear within a `tell` block/`of` operator, e.g. `document at 1` is legal top-level code, but currently doesn't do anything useful when evaluated (the primitive funcs below currently just abort); loathe to define twice [or more] (once as methods on Reference, then again as global handlers); at the same time, implementing selector methods in a hardcoded switch block rather than a lookup table is suboptimal for introspection
+
+
 import Foundation
 
 
@@ -33,23 +36,6 @@ import Foundation
  note: there is no `ELEMENT SELECTOR of …` shorthand for by-index/by-name reference forms (c.f. AppleScript's `word 1 of…`/`folder "Untitled" of…`) as that makes it difficult to determine the correct precedence when binding `CMD X of Y` without explicit parenthesis (Is it calling method CMD of Y with X as the command's argument? Or is it calling a global handler CMD with `X of Y` as its argument? Now try resolving `get element x of y`, where `get` and `element` are both right-associative unary commands. Sylvia-lang already tried to solve this, unsuccessfully.)
  
  */
-
-
-func ofClause(attribute: Value, target value: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value { // TO DO: see TODO on AsAnything re. limiting scope of `didNothing` result
-    // look up command's name in target
-    //print("ofClause looking up", attribute, "on", value)
-    if let command = attribute as? Command {
-        if let selector = value.get(command.name) ?? commandEnv.get(command.name) { // TO DO: what lookup chain (e.g. reference form operators are defined in global namespace); or will target value always end up delegating lookups to that itself [e.g. document -> tell target, which extends global namespace]?
-            if let handler = selector as? Handler {
-                // command's arguments are evaled in commandEnv as normal (the Handler already contains a [strong]ref to its owner, )
-                return try handler.call(with: command, in: commandEnv, as: asAnything) // TO DO: what env?
-            } else if command.arguments.isEmpty {
-                return selector
-            } // fall thru
-        }
-    }
-    throw UnsupportedCoercionError(value: attribute, coercion: asHandler) // TO DO: what error?
-}
 
 
 // TO DO: should element selection handlers be available at global level, or solely as 'methods' on collection-like values? e.g. `document at 1` at top level is a valid query, regardless of whether evaluating it succeeds or fails

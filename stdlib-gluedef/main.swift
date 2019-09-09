@@ -4,7 +4,9 @@
 
 import Foundation
 
-// TO DO: AsLiteralName coercion?; this'd allow aliases to be written directly as names rather than strings; it might also handle 0u sequences more intelligently
+// TO DO: AsLiteralName coercion?; this'd allow aliases to be written directly as names rather than strings;
+
+// TO DO: how to parameterize run-time return type? (TO DO: any primitive handler that evals native code need ability to pass result coercion as Swift func parameter; for now, best to declare requirement explicitly, c.f. use_scopes:…)
 
 
 let stdlibGlue = """

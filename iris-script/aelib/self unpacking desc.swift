@@ -205,8 +205,12 @@ struct NativeDescriptor: Value, SelfPacking, SelfUnpacking { // NativeResultDesc
         case typeType where (try? unpackAsType(self.desc)) == 0x6D736E67: // cMissingValue
             return nullValue
         case typeType, typeProperty, typeKeyword, typeEnumerated:
-            //return try self.toTag(in: env, as: coercion)
-            fatalError()
+            let code = try! unpackAsFourCharCode(self.desc)
+            if let name = self.appData.glueTable.typesByCode[code] {
+                return Symbol(name)
+            } else {
+                return Symbol(String(format: "0x%08x", code)) // TO DO: how should raw AE codes be presented?
+            }
         case typeObjectSpecifier:
             /*
             let specifier = try self.appData.unpack(desc) as AEItem
@@ -270,10 +274,13 @@ extension Symbol: SelfPacking {
     
     public func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
         // TO DO: check that glue table keys are normalized
-        guard let desc = (appData as! NativeAppData).glueTable.typesByName[self.key] else {
+        if let desc = (appData as! NativeAppData).glueTable.typesByName[self.key] {
+            return desc
+        } else if self.key.hasPrefix("0x") && self.key.count == 10, let code = UInt32(self.key.dropFirst(2), radix: 16) {
+            return packAsType(code)
+        } else {
             throw UnsupportedCoercionError(value: self, coercion: asValue) // TO DO: what error?
         }
-        return desc
     }
 }
 

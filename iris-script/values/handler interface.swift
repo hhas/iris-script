@@ -6,7 +6,9 @@
 import Foundation
 
 
-// TO DO: for lambdas (unnamed, unbound, handlers), use nullSymbol as handler interface's name; Q. should we have a dedicated operator syntax for constructing lambdas, or just use a command?
+// TO DO: for lambdas (unnamed, unbound, handlers), use nullSymbol as handler interface's name if no explicit name is declared (e.g. `{args}:action`); Q. should we have a dedicated operator syntax for constructing lambdas, or just use a command? (for now, accept an arg-less command (literal handler name), an appropriately structured colon Pair, or plain [parenthesized?] expr, in an asHandler context)
+
+// TO DO: generalize 'isEventHandler' flag to describe any type of handler; e.g. in a `catching` block, the error handler may declare the error type(s) it is willing to accept, in which case the handler is only invoked if the error argument can be coerced to that type (presumably native errors will be represented as records, so type matching is structural, not nominal)
 
 
 // literal syntax is `HANDLER_NAME { [ LABEL: ] BINDING [ as COERCION ], … } [ returning COERCION ]`
