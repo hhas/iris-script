@@ -108,7 +108,7 @@
 		4F5B251523171EB9001C1941 /* gluelib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FA23109824007D694C /* gluelib_handlers.swift */; };
 		4F5B251623171EB9001C1941 /* gluelib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FB23109826007D694C /* gluelib_operators.swift */; };
 		4F5B58852302098200B039DC /* pair.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B58842302098200B039DC /* pair.swift */; };
-		4F731D3423254869008700C6 /* self unpacking desc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F731D2E23254869008700C6 /* self unpacking desc.swift */; };
+		4F731D3423254869008700C6 /* result descriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F731D2E23254869008700C6 /* result descriptor.swift */; };
 		4F84D00122ADA0F200C9FD23 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00022ADA0F200C9FD23 /* main.swift */; };
 		4F84D00822ADA12A00C9FD23 /* value protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00722ADA12A00C9FD23 /* value protocols.swift */; };
 		4F84D00A22ADA13700C9FD23 /* coercion protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00922ADA13700C9FD23 /* coercion protocols.swift */; };
@@ -251,7 +251,7 @@
 		4F5B24D523171E54001C1941 /* stdlib-glue */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "stdlib-glue"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F5B24D723171E55001C1941 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4F5B58842302098200B039DC /* pair.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pair.swift; sourceTree = "<group>"; };
-		4F731D2E23254869008700C6 /* self unpacking desc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "self unpacking desc.swift"; sourceTree = "<group>"; };
+		4F731D2E23254869008700C6 /* result descriptor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "result descriptor.swift"; sourceTree = "<group>"; };
 		4F84CFFD22ADA0F200C9FD23 /* iris-script */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "iris-script"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F84D00022ADA0F200C9FD23 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4F84D00722ADA12A00C9FD23 /* value protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "value protocols.swift"; sourceTree = "<group>"; };
@@ -463,7 +463,7 @@
 			children = (
 				4F257CCA22BACB0D00A51CF5 /* chunk expressions */,
 				4F46A41923225975008E0265 /* native app data.swift */,
-				4F731D2E23254869008700C6 /* self unpacking desc.swift */,
+				4F731D2E23254869008700C6 /* result descriptor.swift */,
 				4F46A41B232259FB008E0265 /* keyword converter.swift */,
 			);
 			path = aelib;
@@ -829,7 +829,7 @@
 				4F5B24AF231405B8001C1941 /* swift literal.swift in Sources */,
 				4F84D01022AE7E2500C9FD23 /* command.swift in Sources */,
 				4F27087622D9E584009F40B2 /* keyed list.swift in Sources */,
-				4F731D3423254869008700C6 /* self unpacking desc.swift in Sources */,
+				4F731D3423254869008700C6 /* result descriptor.swift in Sources */,
 				4F1EA48122B2793800FFA4D2 /* scalar coercions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

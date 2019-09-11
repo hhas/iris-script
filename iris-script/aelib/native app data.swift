@@ -35,6 +35,21 @@ class NativeAppData: AppData {
         return interface
     }
     
+    
+    func descriptor(for symbol: Symbol) -> Descriptor? {
+        return self.glueTable.typesByName[symbol.key]
+    }
+    
+    func symbol(for code: OSType) -> Symbol {
+        if let name = self.glueTable.typesByCode[code] {
+            return Symbol(name)
+        } else {
+            return Symbol(String(format: "0x%08x", code)) // TO DO: how should raw AE codes be presented?
+        }
+    }
+    
+    
+    
     public required init(applicationURL: URL? = nil, useTerminology: TerminologyType = .sdef) throws {
         let glueTable = GlueTable(keywordConverter: nativeKeywordConverter, allowSingularElements: true)
         // temporary; TO DO: if .aete or URL not available, use getAETE, else if .sdef use SDEF

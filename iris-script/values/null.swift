@@ -27,7 +27,7 @@ struct NullValue: Value { // expanding `nothing` always throws transient NullCoe
         throw NullCoercionError(value: self, coercion: coercion)
     }
     
-    func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
+    func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
         throw NullCoercionError(value: self, coercion: coercion) // TO DO: confirm this is correct (as opposed to returning an empty record); probably, as `optional record` requires null coercion error 
     }
 }
@@ -55,7 +55,7 @@ struct NullAction: Value {
         throw NullCoercionError(value: self, coercion: coercion)
     }
     
-    func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
+    func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
         throw NullCoercionError(value: self, coercion: coercion) // TO DO: confirm this is correct (as opposed to returning an empty record); probably, as `optional record` requires null coercion error
     }
 }

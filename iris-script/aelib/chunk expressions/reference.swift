@@ -65,8 +65,8 @@ struct RemoteCall: Handler { // for AE commands, the command name (e.g. Symbol("
         let resultDesc = try self.appData.sendAppleEvent(name: self.term.name,
                                                          event: self.term.event,
                                                          parentSpecifier: parentSpecifier, // TO DO
-                                                         directParameter: directParameter, // the first (unnamed) parameter to the command method; see special-case packing logic below
-                                                         keywordParameters: keywordParameters) as NativeDescriptor
+            directParameter: directParameter, // the first (unnamed) parameter to the command method; see special-case packing logic below
+            keywordParameters: keywordParameters) as NativeResultDescriptor
         return try coercion.coerce(value: resultDesc, in: scope)
     }
     
@@ -94,11 +94,29 @@ let asReference = AsReference(name: "reference")
 
 
 
+struct InsertionLocation: Value, SelfPacking {
+    
+    var description: String { return "«\(self.desc) of \(self.appData)»" }
+    
+    static var nominalType: Coercion = asReference
+    
+    let appData: NativeAppData
+    let desc: InsertionLocationDescriptor
+    
+    public func get(_ name: Symbol) -> Value? { return nil }
+    
+    func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
+        return self.desc
+    }
+    
+}
+
+
 protocol ReferenceProtocol: Value, SelfPacking {
     
     var appData: NativeAppData { get }
     var desc: SpecifierDescriptor { get }
-
+    
     
     func lookup(_ name: Symbol) -> Value?
     
@@ -125,8 +143,12 @@ extension ReferenceProtocol {
             return nil // TO DO: ByTestSelector()
         case "before", "after": // TO DO: 2 versions of this: `element_type before element of…` (relative), `before element of…` (insertion); dispatch on presence/absence of left operand (it is 2 different operators; just not sure if it should be 2 different commands, which operators could map to)
             return nil // TO DO: RelativeSelector() returns either Reference or Insertion, depending on 2 args or one
-        case "beginning", "end":
-            return nil
+        case "beginning":
+            guard let desc = self.desc as? MultipleObjectSpecifierDescriptor else { return nil }
+            return InsertionSelector(appData: self.appData, desc: desc.beginning)
+        case "end":
+            guard let desc = self.desc as? MultipleObjectSpecifierDescriptor else { return nil }
+            return InsertionSelector(appData: self.appData, desc: desc.end)
         case nullSymbol:
             return self
         default:
@@ -148,6 +170,81 @@ struct Reference: ReferenceProtocol {
     let appData: NativeAppData
     let desc: SpecifierDescriptor
     
+    var description: String {
+        let parent: String
+        let parentDesc = self.desc.from
+        if let rootDesc = parentDesc as? RootSpecifierDescriptor {
+            switch rootDesc.type {
+            case typeNull:
+                switch self.appData.target {
+                case .name(let name):                    parent = " of app \(name.debugDescription)"
+                case .url(let url):
+                    parent = " of app \(url.isFileURL ? url.path.debugDescription : "“\(url)”")"
+                case .bundleIdentifier(let bundleID, _): parent = " of app id \(bundleID.debugDescription)"
+                case .processIdentifier(let pid):        parent = " of app id \(pid)"
+                case .Descriptor(let desc):              parent = " of \(desc)"
+                default:                                 parent = "" // current/none
+                }
+            case typeCurrentContainer: parent = ""
+            case typeObjectBeingExamined: parent = ""
+            default: parent = " of \(rootDesc)" // TO DO
+            }
+        } else if let desc = parentDesc as? ObjectSpecifierDescriptor {
+            parent = Reference(appData: self.appData, desc: desc).description
+        } else {
+            parent = "«\(parentDesc)»"
+        }
+        if let desc = self.desc as? ObjectSpecifierDescriptor {
+            switch desc.form {
+            case .property:
+                if let code = try? unpackAsFourCharCode(desc.seld),
+                    let name = self.appData.glueTable.propertiesByCode[code] {
+                    return "\(name)\(parent)"
+                }
+            case .userProperty:
+                ()
+            default:
+                ()
+            }
+            if let names = self.appData.glueTable.elementsByCode[desc.want],
+                let seld = try? unpackDescriptor(desc.seld, appData: appData) {
+                switch desc.form {
+                case .absolutePosition:
+                    if let symbol = seld as? Symbol, ["first", "middle", "last", "any", "every"].contains(symbol) {
+                        return "\(symbol.label) \(names.singular)\(parent)"
+                    } else {
+                        return "\(names.singular) at \(seld)\(parent)"
+                    }
+                case .name:
+                    return "\(names.singular) named \(seld)\(parent)"
+                case .uniqueID:
+                    return "\(names.singular) id \(seld)\(parent)"
+                case .relativePosition:
+                    ()
+                case .range:
+                    ()
+                case .test:
+                    ()
+                default:
+                    ()
+                }
+            }
+        } else if let desc = self.desc as? InsertionLocationDescriptor {
+            switch desc.position {
+            case .beginning:
+                return "beginning of \(parent)"
+            case .end:
+                return "end of \(parent)"
+            case .before:
+                return "before \(parent)"
+            case .after:
+                return "after \(parent)"
+            }
+        }
+        return "«\(self.desc) of \(self.appData)»"
+    }
+    
+    
     internal func lookup(_ name: Symbol) -> Value? {
         //print("lookup \(name) slot of \(self)")
         // Q. should we allow command lookups directly on any reference?
@@ -164,42 +261,43 @@ struct Reference: ReferenceProtocol {
     }
 }
 
-protocol MultipleReferenceProtocol: ReferenceProtocol {
-    
-}
 
+typealias MultipleReference = Reference
 
-
-struct MultipleReference: MultipleReferenceProtocol {
-    
-    static var nominalType: Coercion = asReference
-    
-    var desc: SpecifierDescriptor { return self._desc }
-    
-    let appData: NativeAppData
-    let _desc: MultipleObjectSpecifierDescriptor
-    
-    init(appData: NativeAppData, desc: MultipleObjectSpecifierDescriptor) {
-        self.appData = appData
-        self._desc = desc
-    }
-    
-    internal func lookup(_ name: Symbol) -> Value? {
-        //print("lookup \(name) slot of \(self)")
-        // Q. should we allow command lookups directly on any reference?
-        if let term = self.appData.glueTable.commandsByName[name.key] {
-            return RemoteCall(term: term, appData: self.appData)
-        } else if let term = self.appData.glueTable.propertiesByName[name.key] {
-            // look up property/elements (elements are usually looked up on context of selector call, e.g. `every document of…`, but may be directly referenced as well: `documents of…`); properties are normally looked up directly, except that `every NAME of…` allows conflicting property/element names to be explicitly disambiguated as element name (by default, conflicting property/element names are treated as property name, with exception of `text` which AS treats as element name as standard)
-            return Reference(appData: self.appData, desc: self._desc.property(term.code))
-        } else if let term = self.appData.glueTable.elementsByName[name.key] {
-            return MultipleReference(appData: self.appData, desc: self._desc.elements(term.code))
-        } else {
-            return nil
-        }
-    }
-}
-
+/*
+ protocol MultipleReferenceProtocol: ReferenceProtocol {
+ 
+ }
+ struct MultipleReference: MultipleReferenceProtocol {
+ 
+ static var nominalType: Coercion = asReference
+ 
+ var desc: SpecifierDescriptor { return self._desc }
+ 
+ let appData: NativeAppData
+ let _desc: MultipleObjectSpecifierDescriptor
+ 
+ init(appData: NativeAppData, desc: MultipleObjectSpecifierDescriptor) {
+ self.appData = appData
+ self._desc = desc
+ }
+ 
+ internal func lookup(_ name: Symbol) -> Value? {
+ //print("lookup \(name) slot of \(self)")
+ // Q. should we allow command lookups directly on any reference?
+ if let term = self.appData.glueTable.commandsByName[name.key] {
+ return RemoteCall(term: term, appData: self.appData)
+ } else if let term = self.appData.glueTable.propertiesByName[name.key] {
+ // look up property/elements (elements are usually looked up on context of selector call, e.g. `every document of…`, but may be directly referenced as well: `documents of…`); properties are normally looked up directly, except that `every NAME of…` allows conflicting property/element names to be explicitly disambiguated as element name (by default, conflicting property/element names are treated as property name, with exception of `text` which AS treats as element name as standard)
+ return Reference(appData: self.appData, desc: self._desc.property(term.code))
+ } else if let term = self.appData.glueTable.elementsByName[name.key] {
+ return MultipleReference(appData: self.appData, desc: self._desc.elements(term.code))
+ } else {
+ return nil
+ }
+ }
+ }
+ */
 
 
 

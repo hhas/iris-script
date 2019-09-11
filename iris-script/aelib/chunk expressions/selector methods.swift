@@ -39,6 +39,23 @@ extension QuerySelector {
     }
 }
 
+struct InsertionSelector: QuerySelector { // beginning/end
+    
+    let appData: NativeAppData
+    let desc: InsertionLocationDescriptor
+    
+    var interface: HandlerInterface {
+        return HandlerInterface(name: "end", // TO DO: implement name
+                                parameters: [],
+                                result: asQuery) // TO DO: what return type?
+    }
+    
+    func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value { // e.g. `first document`
+        guard command.arguments.count == 0 else { throw BadSelectorError() }
+        return InsertionLocation(appData: self.appData, desc: self.desc)
+    }
+}
+
 // 'selector' callables
 
 struct AbsoluteOrdinalSelector: QuerySelector { // first/middle/last/any/all {element_type}

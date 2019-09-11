@@ -1,8 +1,9 @@
 //
-//  descriptor value.swift
+//  result descriptor.swift
 //
 //  wraps Descriptor returned by AppData.sendAppleEvent(…) as Value, allowing unpacking to be driven by Coercion
 //
+//  (this is not intended for use as a general-purpose AEDesc value as `toValue` unpacks to a native Value rather than returning as-is)
 
 //  TO DO: how to pass coercion info as a parameter to all AEs? (also need ability to describe composite types [something current AE/AEOM doesn't do], including Variant [c.f. HTTP content negotiation])
 
@@ -13,14 +14,18 @@ import SwiftAutomation
 // TO DO: can/should SelfPacking/SelfUnpacking be reimplemented as Codable
 
 
-struct NativeDescriptor: Value, SelfPacking, SelfUnpacking { // NativeResultDescriptor
+func unpackDescriptor(_ desc: Descriptor, in scope: Scope = nullScope, as coercion: Coercion = asAnything, appData: NativeAppData) throws -> Value {
+    return try coercion.coerce(value: NativeResultDescriptor(desc, appData: appData), in: scope)
+}
+
+struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
     
-    static func SwiftAutomation_unpackSelf(_ desc: Descriptor, appData: AppData) throws -> NativeDescriptor {
-        return NativeDescriptor(desc, appData: appData as! NativeAppData) // TO DO: where could appData be non-native? need to convert to native (alternatively, how much functionality does NativeAppData really add? might it be better to use AppData directly, with any native-specific methods provided as extensions on that?)
+    static func SwiftAutomation_unpackSelf(_ desc: Descriptor, appData: AppData) throws -> NativeResultDescriptor {
+        return NativeResultDescriptor(desc, appData: appData as! NativeAppData) // TO DO: where could appData be non-native? need to convert to native (alternatively, how much functionality does NativeAppData really add? might it be better to use AppData directly, with any native-specific methods provided as extensions on that?)
     }
     
-    static func SwiftAutomation_noValue() throws -> NativeDescriptor {
-        return NativeDescriptor(nullDescriptor, appData: nullAppData)
+    static func SwiftAutomation_noValue() throws -> NativeResultDescriptor {
+        return NativeResultDescriptor(nullDescriptor, appData: nullAppData)
     }
     
     func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
@@ -59,7 +64,7 @@ struct NativeDescriptor: Value, SelfPacking, SelfUnpacking { // NativeResultDesc
      
      //func toEditable(in scope: Scope, as coercion: AsEditable) throws -> EditableValue
      
-     func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record
+     func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record
      
     */
     // TO DO: toSymbol?
@@ -96,23 +101,6 @@ struct NativeDescriptor: Value, SelfPacking, SelfUnpacking { // NativeResultDesc
         }
     }
     
-    /*
-    func toTag(env: Scope, coercion: Coercion) throws -> Tag {
-        let code: OSType
-        switch self.desc.type {
-        case typeType, typeProperty, typeKeyword, typeEnumerated:
-            code = try! unpackAsFourCharCode(desc)
-        default:
-            throw UnsupportedCoercionError(value: self, coercion: coercion)
-        }
-        // TO DO: worth caching Tags?
-        if let name = self.appData.glueTable.typesByCode[code] {
-            return Tag(name) // e.g. `#document`
-        } else {
-            return Tag(code) // e.g. `#‘«docu»’`
-        }
-    }
-    */
     // unpack collections
     
     func toList(in env: Scope, as coercion: AsList) throws -> OrderedList {
@@ -120,7 +108,7 @@ struct NativeDescriptor: Value, SelfPacking, SelfUnpacking { // NativeResultDesc
             if let desc = self.desc as? ListDescriptor {
                 var result = [Value]()
                 for itemDesc in desc {
-                    let item = NativeDescriptor(itemDesc, appData: self.appData)
+                    let item = NativeResultDescriptor(itemDesc, appData: self.appData)
                     do {
                         result.append(try coercion.item.coerce(value: item, in: env))
                     } catch { // NullCoercionErrors thrown by list items must be rethrown as permanent errors
@@ -141,7 +129,7 @@ struct NativeDescriptor: Value, SelfPacking, SelfUnpacking { // NativeResultDesc
             if let desc = self.desc as? ListDescriptor {
                 var result = [T.ElementCoercion.SwiftType]()
                 for itemDesc in desc {
-                    let item = NativeDescriptor(itemDesc, appData: self.appData)
+                    let item = NativeResultDescriptor(itemDesc, appData: self.appData)
                     do {
                         result.append(try coercion.swiftItem.unbox(value: item, in: env))
                     } catch { // NullCoercionErrors thrown by list items must be rethrown as permanent errors
@@ -156,37 +144,26 @@ struct NativeDescriptor: Value, SelfPacking, SelfUnpacking { // NativeResultDesc
             throw UnsupportedCoercionError(value: self, coercion: coercion).from(error)
         }
     }
-    /*
-    private let classKey = Symbol("class").recordKey
     
-    func toRecord(env: Scope, coercion: AsRecord) throws -> Record {
-        throw NotYetImplementedError()
-        /*
-        if !self.desc.isRecord { throw UnsupportedCoercionError(value: self, coercion: coercion) }
-        var fields = Record.Storage()
-        if self.desc.type != typeAERecord {
-            fields[classKey] = try self.appData.unpack(Descriptor(typeCode: self.desc.type))
+    private let classKey = Symbol("class")
+    
+    func toRawRecord(env: Scope, coercion: AsRecord) throws -> Record {
+        guard let recordDesc = self.desc as? RecordDescriptor else { // TO DO: need to implement ScalarDescriptor.toRecord() and call that here; for now, record descs with descriptorType other than typeAERecord will not unpack correctly
+            return try Record([(nullSymbol, self)])
         }
-        for i in 1...(try! self.desc.count()) {
-            let key: Tag
-            let (keyCode, valueDesc) = try self.desc.item(i) // NativeDescriptor will take ownership; TO DO: what about applying [simple] value type coercions here?
-            // TO DO: better to hide this table behind API that returns Tag instances, as that allows caching (alternative is to create all Tag instances up-front, but that's probably overkill as most won't be used in any given script)
-            if keyCode == 0x6C697374 { // keyASUserRecordFields
-                fatalError("TODO") // TO DO: unpack user fields (an AEList of form `[string,any,string,any,…]`, where each string is a field name)
+        var fields = Record.Fields()
+        if self.desc.type != typeAERecord {
+            fields.append((classKey, self.appData.symbol(for: self.desc.type)))
+        }
+        for (key, descriptor) in recordDesc {
+            if key == 0x6C697374 { // keyASUserRecordFields contains AEList of form [key1,value1,key2,value2,…]
+                throw NotYetImplementedError() // TO DO: how to distinguish user-defined names from SDEF-defined names?
             } else {
-                if let tagName = self.appData.glueTable.typesByCode[keyCode] {
-                    key = Tag(tagName)
-                } else { // TO DO: how to represent four-char-codes as tags? easiest to use `0x_HEXACODE`, though that's not the most readable; probably sufficient to use leading underscore or other character that isn't encountered in terminology keywords [caveat it has to be legal in at least a single-quoted identifier]
-                    key = Tag(keyCode)
-                }
-                fields[key.recordKey] = try NativeDescriptor(valueDesc, appData: self.appData).nativeEval(env: env, coercion: coercion.valueType)
+                fields.append((self.appData.symbol(for: key), NativeResultDescriptor(descriptor, appData: self.appData)))
             }
         }
-        return Record(fields)
-     */
+        return try Record(fields)
     }
-    */
-    
     
     // unpack as anything
     
@@ -201,56 +178,23 @@ struct NativeDescriptor: Value, SelfPacking, SelfUnpacking { // NativeResultDesc
         case typeAEList:
             return try self.toList(in: env, as: asList)
         case typeAERecord:
-            return try self.toRecord(in: env, as: asRecord)
+            return try self.toRawRecord(in: env, as: asRecord)
         case typeType where (try? unpackAsType(self.desc)) == 0x6D736E67: // cMissingValue
             return nullValue
         case typeType, typeProperty, typeKeyword, typeEnumerated:
             let code = try! unpackAsFourCharCode(self.desc)
-            if let name = self.appData.glueTable.typesByCode[code] {
-                return Symbol(name)
-            } else {
-                return Symbol(String(format: "0x%08x", code)) // TO DO: how should raw AE codes be presented?
-            }
+            return self.appData.symbol(for: code)
         case typeObjectSpecifier:
-            /*
-            let specifier = try self.appData.unpack(desc) as AEItem
-            if let multipleSpecifier = specifier as? AEItems {
-                return MultipleReference(multipleSpecifier, attributeName: "", appData: self.appData) // TO DO: what should attributeName be? (since specifier is returned by app, we assume that property/element name ambiguity is not an issue; simplest is to use empty string and check for that before throwing an error in SingleReference.toMultipleReference())
-            } else {
-                return SingleReference(specifier, attributeName: "", appData: self.appData) // TO DO: ditto
-            }*/
-            fatalError()
+            //print("unpack", desc)
+            return Reference(appData: self.appData, desc: self.desc as! SpecifierDescriptor)
         case typeQDPoint, typeQDRectangle, typeRGBColor:
             return OrderedList(try self.appData.unpack(desc) as [Int])
         default:
-            //if self.desc.isRecord { return try self.toRecord(in: env, as: asRecord) }
+            //if self.desc.isRecord { return try self.toRawRecord(in: env, as: asRecord) }
             return self
         }
     }
 }
-
-/*
-extension Bool: SelfPacking {
-
-    func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
-        return packAsBool(self)
-    }
-}
-
-extension Int: SelfPacking {
-    
-    func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
-        return packAsInt(self)
-    }
-}
-
-extension Double: SelfPacking {
-    
-    func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
-        return packAsDouble(self)
-    }
-}
-*/
 
 extension Number: SelfPacking {
     
@@ -274,7 +218,7 @@ extension Symbol: SelfPacking {
     
     public func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
         // TO DO: check that glue table keys are normalized
-        if let desc = (appData as! NativeAppData).glueTable.typesByName[self.key] {
+        if let desc = (appData as! NativeAppData).descriptor(for: self) {
             return desc
         } else if self.key.hasPrefix("0x") && self.key.count == 10, let code = UInt32(self.key.dropFirst(2), radix: 16) {
             return packAsType(code)
@@ -288,5 +232,17 @@ extension OrderedList: SelfPacking {
     
     public func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
         return try packAsArray(self.data, using: appData.pack)
+    }
+}
+
+extension Record: SelfPacking {
+    
+    public func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor { // TO DO: this is a mess
+        return try packAsRecord(self.fields.map{ (label: Symbol, value: Value) throws -> (AEKeyword, Value) in
+            guard let desc = (appData as! NativeAppData).descriptor(for: label) else {
+                throw UnsupportedCoercionError(value: self, coercion: asValue) // TO DO: what error?
+            }
+            return (try unpackAsFourCharCode(desc), value)
+        }, using: appData.pack)
     }
 }

@@ -6,7 +6,7 @@
 import Foundation
 
 
-// implement iterator over defined fields; Record.toRecord should use this to eval its fields (in the case of AsAnyRecord, the iterator always returns wildcard)
+// implement iterator over defined fields; Record.toRawRecord should use this to eval its fields (in the case of AsAnyRecord, the iterator always returns wildcard)
 
 protocol RecordCoercion: Coercion {
     
@@ -32,7 +32,7 @@ struct AsRecord: RecordCoercion {
     }
     
     func coerce(value: Value, in scope: Scope) throws -> Value {
-        let record = try value.toRecord(in: scope, as: self)
+        let record = try value.toRawRecord(in: scope, as: self)
         if record.isMemoizable, record.constrainedType.isa(self) { return record } // TO DO: how to test if coercion is equal or superset of record's constrained type?
         var result = [Record.Field]()
         do {

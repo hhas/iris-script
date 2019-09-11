@@ -23,6 +23,7 @@ struct Record: Value, Accessor {
     var description: String { return "{\(self.fields.map{ $0 == nullSymbol ? "\($1)" : "\($0.label): \($1)"}.joined(separator: ", "))}" }
     
     typealias Field = (label: Symbol, value: Value) // nullSymbol = unnamed field
+    typealias Fields = [Field]
 
     static let nominalType: Coercion = asRecord
     
@@ -30,10 +31,10 @@ struct Record: Value, Accessor {
 
     let constrainedType: RecordCoercion
     
-    let fields: [Field] // TO DO: why is this not named data as per BoxedSwiftValue?
+    let fields: Fields // TO DO: why is this not named data as per BoxedSwiftValue?
     private var namedFields = [Symbol: Value]() // Q. any performance benefit over `first(where:…)`? (bearing in mind a typical record would have <20 slots) if not, get rid of this
     
-    init(_ fields: [Field]) throws { // field names may be omitted, but must be unique
+    init(_ fields: Fields) throws { // field names may be omitted, but must be unique
         var isMemoizable = true
         var nominalFields = [AsRecord.Field]()
         self.fields = fields
@@ -57,7 +58,7 @@ struct Record: Value, Accessor {
         self.init([], as: asRecord)
     }
     
-    internal init(_ fields: [Field], as coercion: RecordCoercion) {
+    internal init(_ fields: Fields, as coercion: RecordCoercion) {
         self.fields = fields
         self.constrainedType = coercion
         self.isMemoizable = true // TO DO: check this (e.g. what if field values are thunked?)
@@ -68,10 +69,11 @@ struct Record: Value, Accessor {
     }
     
     func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
-        throw NotYetImplementedError()
+        return self.isMemoizable ? self : Record(try self.fields.map{($0, try asAnything.coerce(value: $1, in: scope))},
+                                                 as: self.constrainedType)
     }
     
-    func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
+    func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
         return self
     }
     

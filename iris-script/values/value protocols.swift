@@ -59,7 +59,7 @@ protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // T
 
     //func toEditable(in scope: Scope, as coercion: AsEditable) throws -> EditableValue
     
-    func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record
+    func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record // record fields will be evaluated by RecordCoercion upon return
     
 }
 
@@ -145,7 +145,7 @@ extension Value { // default implementations
     //}
     
     // TO DO: is this appropriate? (probably, c.f. Value->OrderedList(Value), but need to check corner cases for command args/handler sigs - may need to distinguish record literals, as `foo`, `foo {}`, `foo nothing`, and `foo {nothing}` have different meanings) // as with toList/toArray, this implementation isn't suitable for commands/blocks; Q. what about pair?
-    func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
+    func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
         return try Record([(nullSymbol, self.eval(in: scope, as: asAnything))]) // TO DO: need to eval self; TO DO: this is also wrong for commands (move to ScalarValue extension?)
     }
 }

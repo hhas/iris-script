@@ -86,7 +86,7 @@ struct HandlerInterface: ComplexValue { // native representation is a record; ho
     }
     
     
-    func toRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
+    func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
         return Record([(Symbol("name"), self.name),
                        (Symbol("input"), OrderedList(self.parameters.map({$0.coercion}))), // TO DO: what about including binding names?
                        (Symbol("output"), self.result)], as: asRecord) // TO DO: what coercion?
