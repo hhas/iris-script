@@ -27,3 +27,21 @@ func formatCode(value: Value) -> String {
     return value.description
 }
 
+
+
+
+func beginsWith(left: String, right: String) throws -> Bool {
+    return left.lowercased().hasPrefix(right.lowercased())
+}
+
+func endsWith(left: String, right: String) throws -> Bool {
+    return left.lowercased().hasSuffix(right.lowercased())
+}
+
+func contains(left: String, right: String) throws -> Bool {
+    fatalError("Not yet implemented.")
+}
+
+func isIn(left: String, right: String) throws -> Bool {
+    fatalError("Not yet implemented.")
+}

@@ -27,6 +27,8 @@ import Foundation
 // TO DO: can we get rid of swiftEval by defining native 'overlay' protocol+extension for Coercions that return Values, e.g. an AsText Coercion that returns Text would implement eval()->Text, which can be re-exported as eval()->Value, thereby satisfying both native->primitive bridging and native runtime typing. (Whereas an AsString Coercion that returns String would only be usable in bridging APIs, but can convert itself to an AsText instance when a native Coercion is required.) Main challenge is supporting generic Coercions, e.g. AsArray(T); need to prototype APIs to confirm they'll support both use-cases. [Also bear in mind that we want to get rid of eval() if we can, and have Coercion.coerce() be the entrypoint, in order to minimize the amount of double-dispatch API-bouncing.]
 
 
+// TO DO: should Values adopt Accessor rather than Mutator?
+
 protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // TO DO: Codable (Q. use Codable for AE bridging?)
         
     var description: String { get }

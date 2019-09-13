@@ -141,9 +141,9 @@ extension Environment {
 class TargetScope: MutableScope { // TO DO: what uses (if any) does this have outside of `tell` blocks? (it is not currently a general-purpose delegate, as only `get` accesses up both scopes; `set` bypasses the target [primary] scope as it's read-only and accesses the parent [secondary] scope)
     
     internal let target: Accessor
-    internal let parent: Environment
+    internal let parent: MutableScope
     
-    init(target: Accessor, parent: Environment) {
+    init(target: Accessor, parent: MutableScope) {
         self.target = target
         self.parent = parent
     }
@@ -152,7 +152,7 @@ class TargetScope: MutableScope { // TO DO: what uses (if any) does this have ou
         //print("TargetScope.get(\(name))")
         return self.target.get(name) ?? self.parent.get(name)
     }
-    func set(_ name: Symbol, to value: Value) throws {
+    func set(_ name: Symbol, to value: Value) throws { // TO DO: should this attempt self.target.set(…) first, delegating to parent on error?
         try self.parent.set(name, to: value) // TO DO: what if name is already defined in target scope? should we check that first and throw if found? (otherwise names may be set that cannot be get)
     }
     func subscope(withWriteBarrier isLocked: Bool) -> MutableScope { // TO DO: what should this return?

@@ -540,14 +540,14 @@ private func procedure_isNotAfter_left_right(command: Command, commandEnv: Scope
     return type_isNotAfter_left_right.result.box(value: result, in: handlerEnv)
 }
 
-// is_same_as {left, right}
+// is {left, right}
 private let type_isSameAs_left_right = (
     param_0: (Symbol("left"), AsString()),
     param_1: (Symbol("right"), AsString()),
     result: asBool
 )
 private let interface_isSameAs_left_right = HandlerInterface(
-    name: "is_same_as",
+    name: "is",
     parameters: [
         (type_isSameAs_left_right.param_0.0, "left", type_isSameAs_left_right.param_0.1),
         (type_isSameAs_left_right.param_1.0, "right", type_isSameAs_left_right.param_1.1),
@@ -566,14 +566,14 @@ private func procedure_isSameAs_left_right(command: Command, commandEnv: Scope, 
     return type_isSameAs_left_right.result.box(value: result, in: handlerEnv)
 }
 
-// is_not_same_as {left, right}
+// is_not {left, right}
 private let type_isNotSameAs_left_right = (
     param_0: (Symbol("left"), AsString()),
     param_1: (Symbol("right"), AsString()),
     result: asBool
 )
 private let interface_isNotSameAs_left_right = HandlerInterface(
-    name: "is_not_same_as",
+    name: "is_not",
     parameters: [
         (type_isNotSameAs_left_right.param_0.0, "left", type_isNotSameAs_left_right.param_0.1),
         (type_isNotSameAs_left_right.param_1.0, "right", type_isNotSameAs_left_right.param_1.1),
@@ -642,6 +642,110 @@ private func procedure_isNotBefore_left_right(command: Command, commandEnv: Scop
         right: arg_1
     )
     return type_isNotBefore_left_right.result.box(value: result, in: handlerEnv)
+}
+
+// begins_with {left, right}
+private let type_beginsWith_left_right = (
+    param_0: (Symbol("left"), AsString()),
+    param_1: (Symbol("right"), AsString()),
+    result: asBool
+)
+private let interface_beginsWith_left_right = HandlerInterface(
+    name: "begins_with",
+    parameters: [
+        (type_beginsWith_left_right.param_0.0, "left", type_beginsWith_left_right.param_0.1),
+        (type_beginsWith_left_right.param_1.0, "right", type_beginsWith_left_right.param_1.1),
+    ],
+    result: type_beginsWith_left_right.result
+)
+private func procedure_beginsWith_left_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_beginsWith_left_right.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_beginsWith_left_right.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try beginsWith(
+        left: arg_0,
+        right: arg_1
+    )
+    return type_beginsWith_left_right.result.box(value: result, in: handlerEnv)
+}
+
+// ends_with {left, right}
+private let type_endsWith_left_right = (
+    param_0: (Symbol("left"), AsString()),
+    param_1: (Symbol("right"), AsString()),
+    result: asBool
+)
+private let interface_endsWith_left_right = HandlerInterface(
+    name: "ends_with",
+    parameters: [
+        (type_endsWith_left_right.param_0.0, "left", type_endsWith_left_right.param_0.1),
+        (type_endsWith_left_right.param_1.0, "right", type_endsWith_left_right.param_1.1),
+    ],
+    result: type_endsWith_left_right.result
+)
+private func procedure_endsWith_left_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_endsWith_left_right.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_endsWith_left_right.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try endsWith(
+        left: arg_0,
+        right: arg_1
+    )
+    return type_endsWith_left_right.result.box(value: result, in: handlerEnv)
+}
+
+// contains {left, right}
+private let type_contains_left_right = (
+    param_0: (Symbol("left"), AsString()),
+    param_1: (Symbol("right"), AsString()),
+    result: asBool
+)
+private let interface_contains_left_right = HandlerInterface(
+    name: "contains",
+    parameters: [
+        (type_contains_left_right.param_0.0, "left", type_contains_left_right.param_0.1),
+        (type_contains_left_right.param_1.0, "right", type_contains_left_right.param_1.1),
+    ],
+    result: type_contains_left_right.result
+)
+private func procedure_contains_left_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_contains_left_right.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_contains_left_right.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try contains(
+        left: arg_0,
+        right: arg_1
+    )
+    return type_contains_left_right.result.box(value: result, in: handlerEnv)
+}
+
+// is_in {left, right}
+private let type_isIn_left_right = (
+    param_0: (Symbol("left"), AsString()),
+    param_1: (Symbol("right"), AsString()),
+    result: asBool
+)
+private let interface_isIn_left_right = HandlerInterface(
+    name: "is_in",
+    parameters: [
+        (type_isIn_left_right.param_0.0, "left", type_isIn_left_right.param_0.1),
+        (type_isIn_left_right.param_1.0, "right", type_isIn_left_right.param_1.1),
+    ],
+    result: type_isIn_left_right.result
+)
+private func procedure_isIn_left_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_isIn_left_right.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_isIn_left_right.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try isIn(
+        left: arg_0,
+        right: arg_1
+    )
+    return type_isIn_left_right.result.box(value: result, in: handlerEnv)
 }
 
 // & {left, right}
@@ -1171,7 +1275,7 @@ private func procedure_whereSelector_elementType_selectorData(command: Command, 
     let arg_0 = try command.swiftValue(at: &index, for: type_whereSelector_elementType_selectorData.param_0, in: commandEnv)
     let arg_1 = try command.swiftValue(at: &index, for: type_whereSelector_elementType_selectorData.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
-    let result = try whereSelector(
+    let result = try testSelector(
         elementType: arg_0,
         selectorData: arg_1,
         commandEnv: commandEnv,
@@ -1477,6 +1581,10 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_isNotSameAs_left_right, procedure_isNotSameAs_left_right)
     env.define(interface_isAfter_left_right, procedure_isAfter_left_right)
     env.define(interface_isNotBefore_left_right, procedure_isNotBefore_left_right)
+    env.define(interface_beginsWith_left_right, procedure_beginsWith_left_right)
+    env.define(interface_endsWith_left_right, procedure_endsWith_left_right)
+    env.define(interface_contains_left_right, procedure_contains_left_right)
+    env.define(interface_isIn_left_right, procedure_isIn_left_right)
     env.define(interface_joinValues_left_right, procedure_joinValues_left_right)
     env.define(interface_uppercase_text, procedure_uppercase_text)
     env.define(interface_lowercase_text, procedure_lowercase_text)

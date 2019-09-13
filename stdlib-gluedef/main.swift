@@ -8,12 +8,19 @@ import Foundation
 
 // TO DO: how to parameterize run-time return type? (TO DO: any primitive handler that evals native code need ability to pass result coercion as Swift func parameter; for now, best to declare requirement explicitly, c.f. use_scopes:…)
 
+// TO DO: should `use_scopes` argument also specify mutability requirements?
+
+// TO DO: ‘begins_with’, ‘ends_with’, ‘contains’, ‘is_in’ infix operators
+
+// TO DO: ‘where’ or ‘whose’? ('where' reads more naturally when used with `its`, e.g. `every document where its name is…`, so we may be better using 'whose', e.g. `every document whose name is…`)
 
 let stdlibGlue = """
 
 «= stdlib glue definition =»
 
 «== Arithmetic operators ==»
+
+«TODO: should symbolic operators have word-based aliases? (these would provide speakable support automatically; alternative is to match spoken phrases to the symbols’ Unicode names)»
 
 to ‘^’ {left as number, right as number} returning number: do
 can_error: true
@@ -129,6 +136,10 @@ done
 
 «note: comparisons may throw if/when trinary `as` clause is added [unless we build extra smarts into glue generator to apply that coercion to the other args automatically, in which case glue code with throw so primitive funcs don't have to]»
 
+«Q. how to name these operators? ideally they should not be confused with arithmetical comparison operators when spoken»
+
+«=== comparison operators ===»
+
 to ‘is_before’ {left as string, right as string} returning boolean: do
 can_error: true
 operator: {form: #infix, precedence: 540}
@@ -139,12 +150,12 @@ can_error: true
 operator: {form: #infix, precedence: 540, aliases: “is_before_or_same_as”}
 done
 
-to ‘is_same_as’ {left as string, right as string} returning boolean: do
+to ‘is’ {left as string, right as string} returning boolean: do
 can_error: true
 operator: {form: #infix, precedence: 540}
 done
 
-to ‘is_not_same_as’ {left as string, right as string} returning boolean: do
+to ‘is_not’ {left as string, right as string} returning boolean: do
 can_error: true
 operator: {form: #infix, precedence: 540}
 done
@@ -156,16 +167,40 @@ done
 
 to ‘is_not_before’ {left as string, right as string} returning boolean: do
 can_error: true
-operator: {form: #infix, precedence: 540, aliases: “is_after_or_same_as”}
+operator: {form: #infix, precedence: 540, aliases: “is_same_as_or_after”}
 done
+
+«=== containment operators ===»
+
+«TO DO: convenience `does_not_begin_with`, etc.»
+
+to ‘begins_with’ {left as string, right as string} returning boolean: do
+can_error: true
+operator: {form: #infix, precedence: 542}
+done
+
+to ‘ends_with’ {left as string, right as string} returning boolean: do
+can_error: true
+operator: {form: #infix, precedence: 542}
+done
+
+to ‘contains’ {left as string, right as string} returning boolean: do
+can_error: true
+operator: {form: #infix, precedence: 542}
+done
+
+to ‘is_in’ {left as string, right as string} returning boolean: do
+can_error: true
+operator: {form: #infix, precedence: 542}
+done
+
+«=== other operators ===»
 
 to ‘&’ {left as string, right as string} returning string: do
 can_error: true
 swift_function: joinValues
 operator: {form: #infix, precedence: 340}
 done
-
-«TODO: also containment operators»
 
 
 «== String commands ==»
@@ -302,10 +337,10 @@ swift_function: idSelector {elementType, selectorData}
 operator: {#infix, 310}
 done
 
-to ‘where’ {left: element_type as name, right: selector_data as expression} returning expression: do
+to ‘whose’ {left: element_type as name, right: selector_data as expression} returning expression: do
 can_error: true
 use_scopes: [#command, #handler] «`elements where expr` will eval expr in handler's scope, delegating to command scope, allowing expr to refer to properties and elements without requiring an explicit `its`»
-swift_function: whereSelector {elementType, selectorData}
+swift_function: testSelector {elementType, selectorData}
 operator: {#infix, 310}
 done
 

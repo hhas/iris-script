@@ -9,7 +9,7 @@
 
 
 func tell(target: AttributedValue, action: Value, commandEnv: Scope) throws -> Value { // `tell expr to expr`
-    let env = TargetScope(target: target, parent: commandEnv as! Environment) // TO DO: fix (TBH, APIs that currently require Environment should really take [Mutable]Scope)
+    let env = TargetScope(target: target, parent: (commandEnv as? MutableScope) ?? MutableShim(commandEnv)) // TO DO: most/all APIs that currently require Environment should really take [Mutable]Scope
     return try action.eval(in: env, as: asAnything) // TO DO: how to get coercion info?
 }
 

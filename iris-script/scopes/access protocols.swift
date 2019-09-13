@@ -39,3 +39,24 @@ extension MutableScope {
     func subscope() -> Scope { return self.subscope(withWriteBarrier: true) }
 }
 
+
+class MutableShim: MutableScope { // kludge
+    
+    let scope: Scope
+    
+    init(_ scope: Scope) {
+        self.scope = scope
+    }
+    
+    func get(_ name: Symbol) -> Value? {
+        return self.scope.get(name)
+    }
+    
+    func set(_ name: Symbol, to value: Value) throws {
+        throw ImmutableValueError(name: name, in: self)
+    }
+    
+    func subscope(withWriteBarrier isLocked: Bool) -> MutableScope {
+        return self // TO DO
+    }
+}

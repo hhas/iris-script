@@ -9,7 +9,7 @@ import Foundation
 // TO DO: coercions don't yet work right
 
 
-func unpackSignature(_ value: Value, in env: Environment) throws -> (Symbol, [HandlerInterface.Parameter]) {
+func unpackSignature(_ value: Value, in env: Scope) throws -> (Symbol, [HandlerInterface.Parameter]) {
     let name: Symbol, parameters: [HandlerInterface.Parameter]
     switch value {
     case let command as Command: // name with optional params
@@ -28,7 +28,7 @@ func unpackSignature(_ value: Value, in env: Environment) throws -> (Symbol, [Ha
 // TO DO: sort out errors; this should throw simple, descriptive errors indicating type of error; caller should raise full coercion error with complete signature
 
 
-func unpackParameters(_ parameters: [Record.Field], in env: Environment) throws -> [HandlerInterface.Parameter] {
+func unpackParameters(_ parameters: [Record.Field], in env: Scope) throws -> [HandlerInterface.Parameter] {
     var uniqueLabels = Set<Symbol>(), uniqueBindings = Set<Symbol>()
     let result = try parameters.map{ (label: Symbol, value: Value) throws -> HandlerInterface.Parameter in
         // label may be nullSymbol, in which case use binding name
@@ -122,7 +122,7 @@ struct AsHandler: SwiftCoercion {
     // TO DO: when should handlers capture their lexical scope? and when should that capture be strongref vs weakref?
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        let env = scope as! Environment // TO DO: fix
+        let env = scope as! Environment // TO DO: fix (NativeHandler currently takes Environment argument [effectively an activation record]; why?)
         // TO DO: return strongrefd handler?
         switch value {
         case let handler as Handler: return handler

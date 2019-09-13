@@ -56,7 +56,7 @@ func idSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope) thr
     fatalError("Not yet implemented.")
 }
 
-func whereSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value {
+func testSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value {
     fatalError("Not yet implemented.")
 }
 

@@ -26,30 +26,6 @@ class NativeAppData: AppData {
     let glueTable: GlueTable
     private var commandInterfaces = [String: HandlerInterface]()
     
-    func interfaceForCommand(term: CommandTerm) -> HandlerInterface {
-        if let interface = self.commandInterfaces[term.name] { return interface }
-        let interface = HandlerInterface(name: Symbol(term.name),
-                                         parameters: term.parameters.map{ (Symbol($0.name), nullSymbol, asValue) },
-                                         result: asIs)
-        commandInterfaces[term.name] = interface
-        return interface
-    }
-    
-    
-    func descriptor(for symbol: Symbol) -> Descriptor? {
-        return self.glueTable.typesByName[symbol.key]
-    }
-    
-    func symbol(for code: OSType) -> Symbol {
-        if let name = self.glueTable.typesByCode[code] {
-            return Symbol(name)
-        } else {
-            return Symbol(String(format: "0x%08x", code)) // TO DO: how should raw AE codes be presented?
-        }
-    }
-    
-    
-    
     public required init(applicationURL: URL? = nil, useTerminology: TerminologyType = .sdef) throws {
         let glueTable = GlueTable(keywordConverter: nativeKeywordConverter, allowSingularElements: true)
         // temporary; TO DO: if .aete or URL not available, use getAETE, else if .sdef use SDEF
@@ -80,28 +56,26 @@ class NativeAppData: AppData {
         fatalError()
     }
     
-    /*
-    override func pack(_ value: Any) throws -> Descriptor {
-        switch value {
-        case let tag as Symbol:
-            guard let desc = self.glueTable.typesByName[tag.key] else { return try super.pack(value) } // TO DO: throw 'unknown tag' error here
-            return desc
-        default:
-            return try super.pack(value)
+    func interfaceForCommand(term: CommandTerm) -> HandlerInterface {
+        if let interface = self.commandInterfaces[term.name] { return interface }
+        let interface = HandlerInterface(name: Symbol(term.name),
+                                         parameters: term.parameters.map{ (Symbol($0.name), nullSymbol, asValue) },
+                                         result: asIs)
+        commandInterfaces[term.name] = interface
+        return interface
+    }
+    
+    func descriptor(for symbol: Symbol) -> Descriptor? {
+        return self.glueTable.typesByName[symbol.key]
+    }
+    
+    func symbol(for code: OSType) -> Symbol {
+        if let name = self.glueTable.typesByCode[code] {
+            return Symbol(name)
+        } else {
+            return Symbol(String(format: "0x%08x", code)) // TO DO: how should raw AE codes be presented?
         }
     }
-    
-    // TO DO: need to check where these get called (right now they're problematic)
-    override func unpack<T>(_ desc: Descriptor) throws -> T {
-        //print("Unpack as \(T.self):", desc)
-        return try super.unpack(desc)
-    }
-    
-    override func unpackAsAny(_ desc: Descriptor) throws -> Any {
-        //print("Unpack as Any:", self)
-        return try super.unpackAsAny(desc)
-    }
-    */
 }
 
 

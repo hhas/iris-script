@@ -20,6 +20,7 @@ func unpackDescriptor(_ desc: Descriptor, in scope: Scope = nullScope, as coerci
 
 struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
     
+    // AppData.sendAppleEvent(…) calls this, passing result as descriptor
     static func SwiftAutomation_unpackSelf(_ desc: Descriptor, appData: AppData) throws -> NativeResultDescriptor {
         return NativeResultDescriptor(desc, appData: appData as! NativeAppData) // TO DO: where could appData be non-native? need to convert to native (alternatively, how much functionality does NativeAppData really add? might it be better to use AppData directly, with any native-specific methods provided as extensions on that?)
     }
@@ -35,7 +36,7 @@ struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
     
     var description: String { return "«\(self.desc)»" }
     
-    static var nominalType: Coercion { return asAnything } // TO DO: asDescriptor
+    static var nominalType: Coercion { return asAnything } // TO DO: what type?
     
     private let desc: Descriptor
     private let appData: NativeAppData
@@ -187,6 +188,7 @@ struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
         case typeObjectSpecifier:
             //print("unpack", desc)
             return Reference(appData: self.appData, desc: self.desc as! SpecifierDescriptor)
+        // TO DO: typeInsertionLoc, comparison/logical test, range
         case typeQDPoint, typeQDRectangle, typeRGBColor:
             return OrderedList(try self.appData.unpack(desc) as [Int])
         default:

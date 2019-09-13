@@ -78,10 +78,16 @@ func test() {
     
     script = """
     tell app “com.apple.TextEdit” to do
-        make new: #document at: end of documents with_properties: {name: “test”, text: “hello”}
+        make new: #document at: end of documents with_properties: {
+            name: “Test”,
+            text: “hello again”
+        }
     done
     """
 
+    script = "tell app “com.apple.TextEdit” to get documents whose text is “” and name begins_with “Untitled”"
+    
+    //script = "tell app “com.apple.TextEdit” to get text of documents"
     //script = "write true"
 
     //script = "if 1 + 2 = 3, 4 then 6, 8, 9." // this (correctly) reports parse error on unexpected `then` keyword
