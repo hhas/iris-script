@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import AppKit
 import AppleEvents
 import SwiftAutomation
 
@@ -25,6 +26,14 @@ class NativeAppData: AppData {
     
     let glueTable: GlueTable
     private var commandInterfaces = [String: HandlerInterface]()
+    
+    public convenience init(bundleIdentifier: String) throws {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else {
+            throw ConnectionError(target: .bundleIdentifier(bundleIdentifier, true),
+                                  message: "Application not found: \(bundleIdentifier)")
+        }
+        try self.init(applicationURL: url)
+    }
     
     public required init(applicationURL: URL? = nil, useTerminology: TerminologyType = .sdef) throws {
         let glueTable = GlueTable(keywordConverter: nativeKeywordConverter, allowSingularElements: true)

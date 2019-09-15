@@ -108,7 +108,6 @@ extension Value { // default implementations
     // TO DO: should default implementations of toTYPE forward to one or more [@inlinable?] generic implementations? if we want to eliminate Value.eval/swiftEval then this will be easiest way to do it, as types that currently override eval can override the generic method[s] instead of every single one of the following
     
     func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
-        print("toTYPE: unsupported", self, coercion)
         throw UnsupportedCoercionError(value: self, coercion: coercion)
     }
     

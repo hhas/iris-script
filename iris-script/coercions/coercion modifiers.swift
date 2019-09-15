@@ -258,13 +258,13 @@ let asEditable = AsEditable()
 
 // nominal type checks
 
-struct AsLiteral<T: Value>: SwiftCoercion {
+struct AsLiteral<T: Value>: SwiftCoercion { // caution: this only works for values that have native syntax (number, string, list, command, etc), not for values that require a constructor command (e.g. range/thru) // TO DO: also define AsLiteralCommand that allows command name and operands to be matched? (while this will be limited due to lack of vararg support in generics, in practice we really only need unary and binary matching as its main use will be matching operator exprs, most of which take one or two operands; alternatively, we could take AsRecord as argument, although that wouldn't support unboxing)
     
     var swiftLiteralDescription: String { return "\(type(of: self))()" }
 
     var name: Symbol { return T.nominalType.name } // TO DO: what should this be?
     
-    var description: String { return "\(self.name.label) \(T.nominalType)" } 
+    var description: String { return "literal \(self.name.label)" } 
     
     // if the input Value is an instance of T, it is passed thru as-is without evaluation, otherwise an error is thrown // TO DO: Value.eval() will bypass this (another reason it needs to go away)
     

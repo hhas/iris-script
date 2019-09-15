@@ -36,7 +36,7 @@ struct RemoteCall: Handler { // for AE commands, the command name (e.g. Symbol("
     let isStaticBindable = false // TO DO: need to decide policy for methods
     
     func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
-        print("Calling", command)
+        //print("Calling", command)
         let directParameter: Any
         var keywordParameters = [KeywordParameter]()
         if command.arguments.isEmpty {
@@ -126,6 +126,8 @@ extension ReferenceProtocol {
             return ByNameSelector(appData: self.appData, parentDesc: self.desc)
         case "id":
             return ByIDSelector(appData: self.appData, parentDesc: self.desc)
+        case "from":
+            return ByRangeSelector(appData: self.appData, parentDesc: self.desc)
         case "where":
             return ByTestSelector(appData: self.appData, parentDesc: self.desc)
         case "before", "after": // TO DO: 2 versions of this: `element_type before element of…` (relative), `before element of…` (insertion); dispatch on presence/absence of left operand (it is 2 different operators; just not sure if it should be 2 different commands, which operators could map to)
@@ -164,22 +166,23 @@ struct Reference: ReferenceProtocol {
             switch rootDesc.type {
             case typeNull:
                 switch self.appData.target {
-                case .name(let name):                    parent = " of app \(name.debugDescription)"
+                case .name(let name):                    parent = " of app \(name.debugDescription)" // TO DO: may want to avoid using name only, and require full path/bundle ID/pid/eppc URL/nil
                 case .url(let url):
                     parent = " of app \(url.isFileURL ? url.path.debugDescription : "“\(url)”")"
-                case .bundleIdentifier(let bundleID, _): parent = " of app id \(bundleID.debugDescription)"
-                case .processIdentifier(let pid):        parent = " of app id \(pid)"
+                case .bundleIdentifier(let bundleID, _): parent = " of app \(bundleID.debugDescription)"
+                case .processIdentifier(let pid):        parent = " of app \(pid)"
                 case .Descriptor(let desc):              parent = " of \(desc)"
-                default:                                 parent = "" // current/none
+                case .current:                           parent = " of current_app"
+                case .none:                              parent = ""
                 }
             case typeCurrentContainer: parent = ""
             case typeObjectBeingExamined: parent = ""
             default: parent = " of \(rootDesc)" // TO DO
             }
         } else if let desc = parentDesc as? ObjectSpecifierDescriptor {
-            parent = Reference(appData: self.appData, desc: desc).description
+            parent = " of \(Reference(appData: self.appData, desc: desc).description)"
         } else {
-            parent = "«\(parentDesc)»"
+            parent = " of «\(parentDesc)»"
         }
         if let desc = self.desc as? ObjectSpecifierDescriptor {
             switch desc.form {
@@ -208,7 +211,7 @@ struct Reference: ReferenceProtocol {
                 case .relativePosition:
                     return "\(names.singular) \((seld as! Symbol).label) \(parent)"
                 case .range:
-                    return "\(names.plural) at \(seld)\(parent)"
+                    return "\(names.plural) from \(seld)\(parent)"
                 case .test:
                     return "\(names.plural) where \(seld)\(parent)" // TO DO: left operand may also be a selector, e.g. "first document where …"
                 default: () // fallthru
@@ -260,8 +263,8 @@ struct Application: ReferenceProtocol {
     let appData: NativeAppData
     let desc: SpecifierDescriptor = RootSpecifierDescriptor.app
     
-    init(bundleIdentifier: String) {
-        self.appData = try! NativeAppData(applicationURL: URL(fileURLWithPath: "/Applications/TextEdit.app"))
+    init(bundleIdentifier: String) throws {
+        self.appData = try NativeAppData(bundleIdentifier: bundleIdentifier)
     }
     
     internal func lookup(_ name: Symbol) -> Value? {

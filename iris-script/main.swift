@@ -84,8 +84,39 @@ func test() {
         }
     done
     """
-
-    script = "tell app “com.apple.TextEdit” to get documents whose text is “” and name begins_with “Untitled”"
+    
+    script = "tell app “com.apple.TextEdit” to get first document whose text is “” and name begins_with “Untitled”"
+    
+    // TO DO: problem is that 'thru' binds tighter than 'at'; we could make 'thru' bind looser than [inner] at if we change outer 'at' to different operator, e.g. 'documents from document at 2 thru document at 3'; Q. would it be practical/wise to define infix 'to' operator for constructing ranges, e.g. `1 to 10`? Q. how does `to` know when to clear left? e.g. `a to b` is ambiguous, as it could read as `a {'to' {b}}`
+    
+    script = "tell app “com.apple.TextEdit” to get documents from (document at 2) thru (document at 3)"
+    
+    script = "tell app “com.apple.TextEdit” to get documents from 2 thru -1"
+    
+    script = "tell app “com.apple.Finder” to get document_files from 2 thru -1 of home"
+    
+    // TO DO: need decision on whether or not to overload `set` command to perform local assignment; within a `tell app…` block it current sends an AE (or tries to); one option is to define `me`/`my` atom for use in references, e.g.:
+    //
+    //  tell app “com.apple.TextEdit” to set my foo to: get document 1"
+    //
+    // we could describe the problem in terms of dispatch-on-first-argument-type, e.g. when first operand is a reference to a target object (e.g. `set end of documents to…` invokes application-defined `set` handler), vs a reference to a local slot (`set end of bars to…` invokes stdlib-defined `set` handler); however, we should also consider that `get`/`set` remote application state is clean simple unambiguous behavior, whereas overloading `set` but not `get` is inconsistent while overloading `get` is redundant (assuming local refs, unlike remote queries, self-resolve on eval)
+    //
+    // on reflection, looks like `set` should be app-only, or reference-only [if get/set apply to local refs, that is arguably more consistent with remote messaging than with local name binding]
+    //
+    // Q. if local queries require explicit `get` to resolve, e.g. `get B of A`, then how should dot-form/superglobals behave, e.g. `@A.B`/`A.B`/`B of @A`?
+    
+   // script = "Set Bob to: “Tim”. Write Bob."
+    
+   // script = "foo 1 as (editable integer)" // TO DO: possible to treat `editable integer` as non-nested command, given it appears as an operand to `as` operator?
+    
+    //script = "x: 1"
+    
+   // script = "x: 1 as editable integer, y: 2"
+    
+    // colon pair for assignment is simplest [within an expr sequence]; is it sufficient for it to implement eval? // one caution: `foo: bar, baz` will bind result of baz, not bar; use period/linebreak to terminate colon's right operand
+    
+    // TO DO: this still leaves question on how to assign when a reference, not identifier, is given; e.g. `set end of bars to…`
+    
     
     //script = "tell app “com.apple.TextEdit” to get text of documents"
     //script = "write true"

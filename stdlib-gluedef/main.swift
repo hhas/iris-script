@@ -10,9 +10,6 @@ import Foundation
 
 // TO DO: should `use_scopes` argument also specify mutability requirements?
 
-// TO DO: ‘begins_with’, ‘ends_with’, ‘contains’, ‘is_in’ infix operators
-
-// TO DO: ‘where’ or ‘whose’? ('where' reads more naturally when used with `its`, e.g. `every document where its name is…`, so we may be better using 'whose', e.g. `every document whose name is…`)
 
 let stdlibGlue = """
 
@@ -309,7 +306,7 @@ done
 
 
 to ‘app’ {bundle_identifier as string} returning value: do
-can_error: false «errors should only occur upon use, not creation»
+can_error: true «TODO: errors (e.g. app not found) should only occur upon use, not creation»
 swift_function: Application
 done
 
@@ -334,6 +331,13 @@ to ‘id’ {left: element_type as name, right: selector_data as expression} ret
 can_error: true
 use_scopes: #command
 swift_function: idSelector {elementType, selectorData}
+operator: {#infix, 310}
+done
+
+to ‘from’ {left: element_type as name, right: selector_data as expression} returning expression: do
+can_error: true
+use_scopes: [#command, #handler]
+swift_function: rangeSelector {elementType, selectorData}
 operator: {#infix, 310}
 done
 
@@ -368,9 +372,9 @@ swift_function: lastElement
 operator: {#prefix, precedence: 320}
 done
 
-to ‘any’ {right: element_type as name} returning expression: do
+to ‘any’ {right: element_type as name} returning expression: do «TODO: what to call this? 'any'? 'some'? 'random'?»
 swift_function: randomElement
-operator: {#prefix, precedence: 320, aliases: “some”}
+operator: {#prefix, precedence: 320, aliases: [“some”, “random”]}
 done
 
 to ‘every’ {right: element_type as name} returning expression: do

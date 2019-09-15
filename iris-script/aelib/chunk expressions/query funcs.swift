@@ -56,6 +56,10 @@ func idSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope) thr
     fatalError("Not yet implemented.")
 }
 
+func rangeSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value {
+    fatalError("Not yet implemented.")
+}
+
 func testSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value {
     fatalError("Not yet implemented.")
 }

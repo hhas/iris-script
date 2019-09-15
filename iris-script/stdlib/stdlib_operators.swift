@@ -50,6 +50,7 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.add("at", .infix, 310, .left, [])
     registry.add("named", .infix, 310, .left, [])
     registry.add("id", .infix, 310, .left, [])
+    registry.add("from", .infix, 310, .left, [])
     registry.add("where", .infix, 310, .left, ["whose"])
     registry.add("thru", .infix, 330, .left, [])
     registry.add("first", .prefix, 320, .left, [])

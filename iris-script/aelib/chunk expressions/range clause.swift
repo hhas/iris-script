@@ -6,6 +6,7 @@
 import Foundation
 
 
+let asRange = AsComplex<ElementRange>(name: "range")
 
 
 struct ElementRange: Value {
@@ -26,11 +27,5 @@ struct ElementRange: Value {
 }
 
 
-
-// coercion
-
-typealias AsRange = AsLiteral<ElementRange>
-
-let asRange = AsRange()
 
 

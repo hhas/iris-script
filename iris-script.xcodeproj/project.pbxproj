@@ -42,7 +42,7 @@
 		4F29320222E23AD700BC0AD4 /* other line readers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F29320122E23AD700BC0AD4 /* other line readers.swift */; };
 		4F29320422E25E7100BC0AD4 /* operator reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F29320322E25E7100BC0AD4 /* operator reader.swift */; };
 		4F2B81BF22CCD63E00FD1EB8 /* record coercion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B81BE22CCD63E00FD1EB8 /* record coercion.swift */; };
-		4F409194231876E600045E85 /* element range.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F409193231876E600045E85 /* element range.swift */; };
+		4F409194231876E600045E85 /* range clause.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F409193231876E600045E85 /* range clause.swift */; };
 		4F409196231904C900045E85 /* handler stub template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F409195231904C900045E85 /* handler stub template.swift */; };
 		4F46A416232258E6008E0265 /* SwiftAutomation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F46A40A232258D3008E0265 /* SwiftAutomation.framework */; };
 		4F46A41A23225975008E0265 /* native app data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F46A41923225975008E0265 /* native app data.swift */; };
@@ -242,7 +242,7 @@
 		4F29320122E23AD700BC0AD4 /* other line readers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "other line readers.swift"; sourceTree = "<group>"; };
 		4F29320322E25E7100BC0AD4 /* operator reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator reader.swift"; sourceTree = "<group>"; };
 		4F2B81BE22CCD63E00FD1EB8 /* record coercion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record coercion.swift"; sourceTree = "<group>"; };
-		4F409193231876E600045E85 /* element range.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "element range.swift"; sourceTree = "<group>"; };
+		4F409193231876E600045E85 /* range clause.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "range clause.swift"; sourceTree = "<group>"; };
 		4F409195231904C900045E85 /* handler stub template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler stub template.swift"; sourceTree = "<group>"; };
 		4F46A400232258D2008E0265 /* SwiftAutomation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SwiftAutomation.xcodeproj; path = ../SwiftAutomation/SwiftAutomation.xcodeproj; sourceTree = "<group>"; };
 		4F46A41923225975008E0265 /* native app data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "native app data.swift"; sourceTree = "<group>"; };
@@ -363,10 +363,10 @@
 			children = (
 				4FAF5F44231E817A0082FB6F /* reference.swift */,
 				4F2594002324E58400B57593 /* reference selectors.swift */,
+				4F409193231876E600045E85 /* range clause.swift */,
 				4F2503DF232BF8A700C8BDD0 /* test clause.swift */,
 				4F2503E6232BF96800C8BDD0 /* test clause selectors.swift */,
 				4FDAE7B1232B9F31005197DE /* reference coercions.swift */,
-				4F409193231876E600045E85 /* element range.swift */,
 				4F25FB8622B68530007EE7AE /* query funcs.swift */,
 			);
 			path = "chunk expressions";
@@ -782,7 +782,7 @@
 				4F1EA48722B27B8D00FFA4D2 /* text.swift in Sources */,
 				4F5B58852302098200B039DC /* pair.swift in Sources */,
 				4FFC6F2A22D7704D00D636B9 /* access protocols.swift in Sources */,
-				4F409194231876E600045E85 /* element range.swift in Sources */,
+				4F409194231876E600045E85 /* range clause.swift in Sources */,
 				4FAF5F45231E817A0082FB6F /* reference.swift in Sources */,
 				4F857703230D34AF002B47F2 /* std state.swift in Sources */,
 				4F2B81BF22CCD63E00FD1EB8 /* record coercion.swift in Sources */,

@@ -1168,7 +1168,7 @@ private func procedure_AEApplication_bundleID(command: Command, commandEnv: Scop
     var index = 0
     let arg_0 = try command.swiftValue(at: &index, for: type_AEApplication_bundleID.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
-    let result = Application(
+    let result = try Application(
         bundleIdentifier: arg_0
     )
     return type_AEApplication_bundleID.result.box(value: result, in: handlerEnv)

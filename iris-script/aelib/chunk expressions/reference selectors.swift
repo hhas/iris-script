@@ -5,6 +5,9 @@
 
 // note: as long as selector arguments are correct type, building a query shouldn't throw, e.g. `foo of bar of x` can build and cache the query without knowing what `x` is or whether it has a `bar` attribute
 
+// TO DO: what to do with coercion args?
+
+// TO DO: could also do with swiftCall being implemented so that we don't have to force-cast Value results
 
 import Foundation
 import AppleEvents
@@ -90,7 +93,7 @@ struct ByIndexSelector: QuerySelector { // ‘at’ {element_type, selector_data
     
     var interface: HandlerInterface {
         return HandlerInterface(name: "at",
-                                parameters: [("left", "element_type", asLiteralName), ("right", "selector_data", asValue)], // usually, but not necessarily, integer; `a thru b` is also accepted, in which case by-range specifier should be constructed; anything else is by-index
+                                parameters: [("left", "element_type", asLiteralName), ("right", "selector_data", asValue)], // usually, but not necessarily, integer
                                 result: asReference)
     }
     func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
@@ -100,15 +103,7 @@ struct ByIndexSelector: QuerySelector { // ‘at’ {element_type, selector_data
         }
         let elementsDesc = self.parentDesc.elements(try elementCode(for: elementType, in: self.appData))
         let selectorData = try asValue.unbox(value: command.arguments[1].value, in: scope)
-        if let range = selectorData as? ElementRange {
-            print(elementType, "at range:", range)
-            let startDesc = RootSpecifierDescriptor.con.elements(0).first // TO DO: implement
-            let endDesc = RootSpecifierDescriptor.con.elements(0).last
-            return MultipleReference(appData: self.appData, desc: elementsDesc.byRange(from: startDesc, to: endDesc))
-        } else {
-            //print(elementType, "at index:", selectorData)
-            return Reference(appData: self.appData, desc: elementsDesc.byIndex(try appData.pack(selectorData)))
-        }
+        return Reference(appData: self.appData, desc: elementsDesc.byIndex(try appData.pack(selectorData)))
     }
 }
 
@@ -190,22 +185,75 @@ struct ByRelativeSelector: QuerySelector { // `ELEMENT before/after parentDesc` 
     }
 }
 
-// TO DO: how to construct [e.g.] `first element where test of …`?
 
-struct ByTestSelector: QuerySelector { // ‘where’ {element_type, test}
+
+struct ByRangeSelector: QuerySelector { // ‘at’ {element_type, selector_data}
+    
+    let appData: NativeAppData
+    let parentDesc: SpecifierDescriptor
+    
+    var interface: HandlerInterface {
+        return HandlerInterface(name: "from",
+                                parameters: [("left", "element_type", asLiteralName), ("right", "selector_data", asRange)], // 
+            result: asReference)
+    }
+    
+    func unpackRangeSelector(value: Value, in scope: Scope, elementCode: OSType) throws -> QueryDescriptor {
+        let value = try asValue.unbox(value: value, in: scope)
+        if let name = value as? String {
+            return RootSpecifierDescriptor.con.elements(elementCode).byName(packAsString(name))
+        } else if let n = try? asInt.unbox(value: value, in: scope) {
+            return RootSpecifierDescriptor.con.elements(elementCode).byIndex(packAsInt(n))
+        } else {
+            return try asReference.unbox(value: value, in: scope).desc
+        }
+    }
+    
+    func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
+        // TO DO: this ignores argument labels (TBH, would be best if parser checked static arg labels as much as possible, followed by first-use checks, followed by full check on every use for fully dynamic dispatch)
+        guard command.arguments.count == 2, let elementType = command.arguments[0].value.asIdentifier() else {
+            throw BadSelectorError()
+        }
+        let code = try elementCode(for: elementType, in: self.appData)
+        let elementsDesc = self.parentDesc.elements(code)
+        let selectorData = try asRange.unbox(value: command.arguments[1].value, in: scope)
+        let subscope = TargetScope(target: Reference(appData: self.appData, desc: RootSpecifierDescriptor.con),
+                                   parent: (scope as? MutableScope) ?? MutableShim(scope))
+        let startDesc = try self.unpackRangeSelector(value: selectorData.start, in: subscope, elementCode: code)
+        let endDesc = try self.unpackRangeSelector(value: selectorData.stop, in: subscope, elementCode: code)
+        return MultipleReference(appData: self.appData, desc: elementsDesc.byRange(from: startDesc, to: endDesc))
+    }
+}
+
+struct ByTestSelector: QuerySelector { // ‘whose’ {element_type, test}
     
     let appData: NativeAppData
     let parentDesc: SpecifierDescriptor
     
     var interface: HandlerInterface {
         return HandlerInterface(name: "where",
-                                parameters: [("left", "element_type", asLiteralName), ("right", "selector_data", asValue)], // TO DO: right is test clause, although we don't yet have a coercion for that (can't use AsComplex as it's protocol-based)
+                                parameters: [("left", "element_type", asLiteralName), ("right", "selector_data", asTestClause)], // TO DO: left may also be [deferred] selector command
                                 result: asReference)
     }
     func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
+        // TO DO: what about coercion arg?
         // TO DO: this ignores argument labels
         // TO DO: left argument can also be a selector, e.g. `first document where test`
-        guard command.arguments.count == 2, let elementType = command.arguments[0].value.asIdentifier() else {
+        guard command.arguments.count == 2, let left = command.arguments[0].value as? Command else {
+            throw BadSelectorError()
+        }
+        let elementType: Symbol
+        if left.arguments.isEmpty {
+            elementType = left.asIdentifier()!
+        } else if left.arguments.count == 2,
+                ["at", "named", "id"].contains(left.name), // TO DO: these names should be defined as constants
+                let name = left.arguments[0].value.asIdentifier() {
+            elementType = name
+        } else if left.arguments.count == 1,
+                ["first", "middle", "last", "any", "every"].contains(left.name),
+                let name = left.arguments[0].value.asIdentifier(){ // TO DO: ditto
+            elementType = name
+        } else {
             throw BadSelectorError()
         }
         let elementsDesc = self.parentDesc.elements(try elementCode(for: elementType, in: self.appData))
@@ -215,9 +263,23 @@ struct ByTestSelector: QuerySelector { // ‘where’ {element_type, test}
         guard let testDesc = (selectorData as? TestClause)?.desc else {
             throw BadSelectorError()
         }
-        //print(elementType, "where:", selectorData)
-        //print(testDesc)
-        return Reference(appData: self.appData, desc: elementsDesc.byTest(testDesc))
+        var result = elementsDesc.byTest(testDesc)
+        if !left.arguments.isEmpty {
+            let subSelector: QuerySelector
+            switch left.name {
+            case "at":
+                subSelector = ByIndexSelector(appData: appData, parentDesc: result)
+            case "named":
+                subSelector = ByNameSelector(appData: appData, parentDesc: result)
+            case "id":
+                subSelector = ByIDSelector(appData: appData, parentDesc: result)
+            default:
+                subSelector = AbsoluteOrdinalSelector(name: AbsoluteOrdinalSelector.Selector(rawValue: left.name)!,
+                                                      appData: appData, parentDesc: result)
+            }
+            result = (try subSelector.call(with: left, in: scope, as: coercion) as! Reference).desc as! ObjectSpecifierDescriptor // TO DO: what about coercion arg?
+        }
+        return Reference(appData: self.appData, desc: result)
     }
 }
 
