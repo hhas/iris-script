@@ -161,11 +161,11 @@ struct Token: CustomStringConvertible {
                 
             // expression sequence separators // TO DO: what about adjoining whitespace as precedence modifier? e.g. `com.example.foo` has different precedence to `com. example. foo`
                 
-            case .comma: return 200
-            case .lineBreak, .period, .query, .exclamation: return 160
+            case .comma: return 92
+            case .lineBreak, .period, .query, .exclamation: return 90
                 
-            case .semicolon: return 260 // important: precedence needs to be higher than expr sep punctuation (comma, period, etc), but lower than lp command’s argument label [Q. lp command argument shouldn't have precedence]
-            case .colon: return 210 // caution: this must be higher than comma to ensure dict/record items parse correctly; however, the .colon case in parseOperation() will lower its precedence when parsing right-hand side of pair as .sentence (e.g. when parsing `name:action` as procedure)
+            case .semicolon: return 96 // important: precedence needs to be higher than expr sep punctuation (comma, period, etc), but lower than lp command’s argument label [Q. lp command argument shouldn't have precedence]
+            case .colon: return 94 // caution: this must be higher than comma to ensure dict/record items parse correctly; however, the .colon case in parseOperation() will lower its precedence when parsing right-hand side of pair as .sentence (e.g. when parsing `name:action` as procedure)
                                 
                 
             case .hashtag: return 2000      // name modifier; this must always bind to following name
@@ -234,6 +234,8 @@ struct Token: CustomStringConvertible {
         self.whitespaceAfter = whitespaceAfter
         self.position = position
     }
+    
+    // used by operator reader to decompose contiguous symbol chars (which tokenizer reads as single token) into individual operators
     
     func extract(_ form: Form, from startIndex: Substring.Index, to endIndex: Substring.Index) -> Token {
         assert (startIndex != endIndex) // TO DO: or return nil?

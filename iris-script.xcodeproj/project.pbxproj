@@ -176,7 +176,7 @@
 			remoteGlobalIDString = 4FACE27222723090000A04A0;
 			remoteInfo = SwiftAutomationLite;
 		};
-		4F46A4172322593E008E0265 /* PBXContainerItemProxy */ = {
+		4F5EBEEE2444C0C4007EB83D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4F46A400232258D2008E0265 /* SwiftAutomation.xcodeproj */;
 			proxyType = 1;
@@ -349,10 +349,10 @@
 		4F25506122EA386400B7034F /* parser */ = {
 			isa = PBXGroup;
 			children = (
+				4FAE769322FDBCCA00952994 /* parser.swift */,
 				4F2931FF22E2290B00BC0AD4 /* editable script.swift */,
 				4F25506422EA38F500B7034F /* block readers.swift */,
 				4FC5C7FC23110B1F007D694C /* quote reader.swift */,
-				4FAE769322FDBCCA00952994 /* parser.swift */,
 				4F5B24B523156B11001C1941 /* custom parsefuncs.swift */,
 			);
 			name = parser;
@@ -507,7 +507,6 @@
 			children = (
 				4F46A400232258D2008E0265 /* SwiftAutomation.xcodeproj */,
 				4FC5C8232312A06C007D694C /* notes.txt */,
-				4F5B24D623171E55001C1941 /* stdlib-gluedef */,
 				4F84CFFF22ADA0F200C9FD23 /* iris-script */,
 				4F84CFFE22ADA0F200C9FD23 /* Products */,
 				4F46A415232258E6008E0265 /* Frameworks */,
@@ -533,6 +532,7 @@
 				4FFC6F2822D7703000D636B9 /* scopes */,
 				4F5B24B0231405C8001C1941 /* formatting */,
 				4F84D01522AE819000C9FD23 /* errors.swift */,
+				4F5B24D623171E55001C1941 /* stdlib-gluedef */,
 				4F25FB8822B6AC57007EE7AE /* stdlib */,
 				4F46A41D23225A14008E0265 /* aelib */,
 				4FC5C7F9231097FE007D694C /* gluelib */,
@@ -615,7 +615,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				4F46A4182322593E008E0265 /* PBXTargetDependency */,
+				4F5EBEEF2444C0C4007EB83D /* PBXTargetDependency */,
 			);
 			name = "iris-script";
 			productName = "iris-lang";
@@ -629,7 +629,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1030;
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					4F5B24D423171E54001C1941 = {
 						CreatedOnToolsVersion = 10.3;
@@ -849,10 +849,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		4F46A4182322593E008E0265 /* PBXTargetDependency */ = {
+		4F5EBEEF2444C0C4007EB83D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = SwiftAutomation;
-			targetProxy = 4F46A4172322593E008E0265 /* PBXContainerItemProxy */;
+			targetProxy = 4F5EBEEE2444C0C4007EB83D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -860,6 +860,7 @@
 		4F5B24DA23171E55001C1941 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -870,6 +871,7 @@
 		4F5B24DB23171E55001C1941 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -995,6 +997,7 @@
 		4F84D00522ADA0F200C9FD23 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1005,6 +1008,7 @@
 		4F84D00622ADA0F200C9FD23 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				PRODUCT_NAME = "$(TARGET_NAME)";

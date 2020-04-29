@@ -59,7 +59,9 @@ struct NumericReader: LineReader {
     
     // TO DO: `±` is also a valid numeric prefix (this is probably best handled by QuantityReader)
     
-    // TO DO: need to preserve leading zeroes (e.g. barcode numbers)
+    // TO DO: need to preserve leading zeroes (e.g. barcode numbers); e.g. add an extra .literal(String) case to Number enum for capturing numbers written this way
+    
+    // note: this does not consume leading +/- signs; those need to be disambiguated from infix +/- operators (defined by standard operator tables, except when those tables are explicitly excluded); the `sign` parameter is purely for use when matching exponent (see sylvia’s implementation, which is more complete)
     
     func readNumber(_ token1: Token, _ reader1: LineReader, sign: Token? = nil) -> (Token, LineReader)? {
         if case .digits = token1.form {

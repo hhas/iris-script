@@ -5,6 +5,8 @@
 import Foundation
 
 
+// 'everything is a command' = 'right-hand rule: if a value (expr) appears after a command name, the command will take it as argument' (this is significant as 'variables' are just arg-less commands that retrieve the value stored under that name; this may produce unanticipated behavior, e.g. when the name is followed by an operator name that is available in both prefix/atom and infix/postfix forms; currently the [dumb] parser takes the prefix/atom form as command argument but it would be better/safer/more predictable to favor the infix/postfix form in lp (low-punctuation) commands, requiring the user to explicitly punctuate the command if they want it used as argument instead)
+
 let env = Environment()
 
 stdlib_loadHandlers(into: env)
@@ -91,9 +93,36 @@ func test() {
     
     script = "tell app “com.apple.TextEdit” to get documents from (document at 2) thru (document at 3)"
     
+    // TO DO: `tell` parsefunc needs to match `to` keyword, but defining an infix `to` operator causes that to match instead, resulting in failed parse
+    //
+    // alternative is to give up on `from…to…` and use `in…thru…` (though ideally we want a generalized solution that will use same rules regardless of i18n)
+    
     script = "tell app “com.apple.TextEdit” to get documents from 2 thru -1"
     
-    script = "tell app “com.apple.Finder” to get document_files from 2 thru -1 of home"
+    
+    // TO DO: period/LF needs higher 'precedence' than `else`; might need to change how ExpressionSequence is constructed (e.g. split into ExpressionSeq vs BlockSeq, with the former limited to single sentences; maybe rename `Sentence` and `Paragraph`)
+    
+    
+    //
+    
+    script = """
+    
+    Set a to: 3, set b to: true. If 3 + a = 4 then "A" else if b then "B" else "C".
+    
+    """
+    
+//    script = " a b c " // this throws parsing error as inner commands can't be LP, but could do with better error message (currently 'expected label in ‘a’ command but found <.unquotedName("c") _"c"_>'); Q. how to suggest corrections? e.g. `a {b {c}}`, `a {b, c}`, `a {b, c: …}`
+    
+    // TO DO: "a + 1" mis-parses as `a {+1}`
+    
+    // TO DO: name arg is currently limited to AsLiteralName, but also needs to accept a reference
+    //script = "set a of b to: 3"
+    
+
+    //script = "set n to app “com.apple.TextEdit”, tell n to get document 1" // TO DO: parser prematurely exits after the 1st `n`; how to match `to` as stop word here? might pass closure thru parser that performs all stop-word/boundary checks; alternatively, leave it for now and address in table-driven parser
+    
+   // script = "tell app “com.apple.Finder” to get document_files from 2 thru -1 of home"
+
     
     // TO DO: need decision on whether or not to overload `set` command to perform local assignment; within a `tell app…` block it current sends an AE (or tries to); one option is to define `me`/`my` atom for use in references, e.g.:
     //

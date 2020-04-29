@@ -108,7 +108,7 @@ struct OperatorDefinition: CustomDebugStringConvertible {
         case infix
         case postfix
         case atom
-        case custom(ParseFunc)
+        case custom(ParseFunc) // TO DO: this is problematic as parser queries operator fixity to determine parsing around commands; we really need to express all operators in terms of pattern matching, with each pattern written as an array, [ParsePattern] (Q. how to describe operands' parsing behavior?); each matcher needs to match normalized literal string or apply a consuming parsefunc that returns new parser state + Value or nil (match failed); Q. how best to express whitespace requirements? (we also want bottom-up shift-reduce parsing with packrat behavior)
         
         static func ==(lhs: Form, rhs: Form) -> Bool {
             switch (lhs, rhs) { // TO DO: should custom prefix/infix forms also match standard prefix/infix forms?
@@ -116,7 +116,7 @@ struct OperatorDefinition: CustomDebugStringConvertible {
             case (.infix, .infix): return true
             case (.postfix, .postfix): return true
             case (.atom, .atom): return true
-            case (.custom(_), .custom(_)): return true // TO DO: what result?
+            case (.custom(_), .custom(_)): return true // TO DO: FIX; what result?
             default: return false
             }
         }
@@ -125,6 +125,7 @@ struct OperatorDefinition: CustomDebugStringConvertible {
     enum Associativity {
         case left
         case right
+        // TO DO: `case none` (e.g. `1 thru 2 thru 3` should be a syntax error)
     }
     
     let name: Name // the operator's canonical name, categorized as .word/.symbol, e.g. `.word(Symbol("if"))`, `.symbol(Symbol("÷"))`

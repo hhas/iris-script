@@ -244,29 +244,31 @@ class Parser {
         }
         //print("reading args for command `\(name)`", allowLooseArguments)
         let next = self.peek().token
-        if next.isExpressionTerminator || next.requiresLeftOperand { // no argument
+        
+        
+        // TO DO: if next token is operator class and can have left operand, we need to defer to that unless whitespacing indicates otherwise, e.g. `-` can be prefix or infix operator, thus `a - 1` currently always parses as `a{-1}` but should only do so if written as `a -1` (and even then should probably be pretty-printed as `a {-1}` for clarity)
+        
+        
+        if next.isExpressionTerminator || next.requiresLeftOperand { // no argument (i.e. either punctuation/linebreak or an infix/postfix operator)
             arguments = []
         } else if case .startRecord = next.form { // explicit record argument; this always binds to command name
             self.advance()
             arguments = try self.readRecord().fields
         } else if allowLooseArguments { // low-punctuation command; first field may be unlabeled, subsequent fields must be labeled
             arguments = [Command.Argument]()
-            self.advance()
-            if !(self.current.token.isExpressionTerminator || self.current.token.requiresLeftOperand) {
+            var isFirst = true
+            while !(self.peek().token.isExpressionTerminator || self.peek().token.requiresLeftOperand) {
+                self.advance()
                 if let label = self.readLabel() {
                     arguments.append((label, try self.readArgumentValue()))
-                } else {
+                } else if isFirst {
                     arguments.append((nullSymbol, try self.readArgumentValue()))
+                } else {
+                    print("expected label in ‘\(name)’ command but found", self.current.token); throw BadSyntax.missingName
                 }
-                //print("read first arg:", arguments)
-                while !(self.peek().token.isExpressionTerminator || self.peek().token.requiresLeftOperand) {
-                    if case .operatorName(_) = self.peek().token.form { break } // operator reader does not match `NAME:` pattern, so argument names should never appear as .operatorName(_) tokens
-                    self.advance()
-                    guard let label = self.readLabel() else {
-                        print("expected label in \(name) command but found", self.current.token); throw BadSyntax.missingName }
-                    arguments.append((label, try self.readArgumentValue()))
-                    //print("read labeled arg:", arguments)
-                }
+                isFirst = false
+                if case .operatorName(_) = self.peek().token.form { break } // operator reader does not match `NAME:` pattern, so .operatorName(_) token will never appear where an argument name is expected, thus an operator terminates lp command
+                //print("read lp arg:", arguments.last!)
             }
         } else {
             arguments = []
@@ -441,6 +443,7 @@ class Parser {
         do {
             result = try self._parseExpression()
             if case .lineBreak = self.current.token.form { self.advance(ignoringLineBreaks: true) }
+            // TO DO: unbalanced conjunction operators (e.g. `then` without `if`) can cause premature exit; need to check if next token if conjunction
             assert(self.current.token.form == .endOfScript, "Parser prematurely exited after \(self.current.token) at \(self.current.location). This is either a syntax error or a parser bug. Next token is \(self.peek().token).")
             let exprSeq: [Value]
             if let builder = result as? ExpressionSequence {

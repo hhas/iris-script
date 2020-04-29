@@ -44,22 +44,23 @@ func parseUnexpectedKeyword(_ parser: Parser, _ definition: OperatorDefinition, 
 }
 
 
-func parsePrefixControlOperator(withConjunction operatorName: Symbol) -> ParseFunc {
+func parsePrefixOperator(named operatorName: Symbol, withConjunction conjunctionName: Symbol) -> ParseFunc {
     return { (_ parser: Parser, _ definition: OperatorDefinition, _ leftExpr: Value?, _ allowLooseArguments: Bool) throws -> Value in
         if leftExpr != nil {
-            print("expected delimiter before \(operatorName) but found: \(leftExpr!)")
+            print("expected delimiter before \(conjunctionName) but found: \(leftExpr!)")
             throw BadSyntax.unterminatedExpression
         }
         // print("parse control", parser.current.token)
         parser.advance()
-        let leftExpr = try parser.parseExpression(allowLooseSequences: .no)
-        //print(leftExpr)
+        let leftExpr = try parser.parseExpression(allowLooseSequences: .no) // this breaks out on token before 'then'
+        print(parser.current.token)
+        print("LEFT", leftExpr)
         parser.advance()
-        //print("parse control", parser.current.token)
+        // check conjunction word is correct
         switch parser.current.token.form {
-        case .comma: ()
-        case .operatorName(let operatorClass) where operatorClass.name == .word(operatorName): ()
-        default: print("expected comma or `\(operatorName.label)` keyword but found: `\(parser.current.token.content)`"); throw BadSyntax.unterminatedExpression
+        case .comma: () // TO DO: not sure about this (e.g. `if test, action.`)
+        case .operatorName(let operatorClass) where operatorClass.name == .word(conjunctionName): ()
+        default: print("\(operatorName) operator expected comma or `\(conjunctionName.label)` keyword after first operand but found: `\(parser.current.token.content)`"); throw BadSyntax.unterminatedExpression
         }
         parser.advance()
         let rightExpr = try parser.parseExpression(definition.precedence, allowLooseSequences: .sentence)

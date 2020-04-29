@@ -10,6 +10,7 @@ import Foundation
 
 // TO DO: should `use_scopes` argument also specify mutability requirements?
 
+// TO DO: glue handler names shouldn't normally need single-quoted as (except for ‘to’, ‘as’, ‘returning’) they're not defined as operators when glue code is parsed
 
 let stdlibGlue = """
 
@@ -259,39 +260,40 @@ use_scopes: #command
 «TODO: make this an operator, as in AS? (it's awfully easy to forget the colon after the `to` keyword, and mildly irritating to have to type it; in principle, a3c could insert the colon automatically, but it may be easier to visually read as an operator, particularly when the name operand is a lengthy expr)»
 done
 
+«TO DO: how to express result/error of action as return value of 'if'? how to express `did_nothing` as alternate result of 'if?'? e.g. `returning result of right or did_nothing` (BTW, this is good example of why 'left' and 'right' are poor labels)»
 to ‘if’ {left: condition as boolean, right: action as expression} returning anything: do
 can_error: true «TODO: would be better to distinguish errors thrown by arguments from errors thrown by handler itself»
 use_scopes: #command
 swift_function: ifTest {condition, action}
-operator: {#parseIfThenOperator, 100}
+operator: {#parseIfThenOperator, 101}
 done
 
 to ‘else’ {left as expression, right as expression} returning anything: do
 can_error: true
 use_scopes: #command
 swift_function: elseTest
-operator: {#infix, 90} «lower precedence than `if`, lp commands; TO DO: adaptive precedence when `if` operators are nested; each `else` should bind to its closest left-hand `if`; alternative is that we handle optional `else` clause within parsefunc, although that lacks composability that an infix `else` provides [assuming we can make it parse]; for example, how should/will following parse: `if t1 then if t2 then a1 else a2 else a3`? It should be `(if t1 then (if t2 then a1 else a2)) else (a3)`, so that outer `else` takes `if t1 then if t2 then a1 else a2` as its left operand, but currently parses as `if t1 then (if t2 then ((a1 else a2) else (a3)))`»
+operator: {#infix, 100, right} «lower precedence than `if`, lp commands»
 done
 
 to ‘while’ {left: condition as boolean, right: action as expression} returning anything: do
 can_error: true
 use_scopes: #command
 swift_function: whileRepeat {condition, action}
-operator: {#parseWhileRepeatOperator, 100}
+operator: {#parseWhileRepeatOperator, 101}
 done
 
 to ‘repeat’ {left: action as expression, right: condition as boolean} returning anything: do
 can_error: true
 use_scopes: #command
 swift_function: repeatWhile {action, condition}
-operator: {#parseRepeatWhileOperator, 100}
+operator: {#parseRepeatWhileOperator, 101}
 done
 
 to ‘tell’ {left: target as value, right: action as expression} returning anything: do
 can_error: true
 use_scopes: #command
 swift_function: tell {target, action}
-operator: {#parseTellToOperator, 100}
+operator: {#parseTellToOperator, 101}
 done
 
 

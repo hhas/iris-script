@@ -160,13 +160,17 @@ class Command: ComplexValue {
         do {
             //print("Command.swiftValue() for:", param, "from", self.arguments)
             return try self.value(at: &index, named: param.label).swiftEval(in: commandEnv, as: param.coercion)
-        } catch {
+        } catch { // TO DO: this catches both label mismatches and eval/coercion errors
             //print("Command.swiftValue() failed:", error)
+            // TO DO: fix this; error message is misleading where command args are unlabeled
             let labels = self.arguments.map{$0.label}
             if labels.contains(param.label) {
                 throw BadArgumentError(at: i, of: self).from(error) // TO DO: need better error description that compares expected labels to found labels, indicating mismatch
             } else {
-                print("Couldn't match the handler parameter named `\(param.label.label)` to any of the `\(self.name.label)` command’s labeled arguments: `\(self.arguments.map{$0.label.label}.filter{!$0.isEmpty}.joined(separator: ", "))`")
+                print(self)
+                print(self._handler.interface)
+                print(param)
+                print("Couldn't match the `\(self.name.label)` handler’s `\(param.label.label)` parameter to any of the `\(self.name.label)` command’s labeled arguments: `\(self.arguments.map{$0.label.label}.filter{!$0.isEmpty}.joined(separator: ", "))`")
                 throw UnknownArgumentError(at: i, of: self).from(error) // TO DO: need better error description that compares expected labels to found labels, indicating mismatch
             }
         }

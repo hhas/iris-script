@@ -41,11 +41,13 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.add("as", .infix, 350, .left, [])
     registry.add("to", .prefix, 180, .left, [])
     registry.add("when", .prefix, 180, .left, [])
-    registry.add("if", .custom(parseIfThenOperator), 100, .left, [])
-    registry.add("else", .infix, 90, .left, [])
-    registry.add("while", .custom(parseWhileRepeatOperator), 100, .left, [])
-    registry.add("repeat", .custom(parseRepeatWhileOperator), 100, .left, [])
-    registry.add("tell", .custom(parseTellToOperator), 100, .left, [])
+    /*
+    registry.add("if", .custom(parseIfThenOperator), 104, .left, [])
+    registry.add("else", .infix, 100, .right, [])
+    registry.add("while", .custom(parseWhileRepeatOperator), 104, .left, [])
+    registry.add("repeat", .custom(parseRepeatWhileOperator), 104, .left, [])
+    registry.add("tell", .custom(parseTellToOperator), 104, .left, [])
+ */
     registry.add("of", .infix, 306, .right, [])
     registry.add("at", .infix, 310, .left, [])
     registry.add("named", .infix, 310, .left, [])

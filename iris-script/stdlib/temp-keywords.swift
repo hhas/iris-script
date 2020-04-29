@@ -7,10 +7,12 @@ import Foundation
 
 
 // used in stdlib_operators
-let parseIfThenOperator = parsePrefixControlOperator(withConjunction:"then")
-let parseWhileRepeatOperator = parsePrefixControlOperator(withConjunction:"repeat")
-let parseRepeatWhileOperator = parsePrefixControlOperator(withConjunction:"while")
-let parseTellToOperator = parsePrefixControlOperator(withConjunction:"to")
+let parseIfThenOperator         = parsePrefixOperator(named: "if", withConjunction:"then")
+let parseWhileRepeatOperator    = parsePrefixOperator(named: "while", withConjunction:"repeat")
+let parseRepeatWhileOperator    = parsePrefixOperator(named: "repeat", withConjunction:"while")
+let parseTellToOperator         = parsePrefixOperator(named: "tell", withConjunction:"to")
+
+let parseSetToOperator          = parsePrefixOperator(named: "set", withConjunction:"to")
 
 // TO DO: how to generate operator definitions for non-commands?
 let parseDoBlock = parseCustomBlock(withStyle: Block.Style.custom(definition: "do", terminator: "done", delimiter: "\n"))
@@ -26,8 +28,26 @@ func stdlib_loadKeywords(into registry: OperatorRegistry) {
     registry.add(OperatorDefinition("true", .atom, precedence: 0))
     registry.add(OperatorDefinition("false", .atom, precedence: 0))
     
-    // used in custom control operators (`if … then …`)
-    registry.add(OperatorDefinition("then", .custom(parseUnexpectedKeyword), precedence: -100))
+    // used in custom control operators (e.g. `if … then …`)
+    // should be okay overloading existing operator names (e.g. `to`) as long as they are prefix/atom
+    // TO DO: these should be automatically added to operator registry when adding the operator
+    
+    // operators of form `NAME op1 CONJUNCTION op2`
+    registry.add("if", .custom(parseIfThenOperator), 104, .left, [])
+    registry.add("else", .infix, 100, .right, [])
+    registry.add("while", .custom(parseWhileRepeatOperator), 104, .left, [])
+    registry.add("repeat", .custom(parseRepeatWhileOperator), 104, .left, [])
+    registry.add("tell", .custom(parseTellToOperator), 104, .left, [])
+    
+    // conjunctions for above
+    registry.add(OperatorDefinition("then", .infix, precedence: -99)) // low precedence forces break-out, which parsePrefixOperator will intercept, check the conjunction is correct, then ; TO DO: this is kludgy
+    registry.add(OperatorDefinition("repeat", .infix, precedence: -99))
+    registry.add(OperatorDefinition("while", .infix, precedence: -99))
+    registry.add(OperatorDefinition("to", .infix, precedence: -99))
+    
+    
+    // TO DO: `set a to b` doesn't work as `to` is parsed as prefix operator: `a{to{b}}`
+    //registry.add("set", .custom(parseSetToOperator), 102, .left, [])
     
     // used in procedure interface
     registry.add(OperatorDefinition("returning", .infix, precedence: 300))

@@ -113,7 +113,7 @@ func defineHandlerGlue(handler: Handler, commandEnv: Scope) throws {
                 throw BadSyntax.missingExpression
         }
         let formName: String
-        // kludge: to use .custom(…) form, pass a parsefunc name as symbol, e.g. #parseIfOperator, where `let parseIfOperator = parsePrefixControlOperator(withConjunction: "to")` is defined elsewhere [note: double-quotes cannot appear within quoted names; while we could avoid this limitation by accepting a string or command, it's not worth the effort as passing a parsefunc just a temporary workaround anyway] // TO DO: this'll be replaced when table-driven parser is implemented; presumably with the form field accepting the custom pattern to match
+        // kludge: to use .custom(…) form, pass a parsefunc name as symbol, e.g. #parseIfOperator, where `let parseIfOperator = parsePrefixOperator(withConjunction: "to")` is defined elsewhere [note: double-quotes cannot appear within quoted names; while we could avoid this limitation by accepting a string or command, it's not worth the effort as passing a parsefunc just a temporary workaround anyway] // TO DO: this'll be replaced when table-driven parser is implemented; presumably with the form field accepting the custom pattern to match
         if ["atom", "prefix", "infix", "postfix"].contains(form) {
             formName = ".\(form.key)"
         } else {

@@ -13,7 +13,7 @@ struct Block: BoxedComplexValue { // caution: this does not capture lexical scop
     var description: String { // TO DO: hand off to pp; also need formatting hints from parser
         switch self.style {
         case .sentence(let t): return "\(self.data.map{$0.description}.joined(separator: ", "))\(t.content)"
-        case .parenthesis: return "(\(self.data.map{$0.description}.joined(separator: ", ")))"
+        case .parenthesis: return "(\n\t\(self.data.map{$0.description}.joined(separator: ",\n\t"))\n)"
         case .custom(let def, let t, let d): return "\(def)\n\(self.data.map{$0.description}.joined(separator: "\(d)"))\n\(t)"
         }
     }
