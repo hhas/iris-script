@@ -15,6 +15,9 @@ import Foundation
 
 // TO DO: should lexer/parser be concerned with NFC/NFD?
 
+// TO DO: code editor should map Shift-SPACEBAR to underscore for easier entry; Q. to what extent should editor infer underscores when multi-word names are entered with spaces (e.g. via dictation), e.g. auto-“correcting” `foo bar` to `foo_bar` if `foo_bar` is already known to be defined and `foo` and `bar` are not
+
+
 typealias Precedence = Int16
 
 
@@ -55,17 +58,30 @@ struct Token: CustomStringConvertible {
     
     enum Form: Equatable { // core punctuation, plus digits and non-digit text
         
+        enum Separator { // all act as expr separators and can be used interchangeably within blocks, lists, records; only difference is how they behave at runtime (essentially they act as debugger hooks, optionally inserting extra instructions at parse-time)
+            case comma              // ,
+            case period             // .
+            case query              // ?
+            case exclamation        // !
+        }
+        
         // TO DO: restructure as .punctuation(), .unaryQuote(), .beginQuote(), .endQuote(), .letters(), .symbols(), .digits(), .lexeme() primitives, where primitives are progressively converted to .lexemes (.string(), .numeric(), .identifier(), etc)?
         
-        // expression separators
-        case comma              // ,
-        case semicolon          // ;
+        // expression separators // TO DO: combine into single .separator(Separator) case
+        case separator(Separator)
+        //case comma              // ,
+        //case period             // .
+        //case query              // ?
+        //case exclamation        // !
+        
+        // key-value pairing // colon is defined as a builtin rather than a table-defined operator since key-value list and record syntax+types are builtins; Q. should `name:value` bindings in block contexts map to `set` command or to dedicated Bind Value? (i.e. if `set` is stdlib-defined, we probably still want a way to store values in env even when stdlib isn't loaded)
         case colon              // :
-        case period             // .
-        case query              // ?
-        case exclamation        // !
-        case hashtag            // #
-        case mentions           // @
+
+        // pipe (passes output of LH expr as first argument to RH command) // TO DO: defining this as builtin could allow for RH operand to be LF-wrapped onto next line - not sure if this is a good or bad idea (forcing both operands to appear on same line prevents editing accidents); other reason for making it a builtin is that the parser can apply the `A;B`->`B{A}` transform directly (annotating B Command for PP), whereas an operator would apply at eval time
+        case semicolon          // ;
+        
+        case hashtag            // #  // #NAME = symbol literal
+        case mentions           // @  // @NAME = special names, i.e. system namespace (e.g. module namespace, e.g. `@com.example.foo`; any config-defined constants, e.g. @USER)
         case underscore         // _
         
         // TO DO: is there any benefit to underscoreSeparator being a distinct case? (right now, it's part of undifferentiated words); e.g. does splitting phrases into discrete words (`'document' '_' 'file'` instead of `'document_file'`) provide any benefits to editor when fuzzy matching user's typed input to available domain knowledge; e.g. a user may type `document file` within a `tell @com.apple.Finder to: do…done` block, either accidentally or intentionally [if confident the editor's autocorrect can interpret their intent based on current context], which is certainly beneficial from a touch-typing perspective as Space Bar is much quicker and easier to hit than combined Shift+Minus keys
@@ -126,12 +142,9 @@ struct Token: CustomStringConvertible {
             case (.endRecord, .endRecord): return true
             case (.startGroup, .startGroup): return true
             case (.endGroup, .endGroup): return true
-            case (.comma, .comma): return true
+            case (.separator(let a), .separator(let b)): return a == b
             case (.semicolon, .semicolon): return true
             case (.colon, .colon): return true
-            case (.period, .period): return true
-            case (.query, .query): return true
-            case (.exclamation, .exclamation): return true
             case (.hashtag, .hashtag): return true
             case (.mentions, .mentions): return true
             case (.underscore, .underscore): return true
@@ -155,29 +168,32 @@ struct Token: CustomStringConvertible {
         // TO DO: how to describe precedences by name/category? (using hardcoded ints will become problematic) e.g. arithmetic operators should be one category, with relative precedences between operators within that category (`+` = `-` < `*` = `/`; caveat we need to distinguish operands as well)
         
         // 0 is default precedence (literal values)
-        var precedence: Precedence {
+        var precedence: Precedence { // TO DO: this needs moved/deleted as operator precedence cannot be determined from .operatorName(_) tokens, only from matched patterns
             switch self {
-                // there is also a problem with [e.g.] `if` appearing inside lists/records, as it'll want to consume comma-delimited items for itself
                 
             // expression sequence separators // TO DO: what about adjoining whitespace as precedence modifier? e.g. `com.example.foo` has different precedence to `com. example. foo`
-                
-            case .comma: return 92
-            case .lineBreak, .period, .query, .exclamation: return 90
-                
+            
+            case .separator(_): return -10 // TO DO: what precedence?
+            case .lineBreak: return 90
             case .semicolon: return 96 // important: precedence needs to be higher than expr sep punctuation (comma, period, etc), but lower than lp command’s argument label [Q. lp command argument shouldn't have precedence]
-            case .colon: return 94 // caution: this must be higher than comma to ensure dict/record items parse correctly; however, the .colon case in parseOperation() will lower its precedence when parsing right-hand side of pair as .sentence (e.g. when parsing `name:action` as procedure)
+            case .colon: return 94 // caution: this must be higher than .separator/.lineBreak to ensure dict/record items parse correctly (TO DO: is this still an issue with SR parser?)
                                 
                 
             case .hashtag: return 2000      // name modifier; this must always bind to following name
             case .mentions: return 2000     // name modifier; Q. what if the name is multipart (reverse domain name, aka UTI), e.g. `@com.example.my_lib`? one option is to construct it as standard specifier, with pp annotations so that it prints as `A.B` instead of `B of A`; in this case, binding `@` to first part only means that `@com` is the superglobal's name; OTOH, binding `@` to entire name means that `com.example.my_lib` is the superglobal's name, thus `@` is effectively a prefix operator that switches the context in which the chunk expr is evaluated from current to superglobal; we could even implement this as a [non-maskable] command: `'@'{com.example.my_lib}`. It all comes down to how we want to evaluate chunk exprs in general and UTIs in particular; e.g. if we use a partial LineReader to extract UTIs to value representation, binding the `@` to the entire UTI later on will occur naturally. Also note that .period form's precedence is that of expr sep punctuation; if we want full parser to treat .period differently when left-and-right-contiguous (property selector) vs left- and/or right-delimited (expr sep) then we'll need to move `Form.precedence` to `Token`. Thus question becomes: do we want contiguous .period to act as a general Swift/JS/etc-style 'dot' operator (which can be used even when stdlib's `of` operator/command isn't loaded)? (if so, it needs to play nice with parameterized commands, e.g. `foo.item{at:1}.item{named:"bar"}`? or does that run too far counter to "speakable-friendly" syntax? after all, UTI pronounciation is simple enough - e.g. "com dot example dot foo" - but using "dot" when speaking commands is likely to get awkward, especially as it won't play well with lp command syntax). Think we should look at UTI literal syntax in same way as we should look at, say, date and time literals, e.g. `2019-07-12` should be directly extractable using a 'DateTime' LineReader.
 
             case .operatorName(let operatorClass): // Q. what range to use for operators? 100-999?
+                
+                // TO DO: where to put precedence info?
+                
+                fatalError("precedence not available for operator class \(operatorClass)")
+                
                 // e.g. v1 o1 v2 o2 … -- once v2 is parsed, peek ahead to o2 to determine if v2 is operand to o2 or o1
-                if let a = operatorClass.infix, let b = operatorClass.postfix, a.precedence != b.precedence {
-                    print("warning: mismatched precedences for \(a) vs \(b)")
+                //if let a = operatorClass.infix, let b = operatorClass.postfix, a.precedence != b.precedence {
+               //     print("warning: mismatched precedences for \(a) vs \(b)")
                     // note that prefix and infix can have different precedences (e.g. `+`/`-`); however, `Form.precedence` is only being used when determining if current operator binds tighter than preceding operator (i.e. the operator cannot be .prefix or .atom) // TO DO: what about .custom? (e.g. if non-numeric comparison operators take an optional `as` clause)
-                }
-                return operatorClass.infix?.precedence ?? operatorClass.postfix?.precedence ?? 0
+               // }
+                //return operatorClass.infix?.precedence ?? operatorClass.postfix?.precedence ?? 0
 //            case .error(_): return 0
 //            case .invalid: return 0
             case .endOfScript: return -10000
@@ -189,12 +205,12 @@ struct Token: CustomStringConvertible {
     static let predefinedSymbols: [Character:Form] = [
         // TO DO: which punctuation chars need associated whitespace rules; e.g. `.` has different meanings depending on whether it has no leading/trailing whitespace, or has trailing whitespace only (note: whitespace before the `.` should probably be considered a typo and removed by pretty printer, although we should consider whether `.` at start of a line may indicate a legal cosmetic linewrap within a long expr; e.g. Swift allows this, although it's of less interest to us as `A.B` is generally only used for reverse domain names, with `B of A` being the standard form for attribute selection)
         // punctuation (separators/terminators)
-        ",": .comma,
+        ",": .separator(.comma),
+        ".": .separator(.period),
+        "?": .separator(.query),
+        "!": .separator(.exclamation),
         ";": .semicolon,
         ":": .colon,
-        ".": .period,
-        "?": .query,
-        "!": .exclamation,
         "_": .underscore,
         // name modifiers
         "#": .hashtag,
@@ -275,10 +291,10 @@ struct Token: CustomStringConvertible {
     
     var isContiguous: Bool { return self.isLeftContiguous && self.isRightContiguous }
     
-    var isEndOfSequence: Bool {
+    var isEndOfSequence: Bool { // TO DO: still needed
         switch self.form {
         case .endList, .endRecord, .endGroup: return true
-        case .operatorName(let operatorClass): return operatorClass.name == .word("done") // kludge
+        case .operatorName(let operatorClass): fatalError("Can't get Token.isEndOfSequence for \(operatorClass)") //return operatorClass.name == .word("done") // kludge
         case .endOfScript: return true
         default: return false
         }
@@ -299,7 +315,7 @@ struct Token: CustomStringConvertible {
     // i.e. if operator takes left operand (infix/postfix), it must terminate the preceding expression in order to consume it; OTOH, if operator is prefix/atom, it's up to preceding tokens/parsefunc to know what to do with it (e.g. in `write true`, `true` is an atom that will be consumed as `write` command's argument) // caution: this is only a partial fix, as until the operator expression is fully parsed, we cannot be sure of this when dealing with operators that have >1 definition, while operators that use custom parsefuncs will always be treated as having no left operand even when they do; TO DO: fix this properly once table-driven parser is implemented (unlike parsefuncs, whose matching behaviors are opaque, matching tables can be independently inspected to determine the exact number and positions of their operands)
     var isExpressionTerminator: Bool {
         switch self.form {
-        case .semicolon, .colon, .comma, .period, .query, .exclamation,
+        case .semicolon, .colon, .separator(_),
              .endList, .endRecord, .endGroup, .lineBreak, .endOfScript:
             return true
         default:
@@ -307,7 +323,7 @@ struct Token: CustomStringConvertible {
         }
     }
     
-    var requiresLeftOperand: Bool { return self.operatorClass?.requiresLeftOperand ?? false }
+    var requiresLeftOperand: Bool { if let oc = self.operatorClass { fatalError("Can't get Token.requiresLeftOperand for \(oc)") } else { return false } /*return self.operatorClass?.requiresLeftOperand ?? false*/ }
     
     var operatorClass: OperatorClass? {
         if case .operatorName(let operatorClass) = self.form { return operatorClass } else { return nil }

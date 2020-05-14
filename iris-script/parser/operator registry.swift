@@ -12,139 +12,30 @@ import Foundation
 
 // eventually all operators defined in compiled libraries should be validated and reduced to quick-loading format; for now, we probably want to validate all operators as they're read (e.g. checking for reserved chars, name/definition collisions within/between libraries, mixed token types in names)
 
-typealias ParseFunc = (_ parser: Parser, _ definition: OperatorDefinition, _ leftExpr: Value?, _ allowLooseArguments: Bool) throws -> Value // TO DO: also pass operator name (e.g. for error reporting)? [not too worried about this as final implementation will be table driven, not recursive descent]
 
 
-struct OperatorClass: CustomDebugStringConvertible {
+
+struct OperatorClass: CustomDebugStringConvertible { // all operators that use a given name // TO DO: define as class rather than struct? it would reduce no. of method calls needed to populate PartialMatch tree to one add() per OpClass rather than one add() per OpDef
     
     var debugDescription: String {
-        return "<\(self.name == nil ? "nil" : String(describing: self.name!)) \([self.atom, self.prefix, self.infix, self.postfix, self.custom].map{$0 == nil ? "0" : "1"}.joined(separator: ""))>"
+        return "<\(self.name.label) \(self.operations.map{String(describing: $0.pattern)}.joined(separator: " "))>"
     }
     
-    private(set) var name: OperatorDefinition.Name?
+    let name: Symbol // .operatorName(_) needs to include the name of the operator for reporting purposes (i.e. we can't just pass operation array)
+
+    private(set) var operations = [OperatorDefinition]()
     
-    private(set) var atom: OperatorDefinition?      // `OPERATOR_NAME`
-    private(set) var prefix: OperatorDefinition?    // `OPERATOR_NAME RIGHT_OPERAND`, e.g. `-expr`
-    private(set) var infix: OperatorDefinition?     // `LEFT_OPERAND OPERATOR_NAME RIGHT_OPERAND`, e.g. `expr + expr`
-    private(set) var postfix: OperatorDefinition?   // `LEFT_OPERAND OPERATOR_NAME`, e.g. ``
-    private(set) var custom: OperatorDefinition?    // custom parsefunc
+    init(name: Symbol) {
+        self.name = name // this is the name under which the Operation is stored in registry (a single Operation may be stored under multiple names); the name itself it may be canonical name, alias, and/or conjunction for one or more operators; when the tokenizer matches that name, it outputs an .operatorName(OperatorDefinitions) token and it's up to parser to determine which definition it is (e.g. if it's a conjunction in an Operation that's already partially matched, or if it's the start of a new match, or both)
+     }
     
-    var isEmpty: Bool { return self.prefix == nil && self.infix == nil && self.postfix == nil && self.atom == nil }
-    
-    // TO DO: these do not work for .custom(_) where custom parsefunc takes a left operand (current custom parsefuncs do not, so this will do for now; sort out when implementing table-driven parser)
-    var hasLeftOperand: Bool { return self.infix != nil || self.postfix != nil }
-    var requiresLeftOperand: Bool { return self.prefix == nil && self.atom == nil && self.custom == nil }
-    
-    private func definition(for form: OperatorDefinition.Form) -> OperatorDefinition? { // used in add() above
-        switch form {
-        case .atom: return self.atom
-        case .prefix: return self.prefix
-        case .infix: return self.infix
-        case .postfix: return self.postfix
-        case .custom(_): return self.custom
-        }
-    }
-    
-    mutating func add(_ definition: OperatorDefinition) {
-        if let d = self.definition(for: definition.form) { print("warning: overwriting existing operator definition \(d) with \(definition)") } // TO DO: should this be treated as implementation error if new definition != old definition (i.e. it's possible that two libraries will define the same custom operators to ensure availability whenever one of them is imported; assuming operators adhere to established semantics (e.g. arithmetic, algebraic symbols) then only predecences might mismatch, and assuming libraries are released sequentially then the 2nd library should just use the same precedence values as the first)
-        switch definition.form {
-        case .atom: self.atom = definition
-        case .prefix: self.prefix = definition
-        case .infix: self.infix = definition
-        case .postfix: self.postfix = definition
-        case .custom(_): self.custom = definition
-        }
-        self.name = definition.name
+    mutating func add(_ operation: OperatorDefinition) {
+        // TO DO: how to detect conflicting definitions? (could be tricky, plus it could impact bootstrap times)
+        self.operations.append(operation)
     }
 }
 
 
-
-struct OperatorDefinition: CustomDebugStringConvertible {
-    
-    var debugDescription: String { return "<OperatorDefinition \(self.name)>" }
-    
-    enum Name: Comparable, Hashable, CustomDebugStringConvertible {
-        
-        case word(Symbol)
-        case symbol(Symbol) // TO DO: rename symbolic(_)? (easier to distinguish from .symbol token)
-        
-        var debugDescription: String {
-            switch self {
-            case .word(let s):   return String(describing: s)
-            case .symbol(let s): return String(describing: s)
-            }
-        }
-        
-        var name: Symbol {
-            switch self {
-            case .word(let name): return name
-            case .symbol(let name): return name
-            }
-        }
-        
-        init?(_ name: String) { // returns nil if non-valid characters are found; TO DO: throw instead?
-            switch name {
-            case nameCharacters:    self = .word(Symbol(name))
-            case symbolCharacters:  self = .symbol(Symbol(name))
-            default:                return nil
-            }
-        }
-        
-        private var key: String {
-            switch self {
-            case .word(let s): return s.key
-            case .symbol(let s):  return s.key
-            }
-        }
-        
-        static func < (lhs: OperatorDefinition.Name, rhs: OperatorDefinition.Name) -> Bool {
-            return lhs.key < rhs.key
-        }
-    }
-    
-    enum Form: Equatable {
-        case prefix
-        case infix
-        case postfix
-        case atom
-        case custom(ParseFunc) // TO DO: this is problematic as parser queries operator fixity to determine parsing around commands; we really need to express all operators in terms of pattern matching, with each pattern written as an array, [ParsePattern] (Q. how to describe operands' parsing behavior?); each matcher needs to match normalized literal string or apply a consuming parsefunc that returns new parser state + Value or nil (match failed); Q. how best to express whitespace requirements? (we also want bottom-up shift-reduce parsing with packrat behavior)
-        
-        static func ==(lhs: Form, rhs: Form) -> Bool {
-            switch (lhs, rhs) { // TO DO: should custom prefix/infix forms also match standard prefix/infix forms?
-            case (.prefix, .prefix): return true
-            case (.infix, .infix): return true
-            case (.postfix, .postfix): return true
-            case (.atom, .atom): return true
-            case (.custom(_), .custom(_)): return true // TO DO: FIX; what result?
-            default: return false
-            }
-        }
-    }
-    
-    enum Associativity {
-        case left
-        case right
-        // TO DO: `case none` (e.g. `1 thru 2 thru 3` should be a syntax error)
-    }
-    
-    let name: Name // the operator's canonical name, categorized as .word/.symbol, e.g. `.word(Symbol("if"))`, `.symbol(Symbol("÷"))`
-    let aliases: [Name] // any other recognized names (pp will typically reduce these to canonical names), e.g. `.symbol(Symbol("/"))`; in particular, symbolic operators may define a word-based alternative to aid dictation-driven coding, e.g. `.word(Symbol("divided_by"))`
-    let form: Form // operand position(s), if any
-    let precedence: Precedence
-    let associativity: Associativity
-    // TO DO: token-matching patterns can generally be inferred from form, with caveat on more specialized operators - e.g. `as`, `if` - where it may be beneficial to supply custom pattern (i.e. if Pair is a native Value, it could wait until eval, or the pattern could express the required type; OTOH, if colon pair is pure syntax construct, it will need to be matched by a pattern [in which case need a `Pattern?` argument that allows default form-derived pattern to be overridden])
-    
-    init(_ name: String, _ form: Form, precedence: Precedence, associativity: Associativity = .left, aliases: [String] = []) { // native libraries should always use this API; primitive libraries will use it until they can build pre-validated, pre-optimized definitions, at which point they can skip these checks at load-time [except when running in troubleshooting mode]
-        guard let n = Name(name) else { fatalError("Invalid operator name: \"\(name)\"") } // TO DO: throw instead?
-        self.name = n
-        self.form = form
-//        if form != .atom && !operatorPrecedences.contains(precedence) { fatalError("Invalid operator precedence: \(precedence)") }
-        self.precedence = precedence
-        self.associativity = associativity
-        self.aliases = aliases.map{ if let name = Name($0) { return name } else { fatalError("Invalid operator name: \"\($0)\"") }} // TO DO: throw instead?
-    }
-}
 
 
 
@@ -158,7 +49,7 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
     
     var debugDescription: String { return "OperatorRegistry<\(self.wordOperators.keys) \(self.symbolOperators.keys)>" }
     
-    typealias OperatorTable = [String: OperatorClass]
+    typealias OperatorTable = [String: OperatorClass] // maps a single keyword to all operators that use that keyword
     
     private var wordOperators   = OperatorTable() // whole-token matches
     private var symbolOperators = OperatorTable() // whole-token matches; also need separate longest-match tree
@@ -170,58 +61,55 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
     
     // TO DO: may want longest match for words as well, e.g. autosuggest, autocomplete (including underscore autoinsertion)
     
-    struct PartialMatch  {
+    struct PartialMatch  { // tree structure where each node can match a sequence of symbol characters to an operator class; used to perform longest match of symbol-based operator names
         
         private var matches = [Character: PartialMatch]()
-        private var definitions = OperatorClass()
+        private var definitions: OperatorClass? // nil if this isn't a complete match
         
-        mutating func add(_ name: Substring, _ definition: OperatorDefinition) {
+        mutating func add(_ name: Substring, _ definition: OperatorClass) {
             if let char = name.first {
                 if self.matches[char] == nil { self.matches[char] = PartialMatch() }
                 self.matches[char]!.add(name.dropFirst(1), definition)
             } else {
-                self.definitions.add(definition)
+                //assert(self.definitions == nil) // TO DO: could this be troublesome if registry builds partial match tree before all operators have been defined? (as long as the new operator class is a superset of a previous one, no)
+                self.definitions = definition
             }
         }
         
         func match(_ value: Substring) -> (endIndex: String.Index, definition: OperatorClass)? {
             guard let char = value.first else { // else reached end
-                if !self.definitions.isEmpty {
-                    return (value.endIndex, self.definitions)
+                if let definitions = self.definitions {
+                    return (value.endIndex, definitions)
                 } else {
                     return nil
                 }
             }
             if let fullMatch = self.matches[char]?.match(value.dropFirst(1)) {
                 return fullMatch
+            } else if let definitions = self.definitions {
+                return (value.startIndex, definitions) // TO DO: check this isn't off-by-one
+            } else {
+                return nil
             }
-            if !self.definitions.isEmpty {
-                return (value.startIndex, self.definitions) // TO DO: check this isn't off-by-one
-            }
-            return nil
         }
     }
     
     private var symbolMatcher = PartialMatch() // (note: symbolMatcher.description should always be nil)
     
     
-    private func add(_ name: OperatorDefinition.Name, _ definition: OperatorDefinition) {
-        switch name {
-        case .word(let n):
-            assert(!n.isEmpty)
-            if self.wordOperators[n.key] == nil { self.wordOperators[n.key] = OperatorClass() }
-            self.wordOperators[n.key]!.add(definition)
-        case .symbol(let n):
-            assert(!n.isEmpty)
-            if self.symbolOperators[n.key] == nil { self.symbolOperators[n.key] = OperatorClass() }
-            self.symbolOperators[n.key]!.add(definition)
-            self.symbolMatcher.add(Substring(n.key), definition)
-        }
-    }
-    
     func add(_ definition: OperatorDefinition) {
-        self.add(definition.name, definition)
-        for name in definition.aliases { self.add(name, definition) }
+        for name in definition.keywords {
+            assert(!name.isEmpty)
+            if name.isSymbolic {
+                // TO DO: any performance difference using string rather than symbol as dictionary keys? (if not, use Symbol)
+                if self.symbolOperators[name.key] == nil { self.symbolOperators[name.key] = OperatorClass(name: name) }
+                self.symbolOperators[name.key]!.add(definition)
+                self.symbolMatcher.add(Substring(name.key), self.symbolOperators[name.key]!)
+            } else {
+                if self.wordOperators[name.key] == nil { self.wordOperators[name.key] = OperatorClass(name: name) }
+                self.wordOperators[name.key]!.add(definition)
+            }
+        }
     }
     
     
@@ -257,8 +145,33 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
 
 extension OperatorRegistry {
     
-    func add(_ name: String, _ form: OperatorDefinition.Form, _ precedence: Precedence = -100,
-                             _ associativity: OperatorDefinition.Associativity = .left, _ aliases: [String] = []) {
-        self.add(OperatorDefinition(name, form, precedence: precedence, associativity: associativity, aliases: aliases))
+    
+    //     registry.prefix("NOT", 400)
+    //     registry.infix(Keyword("≤", "<="), 540)
+    //     registry.infix("else", 100, .right)
+    
+    // as in original, need sub-token matching of symbol char sequences
+
+    func prefix(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
+        self.add(OperatorDefinition(pattern: [.keyword(name), .expression], precedence: precedence, associate: associate))
+    }
+    func infix(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
+        self.add(OperatorDefinition(pattern: [.expression, .keyword(name), Pattern.expression], precedence: precedence, associate: associate))
+    }
+    func postfix(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
+        self.add(OperatorDefinition(pattern: [.expression, .keyword(name)], precedence: precedence, associate: associate))
+    }
+    func atom(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
+        self.add(OperatorDefinition(pattern: [.keyword(name)], precedence: precedence, associate: associate))
+    }
+    func prefix(_ name: Keyword, conjunction: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
+        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(conjunction), .expression], precedence: precedence, associate: associate))
+    }
+    func prefix(_ name: Keyword, terminator: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
+        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(terminator)], precedence: precedence, associate: associate))
+    }
+    
+    func add(_ pattern: [Pattern], _ precedence: Precedence = -100, _ associate: OperatorDefinition.Associativity = .left) {
+        self.add(OperatorDefinition(pattern: pattern, precedence: precedence, associate: associate))
     }
 }

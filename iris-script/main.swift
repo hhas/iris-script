@@ -103,13 +103,18 @@ func test() {
     // TO DO: period/LF needs higher 'precedence' than `else`; might need to change how ExpressionSequence is constructed (e.g. split into ExpressionSeq vs BlockSeq, with the former limited to single sentences; maybe rename `Sentence` and `Paragraph`)
     
     
-    //
+    
     
     script = """
     
     Set a to: 3, set b to: true. If 3 + a = 4 then "A" else if b then "B" else "C".
     
     """
+    
+    script = " if a then (b, c, d) else (e, f). " // TO DO: sentence blocks (multiple comma-separated exprs) in `then clause` are problematic as punctuation has lower precedence than operators; would need to special-case parsing of block operands
+    script = " if a then (b, c, d) else (e, f). "
+    
+    script = " a + - b "
     
 //    script = " a b c " // this throws parsing error as inner commands can't be LP, but could do with better error message (currently 'expected label in ‘a’ command but found <.unquotedName("c") _"c"_>'); Q. how to suggest corrections? e.g. `a {b {c}}`, `a {b, c}`, `a {b, c: …}`
     

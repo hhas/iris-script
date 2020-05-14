@@ -6,15 +6,17 @@
 import Foundation
 
 
+// TO DO: sentence blocks are intractable, so get rid of those: comma, period, query, exclamation marks should all act as expr delimiter and make no structural difference to code; only difference is when using them as runtime flags to control stepping/prompting/etc (e.g. proceed on `,` but hold on `.` [c.f. debugger breakpoint], introspect current state on `?`, request confirmation of unsafe operation on `!`); these flags can be set via annotations, e.g. `«period: wait 5sec»`, and the annotations themselves may contain commands to be evaled in isolated 'debugger' environment with managed access to runtime env
+
 
 
 struct Block: BoxedComplexValue { // caution: this does not capture lexical scope
         
     var description: String { // TO DO: hand off to pp; also need formatting hints from parser
-        switch self.style {
-        case .sentence(let t): return "\(self.data.map{$0.description}.joined(separator: ", "))\(t.content)"
-        case .parenthesis: return "(\n\t\(self.data.map{$0.description}.joined(separator: ",\n\t"))\n)"
-        case .custom(let def, let t, let d): return "\(def)\n\(self.data.map{$0.description}.joined(separator: "\(d)"))\n\(t)"
+        if let def = self.operatorDefinition {
+            return "\(def)\n\(self.data.map{$0.description}.joined(separator: "\n"))\n\(def)" // TO DO
+        } else {
+            return "(\n\t\(self.data.map{$0.description}.joined(separator: ",\n\t"))\n)"
         }
     }
     
@@ -22,24 +24,18 @@ struct Block: BoxedComplexValue { // caution: this does not capture lexical scop
 
     static let nominalType: Coercion = asBlock
     
-    enum Style { // TO DO: revise this as a single Block contains all contiguous sentences with all separator and terminator punctuation and linebreak info included, and the only thing that varies is how its boundaries are marked; therefore Style should be renamed Delimiters and .sentence(_) case should be renamed .none; for .custom(_) case we need to decide what it should hold (it may be that it uses start and end keywords, defined as .atom operators)
-        case sentence(terminator: Token) // terminator may be .period, .query, .exclamation; TO DO: how should `!`/`?` modify behavior? (e.g. environment hooks)
-        case parenthesis // TO DO: not sure about this; should parens be separate Group type which can hold blocks or other values?
-        case custom(definition: String, terminator: String, delimiter: String) // TO DO: definition should probably provide formatter
-    }
+    let operatorDefinition: OperatorDefinition?
     
     // Q. would it be simpler just to encapsulate ExpressionSequence?
     
     let data: [Value]
-    let style: Style // pretty-printer should format blocks as-per user preference
     
-    init(_ data: [Value], style: Style) {
+    init(_ data: [Value], operatorDefinition: OperatorDefinition?) {
         self.data = data
-        self.style = style
+        self.operatorDefinition = operatorDefinition
     }
-    
     init(_ data: [Value]) {
-        self.init(data, style: .parenthesis)
+        self.init(data, operatorDefinition: nil)
     }
     
     /*

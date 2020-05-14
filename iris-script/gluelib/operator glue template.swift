@@ -6,6 +6,8 @@
 import Foundation
 
 
+// Operation(pattern: [.keyword(name)], precedence: precedence, associate: associate)
+
 
 private let templateSource = """
 //
@@ -22,18 +24,19 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
 ««-loadOperators»»
 }
 
-
 """
 
 
 let operatorsTemplate = TextTemplate(templateSource) { (tpl: Node, args: (libraryName: String, handlerGlues: [HandlerGlue])) in
     tpl.libraryName.set(args.libraryName)
     tpl.loadOperators.map(args.handlerGlues.filter{$0.operatorSyntax != nil}) { (node: Node, glue: HandlerGlue) -> Void in
+        
         node.operatorName.set(glue.name)
+        node.aliases.set(glue.operatorSyntax!.aliases.map{$0.debugDescription}.joined(separator: ", "))
+        
         node.form.set(glue.operatorSyntax!.form)
         node.precedence.set(glue.operatorSyntax!.precedence)
         node.associativity.set(glue.operatorSyntax!.isLeftAssociative ? ".left" : ".right")
-        node.aliases.set(glue.operatorSyntax!.aliases.map{$0.debugDescription}.joined(separator: ", "))
     }
 }
 

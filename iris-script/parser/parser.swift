@@ -3,108 +3,99 @@
 //  iris-script
 //
 
-
-// TO DO: need smarter handling of missing colons on command labels (an easy user error), e.g. `set x to y` instead of `set x to: y` (right now it just dumps out of parseExpression with unhelpful error message)
-
-// TO DO: how to read blocks with custom delimiters, e.g. `do…done`? (not worth sweating it for POC implementation; just use custom operator parsefunc)
-
-// TO DO: how to deal with terminator punctuation (`.?!`)? also, what should be syntax rules for using terminator punctuation at end of list/record items? e.g. `(Foo, bar! Baz)` is perfectly legal (being a group of two sentences), but should `[foo, bar! baz]` require explicit parenthesization to avoid any ambiguity on where each list item begins and ends, e.g. `[foo, (bar!), baz]` or `[(foo, bar!), baz]`
-
-// should `tell`, `if`, `while` operators use `tell EXPR to EXPR`, `if EXPR then EXPR`, `while EXPR repeat EXPR` syntax? Q. what word should separate operands in `to`/`when`, e.g. `to perform_action {…} returning TYPE XXXX do … done.`
-
-// one more possibility for `tell`, `if`, etc: define them as prefix operators, and require comma separator between first and second operands; thus: `tell app "TextEdit", make new: #document.`, `if some_condition, do…done.`; this should read more naturally for `to`/`when` operators: `to perform_action {…} returning TYPE, do … done.`; OTOH, it doesn't read as well for `tell` which benefits from the pronouncable `to` preposition.
-
-// TO DO: pass Bool flag to parseOperation to indicate only current sentence should be read? (i.e. `if TEST …` should only read up to first `.?!` or first linebreak not preceded by comma/semicolon, assuming no explicit block delimiters.)
-
-// TO DO: need to watch out for parensed Pairs in records (e.g. when passing lambdas)
-
-
 import Foundation
 
-// nasty hacky duct-taped temp code (recursive descent Pratt Parser class taken from sylvia-lang, hacked up to support iris syntax); not what we want (which is non-recursive table-driven bottom-up incremental parsing) but will do as stopgap for sake of getting language up and running
 
+// simplest is to invoke list reduce func on `]` token, and let reduce func pop stack until it finds corresponding `[` (this isn't table-driven pattern-matching, which is what we ultimately want as tables provide introspectable information that can drive auto-suggest/-correct/-complete, and auto-generate user documentation for operator syntax)
 
-// if test: expr -- TO DO: assuming `if` is a command, `test: expr` looks like a labeled argument, rather than an unlabeled pair argument (OTOH, this shouldn't be an issue as long as `if` is an operator, as operands do not have labels)
+// for now, syntax errors are detected late (but this isn't necessarily a problem as we want to parse the entire script, reducing as much as possible, then prompt user to resolve any remaining issues)
 
-
-// TO DO: need to finalize association rules for low-punctuation commands; given that 'variables' (i.e. arg-less commands) may frequently appear as arguments it may be preferable to bind trailing args to the outermost command; e.g. `foo bar baz: fub` -> `foo (bar) baz: fub` = `foo {bar, baz: fub}`, rather than most recent (`foo {bar {baz: fub}}`); the allowLooseArguments flag should produce this result, but needs some real-world usage tests to confirm it's the right choice
-
-// TO DO: also need decision on `foo {…} bar: baz`; while it can be inferred that record is first [direct] arg value, problem here is that treating the record as first arg value is inconsistent with `foo {…}`, so may be cleaner to treat it as syntax error
-
-// TO DO: we also need to nail down singular vs plural use of 'argument[s]' and 'parameter[s]' - while the internal implementation is closer to the traditional name coupled to N-ary tuple, we describe commands as unary prefix operators whose operand is always a record (if omitted, an empty record is inferred)
-
-
-// commas bind tighter than `if`, `to`, `while`, etc; `if`, `while`, etc binds tighter than `else`; Q. if commas bind tighter than `if`, that makes `if` a unary prefix operator that takes at minimum two comma-separated exprs (the first expr is the test to perform; remaining exprs are the action to perform if the test succeeds); note that when `if` appears inside a comma sequence, it will want to take the rest of the sequence for itself (longest match). Q. can/should we use same binding rule here as in lp commands, where being directly inside a comma-delimited sequence switches the nested `if` to use shortest match? (otoh, if `if` is preceded a by linebreak without a preceding comma [or semicolon], it'll use longest match [i.e. a linebreak without a preceding comma is treated as sentence terminator, same as with `.?!`]; this clearly needs more thought as a small variation in punctuation will produce a large variation in behavior; aka the “eats, shoots, and leaves” dilemma)
-
-
-enum AllowSequence {
-    case no
-    case sentence
-    case elements
-    case yes
-    
-    
-    func isDisallowed(_ token: Token) -> Bool {
-        switch self {
-        case .no: return [.lineBreak, .comma, .period, .query, .exclamation].contains(token.form)
-        case .sentence: return [.lineBreak, .period, .query, .exclamation].contains(token.form) // .comma is allowed in sentence
-        case .elements: return [.period, .query, .exclamation].contains(token.form) // .lineBreak, .comma are allowed in lists/records
-        case .yes: return false
-        }
-    }
-}
-
+typealias ReduceFunc = (Parser) -> Void
 
 typealias ScriptAST = Block
 
 
-internal class ExpressionSequence: Value { // internal collector for two or more comma- and/or linebreak-separated items
-    
-    var description: String { return "<\(type(of: self)) \(self.items)>" }
-    
-    static let nominalType: Coercion = asValue // ExpressionSequence is only used inside Parser, so this definition is purely to keep type checker happy
 
-    private(set) var items = [Value]()
-    private(set) var dictionary = KeyedList.SwiftType()// in keyed list, this must equal items.count; in ordered list this must be zero
-    
-    // TO DO: also need to record separators (in records and lists, we need to confirm all items are delimited by comma and/or linebreak; in blocks, we need to account for `.?!` as well)
-    
-    private(set) var labelCount = 0 // in record or block, this must equal count
-    private(set) var otherCount = 0 // this should always be zero (but see TODO below about enforcing it as grammar)
-    
-    init(_ item: Value) {
-        self.items.append(item)
-    }
-    
-    func append(_ item: Value) {
-        // TO DO: need to keep tally of Pairs; also need to decide how Pair.eval() behaves (since Pairs should only appear in blocks)
-        self.items.append(item)
-        if let pair = item as? Pair {
-            if let key = pair.key as? Symbol { // kludgy as parser encodes record field labels as Symbols
-                self.labelCount += 1
-                self.dictionary[key.dictionaryKey] = pair.value
-            } else if let key = pair.key as? HashableValue {
-                self.dictionary[key.dictionaryKey] = pair.value
-            } else {
-                self.otherCount += 1 // TO DO: this can go away if parser enforces Pair keys as HashableValue (KeyedList keys) or .[un]quotedName (record fields); except we also want Pair keys to be HandlerInterface when used in `to` operator; where else might pairs be used?
-            }
-        }
-    }
-    
-    func append(_ punctuation: Token.Form) { // .comma, .period, .exclamation, .query, .lineBreak (note that `.comma .lineBreak*` is recorded as `.comma`; not sure if we should record comma+lineBreak[s] as a distinct separator)
-        //print("append \(punctuation)")
-        // TO DO: how best to annotate? (this is mostly for use in preserving Block punctuation, where `.?!` punctuation may mediate evaluation [e.g. requesting user confirmation/suppressing all warnings on potentially destructive operations, or controlling stepping granularity in debug mode (pause on each expr vs pause at start/end of each sentence)], though we should also confirm that lists and records are properly punctuated [i.e. leery of allowing `.?!` to appear as list item/record field separators])
-    }
+// OperatorDefinition should include pattern; this is probably easiest done as array of enum
+
+// partial matches are struct of OperatorDefinition + index into pattern array
+
+// when a Value is pushed onto stack, pass it to each partial match which checks it against pattern and returns either new partial match (the match index is advanced and returned in a new partial match struct), completed match (don't reduce immediately as there may be a longer match to be made [i.e. SR conflict is resolved by preferring longest patch]), or no match (in which case that matcher isn't carried forward); that implies matches are part of .value case
+
+
+func reduceList(parser: Parser) {
     
 }
 
-
-
-class Parser {
+class Parser { // TO DO: initially implement as full-file parser, then convert to per-line (for incremental parsing)
+    
+    // Q. how to represent partial values? (in per-line parsing, lists, records, blocks can extend over multiple lines)
+    
+    // it's all about not recursing; we should never go more than one-parsefunc deep
+    
+    enum Reduction {
+        case token(Token) // unreduced tokens are shifted onto stack (these may be part of an incomplete match, or tokens that could not be matched [at all/at this time])
+        
+        // TO DO: case for `label:value` pairs? may help in parsing record fields (including LP commands); TO DO: problem reading nested commands, reading backwards will associate labeled args with inner command // Q. read commands forward? or set flags indicating LP is/isn't allowed; Q. what about operator pattern-matching, in particular stop-words/conjunctions (e.g. `done`, `then`, and troublesome cases like `to` [which is both infix conjunction and prefix operator]); match operator patterns in fwd direction? Q. what if colon appears at end of line? (prob put token back on stack)
+        
+        // exprSeq -- comma-separated exprs; constructed without regard to any enclosing braces/blocks (but does need to note presence/absence of trailing comma); thus a reduction becomes `open-brace + close-brace | open-brace + expr + close-brace | open-brace + exprSeq + close-brace`; this should allow expr-seqs to be gathered into array in fwd direction (invalid/unreduced tokens will cause expr-seq to be interrupted, e.g. expr-seq + bad-token + expr-seq); Q. what about `else` operator and sentence blocks?
+        
+        // semicolon is a transform applied to RH command (if RH operand is not command, it's a syntax error); we could in principle define `;` as an infix operator, except that we want same eol continuation behavior as comma/colon (operators cannot extend over multiple lines) and that requires parser support
+        
+        // - Q. how to represent invalid items? e.g. wrap [Reduction] array in InvalidValue? insert balancing PlaceholderValue/MissingBraceValue (which guesses where opening/closing brace should be); Q. what are our synchronization points?
+        
+        // simple operators can usually be reduced on first pass (single-line); operators that take blocks as operands (e.g. `if`, `while`) will be unreduced until full pass
+        
+        // commands may be reduced on first-pass if short (note: LP commands may have lengthy arguments that wrap over multiple lines; FP commands typically take record as argument so rely on standard record parsing)
+        
+        // when parser encounters a quoted-/unquoted-name token, it always(?) treats it as a command name; however, if it's immediately followed by a colon then it's a key in colon-pair (but we don't know if it's a property label or a command that returns a dictionary key, or a name-value binding in current scope [syntactic shortcut for assignment]; however, we've already banned commands as keys in KV-list literals [static values only as keys in literals; this is to avoid visual similarity between record and KV-list syntaxes]); therefore, two types of colon pairs: `Symbol:Value` (LP args and record fields) and `KeyConvertibleValue:Value` (kv-list items, where key is number/string/symbol); since Symbol is a KCV, we can store both in Reduction.colonPair(KeyConvertibleValue,Value) and leave reduction funcs for LP commands and records to check that it's Symbol (this shouldn't be too onerous as args and records are relatively short; only kv-list literals can run to large number of items)
+        
+        // if colon-pair is Value, how to reduce later?
+        
+        // cmd = name [expr] [colon-pair…]
+        // cmd = name record
+        // record = '{' '}' | '{' expr-seq '}' -- note: expr-seq may contain colon-pairs where each label is a name
+        
+        // operator patterns - how to describe operands (normally expr, but some may also be expr-seq)
+        
+        // per-line can't resolve string literals as it has no way of determining if inside or outside string literal; it needs to capture line String and string indices of double-quote tokens; it will attempt to parse text on both sides of double-quote, which will likely generate more syntax errors on one side than other, providing probability weighting (typographers quotes can also provide weighting, but can't be 100% trusted as users can type them incorrectly)
+        
+        // Q. how to trigger reduction for prefix/infix operator/punctuation upon pushing trailing Value (EXPR) back onto stack? presumably we push the partially-matched pattern onto stack before parsing EXPR; we resume matching that pattern after EXPR is complete
+        
+        case colon(Value, Value) // colon pair may be key:value pair in kv-list, label:value in record or LP command, name:value binding in block; anything else? (also, should we restrict where env bindings can appear, e.g. to top-level contexts? if so, how?)
+        
+        case value(Value) // reduction function pops one or more tokens off stack and pushes the reduced Value back on
+       // case values([Value]) // might be list items, sentence
+       // case label(Symbol) // `name:` // problematic, e.g. `to foo a: b: action`
+        case error(String) // if reduction fails, add .error to stack then push tokens back on; TO DO: what should syntax errors describe? (in some cases, should be sufficient to suggest missing token, e.g. `[` for `]`)
+    }
+    
+    // TO DO: expr delimiters (,.?!) should probably be a single Token.Form case
+    
+    typealias PunctuationHandler = (Value) -> Value // given `,`/`.`/`?`/`!` return debugger command(s) to insert
+        
+    // callback hooks for inserting debugger commands into AST at parse-time
+    var handlePeriod: PunctuationHandler?
+    var handleComma: PunctuationHandler?
+    var handleQuery: PunctuationHandler?
+    var handleExclamation: PunctuationHandler?
+    
+    private func handlePunctuation(_ token: Token, using handler: PunctuationHandler?) {
+        // TO DO: how to annotate AST so that PP can reinsert original punctuation when rendering tidied code?
+        // don't insert debugger command if preceding tokens can't be reduced to Value (i.e. punctuation modifies run-time behavior of the preceding value only, e.g. `Delete my_files!`)
+        assert(!self.stack.isEmpty) // this could happen if punctuation appears at start of line; parser needs to reject that case before it gets to here
+        if case .value(let value) = self.stack[self.stack.count-1].reduction { // assuming preceding token[s] have already reduced to a value (expr), get that value for passing to hook
+            if let fn = handler { self.stack[self.stack.count-1] = (.value(fn(value)), []) }
+        } else { // if preceding tokens haven't [yet] been reduced, append the punctuation token for later processing
+            self.stack.append((.token(token), []))
+        }
+    }
     
     let operatorRegistry: OperatorRegistry
-    private(set) var current: BlockReader
+    private(set) var current: BlockReader // current token
     private var annotations = [Token]() // TO DO: parser needs to bind extracted annotations to AST nodes automatically (this may be easier once TokenInfo includes line numbers)
+            
+    private(set) var stack = [(reduction: Reduction, partialMatches: [PartialMatch])]() // TO DO: what about capturing partially matched patterns? (i.e. build the match while going forward, rather than waiting until reduction and matching backward); Q. how to deal with operator precedence? // one reason to match moving forward is that a complex operator, e.g. `tell EXPR to EXPR`, can install an in-stream detector for its conjunction token (`to`) - in the event that an invalid parse occurs, e.g. `tell (app "foo" to action`, the nearest location[s] of that keyword is known; in a valid parse, the keyword should trigger the reduction of the preceding token, e.g. `tell app "foo" to action` would reduce `app "foo"` when `to` is encountered
     
     init(tokenStream: BlockReader, operatorRegistry: OperatorRegistry) {
         self.current = tokenStream
@@ -127,337 +118,140 @@ class Parser {
         self.current = self.peek(ignoringLineBreaks: ignoringLineBreaks)
     }
     
-    //
+    // parsing sentence block operands is problematic: requires changing parsing behavior on trailing operand so that commas do not terminate (but still needs to break at period/eol/`else` operator) - that won't combine well with reductions, which work backwards from terminator (i.e. not context-sensitive)
     
-    func readList() throws -> Value { // start on '['
-        assert(self.current.token.form == .startList)
-        let value: Value
-        switch self.peek().token.form {
-        case .endList:
-            self.advance(ignoringLineBreaks: true)
-            value = OrderedList()
-        case .colon:
-            self.advance(ignoringLineBreaks: true)
-            self.advance(ignoringLineBreaks: true)
-            if self.current.token.form != .endList { throw BadSyntax.missingExpression }
-            value = KeyedList()
-        default:
-            self.advance(ignoringLineBreaks: true) // step over `[`
-            // TO DO: parseExpression->parseAtom fails on `.startList … .lineBreak .endList`
-            let content = try self._parseExpression(allowLooseSequences: .elements)
-            if let content = content as? ExpressionSequence {
-                if content.otherCount > 0 { throw UnsupportedCoercionError(value: content, coercion: asList) }
-                // TO DO: one problem here is that KeyedList won't preserve key order [unless Swift Dictionary preserves key order], which is a pain for pretty-printing; one option is to capture ordered items as well (though this'll require an extended version of KeyedList struct)
-                // TO DO: there are also issues over parenthesized pairs not being treated as items in OrderedList (since parser doesn't currently annotate values with parens); however, we've yet to decide to what extent Pair is used within parser vs exposed as a runtime value
-                if content.dictionary.count == 0 {
-                    value = OrderedList(content.items)
-                } else if content.dictionary.count == content.items.count {
-                    value = KeyedList(content.dictionary)
-                } else {
-                    throw UnsupportedCoercionError(value: content, coercion: asList)
-                }
-            } else {
-                if let pair = content as? Pair {
-                    guard let key = pair.key as? HashableValue else {
-                        throw UnsupportedCoercionError(value: pair.key, coercion: asHashableValue)
+    func popKeyValueSeq() -> [KeyedList.Key: Value]? { // pop back to .startList
+        
+        return [:]
+    }
+    
+    func popExprSeq(backTo delimiter: Token.Form) -> [Value]? {
+        var items = [Value]()
+        while let (last, _) = self.stack.popLast() {
+            switch last {
+            case .value(let item):
+                items.insert(item, at: 0)
+            case .token(let token) where token.form == delimiter: // start delimiter
+                return items
+            default:
+                print("found unreduced token: \(last)")
+                break
+            }
+        }
+        for item in items { self.stack.append((.value(item), [])) } // TO DO: rather than rolling back entirely, add .values(items) instead? could argue for constructing values seq forwards; what about .values(…) also capturing beginning/ending token (if found)?
+        return nil
+    }
+    
+    func reduceNow() { // called on encountering a right-hand delimiter (punctuation, linebreak, operator keyword); TO DO: reduce any fully matched patterns
+        if let item = self.stack.last { print("reduceNow:", item) }
+        
+        // TO DO: how to reduce commands? (both `name record` and LP syntax, with added caveat about nested LP syntax)
+    }
+    
+    // note: if conjunction appears in block, keep parsing block but make note of its position in the event unbalanced-block syntax errors are found
+    
+    
+    func parseScript() throws -> ScriptAST {
+        loop: while true {
+            print(self.current.token.form)
+            switch self.current.token.form {
+            case .endOfScript: break loop
+            case .annotation(_): () // discard annotations for now
+            case .endList:
+                self.reduceNow() // ensure last item is reduced
+                // TO DO: need to distinguish `key:value` pairs from values; might need a separate pop func depending on how colon pairs are represented
+                // TO DO: how to represent empty KV list? `[:]` (Swift-style syntax) is visually cryptic but avoids any ambiguity; explicit `[] as kv_list` would work but pushes work onto runtime and will be problematic if LH operand is non-empty list
+                if case .colon(let key, let value) = self.stack.last?.reduction {
+                    print("reduce KV list", key, value)
+                    if let items = self.popKeyValueSeq() {
+                        self.stack.append((.value(KeyedList(items)), []))
+                    } else {
+                        self.stack.append((.token(self.current.token), [])) // TO DO: what about capturing partial result?
+                        print("couldn't reduce kv-list at this time")
                     }
-                    value = KeyedList([key.dictionaryKey: pair.value])
+                }
+                if let items = self.popExprSeq(backTo: .startList) {
+                    self.stack.append((.value(OrderedList(items)), []))
                 } else {
-                    value = OrderedList([content])
+                    self.stack.append((.token(self.current.token), [])) // TO DO: what about capturing partial result?
+                    print("couldn't reduce list at this time")
                 }
-            }
-            self.advance(ignoringLineBreaks: true) // step onto `]`
-            guard case .endList = self.current.token.form else { throw BadSyntax.unterminatedList } //SyntaxError("Expected expression or end of block but found: \(self.current)") }
-        }
-        assert(self.current.token.form == .endList)
-        return value // end on ']'
-    }
-    
-    func readField(_ content: Value) throws -> Record.Field { // used by readRecord()
-        if let pair = content as? Pair {
-            guard let key = pair.key.asIdentifier() else { throw BadSyntax.missingName } // parser has already reduced field name to Command
-            return (key, pair.value)
-        } else {
-            return (nullSymbol, content)
-        }
-    }
-    
-    func readRecord() throws -> Record { // start on '{'
-        assert(self.current.token.form == .startRecord)
-        let value: Record
-        self.advance(ignoringLineBreaks: true) // step over `{`
-        switch self.current.token.form {
-        case .endRecord: // `}`
-            value = Record()
-        default:
-            let fields: [Record.Field]
-            let content = try self._parseExpression(allowLooseSequences: .elements)
-            if let content = content as? ExpressionSequence {
-                fields = try content.items.map(self.readField)
-            } else {
-                fields = [try self.readField(content)]
-            }
-            value = try Record(fields)
-            self.advance(ignoringLineBreaks: true) // advance onto `}`
-        }
-        assert(self.current.token.form == .endRecord, "Expected .endRecord but found \(self.current.token)")
-        return value // end on '}'
-    }
-    
-    
-    func readLabel() -> Symbol? { // used by readCommand() when reading low-punctuation commands (Q. how hard to tighten `Pair` behavior and get rid of this)
-        let name: String
-        // TO DO: replace isName with Token.identifier->String?
-        if self.current.token.isName && self.current.token.isRightContiguous && self.peek().token.form == .colon {
-            switch self.current.token.form {
-            case .quotedName(let s):   name = s
-            case .unquotedName(let s): name = s
-            default:                   name = String(self.current.token.content)
-            }
-        } else if case .operatorName(_) = self.current.token.form, self.peek().token.form == .colon { // self.current.token.isRightContiguous // TO DO: not sure about contiguous checking; any whitespace before colon can be discarded by PP, but colon's meaning should stay the same, otherwise we're going to get some surprising parsing behavior (alternatively, we straight-up reject `whitespace .colon` as syntax error, but that seems excessive) // TO DO: do we need this? (OperatorReader )
-            name = String(self.current.token.content)
-        } else {
-            return nil
-        }
-        self.advance() // step over name
-        self.advance() // step over colon
-        return Symbol(name)
-    }
-    
-    func readArgumentValue() throws -> Value {
-        // TO DO: allowLooseSequences is redundant as `argumentPrecedence` > punctuation
-        // note: argumentPrecedence is also higher than colon; how should Pair syntax parse?
-        return try self.parseExpression(argumentPrecedence, allowLooseArguments: false, allowLooseSequences: .no)
-    }
-    
-    func readCommand(_ allowLooseArguments: Bool) throws -> Command { // cursor is on first token on command (i.e. its name)
-        // peek ahead: if next token is `{`, read arguments record; if next token is expr sep punctuation/linebreak/eof or infix/postfix op, command has no args; otherwise read low-punctuation arg[s] as exprs - first arg may be Pair or Value; subsequent args must be Pairs with label keys
-        let name: String
-        var arguments: [Command.Argument]
-        switch self.current.token.form {
-        case .quotedName(let s):
-            name = s
-        case .unquotedName(let s):
-            name = s
-        default:
-            name = String(self.current.token.content)
-        }
-        //print("reading args for command `\(name)`", allowLooseArguments)
-        let next = self.peek().token
-        
-        
-        // TO DO: if next token is operator class and can have left operand, we need to defer to that unless whitespacing indicates otherwise, e.g. `-` can be prefix or infix operator, thus `a - 1` currently always parses as `a{-1}` but should only do so if written as `a -1` (and even then should probably be pretty-printed as `a {-1}` for clarity)
-        
-        
-        if next.isExpressionTerminator || next.requiresLeftOperand { // no argument (i.e. either punctuation/linebreak or an infix/postfix operator)
-            arguments = []
-        } else if case .startRecord = next.form { // explicit record argument; this always binds to command name
-            self.advance()
-            arguments = try self.readRecord().fields
-        } else if allowLooseArguments { // low-punctuation command; first field may be unlabeled, subsequent fields must be labeled
-            arguments = [Command.Argument]()
-            var isFirst = true
-            while !(self.peek().token.isExpressionTerminator || self.peek().token.requiresLeftOperand) {
-                self.advance()
-                if let label = self.readLabel() {
-                    arguments.append((label, try self.readArgumentValue()))
-                } else if isFirst {
-                    arguments.append((nullSymbol, try self.readArgumentValue()))
+            case .endRecord:
+                ()
+            case .endGroup:
+                self.reduceNow()
+                if let items = self.popExprSeq(backTo: .startList) {
+                    self.stack.append((.value(Block(items)), []))
                 } else {
-                    print("expected label in ‘\(name)’ command but found", self.current.token); throw BadSyntax.missingName
+                    self.stack.append((.token(self.current.token), []))
+                    print("couldn't reduce group at this time")
                 }
-                isFirst = false
-                if case .operatorName(_) = self.peek().token.form { break } // operator reader does not match `NAME:` pattern, so .operatorName(_) token will never appear where an argument name is expected, thus an operator terminates lp command
-                //print("read lp arg:", arguments.last!)
-            }
-        } else {
-            arguments = []
-        }
-        //print("completed command:", Command(Symbol(name), arguments), "ended on", self.current.token)
-        return Command(Symbol(name), arguments) // leaves cursor on last token of command
-    }
-    
-    // token matching
-    
-    private func parseAtom(_ allowLooseArguments: Bool = true) throws -> Value {
-        let tokenInfo = self.current
-        //print("parseAtom", tokenInfo)
-        let token = tokenInfo.token
-        let value: Value
-        switch token.form {
-        case .value(let v):
-            value = v
-        case .startList:      // `[…]` - an ordered collection (array) or key-value collection (dictionary)
-            value = try self.readList()
-        case .startRecord:    // `{…}`
-            value = try self.readRecord()
-        case .startGroup:     // `(…)`
-            self.advance(ignoringLineBreaks: true) // step over '('
-            value = try self.parseExpression() // this allows any punctuation // TO DO: annotate value to preserve elective parens when pretty printing (there's also the question of how to treat `[(1:2)]` - as OrderedList of Pairs or as syntax error? currently the parens are ignored and a KeyedList is built)
             
-            self.advance(ignoringLineBreaks: true) // step onto ')'
-            guard case .endGroup = self.current.token.form else { throw BadSyntax.unterminatedGroup } //SyntaxError("Expected end of precedence group, “)”, but found: \(self.this)") }
-        
-        // TO DO: should .letters/.symbols/.digits be rejected here, on grounds that upstream readers should already have transformed all of these primitive tokens to name/operator/number
-        case .letters, .symbols, .quotedName(_), .unquotedName(_): // found `NAME`/`'NAME'` // TO DO: merge .quotedName(_) and .unquotedName(_) into .name(String,isQuoted:Bool)?
-            // TO DO: reading reverse domain names with optional `@` prefix, e.g. `com.example.foo`, is probably best done by a LineReader adapter; question is whether we should generalize this to allow commands with arguments within/at end
-            value = try self.readCommand(allowLooseArguments)
-        case .operatorName(let operatorClass) where !operatorClass.requiresLeftOperand: // atom/prefix operator
-            if let definition = operatorClass.custom, case .custom(let parseFunc) = definition.form {
-                value = try parseFunc(self, definition, nil, allowLooseArguments) // , allowLooseSequences: allowLooseSequences?
-            } else if self.peek().token.isExpressionTerminator || self.peek().token.requiresLeftOperand {
-                guard let definition = operatorClass.atom else { throw BadSyntax.missingExpression } // TO DO: if right-contiguous and next token is colon, then value should be label
-                value = Command(definition)
-            } else {
-                guard let definition = operatorClass.prefix else {
-                    print("parseAtom bad operator:", operatorClass);
-                    throw BadSyntax.unterminatedExpression }
-                self.advance() // step over operator name to read right-hand operand
-                value = Command(definition, right: try self.parseExpression(definition.precedence, allowLooseArguments: allowLooseArguments, allowLooseSequences: .no)) // comma, period, etc marks end of argument fields
-            }
-        case .hashtag:
-            if self.current.token.hasTrailingWhitespace {
-                print("found space after `#`")
-                throw BadSyntax.missingName }
-            self.advance(ignoringLineBreaks: true) // step over '#'
-            switch self.current.token.form {
-            case .letters, .symbols:    value = Symbol(String(self.current.token.content))
-            case .quotedName(let name): value = Symbol(name)
-            case .unquotedName(let name): value = Symbol(name)
-            default:                    print("expected name after `#` but found", self.current.token);throw BadSyntax.missingName
-            }
-        case .mentions:
-            //if self.current.token.hasTrailingWhitespace { throw BadSyntax.missingName }
-            // TO DO: should `@` bind to a single quoted/unquoted name, or to a complete URI
-            throw NotYetImplementedError()
-        case .endOfScript:
-            print("Expected an expression but found end of code instead.")
-            throw BadSyntax.missingExpression //SyntaxError("Expected an expression but found end of code instead.")
-        
-        case .annotation(_): // TO DO: temporary (parser currently fails if script starts with an annotation)
-            value = nullValue
-        default:
-            print("parseAtom Expected an expression but found \(token)")
-            throw BadSyntax.missingExpression //SyntaxError("Expected an expression but found \(token)")
-        }
-        //value.annotations[codeAnnotation] = CodeRange(start: tokenInfo.start, end: self.current.end)
-        //print("ENDED parseAtom", value)
-        return value
-    } // important: this should always leave cursor on last token of expression
-    
-    
-    // propagate allowLooseArguments through operators too (e.g. `duplicate document at 1 of documents to: end of documents`); only parens/brackets/braces should discard this flag
-    private func parseOperation(_ leftExpr: Value, allowLooseArguments: Bool = true, allowLooseSequences: AllowSequence = .yes) throws -> Value {
-        let tokenInfo = self.current
-//        print("BEGIN parseOperation", tokenInfo)
-        let token = tokenInfo.token
-        let value: Value
-        switch token.form {
-        case .operatorName(let operatorClass) where operatorClass.hasLeftOperand: // TO DO: what errors if operator not found?
-            let nextToken = self.peek().token
-            //print("parsing", operatorClass, "next:", nextToken, (nextToken.isExpressionTerminator,nextToken.requiresLeftOperand))
-            if let definition = operatorClass.custom, case .custom(let parseFunc) = definition.form {
-                value = try parseFunc(self, definition, leftExpr, allowLooseArguments)
-            } else if nextToken.isExpressionTerminator || nextToken.requiresLeftOperand { // no right operand, so current token needs to be a postfix operator
-                //print("next is right delimiter", nextToken)
-                assert(!(nextToken.form == .colon)) // OperatorReader should never match a name followed by a colon as an operator name
-                guard let definition = operatorClass.postfix else {
-                    print("expected right-hand operand for:", operatorClass, "but found", nextToken.form) // TO DO: fix error message
-                    throw BadSyntax.unterminatedExpression
+                // delimiter punctuation always triggers reduction of preceding tokens
+                // TO DO: parser should reject punctuation that appears at (e.g.) start of line
+                // TO DO: when reduction fails due to syntax error, append Placeholder to stack containing remaining pattern[s]; editor can use this to assist user in correcting/completing code
+                // TO DO: check that numeric decimal/thousands separators (e.g. `1,000,000.23`) are reduced by numeric reader; we don't want those confused for expr separators; Q. can numeric reader reliably reduce `+`/`-` prefixes on numbers? (that's challenging as it requires numeric reader to know about balanced whitespace and left delimiters)
+            case .separator(let sep):
+                self.reduceNow()
+                switch sep {
+                case .comma:
+                    self.handlePunctuation(self.current.token, using: self.handleComma)
+                case .period:
+                    self.handlePunctuation(self.current.token, using: self.handlePeriod)
+                case .query:
+                    self.handlePunctuation(self.current.token, using: self.handleQuery)
+                case .exclamation:
+                    self.handlePunctuation(self.current.token, using: self.handleExclamation)
                 }
-                value = Command(definition, left: leftExpr)
-            } else { // infix operator
-                guard let definition = operatorClass.infix else {
-                    print("expected delimiter after:", operatorClass, "but found", nextToken.form) // TO DO: fix error message
-                    throw BadSyntax.unterminatedExpression
-                }
-                self.advance() // step over operator name to read right-hand operand
-                let precedence = definition.associativity == .right ? definition.precedence - 1 : definition.precedence
-                value = Command(definition, left: leftExpr, right: try self.parseExpression(precedence, allowLooseArguments: allowLooseArguments, allowLooseSequences: .no))
-            }
-        case .colon:
-            self.advance(ignoringLineBreaks: true) // skip over ":"
-            // if right-side of pair can be a comma-delimited sequence, we need to reduce the colon's precedence below comma's
-            let precedence = [.yes, .sentence].contains(allowLooseSequences) ? Token.Form.comma.precedence - 10 : token.form.precedence - 1
-            value = Pair(leftExpr, try self.parseExpression(precedence, allowLooseArguments: true, allowLooseSequences: allowLooseSequences)) // TO DO: where can Pair occur? keyed list, block (assignment shorthand) // TO DO: what should allowLooseSequences be? (.no?)
-        case .semicolon:
-            let precedence = token.form.precedence
-            self.advance(ignoringLineBreaks: true) // skip over ";"
-            let rightExpr = try self.parseExpression(precedence, allowLooseSequences: .no) // TO DO: allowLooseSequences?
-            guard let command = rightExpr as? Command else {
-                //print(leftExpr, rightExpr)
-                throw UnsupportedCoercionError(value: rightExpr, coercion: asCommand)
-            } // TO DO: what error?
-            value = Command(command.name, [(nullSymbol, leftExpr)] + command.arguments)
-            // TO DO: annotate command for pp; i.e. `B {A, C}` should print as `A; B {C}`
-            
-        case .comma, .lineBreak, .period, .exclamation, .query:
-            let form = self.current.token.form
-            let builder = (leftExpr as? ExpressionSequence) ?? ExpressionSequence(leftExpr) // this is only place ExprSeq is instantiated; Q. if parseDoBlock was to create its own ExprSeq-like collector that halts on receiving `done`?
-            builder.append(form)
-            if self.peek(ignoringLineBreaks: true).token.isEndOfSequence { return leftExpr }
-            self.advance(ignoringLineBreaks: true)
-            builder.append(try self.parseExpression(form.precedence, allowLooseSequences: allowLooseSequences))
-            value = builder
-            //print("parseOperation got sequence:", builder)
-            // TO DO: `if [.yes, .sentence].contains(allowLooseSequences)` we need to convert ExprSeq to Block; problem is we can't do it until recursive parseExpression has finished unspooling
-        case .endOfScript:
-            print("Expected an operand after the following code but found end of code instead: \(leftExpr)")
-            throw BadSyntax.missingExpression //SyntaxError("Expected an operand after the following code but found end of code instead: \(leftExpr)")
-        default:
-            print("Invalid token after leftExpr `\(leftExpr)`: \(token)")
-            throw BadSyntax.missingExpression//SyntaxError("Invalid token after \(leftExpr): \(token)")
-        }
-        //print("ENDED parseOperation", value)
-        return value
-    } // important: this should always leave cursor on last token of expression
-    
-    
-    
-    func _parseExpression(_ precedence: Precedence = 0, allowLooseArguments: Bool = true, allowLooseSequences: AllowSequence = .yes) throws -> Value {
-//        print("BEGIN expr", self.current.token, precedence)
-        if self.current.token.form == .endOfScript { print("parseExpression started on .endScript"); return nullValue } // TO DO: can this still happen?
-        var left = try self.parseAtom(allowLooseArguments)
-//        print("LEFT", left, precedence, self.peek().token)
-        //print("parseExpression", self.peek().token, (precedence, self.peek().token.form.precedence))
-        while precedence < self.peek().token.form.precedence && !allowLooseSequences.isDisallowed(self.peek().token) { // note: this disallows line breaks between operands and operator (Q. do we need to change this there's when adjoining punctuation?)
-            self.advance()
-            left = try self.parseOperation(left, allowLooseArguments: allowLooseArguments, allowLooseSequences: allowLooseSequences)
-        }
-//        print("ENDED expr", self.current.token, "result =", left, (precedence, self.peek().token.form.precedence))
-        return left
-    } // important: this should always leave cursor on last token of expression
-    
-    func parseExpression(_ precedence: Precedence = 0, allowLooseArguments: Bool = true, allowLooseSequences: AllowSequence = .yes) throws -> Value {
-        let expr = try self._parseExpression(precedence, allowLooseArguments: allowLooseArguments, allowLooseSequences: allowLooseSequences)
-        if let seq = expr as? ExpressionSequence {
-            return Block(seq.items) //, style: .sentence(terminator: Token(.period, nil, ".", " ", .last)))
-        }
-        return expr
-    }
-    
-    // main
-    
-    func parseScript() throws -> ScriptAST { // ASTDocument? (see above notes about defining standard ASTNode protocols); also provide public API for parsing a single data structure (c.f. JSON deserialization)
-        var result: Value = nullValue
-        do {
-            result = try self._parseExpression()
-            if case .lineBreak = self.current.token.form { self.advance(ignoringLineBreaks: true) }
-            // TO DO: unbalanced conjunction operators (e.g. `then` without `if`) can cause premature exit; need to check if next token if conjunction
-            assert(self.current.token.form == .endOfScript, "Parser prematurely exited after \(self.current.token) at \(self.current.location). This is either a syntax error or a parser bug. Next token is \(self.peek().token).")
-            let exprSeq: [Value]
-            if let builder = result as? ExpressionSequence {
-                exprSeq = builder.items
-            } else {
-                exprSeq = [result]
-            }
-            return ScriptAST(exprSeq) // TBH, should swap this around so ScriptAST initializer takes code as argument and lexes and parses it
-        } catch { // TO DO: delete once syntax errors provide decent debugging info
-            print("[DEBUG] Partially parsed script:", result)
-            print("failed on", self.current)
-            throw error
-        }
-    }
-    
-}
+            case .lineBreak:
+                self.reduceNow()
+                // TO DO: debugger may want to insert hooks (e.g. step) at line-endings too; as before, to preserve LF-delimited list/record items, this needs to operate on preceding value without changing no. of values on stack; it should probably onalso ignore if LF was also preceded by punctuation
+                
+                // this may or may not fully reduce preceding tokens (e.g. if list wraps multiple lines); Q. any situation where the last token isn't reduced but can legitimately be reduced later? (versus e.g. a dangling operator, which should probably be treated as syntax error even if remaining operand appears at start of next line); yes, e.g. if last token is `[`; if we use patterns to match, patterns should specify where LFs are allowed - upon reaching lineBreak, any patterns that don't permit LF at that point are discontinued (i.e. they remain partially matched up to last token, but don't carry forward to next line); the alternative is we do allow patterns to carry forward in hopes of completing parse, then have PP render as a single line of code (but that isn't necessarily what user intended, e.g. `foo + LF to bar: baz`)
+                
+                
+                
+                // TO DO: .colon, .semicolon are probably easiest implemented as patterns which are pushed onto stack when those tokens are encountered
+                
+            case .operatorName(let operatorDefinitions):
+                
+                // TO DO: reconcile these patterns with any partially matched patterns at top(?) of stack; note that these patterns could also spawn new partial matches (e.g. `to…` vs `tell…to…`, `repeat…while…` vs `while…repeat…`)
+                
+                print("Operator", operatorDefinitions)
+                
+                // TO DO: new patterns need backwards-matched as needed (e.g. infix, postfix ops need to match current topmost stack item as LH operand, caveat if that is preceded by another operator requiring precedence/associativity resolution); note that while these patterns are completed upon reducing RH expression, we can't immediately reduce completed patterns as there may be another operator name after the expr; need to wait for delimiter (punctuation or linebreak) to trigger those reductions
+                
+                
+            case .colon: // push onto stack; what about pattern matching? what should `value:value` transform to?
+                //self.reduceNow() // TO DO: is this appropriate? probably not: need to take care not to over-reduce LH (e.g. `foo bar:baz` should not reduce to `foo{bar}:baz`) i.e. is there any situation where LH is *not* a single token ([un]quotedName or symbol/string/number literal) - obvious problem here is that it won't handle string literals that haven't already been reduced to .value (which is something we defer when reading per-line)
+                self.stack.append((.token(self.current.token), [])) // this needs to add colon-pair pattern if top of stack (LH) is EXPR (or anything other than `[`?) (unlike operators, which are library-defined, colon is hardcoded punctuation with special representation); should `[:]` be matched as pattern, or just hardcode into `case .endList`? one reason to prefer patterns is they generate better syntax error messages
+                
+                // in keeping with `name:value` binding syntax, colon is used to bind handler interface to handler action:
+                
+                // (foo {x as bar} returning baz: do … done) as handler // creates a NativeHandler instance but doesn't bind it
+                
+                // (foo: do … done) as handler  // note the cast is necessary to prevent binding block's result to name (without the cast, the preceding example would fail)
+                
+                // (do … done) as handler  // and here is simplest form: an unnamed handler that takes no input and returns unspecified output
+                
+                // note: colon needs to bind tighter than `as` and `returning`, but looser than `to`:
 
+                // To foo x as bar returning baz: do … done.
+                
+                // one problem with colon for bindings: `a of b: c` is visually confusing and should probably be disallowed, or at least discouraged (use `set a of b to c`; Q. what about `b.a: c`?); also consider colon bindings to be essentially static, i.e. LH operand is fixed at parse time
+                
+                // still not sure if colon binding in blocks should map to `set`; we could argue that since all behaviors are library-supplied, binding is one of those behaviors
+
+
+                // when matching operator keywords such as `to`, `do`, `done`, should pattern specify leftDelimited/rightDelimited/leftDelimited? i.e. we want to 'encourage' `to` to appear at start of line, to minimize it being treated as an operand/argument in more ambiguous contexts (e.g. in `tell foo to bar`, we want to avoid parsing as `tell {foo {to bar}}`)
+                
+                
+                // .quotedName, .unquotedName // command or label; push onto stack
+            default:
+                self.stack.append((.token(self.current.token), []))
+            }
+            self.advance()
+        }
+        return ScriptAST([])
+    }
+}

@@ -5,6 +5,7 @@
 
 import Foundation
 
+// TO DO: what about date and time readers for matching `YYYY-MM-DD`, `HH-MM-SS…` patterns?
 
 // TO DO: reader for 0uXXXX Unicode codepoints; these are probably best as UTF8 with implicit concatenation, e.g. `0u32 0u456 0u101DEF` would concat to 3-codepoint string; Q. how should they concat to string literals? (we don't really want to require an explicit `&` operator as e.g. data files may not have access to that; see also string interpolation)
 

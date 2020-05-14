@@ -68,7 +68,7 @@ struct NumericReader: LineReader {
             let startToken = sign ?? token1 // TO DO: fix this; if sign token contains more than a single +/- at end, trim all +/- chars from end, keeping tally of whether or not number is negative (caution: watch out for, e.g. `foo+-1`, which is a legal if ambiguous expr [it could mean `(foo) + (-1)` or `foo {+-1}`, though in practice we rely on contiguous whitespace and any operator definitions to figure it out]; might be safer just to take the last char to determine number literal's sign, and throw the rest back onto the token stream); any chars left after end trim needs to go back on token stream (i.e. nextReader needs to be wrapped in UnpopToken before returning it)
             var (endToken, nextReader) = (token1, reader1)
             let (token2, reader2) = reader1.next()
-            if case .period = token2.form, token2.isContiguous { // check for `.DIGITS`
+            if case .separator(.period) = token2.form, token2.isContiguous { // check for `.DIGITS`
                 let (token3, reader3) = reader2.next()
                 if case .digits = token3.form {
                     endToken = token3
