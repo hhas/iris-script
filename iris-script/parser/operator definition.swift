@@ -34,11 +34,11 @@ struct OperatorDefinition: CustomDebugStringConvertible { // TO DO: Equatable
     
     var name: Symbol { return self.keywords.first! } // canonical name
     var conjunctions: ArraySlice<Symbol> { return self.keywords.dropFirst() }
-   // let aliases: [Symbol] // any other recognized names (pp will typically reduce these to canonical names), e.g. `.symbol(Symbol("/"))`; in particular, symbolic operators may define a word-based alternative to aid dictation-driven coding, e.g. `.word(Symbol("divided_by"))`
-
+    // let aliases: [Symbol] // any other recognized names (pp will typically reduce these to canonical names), e.g. `.symbol(Symbol("/"))`; in particular, symbolic operators may define a word-based alternative to aid dictation-driven coding, e.g. `.word(Symbol("divided_by"))`
+    
     // parser resolves operator precedence by either reducing LH expr (if LH operator has higher precedence) or shifting RH operator and finishing that match first (once RH operation is reduced, the LH operation can be reduced as well); similarly, associativity reduces LH operation if the operator is .left associative or shifts operand if .right and matches RH operation first
     
-    let pattern: [Pattern] // TO DO: initializer should probably enforce one or more keywords (or punctuation) in pattern
+    let pattern: [Pattern] // TO DO: initializer should ideally enforce a non-empty array containing one or more keywords (or punctuation), also we may want to ensure keywords and exprs are not adjacent [e.g. `if…then…` alternates the two, while in the case of `do…done` multiple exprs in the body should have delimiters between them or, if the block is empty, then `Kw LF Kw`]; that said, we want to minimize bootstrap overheads so may be best to perform these checks at glue generation time
     let precedence: Precedence
     let associate: Associativity // only relevant to infix operators, e.g. `^`, `else`
     

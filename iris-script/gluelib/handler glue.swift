@@ -151,7 +151,6 @@ func renderHandlerGlue(for libraryName: String, from script: String) throws -> S
     let operatorRegistry = OperatorRegistry()
     gluelib_loadOperators(into: operatorRegistry) // essential operators used in glue defs; these may be overwritten by stdlib operators
     //stdlib_loadOperators(into: operatorRegistry)
-    //stdlib_loadKeywords(into: operatorRegistry) // temporary while we bootstrap stdlib + gluelib
     let operatorReader = newOperatorReader(for: operatorRegistry)
     
     let doc = EditableScript(script) { NumericReader(operatorReader(NameReader(UnicodeReader($0)))) }

@@ -116,7 +116,7 @@ struct Token: CustomStringConvertible {
         case quotedName(String) // 'WORD' (quotes may be any of '‘’; WORD may be any character other than linebreaks or single/double/annotation quotes) // single-quotes always appear on single line, without leading/trailing whitespace around the quoted text (the outer edges of the quotes should always be separator/delimiter punctuation or whitespace, although we do need to confirm this, e.g. it's probably reasonable [and sensible] to treat `'foo'mod'bar'` as bad syntax, but what about `'foo'*'bar'`? note that `'foo'.'bar'` is legal [if ugly], as `.` is core punctuation and has its own whitespace-based disambiguation rules)
         
         // tokens created by single-task interim parsers
-        case operatorName(OperatorClass) // Swift enums are not runtime-extensible so we provide an 'extensibility' slot; used by OperatorReader (and, potentially, other partial readers) when decomposing words
+        case operatorName(OperatorGroup) // Swift enums are not runtime-extensible so we provide an 'extensibility' slot; used by OperatorReader (and, potentially, other partial readers) when decomposing words
         case value(Value) // holds any completed value; this'd allow chained parsers to convert token stream from lexer tokens to parsed nodes, with the expectation that the final parser in chain emits a single .value containing the entire AST as a single Value [caveat the whole single-line lexing thing, which'll require some kind of 'stitcher' that tries to balance lines as best it can, inserting best-guess 'fixers' to rebalance where unbalanced]; having a pure token stream for each line is, on the one hand, a bit inefficient (string and annotation literals are presented as sequences of tokens instead of just one atomic .stringLiteral [we could optimize a bit by keeping a per-line list of where the .stringDelimiter tokens appear, allowing us to splice the string's entire content from the original code using beginning and end string indices [caution: if `""` indicates escaped quote, there will be some extra wrangling involved as the splices won't be contiguous]])
         
         case annotation(String) // TO DO: need to decide how/where to put annotations, and how to encode them (annotation content follows its own syntactic rules, which are specific to annotation type, e.g. structural headings and dev/user docs are in Markdown, includes/excludes are comma-delimited lists of superglobal [library] names with optional syntax version suffix), TODOs and comments are unstructured plaintext; Q. what about disabled/macro'd code? (might want to retain tokens for pretty printing)
@@ -325,7 +325,7 @@ struct Token: CustomStringConvertible {
     
     var requiresLeftOperand: Bool { if let oc = self.operatorClass { fatalError("Can't get Token.requiresLeftOperand for \(oc)") } else { return false } /*return self.operatorClass?.requiresLeftOperand ?? false*/ }
     
-    var operatorClass: OperatorClass? {
+    var operatorClass: OperatorGroup? {
         if case .operatorName(let operatorClass) = self.form { return operatorClass } else { return nil }
     }
     

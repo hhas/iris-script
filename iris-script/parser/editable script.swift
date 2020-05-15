@@ -43,6 +43,8 @@ class EditableScript: CustomStringConvertible, CustomDebugStringConvertible { //
     
     struct Line: Sequence, CustomDebugStringConvertible { // TO DO: Equatable (this might be done by comparing counts; comparing lines for [in]significant text changes is a separate task vs looking up the line no. of an existing line)
         
+        // TO DO: for each line, is it worth keeping a quick-access array of its double-quote (and double-angle-quote) indices? i.e. to reduce string literals (which are initially multiple [to-be-discarded] tokens bounded by two .stringDelimiter tokens, possibly with `""` escapes as well), we need to scan the whole program doing a balance count (and when we do that, we want to try to be intelligent about guessing if any DQs are missing, even if the final count is even [i.e. balanced], which we can do by seeing how well each line of 'code' between any two quotes can reduce; actually, we could probably use a simpler heuristic: sequences of three or more non-keyword words that do not contain any colons are not valid LP commands which strongly implies they belong inside a string/annotation literal)
+        
         var debugDescription: String { return self.code.debugDescription } // TO DO: what to show?
         
         var isEmpty: Bool { return self.tokens.isEmpty }

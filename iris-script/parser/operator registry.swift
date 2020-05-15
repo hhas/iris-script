@@ -13,25 +13,26 @@ import Foundation
 // eventually all operators defined in compiled libraries should be validated and reduced to quick-loading format; for now, we probably want to validate all operators as they're read (e.g. checking for reserved chars, name/definition collisions within/between libraries, mixed token types in names)
 
 
+// TO DO: is there any use-case where the order of command arguments is *not* the same as order of operands?
 
 
-struct OperatorClass: CustomDebugStringConvertible { // all operators that use a given name // TO DO: define as class rather than struct? it would reduce no. of method calls needed to populate PartialMatch tree to one add() per OpClass rather than one add() per OpDef
+struct OperatorGroup: CustomDebugStringConvertible { // all operators that use a given name // TO DO: define as class rather than struct? it would reduce no. of method calls needed to populate PartialMatch tree to one add() per OpGrp rather than one add() per OpDef
     
     var debugDescription: String {
-        return "<\(self.name.label) \(self.operations.map{String(describing: $0.pattern)}.joined(separator: " "))>"
+        return "<\(self.name.label) \(self.definitions.map{String(describing: $0.pattern)}.joined(separator: " "))>"
     }
     
-    let name: Symbol // .operatorName(_) needs to include the name of the operator for reporting purposes (i.e. we can't just pass operation array)
+    let name: Symbol // .operatorName(_) needs the name of the operator keyword (canonical/conjunction/alias) as written in user's code for reporting purposes
 
-    private(set) var operations = [OperatorDefinition]()
+    private(set) var definitions = [OperatorDefinition]()
     
     init(name: Symbol) {
         self.name = name // this is the name under which the Operation is stored in registry (a single Operation may be stored under multiple names); the name itself it may be canonical name, alias, and/or conjunction for one or more operators; when the tokenizer matches that name, it outputs an .operatorName(OperatorDefinitions) token and it's up to parser to determine which definition it is (e.g. if it's a conjunction in an Operation that's already partially matched, or if it's the start of a new match, or both)
      }
     
-    mutating func add(_ operation: OperatorDefinition) {
+    mutating func add(_ definition: OperatorDefinition) {
         // TO DO: how to detect conflicting definitions? (could be tricky, plus it could impact bootstrap times)
-        self.operations.append(operation)
+        self.definitions.append(definition)
     }
 }
 
@@ -49,24 +50,26 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
     
     var debugDescription: String { return "OperatorRegistry<\(self.wordOperators.keys) \(self.symbolOperators.keys)>" }
     
-    typealias OperatorTable = [String: OperatorClass] // maps a single keyword to all operators that use that keyword
+    typealias OperatorTable = [String: OperatorGroup] // maps a single keyword to all operators that use that keyword
     
     private var wordOperators   = OperatorTable() // whole-token matches
-    private var symbolOperators = OperatorTable() // whole-token matches; also need separate longest-match tree
+    private var symbolOperators = OperatorTable() // whole-token matches (this is quicker than sub-token matching when a single symbolic operator is clearly delimited by words/punctuation/whitespace)
     
     var wordOperatorDefinitions: OperatorTable.Values { return self.wordOperators.values }
     var symbolOperatorDefinitions: OperatorTable.Values { return self.symbolOperators.values }
+    
+    private var symbolMatcher = PartialMatch() // (note: symbolMatcher.description should always be nil) // used by to perform sub-token matches where two or more symbolic operators are written contiguously; e.g. "1<=-2" tokenizes as [.value("1"), .symbols("<=-"), .value("2")], which OperatorReader rewrites to [.value("1"), .operator("<="), .operator("-"), .value("2")]
     
     // TO DO: as alternative to populating match table are parse-time, what about pre-building tables into libraries themselves?
     
     // TO DO: may want longest match for words as well, e.g. autosuggest, autocomplete (including underscore autoinsertion)
     
-    struct PartialMatch  { // tree structure where each node can match a sequence of symbol characters to an operator class; used to perform longest match of symbol-based operator names
+    struct PartialMatch { // tree structure where each node can match a sequence of symbol characters to an operator class; used to perform longest match of symbol-based operator names
         
         private var matches = [Character: PartialMatch]()
-        private var definitions: OperatorClass? // nil if this isn't a complete match
+        private var definitions: OperatorGroup? // nil if this isn't a complete match
         
-        mutating func add(_ name: Substring, _ definition: OperatorClass) {
+        mutating func add(_ name: Substring, _ definition: OperatorGroup) {
             if let char = name.first {
                 if self.matches[char] == nil { self.matches[char] = PartialMatch() }
                 self.matches[char]!.add(name.dropFirst(1), definition)
@@ -76,7 +79,7 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
             }
         }
         
-        func match(_ value: Substring) -> (endIndex: String.Index, definition: OperatorClass)? {
+        func match(_ value: Substring) -> (endIndex: String.Index, definition: OperatorGroup)? {
             guard let char = value.first else { // else reached end
                 if let definitions = self.definitions {
                     return (value.endIndex, definitions)
@@ -94,19 +97,16 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
         }
     }
     
-    private var symbolMatcher = PartialMatch() // (note: symbolMatcher.description should always be nil)
-    
-    
     func add(_ definition: OperatorDefinition) {
         for name in definition.keywords {
             assert(!name.isEmpty)
             if name.isSymbolic {
                 // TO DO: any performance difference using string rather than symbol as dictionary keys? (if not, use Symbol)
-                if self.symbolOperators[name.key] == nil { self.symbolOperators[name.key] = OperatorClass(name: name) }
+                if self.symbolOperators[name.key] == nil { self.symbolOperators[name.key] = OperatorGroup(name: name) }
                 self.symbolOperators[name.key]!.add(definition)
                 self.symbolMatcher.add(Substring(name.key), self.symbolOperators[name.key]!)
             } else {
-                if self.wordOperators[name.key] == nil { self.wordOperators[name.key] = OperatorClass(name: name) }
+                if self.wordOperators[name.key] == nil { self.wordOperators[name.key] = OperatorGroup(name: name) }
                 self.wordOperators[name.key]!.add(definition)
             }
         }
@@ -115,16 +115,16 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
     
     // TO DO: should matchWord/matchSymbols take token and return tokens?
     
-    func matchWord(_ value: Substring) -> OperatorClass? {
+    func matchWord(_ value: Substring) -> OperatorGroup? {
         assert(!value.isEmpty)
         return self.wordOperators[value.lowercased()]
     }
     
-    func matchSymbols(_ value: Substring) -> [(Substring, OperatorClass)] { // returned substrings should be slices of same underlying string as value
+    func matchSymbols(_ value: Substring) -> [(Substring, OperatorGroup)] { // returned substrings should be slices of same underlying string as value
         assert(!value.isEmpty)
         if let result = self.symbolOperators[String(value)] { return [(value, result)] }
         var symbols = value
-        var result = [(Substring, OperatorClass)]()
+        var result = [(Substring, OperatorGroup)]()
         while !symbols.isEmpty {
             if let (endIndex, definitions) = self.symbolMatcher.match(symbols) {
                 result.append((symbols.prefix(upTo: endIndex), definitions))
@@ -136,7 +136,7 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
         return result
     }
     
-    func get(_ name: Symbol) -> OperatorClass? {
+    func get(_ name: Symbol) -> OperatorGroup? {
         return self.wordOperators[name.key] ?? self.symbolOperators[name.key]
     }
 }

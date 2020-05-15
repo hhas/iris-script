@@ -8,13 +8,12 @@ import Foundation
 // 'everything is a command' = 'right-hand rule: if a value (expr) appears after a command name, the command will take it as argument' (this is significant as 'variables' are just arg-less commands that retrieve the value stored under that name; this may produce unanticipated behavior, e.g. when the name is followed by an operator name that is available in both prefix/atom and infix/postfix forms; currently the [dumb] parser takes the prefix/atom form as command argument but it would be better/safer/more predictable to favor the infix/postfix form in lp (low-punctuation) commands, requiring the user to explicitly punctuate the command if they want it used as argument instead)
 
 let env = Environment()
+let operatorRegistry = OperatorRegistry()
 
 stdlib_loadHandlers(into: env)
 stdlib_loadConstants(into: env)
 
-let operatorRegistry = OperatorRegistry()
 stdlib_loadOperators(into: operatorRegistry)
-stdlib_loadKeywords(into: operatorRegistry) // temporary while we bootstrap stdlib + gluelib
 let operatorReader = newOperatorReader(for: operatorRegistry)
 
 
@@ -114,7 +113,17 @@ func test() {
     script = " if a then (b, c, d) else (e, f). " // TO DO: sentence blocks (multiple comma-separated exprs) in `then clause` are problematic as punctuation has lower precedence than operators; would need to special-case parsing of block operands
     script = " if a then (b, c, d) else (e, f). "
     
-    script = " a + - b "
+    //script = " a + - b "
+    
+    //script = " [1:2, 3:4, 5:6] "
+    
+    script = " 1 + 2 * 3 "
+    
+    //script = " f x - 1" // this should parse as `-{f{x},1}`
+    
+    //script = " f a: b - 1" //
+    
+    //script = " f a: b of c - 1 " // `of` needs to bind more tightly than arg label, i.e. `-{f{a:of{b,c}},1}`
     
 //    script = " a b c " // this throws parsing error as inner commands can't be LP, but could do with better error message (currently 'expected label in ‘a’ command but found <.unquotedName("c") _"c"_>'); Q. how to suggest corrections? e.g. `a {b {c}}`, `a {b, c}`, `a {b, c: …}`
     
