@@ -25,7 +25,7 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.infix("returning", 300)
     
     // block
-    registry.prefix("do", terminator: "done", 100)
+    registry.prefix("do", suffix: "done", 100)
     
     // assignment // TO DO: what should LH operand pattern be?
     registry.prefix("set", conjunction: "to", 102)

@@ -32,7 +32,14 @@ struct Token: CustomStringConvertible {
     // initial tokenization by CoreLexer is minimal, recognizing only core punctuation, contiguous digits, whitespace (as delimiter), and symbols and words (everything else); determining which tokens actually appear inside string literals and annotations [meaning they're not real tokens after all], assembling complete number literals from multiple tokens, distinguishing operator names from command names, etc is left to downstream consumers
     
     var description: String { // underscore before/after quoted token text indicates adjoining whitespace
-        return "<.\(self.form) \(self.whitespaceBefore == nil ? "" : "_")\(self.content.debugDescription)\(self.whitespaceAfter == nil ? "" : "_")>"
+        let form: String
+        switch self.form {
+        case .operatorName(_):  form = "operatorName"
+        case .quotedName(_):    form = "quotedName"
+        case .unquotedName(_):  form = "unquotedName"
+        default:                form = String(describing: self.form)
+        }
+        return "<.\(form) \(self.whitespaceBefore == nil ? "" : "_")\(self.content.debugDescription)\(self.whitespaceAfter == nil ? "" : "_")>"
     }
     
     // Q. what about non-Latin scripts? e.g. Arabic comma is `،` (don't suppose NFKC remaps it to `,`?); probably best to rely on top-level «language:…» annotation to switch/extend lexer's character sets [we can worry about implementing that later]

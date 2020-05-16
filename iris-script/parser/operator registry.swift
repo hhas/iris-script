@@ -1,5 +1,5 @@
 //
-//  operators.swift
+//  operator registry.swift
 //  iris-script
 //
 
@@ -14,31 +14,6 @@ import Foundation
 
 
 // TO DO: is there any use-case where the order of command arguments is *not* the same as order of operands?
-
-
-struct OperatorGroup: CustomDebugStringConvertible { // all operators that use a given name // TO DO: define as class rather than struct? it would reduce no. of method calls needed to populate PartialMatch tree to one add() per OpGrp rather than one add() per OpDef
-    
-    var debugDescription: String {
-        return "<\(self.name.label) \(self.definitions.map{String(describing: $0.pattern)}.joined(separator: " "))>"
-    }
-    
-    let name: Symbol // .operatorName(_) needs the name of the operator keyword (canonical/conjunction/alias) as written in user's code for reporting purposes
-
-    private(set) var definitions = [OperatorDefinition]()
-    
-    init(name: Symbol) {
-        self.name = name // this is the name under which the Operation is stored in registry (a single Operation may be stored under multiple names); the name itself it may be canonical name, alias, and/or conjunction for one or more operators; when the tokenizer matches that name, it outputs an .operatorName(OperatorDefinitions) token and it's up to parser to determine which definition it is (e.g. if it's a conjunction in an Operation that's already partially matched, or if it's the start of a new match, or both)
-     }
-    
-    mutating func add(_ definition: OperatorDefinition) {
-        // TO DO: how to detect conflicting definitions? (could be tricky, plus it could impact bootstrap times)
-        self.definitions.append(definition)
-    }
-}
-
-
-
-
 
 
 
@@ -167,8 +142,8 @@ extension OperatorRegistry {
     func prefix(_ name: Keyword, conjunction: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
         self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(conjunction), .expression], precedence: precedence, associate: associate))
     }
-    func prefix(_ name: Keyword, terminator: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(terminator)], precedence: precedence, associate: associate))
+    func prefix(_ name: Keyword, suffix: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
+        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(suffix)], precedence: precedence, associate: associate))
     }
     
     func add(_ pattern: [Pattern], _ precedence: Precedence = -100, _ associate: OperatorDefinition.Associativity = .left) {

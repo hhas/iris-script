@@ -23,7 +23,7 @@ typealias ScriptAST = Block
 // when a Value is pushed onto stack, pass it to each partial match which checks it against pattern and returns either new partial match (the match index is advanced and returned in a new partial match struct), completed match (don't reduce immediately as there may be a longer match to be made [i.e. SR conflict is resolved by preferring longest patch]), or no match (in which case that matcher isn't carried forward); that implies matches are part of .value case
 
 
-
+// TO DO: should all colons be dealt with using pattern matching? (this might only reduce to colon pairs)
 let colonPair = OperatorDefinition(pattern: [.expression, .keyword(":"), .expression], precedence: 0, associate: .right)
 
 
@@ -99,7 +99,7 @@ class Parser { // TO DO: initially implement as full-file parser, then convert t
     private(set) var current: BlockReader // current token
     private var annotations = [Token]() // TO DO: parser needs to bind extracted annotations to AST nodes automatically (this may be easier once TokenInfo includes line numbers)
     
-    typealias StackItem = (reduction: Reduction, partialMatches: [PartialMatch])
+    typealias StackItem = (reduction: Reduction, matches: [PatternMatch]) // in-progress/completed matches
             
     private(set) var stack = [StackItem]() // TO DO: what about capturing partially matched patterns? (i.e. build the match while going forward, rather than waiting until reduction and matching backward); Q. how to deal with operator precedence? // one reason to match moving forward is that a complex operator, e.g. `tell EXPR to EXPR`, can install an in-stream detector for its conjunction token (`to`) - in the event that an invalid parse occurs, e.g. `tell (app "foo" to action`, the nearest location[s] of that keyword is known; in a valid parse, the keyword should trigger the reduction of the preceding token, e.g. `tell app "foo" to action` would reduce `app "foo"` when `to` is encountered
     
@@ -171,18 +171,17 @@ class Parser { // TO DO: initially implement as full-file parser, then convert t
     
     //
     
-    func shift(_ reduction: Reduction, _ newMatches: [PartialMatch] = []) {
-        // TO DO: who is responsible for back-matching infix/postfix operators? // what API should PartialMatch provide for this?
-        var matches = [PartialMatch]()
+    func shift(_ reduction: Reduction, _ newMatches: [PatternMatch] = []) {
+        // TO DO: who is responsible for back-matching infix/postfix operators? // what API should PatternMatch provide for this?
+        var matches = [PatternMatch]()
         // advance/discard any in-progress matches
-        if let currentMatches = self.stack.last?.partialMatches {
-            for currentMatch in currentMatches {
-                if let remainingMatch = currentMatch.match(reduction) {
-                    matches.append(remainingMatch)
-                    print("Matched", reduction, "to", currentMatch, "leaving", remainingMatch)
-                    if remainingMatch.isComplete {
-                        print("@@@Fully matched", remainingMatch.operatorDefinition)
-                    }
+        if let previousMatches = self.stack.last?.matches {
+            //print(previousMatches)
+            for previousMatch in previousMatches {
+                if let thisMatch = previousMatch.match(reduction) { // nil if match was complete on the previous token or has failed to match this token, else a matcher for the next token after this
+                    matches.append(thisMatch)
+                    //print("Matched", reduction, "to", previousMatch, "leaving", thisMatch.remaining)
+                    //if thisMatch.isComplete { print("@@@Fully matched", thisMatch.operatorDefinition) }
                 }
             }
         }
@@ -194,9 +193,13 @@ class Parser { // TO DO: initially implement as full-file parser, then convert t
         guard let item = self.stack.last else { return } // this'll only occur if a separator appears at start of script
         print("reduceNow:", item)
         
-        for m in item.partialMatches where m.isComplete {
-            print("  Found edge of fully matched pattern for operator `\(m.operatorDefinition.name)`") // TO DO: next pr
+        for m in item.matches where m.isComplete {
+            print("  found edge of fully matched ‘\(m.operatorDefinition.name.label)’ operation")
+            print("  ", self.stack[m.start]) // check start of match for contention, e.g. in `1 + 2 * 3` there is an SR conflict on `2` which requires comparing operator precedences to determine which operation to reduce first
+            // in addition, if an EXPR operand match is not a fully-reduced .value(_) then that reduction needs to be performed first
         }
+        
+        // Q. how to deal with unreduced/incomplete operands; how to deal with operator precedence/associativity?
         
         // TO DO: how to reduce commands? (both `name record` and LP syntax, with added caveat about nested LP syntax)
     }
@@ -206,7 +209,7 @@ class Parser { // TO DO: initially implement as full-file parser, then convert t
     
     func parseScript() throws -> ScriptAST {
         loop: while true {
-            print(self.current.token.form)
+            print("PARSE .\(self.current.token.form)")
             switch self.current.token.form {
             case .endOfScript: break loop
             case .annotation(_): () // discard annotations for now
@@ -219,14 +222,14 @@ class Parser { // TO DO: initially implement as full-file parser, then convert t
                     if let items = self.popKeyValueSeq() {
                         self.shift(.value(KeyedList(items)))
                     } else {
-                        self.self.shift(.token(self.current.token)) // TO DO: what about capturing partial result?
+                        self.shift(.token(self.current.token)) // TO DO: what about capturing partial result?
                         print("couldn't reduce kv-list at this time")
                     }
                 }
                 if let items = self.popExprSeq(backTo: .startList) {
-                    self.self.shift(.value(OrderedList(items)))
+                    self.shift(.value(OrderedList(items)))
                 } else {
-                    self.self.shift(.token(self.current.token)) // TO DO: what about capturing partial result?
+                    self.shift(.token(self.current.token)) // TO DO: what about capturing partial result?
                     print("couldn't reduce list at this time")
                 }
             case .endRecord:
@@ -234,9 +237,9 @@ class Parser { // TO DO: initially implement as full-file parser, then convert t
             case .endGroup:
                 self.reduceNow()
                 if let items = self.popExprSeq(backTo: .startList) {
-                    self.self.shift(.value(Block(items)))
+                    self.shift(.value(Block(items)))
                 } else {
-                    self.self.shift(.token(self.current.token))
+                    self.shift(.token(self.current.token))
                     print("couldn't reduce group at this time")
                 }
             
@@ -271,39 +274,42 @@ class Parser { // TO DO: initially implement as full-file parser, then convert t
                 // note: resolving operator precedences, e.g. `1 + 2 * 3`, is a form of SR-conflict resolution; presumably we need to look at `2` to see if it is matched by >1 operator (then we need to check those operators are completely matched)
                 
                 // having encountered an operator-defined keyword, we get all operator definitions that use that keyword
-                // TO DO: if the opdef has a leading expr before that keyword, check stack's head is an expr; append a new PartialMatch to head's partialMatches then add the Reduction.token(.operatorName(…) with nextMatch)
+                // TO DO: if the opdef has a leading expr before that keyword, check stack's head is an expr; append a new PatternMatch to head's matches then add the Reduction.token(.operatorName(…) with nextMatch)
                 
                 // TO DO: if stack's head is not an expr, reduceNow?
                 
                 // TO DO: reconcile these patterns with any partially matched patterns at top(?) of stack; note that these patterns could also spawn new partial matches (e.g. `to…` vs `tell…to…`, `repeat…while…` vs `while…repeat…`)
                 
-                print("FOUND OP", operatorClass.name)
+             //   print("FOUND OP", operatorClass.name)
                 
                 
-                var m = [PartialMatch]()
+                var m = [PatternMatch]()
                 
+                // TO DO: should this be moved to shift()? (it would mean shift's 2nd parameter becomes [OpDef] instead of [PatternMatch])
                 for definition in operatorClass.definitions {
                     // TO DO: is there any situation where neither first nor second pattern is a keyword?
-                    print("back-matching:", definition)
+                    //print("back-matching:", definition)
                     // temporary kludge
                     if case .keyword(let k) = definition.pattern[0], k.matches(operatorClass.name) { // prefix operator
-                        let newMatch = PartialMatch(operatorDefinition: definition, start: self.stack.count, remaining: [Pattern](definition.pattern.dropFirst()))
+                        let newMatch = PatternMatch(operatorDefinition: definition, start: self.stack.count, remaining: [Pattern](definition.pattern.dropFirst()))
+                        print("  adding matcher for ‘\(operatorClass.name.label)’:", newMatch)
                         m.append(newMatch)
                        // print("matched prefix op", newMatch)
                     } else if definition.pattern.count > 1, case .expression = definition.pattern[0], case .keyword(let k) = definition.pattern[1], k.matches(operatorClass.name) { // infix/postfix operator
                         if let last = self.stack.last {
                            // print("checking last", last.reduction)
                             if case .value(_) = last.reduction { // TO DO: this needs work as .value is not the only valid Reduction: stack's head can also be an unreduced command or LP argument, but we don't know if we should reduce that command now or later (we have to finish matching the operator in order to know the operator's precedence, at which point we can determine which to reduce first: command (into an operand) or operator (into an argument)); Q. do we actually need to know if EXPR is a valid expression to proceed with the match? if it looks like it *could* be reduced later on (i.e. it's not a linebreak or punctuation), that might be enough to proceed with match for now
-                                let newMatch = PartialMatch(operatorDefinition: definition, start: self.stack.count-1, remaining: [Pattern](definition.pattern.dropFirst()))
-                                self.stack[self.stack.count-1].partialMatches.append(newMatch)
-                                m.append(newMatch.nextMatch())
+                                let newMatch = PatternMatch(operatorDefinition: definition, start: self.stack.count-1, remaining: [Pattern](definition.pattern.dropFirst()))
+                                print("  adding matcher for ‘\(operatorClass.name.label)’:", newMatch)
+                                self.stack[self.stack.count-1].matches.append(newMatch) // add matcher to head of stack, before operator name is shifted onto it
+                                //m.append(newMatch.nextMatch()) // shift() will carry this forward from head of stack
                                 //print("matched infix/postfix op", newMatch)
                             }
                         }
                     } else {
                         // check head's existing matches: if name is conjunction in one of those then do nothing
                         if let last = self.stack.last {
-                            for partialMatch in last.partialMatches {
+                            for partialMatch in last.matches {
                                 if !partialMatch.isComplete, case .keyword(let k) = partialMatch.remaining[0], k.matches(operatorClass.name) {
                                     print(operatorClass.name, "is part of existing match")
                                 }
@@ -315,21 +321,20 @@ class Parser { // TO DO: initially implement as full-file parser, then convert t
                     
                 }
                 
-                
-                self.self.shift(.token(self.current.token), m)
+                self.shift(.token(self.current.token), m)
                 
                 // TO DO: new patterns need backwards-matched as needed (e.g. infix, postfix ops need to match current topmost stack item as LH operand, caveat if that is preceded by another operator requiring precedence/associativity resolution); note that while these patterns are completed upon reducing RH expression, we can't immediately reduce completed patterns as there may be another operator name after the expr; need to wait for delimiter (punctuation or linebreak) to trigger those reductions
                 
                 
             case .colon: // push onto stack; what about pattern matching? what should `value:value` transform to?
                 //self.reduceNow() // TO DO: is this appropriate? probably not: need to take care not to over-reduce LH (e.g. `foo bar:baz` should not reduce to `foo{bar}:baz`) i.e. is there any situation where LH is *not* a single token ([un]quotedName or symbol/string/number literal) - obvious problem here is that it won't handle string literals that haven't already been reduced to .value (which is something we defer when reading per-line)
-                let m: [PartialMatch]
+                let m: [PatternMatch]
                 if case .value(_) = self.stack.last?.reduction {
-                    m = [PartialMatch(operatorDefinition: colonPair, start: self.stack.count-1, remaining: [colonPair.pattern[2]])]
+                    m = [PatternMatch(operatorDefinition: colonPair, start: self.stack.count-1, remaining: [colonPair.pattern[2]])]
                 } else {
                     m = []
                 }
-                self.self.shift(.token(self.current.token), m) // this needs to add colon-pair pattern if top of stack (LH) is EXPR (or anything other than `[`?) (unlike operators, which are library-defined, colon is hardcoded punctuation with special representation); should `[:]` be matched as pattern, or just hardcode into `case .endList`? one reason to prefer patterns is they generate better syntax error messages
+                self.shift(.token(self.current.token), m) // this needs to add colon-pair pattern if top of stack (LH) is EXPR (or anything other than `[`?) (unlike operators, which are library-defined, colon is hardcoded punctuation with special representation); should `[:]` be matched as pattern, or just hardcode into `case .endList`? one reason to prefer patterns is they generate better syntax error messages
                 
                 print("added", m, self.stack.count)
                 
@@ -356,20 +361,23 @@ class Parser { // TO DO: initially implement as full-file parser, then convert t
                 // .quotedName, .unquotedName // command or label; push onto stack
                 
             case .value(let value):
-                self.self.shift(.value(value))
+                self.shift(.value(value))
             default:
-                self.self.shift(.token(self.current.token))
+                self.shift(.token(self.current.token))
             }
             self.advance()
         }
+        print("\nReductions:")
         var result = [Value]()
-        for (item, _) in self.stack {
-            if case .value(let value) = item {
+        for (reduction, matches) in self.stack {
+            if case .value(let value) = reduction {
                 result.append(value)
             } else {
-                print("Found non-value: \(item)")
+                //print("Found non-value: \(reduction)")
             }
+            print("  .\(reduction)", matches.filter{$0.isComplete}.map{String(describing:$0)}.joined(separator: " "))
         }
+        print()
         return ScriptAST(result)
     }
 }

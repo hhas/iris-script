@@ -1,10 +1,12 @@
 //
-//  patterns.swift
+//  operator patterns.swift
 //  iris-script
 //
 
 import Foundation
 
+
+// it may help to think of parser's stack as not so much an SR stack but as an array of in-progress reductions; starting as an array of .token(_) and finishing as an array of .value(_); this may require multiple passes (particularly when parsing per-line, e.g. while editing where the code may contain multiple [transient] syntax errors)
 
 // A partial match succeeds in becoming a full match, or fails to match a Reduction before that
 
@@ -32,19 +34,24 @@ protocol PatternProtocol {
 
 
 
+// TO DO: assuming EXPR can match the start/end of a not-yet-reduced operand (which would greatly simplify pattern matching of incomplete code) as well as a completely reduced .value, exactly which token forms does this involve? (also be aware that handedness must be taken into account, e.g. a list to the left of the operator would appear as .endList but to its right as .startList); also consider that matchers' start indexes will be invalidated by reductions occurring mid-stack
+
+
 enum Pattern: PatternProtocol, CustomDebugStringConvertible {
     case keyword(Keyword)
     case pattern(CompositePattern)
     case expression // any value
+    // TO DO: .token(…)? (this might be a subset of Token.Form - braces and punctuation only; powerful, e.g. able to match `HH:MM:SS`, but could also be dangerous)
+    // TO DO: .regepx(…) rather than .value(T)? that'd match the token's raw string rather than form
     case value(Value.Type) // match specific type of literal value, e.g. Command; e.g. pipe operator has pattern [.expression, .keyword(";"), .value(Command.self)]; note: this should ignore grouping parens when testing value type (but not blocks?) - that shouldn't be an issue as parser should discard grouping parens around single expr (elective or precedence-overriding) while parens wrapped around expr-seq will be parsed as Block
-    case delimiter // punctuation or linebreak required; e.g. prefix `to` operator should be left-delimited to avoid confusion with infix `to` conjunction; that delimiter may be start of code, linebreak, `(` (`[` and `{` would also work, although that implies `to` is being used within a record or list which is typically a semantic error as a list of closures should be defined using `as [handler]` cast; using `to` will bind them to current namespace as well)
-    case lineBreaks // one or more // TO DO: needed? (i.e. are there any cases where punctuation isn't sufficient to delimit)
+    case delimiter // punctuation or linebreak required; e.g. prefix `to` operator should be left-delimited to avoid confusion with infix `to` conjunction; that delimiter may be start of code, linebreak, `(` (`[` and `{` would also work, although that implies `to` is being used within a record or list which is typically a semantic error as a list of closures should be defined using `as [handler]` cast; using `to` will bind them to current namespace as well) // TO DO: what about requiring a leading/trailing delimiter without consuming it? any situations where that might be helpful/necessary (e.g. indicating clear-left for the prefix `to` operator, to prevent it being confused for a command argument, e.g. `tell foo to bar` *should* longest-match the `tell…to…` op, but if the prefix `to` operator can require a LH delimiter then that will also help to disambiguate by making it impossible for `foo to bar` to be interpreted as `foo{to{bar}}`, particularly when reading incomplete/invalid code where a syntax error may prevent the `tell…to…` operator being matched)
+    case lineBreaks // one or more // TO DO: needed? (i.e. are there any cases where punctuation isn't sufficient to delimit) // TO DO: singular or plural (i.e. are there any use-cases where we need to disallow *multiple* linebreaks?)
     case ignoreLineBreaks // skip over any contiguous linebreaks (normally linebreaks within an operation are a syntax error; exceptions are e.g. in `do … done` block)
 
     
     var debugDescription: String {
         switch self {
-        case .keyword(let k):   return String(describing: k)
+        case .keyword(let k):   return "\"\(k.name.label)\""
         case .pattern(let p):   return String(describing: p)
         case .expression:       return "EXPR"
         case .value(let t):     return String(describing: t)
@@ -61,11 +68,11 @@ enum Pattern: PatternProtocol, CustomDebugStringConvertible {
                 return .fullMatch
             }
         case .pattern(let p):
-            return p.match(reduction)
-        case .expression:
+            return p.match(reduction) // TO DO: need to decide how/where composite patterns decompose themselves; the goal is to transform [CompositePattern, REST] into [[SimplePattern,…,REST],…], preferably shortest first
+        case .expression: // TO DO: is it sufficient to match something that *could* be an expression, e.g. if .endList appears to left of a postfix operator, that implies the LH operand will eventually be a List value, even if it hasn't yet been reduced to one (i.e. the operator pattern can match it; it just can't reduce to an annotated Command yet)
             if case .value(_) = reduction { return .fullMatch }
         case .value(let t):
-            if case .value(let v) = reduction, type(of: v) == t { return .fullMatch } // Q. what about subclasses? also numbers
+            if case .value(let v) = reduction, type(of: v) == t { return .fullMatch } // Q. what about subclasses? also numbers // this is likely to be troublesome for any Value composed of more than one token (command/record/list/block, and possibly string)
         case .delimiter: // note: this only matches separator OR linebreak; to match separator followed by zero or more linebreaks, use `.delimiter, .ignoreLineBreak`
             if case .token(let t) = reduction {
                 switch t.form {
@@ -83,6 +90,9 @@ enum Pattern: PatternProtocol, CustomDebugStringConvertible {
     }
 
 }
+
+
+//
 
 
 protocol CompositePattern: PatternProtocol {
@@ -126,6 +136,8 @@ struct OptionalPattern: CompositePattern {
 
 // how to match repeating seqs? we arguably want to spawn two remaining patterns: one with the seq followed by ZeroOrMore seqs followed by closing; the other with closing (i.e. don't worry about rollback; just branch to attempt both matches [i.e. with the OptionalPattern section and without the OptionalPattern section] and discontinue the failed one[s]); this probably means rewriting patterns from user-friendly structure to state-machine-friendly (i.e. only primitives are sequenceOf and anyOf)
 
+// TO DO: also need a pattern for matching no adjacent whitespace, e.g. 'YYYY-MM-DD' (Q. is this safe for negation operator to use?); also, what about regexp-based matcher? (this may be preferable to `.value(Value.Type)` for matching literal values)
+
 struct BalancedWhitespace: CompositePattern { // if pattern is sequence, this will be non-atomic (in practice, this is probably only used to match operators, e.g. when distinguishing `a -b` command from infix `a - b`/`a-b` operation, in which case it might be simpler to capture operator and perform match as atomic operation); alternative would be for parser to enforce balanced whitespace around all infix operators
     
     let pattern: Pattern
@@ -135,61 +147,3 @@ struct BalancedWhitespace: CompositePattern { // if pattern is sequence, this wi
     }
 }
 
-
-//
-
-// Q. should PartialMatch be re-cast as an enum that distinguishes between completed match, incomplete match [and failed match?]?
-
-
-// note that composite matches such as OptionalMatch can spawn multiple PartialMatches, one for each branch
-
-struct PartialMatch { // a single pattern; this should advance when a .value is pushed onto stack (assuming no unreduced tokens between it and the previous .value which holds the previous match)
-    
-    // note: matches are started on first operator/punctuation, backtracking to match any leading EXPRs in the pattern
-    
-    let operatorDefinition: OperatorDefinition
-    
-    let start: Int // index of first stack item matched by this pattern (Q. when is this determined? e.g. `1 * 2 + 3` will start `*` match on index 0; where does `+` match start? is 1*2 reduced first? (i.e. as soon as precedences of operators on either side of `2` can be compared))
-    //private(set) var end: Int
-    
-    let remaining: [Pattern]
-    
-    var firstPattern: Pattern? { return self.remaining.first }
-    var remainingPatterns: [Pattern] { return [Pattern](self.remaining.dropFirst()) }
-    
-    func nextMatch(with extraPatterns: [Pattern] = []) -> PartialMatch {
-        return PartialMatch(operatorDefinition: self.operatorDefinition, start: self.start, remaining: extraPatterns + self.remainingPatterns)
-    }
-    
-    
-    func match(_ reduction: Parser.Reduction) -> PartialMatch? {
-        print("matching", reduction, "to", self)
-        if let pattern = self.firstPattern {
-            switch pattern.match(reduction) {
-            case .fullMatch:
-                return self.nextMatch()
-            case .partialMatch(let remaining):
-                return self.nextMatch(with: remaining)
-            case .noMatch:
-                return nil
-            case .noConsume:
-                return self.nextMatch().match(reduction) // TO DO: confirm this is correct (e.g. what if pattern ends with -LF?)
-            }
-        } else {
-            print(self, "is already fully matched")
-            return nil // already fully matched
-        }
-    }
-    
-    var isComplete: Bool { return self.remaining.isEmpty } // if true, stack item is last Reduction in this match
-    
-    //let index: Int // TO DO: this is insufficient to handle composite patterns; might be better to use [Pattern], which can be outputted by CompositePatterns (e.g. AnyPattern will pick the sequence whose first token matches and return that, followed by rest of parent pattern, as flat array; RepeatingPattern will return rest of its pattern followed by `OptionalPattern(self)` followed by rest of parent pattern); one challenge is trailing optional pattern: if it only partially matches then need to rollback to before that match [but isn't that always the case with Optional(SEQUENCE)?]
-    // include rollback index for stack (i.e. last point where a match with optional tail pattern could be completed, or the point before the match started)
-    
-    
-    // Q. how does pattern-seq matching work? optional seqs are the challenge; use rollback? (that'd need to rollback both pattern and matched token) is it better to let matches build up and wait for something else to trigger reductions, at which point matches can be analyzed? [the challenge with that is we generally want to find longest matches from start of code, not end]; allowing matches to accummulate means more opportunity to disambiguate ambiguous code, e.g. allowing parse to succeed with `SHORT LONG` match rather than failing on `LONGEST INVALID`, while still preferring `LONG SHORT`
-}
-
-// Q. given two different operators of same precedence but different associativity, should the latter affect which binds first?
-
-// Q. how to carry forward current precedence and associativity? or should parser just look for `OPNAME1 EXPR OPNAME2` sequences itself

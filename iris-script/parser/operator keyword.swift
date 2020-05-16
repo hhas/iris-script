@@ -1,5 +1,5 @@
 //
-//  keyword.swift
+//  operator keyword.swift
 //  iris-script
 //
 //  an operator-defined keyword (including any aliases); used in patterns

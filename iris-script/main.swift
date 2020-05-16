@@ -117,7 +117,7 @@ func test() {
     
     //script = " [1:2, 3:4, 5:6] "
     
-    script = " 1 + 2 * 3 "
+    script = " 1 + 2 * -3 "
     
     //script = " f x - 1" // this should parse as `-{f{x},1}`
     
