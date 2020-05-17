@@ -16,16 +16,16 @@ extension Symbol {
 }
 
 
-struct Keyword: CustomDebugStringConvertible, ExpressibleByStringLiteral { // each operator keyword has a canonical (preferred) name and zero or more aliases, e.g. the division operator has the canonical name `÷` but can also be referred to by aliases `/` and `divided_by` (`/` is for convenience when entering code via ASCII keyboard while `divided_by` facilitates entering code via dictation; the PP will rewrite user's code to use the canonical name except when instructed otherwise)
+public struct Keyword: CustomDebugStringConvertible, ExpressibleByStringLiteral { // each operator keyword has a canonical (preferred) name and zero or more aliases, e.g. the division operator has the canonical name `÷` but can also be referred to by aliases `/` and `divided_by` (`/` is for convenience when entering code via ASCII keyboard while `divided_by` facilitates entering code via dictation; the PP will rewrite user's code to use the canonical name except when instructed otherwise)
     
-    var debugDescription: String {
+    public var debugDescription: String {
         return "Kw(\"\(self.name.label)\"\(self.aliases.map{ ", \"\($0.label)\"" }.joined(separator: "")))"
     }
     
-    let name: Symbol
-    let aliases: [Symbol] // TO DO: is it worth formally describing the motivation for adding each alias? (e.g. ASCII compatibility, dictation support, popular synonym)
+    public let name: Symbol
+    public let aliases: [Symbol] // TO DO: is it worth formally describing the motivation for adding each alias? (e.g. ASCII compatibility, dictation support, popular synonym)
     
-    init(_ name: Symbol, aliases: [Symbol] = []) {
+    public init(_ name: Symbol, aliases: [Symbol] = []) {
         self.name = name
         self.aliases = aliases
     }
@@ -38,14 +38,15 @@ struct Keyword: CustomDebugStringConvertible, ExpressibleByStringLiteral { // ea
         self.init(Symbol(value))
     }
     
-    func matches(_ name: Symbol) -> Bool {
+    public func matches(_ name: Symbol) -> Bool {
         return self.name == name || self.aliases.contains(name)
     }
     
-    func hasCanonicalName(_ name: Symbol) -> Bool {
+    public func hasCanonicalName(_ name: Symbol) -> Bool {
         return self.name == name
     }
-    func hasAliasName(_ name: Symbol) -> Bool {
+    
+    public func hasAliasName(_ name: Symbol) -> Bool {
         return self.aliases.contains(name)
     }
 }

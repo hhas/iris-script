@@ -42,7 +42,7 @@ struct OperatorDefinition: CustomDebugStringConvertible { // TO DO: Equatable
         // TO DO: `case none` (e.g. `1 thru 2 thru 3` should be a syntax error)
     }
     
-    var name: Symbol { return self.keywords.first! } // canonical name
+    var name: Symbol { return self.keywords.first ?? Symbol("") } // canonical name
     var conjunctions: ArraySlice<Symbol> { return self.keywords.dropFirst() }
     // let aliases: [Symbol] // any other recognized names (pp will typically reduce these to canonical names), e.g. `.symbol(Symbol("/"))`; in particular, symbolic operators may define a word-based alternative to aid dictation-driven coding, e.g. `.word(Symbol("divided_by"))`
     
