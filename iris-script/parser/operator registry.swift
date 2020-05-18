@@ -73,16 +73,17 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
     }
     
     func add(_ definition: OperatorDefinition) {
-        for name in definition.keywords {
-            assert(!name.isEmpty)
-            if name.isSymbolic {
-                // TO DO: any performance difference using string rather than symbol as dictionary keys? (if not, use Symbol)
-                if self.symbolOperators[name.key] == nil { self.symbolOperators[name.key] = OperatorGroup(name: name) }
-                self.symbolOperators[name.key]!.add(definition)
-                self.symbolMatcher.add(Substring(name.key), self.symbolOperators[name.key]!)
-            } else {
-                if self.wordOperators[name.key] == nil { self.wordOperators[name.key] = OperatorGroup(name: name) }
-                self.wordOperators[name.key]!.add(definition)
+        for keyword in definition.keywords {
+            for name in keyword.allNames {
+                assert(!name.isEmpty)
+                if name.isSymbolic {
+                    if self.symbolOperators[name.key] == nil { self.symbolOperators[name.key] = OperatorGroup(name: name) }
+                    self.symbolOperators[name.key]!.add(definition)
+                    self.symbolMatcher.add(Substring(name.key), self.symbolOperators[name.key]!)
+                } else {
+                    if self.wordOperators[name.key] == nil { self.wordOperators[name.key] = OperatorGroup(name: name) }
+                    self.wordOperators[name.key]!.add(definition)
+                }
             }
         }
     }
@@ -128,25 +129,25 @@ extension OperatorRegistry {
     // as in original, need sub-token matching of symbol char sequences
 
     func prefix(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.keyword(name), .expression], precedence: precedence, associate: associate))
+        self.add(OperatorDefinition(pattern: [.keyword(name), .expression], precedence: precedence, associate: associate, reducer: reducePrefixOperator))
     }
     func infix(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.expression, .keyword(name), Pattern.expression], precedence: precedence, associate: associate))
+        self.add(OperatorDefinition(pattern: [.expression, .keyword(name), Pattern.expression], precedence: precedence, associate: associate, reducer: reduceInfixOperator))
     }
     func postfix(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.expression, .keyword(name)], precedence: precedence, associate: associate))
+        self.add(OperatorDefinition(pattern: [.expression, .keyword(name)], precedence: precedence, associate: associate, reducer: reducePostfixOperator))
     }
     func atom(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.keyword(name)], precedence: precedence, associate: associate))
+        self.add(OperatorDefinition(pattern: [.keyword(name)], precedence: precedence, associate: associate, reducer: reduceAtomOperator))
     }
     func prefix(_ name: Keyword, conjunction: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(conjunction), .expression], precedence: precedence, associate: associate))
+        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(conjunction), .expression], precedence: precedence, associate: associate, reducer: reducePrefixOperatorWithConjunction))
     }
     func prefix(_ name: Keyword, suffix: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(suffix)], precedence: precedence, associate: associate))
+        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(suffix)], precedence: precedence, associate: associate, reducer: reducePrefixOperatorWithSuffix))
     }
     
-    func add(_ pattern: [Pattern], _ precedence: Precedence = -100, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: pattern, precedence: precedence, associate: associate))
+    func add(_ pattern: [Pattern], _ precedence: Precedence = -100, _ associate: OperatorDefinition.Associativity = .left, reducer: @escaping ReduceFunc) {
+        self.add(OperatorDefinition(pattern: pattern, precedence: precedence, associate: associate, reducer: reducer))
     }
 }

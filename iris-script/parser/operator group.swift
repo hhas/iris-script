@@ -2,7 +2,7 @@
 //  operator group.swift
 //  iris-script
 //
-//  encapsulates all operators that use a given name anywhere in their pattern; e.g. the group for #‘-’ currently encapsulates the prefix "negative" and infix "minus" operators (if YYYY-MM-DD date patterns are introduced then that would also be added to that group)
+//  encapsulates all operators that use a given name anywhere in their pattern; e.g. the group for #‘-’ currently encapsulates the prefix "negative" and infix "minus" operators (if YYYY-MM-DD date patterns are introduced then that would also be added to that group); used by OperatorRegistry and Token.Form.operatorName(…)
 
 import Foundation
 

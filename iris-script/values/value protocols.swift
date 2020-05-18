@@ -172,7 +172,24 @@ extension BoxedSwiftValue {
 
 
 
-protocol ScalarValue: Value { // can't implement Hashable protocol directly due to Equatable's use of Self (i.e. we want to keep ScalarValue protocol concrete, so that we can use it as parameter/result type in primitive functions; ditto collection types, e.g. `func count(value:CollectionValue)->Int`); see sylvia-lang's RecordKey + RecordKeyConvertible
+// hashable Values (numbers, strings, symbols) should implement KeyConvertible protocol, which in turn requires the Value conform to Swift's generic Hashable protocol (i.e. must implement `hash(into:)` and `==`)
+
+// to cast or check if a Value can be used as a hash key, use `value as? HashableValue` or `value is HashableValue`, not KeyConvertible (which is a generic protocol)
+
+protocol HashableValue: Value {
+    var dictionaryKey: KeyedList.Key { get }
+}
+
+protocol KeyConvertible: HashableValue, Hashable { } // Values that can be used as hash keys (Int, Double, Text, Symbol, etc) must implement Hashable+Equatable and adopt KeyConvertible
+
+extension KeyConvertible {
+    
+    var dictionaryKey: KeyedList.Key { return KeyedList.Key(self) } // TO DO: how/where do we perform normalizations (e.g. case-sensitivity) defined by Record's key Coercion
+}
+
+
+
+protocol ScalarValue: Value {
 }
 
 
@@ -223,3 +240,5 @@ extension ComplexValue {
 
 
 typealias BoxedComplexValue = ComplexValue & BoxedSwiftValue
+
+

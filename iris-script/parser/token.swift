@@ -18,6 +18,8 @@ import Foundation
 // TO DO: code editor should map Shift-SPACEBAR to underscore for easier entry; Q. to what extent should editor infer underscores when multi-word names are entered with spaces (e.g. via dictation), e.g. auto-“correcting” `foo bar` to `foo_bar` if `foo_bar` is already known to be defined and `foo` and `bar` are not
 
 
+typealias Annotation = String
+
 typealias Precedence = Int16
 
 
@@ -65,11 +67,20 @@ struct Token: CustomStringConvertible {
     
     enum Form: Equatable { // core punctuation, plus digits and non-digit text
         
-        enum Separator { // all act as expr separators and can be used interchangeably within blocks, lists, records; only difference is how they behave at runtime (essentially they act as debugger hooks, optionally inserting extra instructions at parse-time)
+        enum Separator: CustomDebugStringConvertible { // all act as expr separators and can be used interchangeably within blocks, lists, records; only difference is how they behave at runtime (essentially they act as debugger hooks, optionally inserting extra instructions at parse-time)
             case comma              // ,
             case period             // .
             case query              // ?
             case exclamation        // !
+
+            var debugDescription: String {
+                switch self {
+                case .comma:        return "\",\""
+                case .period:       return "\".\""
+                case .query:        return "\"?\""
+                case .exclamation:  return "\"!\""
+                }
+            }
         }
         
         // TO DO: restructure as .punctuation(), .unaryQuote(), .beginQuote(), .endQuote(), .letters(), .symbols(), .digits(), .lexeme() primitives, where primitives are progressively converted to .lexemes (.string(), .numeric(), .identifier(), etc)?
@@ -126,7 +137,7 @@ struct Token: CustomStringConvertible {
         case operatorName(OperatorGroup) // Swift enums are not runtime-extensible so we provide an 'extensibility' slot; used by OperatorReader (and, potentially, other partial readers) when decomposing words
         case value(Value) // holds any completed value; this'd allow chained parsers to convert token stream from lexer tokens to parsed nodes, with the expectation that the final parser in chain emits a single .value containing the entire AST as a single Value [caveat the whole single-line lexing thing, which'll require some kind of 'stitcher' that tries to balance lines as best it can, inserting best-guess 'fixers' to rebalance where unbalanced]; having a pure token stream for each line is, on the one hand, a bit inefficient (string and annotation literals are presented as sequences of tokens instead of just one atomic .stringLiteral [we could optimize a bit by keeping a per-line list of where the .stringDelimiter tokens appear, allowing us to splice the string's entire content from the original code using beginning and end string indices [caution: if `""` indicates escaped quote, there will be some extra wrangling involved as the splices won't be contiguous]])
         
-        case annotation(String) // TO DO: need to decide how/where to put annotations, and how to encode them (annotation content follows its own syntactic rules, which are specific to annotation type, e.g. structural headings and dev/user docs are in Markdown, includes/excludes are comma-delimited lists of superglobal [library] names with optional syntax version suffix), TODOs and comments are unstructured plaintext; Q. what about disabled/macro'd code? (might want to retain tokens for pretty printing)
+        case annotation(Annotation) // TO DO: need to decide how/where to put annotations, and how to encode them (annotation content follows its own syntactic rules, which are specific to annotation type, e.g. structural headings and dev/user docs are in Markdown, includes/excludes are comma-delimited lists of superglobal [library] names with optional syntax version suffix), TODOs and comments are unstructured plaintext; Q. what about disabled/macro'd code? (might want to retain tokens for pretty printing)
         
         case error(NativeError) // TO DO: need one or more cases to encapsulate the various possible syntax errors that may be encountered: unbalanced quoting/grouping punctuation, missing/surplus delimiter punctuation (probably one case that takes an Error enum describing the exact issue; whether syntax errors are also Values, allowing them to appear directly in AST, or whether they should be encapsulated in a shim value (for some categories of syntax errors, a mutable shim would allow the user to correct the error in-place, e.g. adding a missing expr into the wrapper or rebalancing an unbalanced group at the wrapper's proposed best-guess boundary, enabling the captured tokens to be reduced to the final Value, without having to disturb the rest of the AST)
         
@@ -160,8 +171,8 @@ struct Token: CustomStringConvertible {
             case (.digits, .digits): return true
             case (.symbols, .symbols): return true
             case (.letters, .letters): return true
-            case (.unquotedName(_), .unquotedName(_)): return true
-            case (.quotedName(_), .quotedName(_)): return true
+            case (.unquotedName(let a), .unquotedName(let b)): return a == b
+            case (.quotedName(let a), .quotedName(let b)): return a == b
             case (.operatorName(let a), .operatorName(let b)): return a.name == b.name
             case (.value(_), .value(_)): return true
             case (.error(_), .error(_)): return true
@@ -189,18 +200,18 @@ struct Token: CustomStringConvertible {
             case .hashtag: return 2000      // name modifier; this must always bind to following name
             case .mentions: return 2000     // name modifier; Q. what if the name is multipart (reverse domain name, aka UTI), e.g. `@com.example.my_lib`? one option is to construct it as standard specifier, with pp annotations so that it prints as `A.B` instead of `B of A`; in this case, binding `@` to first part only means that `@com` is the superglobal's name; OTOH, binding `@` to entire name means that `com.example.my_lib` is the superglobal's name, thus `@` is effectively a prefix operator that switches the context in which the chunk expr is evaluated from current to superglobal; we could even implement this as a [non-maskable] command: `'@'{com.example.my_lib}`. It all comes down to how we want to evaluate chunk exprs in general and UTIs in particular; e.g. if we use a partial LineReader to extract UTIs to value representation, binding the `@` to the entire UTI later on will occur naturally. Also note that .period form's precedence is that of expr sep punctuation; if we want full parser to treat .period differently when left-and-right-contiguous (property selector) vs left- and/or right-delimited (expr sep) then we'll need to move `Form.precedence` to `Token`. Thus question becomes: do we want contiguous .period to act as a general Swift/JS/etc-style 'dot' operator (which can be used even when stdlib's `of` operator/command isn't loaded)? (if so, it needs to play nice with parameterized commands, e.g. `foo.item{at:1}.item{named:"bar"}`? or does that run too far counter to "speakable-friendly" syntax? after all, UTI pronounciation is simple enough - e.g. "com dot example dot foo" - but using "dot" when speaking commands is likely to get awkward, especially as it won't play well with lp command syntax). Think we should look at UTI literal syntax in same way as we should look at, say, date and time literals, e.g. `2019-07-12` should be directly extractable using a 'DateTime' LineReader.
 
-            case .operatorName(let operatorClass): // Q. what range to use for operators? 100-999?
+            case .operatorName(let operatorGroup): // Q. what range to use for operators? 100-999?
                 
                 // TO DO: where to put precedence info?
                 
-                fatalError("precedence not available for operator class \(operatorClass)")
+                fatalError("precedence not available for operator class \(operatorGroup)")
                 
                 // e.g. v1 o1 v2 o2 … -- once v2 is parsed, peek ahead to o2 to determine if v2 is operand to o2 or o1
-                //if let a = operatorClass.infix, let b = operatorClass.postfix, a.precedence != b.precedence {
+                //if let a = operatorGroup.infix, let b = operatorGroup.postfix, a.precedence != b.precedence {
                //     print("warning: mismatched precedences for \(a) vs \(b)")
                     // note that prefix and infix can have different precedences (e.g. `+`/`-`); however, `Form.precedence` is only being used when determining if current operator binds tighter than preceding operator (i.e. the operator cannot be .prefix or .atom) // TO DO: what about .custom? (e.g. if non-numeric comparison operators take an optional `as` clause)
                // }
-                //return operatorClass.infix?.precedence ?? operatorClass.postfix?.precedence ?? 0
+                //return operatorGroup.infix?.precedence ?? operatorGroup.postfix?.precedence ?? 0
 //            case .error(_): return 0
 //            case .invalid: return 0
             case .endOfScript: return -10000
@@ -301,7 +312,7 @@ struct Token: CustomStringConvertible {
     var isEndOfSequence: Bool { // TO DO: still needed
         switch self.form {
         case .endList, .endRecord, .endGroup: return true
-        case .operatorName(let operatorClass): fatalError("Can't get Token.isEndOfSequence for \(operatorClass)") //return operatorClass.name == .word("done") // kludge
+        case .operatorName(let operatorGroup): fatalError("Can't get Token.isEndOfSequence for \(operatorGroup)") //return operatorGroup.name == .word("done") // kludge
         case .endOfScript: return true
         default: return false
         }
@@ -330,10 +341,10 @@ struct Token: CustomStringConvertible {
         }
     }
     
-    var requiresLeftOperand: Bool { if let oc = self.operatorClass { fatalError("Can't get Token.requiresLeftOperand for \(oc)") } else { return false } /*return self.operatorClass?.requiresLeftOperand ?? false*/ }
+    var requiresLeftOperand: Bool { if let oc = self.operatorGroup { fatalError("Can't get Token.requiresLeftOperand for \(oc)") } else { return false } /*return self.operatorGroup?.requiresLeftOperand ?? false*/ }
     
-    var operatorClass: OperatorGroup? {
-        if case .operatorName(let operatorClass) = self.form { return operatorClass } else { return nil }
+    var operatorGroup: OperatorGroup? {
+        if case .operatorName(let operatorGroup) = self.form { return operatorGroup } else { return nil }
     }
     
     // TO DO: these are currently unused

@@ -25,6 +25,8 @@ public struct Keyword: CustomDebugStringConvertible, ExpressibleByStringLiteral 
     public let name: Symbol
     public let aliases: [Symbol] // TO DO: is it worth formally describing the motivation for adding each alias? (e.g. ASCII compatibility, dictation support, popular synonym)
     
+    public var allNames: [Symbol] { return [self.name] + self.aliases }
+    
     public init(_ name: Symbol, aliases: [Symbol] = []) {
         self.name = name
         self.aliases = aliases

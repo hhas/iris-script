@@ -31,3 +31,18 @@ protocol LineReader { // common API by which [partial] lexers and parsers can be
 }
 
 
+
+
+protocol BlockReader {
+    
+    typealias Location = (lineIndex: Int, tokenIndex: Int)
+    
+    var code: String { get }
+    
+    var token: Token { get } // the current token
+    var location: Location { get } // the current token's position
+
+    func next() -> BlockReader
+}
+
+
