@@ -16,10 +16,10 @@ import Foundation
 struct PatternMatcher: CustomDebugStringConvertible { // a single pattern; this should advance when a .value is pushed onto stack (assuming no unreduced tokens between it and the previous .value which holds the previous match)
     
     var debugDescription: String {
-        if self.isComplete {
-            return "<Fully-matched \(self.definition)>"
+        if self.isCompleted {
+            return "«matcher found `\(self.definition.fullName)` (\(self.count) tokens)»"
         } else {
-            return "<Matching \(formatPattern(self.remaining)) of \(self.definition)>"
+            return "«matcher wants \((self.remaining)) of `\(self.definition.fullName)`»"
         }
     }
     
@@ -27,15 +27,13 @@ struct PatternMatcher: CustomDebugStringConvertible { // a single pattern; this 
     
     let definition: OperatorDefinition
     
-    private(set) var start: Int // -ve offset to index of first stack item matched by this pattern (Q. when is this determined? e.g. `1 * 2 + 3` will start `*` match on index 0; where does `+` match start? is 1*2 reduced first? (i.e. as soon as precedences of operators on either side of `2` can be compared)) // TO DO: this won't work if reductions are applied mid-stack; might need to rethink (e.g. if LH EXPR matches .endList, start would identify that token only, not the entire list - which needs reduced down before the matched operation can be reduced; in per-line parsing, that reduction must be performed by re-matching tail end of list from bottom [start] of stack, not top [end]); could use -ve offset from each matcher's index (since that shouldn't change)
+    let count: Int // no. of stack items matched by this pattern (Q. when is this determined? e.g. `1 * 2 + 3` will start `*` match on index 0; where does `+` match start? is 1*2 reduced first? (i.e. as soon as precedences of operators on either side of `2` can be compared)) // TO DO: this won't work if reductions are applied mid-stack; might need to rethink (e.g. if LH EXPR matches .endList, start would identify that token only, not the entire list - which needs reduced down before the matched operation can be reduced; in per-line parsing, that reduction must be performed by re-matching tail end of list from bottom [start] of stack, not top [end]); could use -ve offset from each matcher's index (since that shouldn't change)
+        
+    private let remaining: [Pattern] // any patterns to match to next Reduction[s] in parser stack; caution: do not assume these patterns are the same as definition.patterns[OFFSET..<END_INDEX]; they may be transformations of composite patterns
     
-    //private(set) var end: Int
-    
-    let remaining: [Pattern] // any patterns to match to next Reduction[s] in parser stack; caution: do not assume these patterns are the same as definition.patterns[OFFSET..<END_INDEX]; they may be transformations of composite patterns
-    
-    private init(for definition: OperatorDefinition, start: Int = 0, remaining: [Pattern]) {
+    private init(for definition: OperatorDefinition, count: Int, remaining: [Pattern]) {
         self.definition = definition
-        self.start = start
+        self.count = count
         self.remaining = remaining
     }
     
@@ -44,49 +42,49 @@ struct PatternMatcher: CustomDebugStringConvertible { // a single pattern; this 
     // TO DO: how to back-match operator patterns? (presumably keep reifying until we reach the relevant keyword, then backmatch all of those patterns against topmost frame[s] of parser stack; Q. how to match .noConsume when doing this?)
     
     public init(for operatorDefinition: OperatorDefinition) {
-        self.init(for: operatorDefinition, start: 0, remaining: [Pattern](operatorDefinition.pattern.dropFirst()))
+        self.init(for: operatorDefinition, count: 1, remaining: [Pattern](operatorDefinition.pattern.dropFirst()))
     }
     
-    var firstPattern: Pattern? { return self.remaining.first }
-    var remainingPatterns: [Pattern] { return [Pattern](self.remaining.dropFirst()) }
-    
-    func nextMatch(withRemaining remainingPatterns: [Pattern] = []) -> PatternMatcher {
-        return PatternMatcher(for: self.definition, start: self.start + 1, remaining: remainingPatterns)
+    // TO DO: to determine operator precedence parser needs to know matched operations' fixity; to do that, it needs to know the final pattern that was matched (or at least its first and last matches)… or does it? parser should be able to see which token.form was matched first/last: opname/punc or .value(_); if it's .value,
+        
+    private func nextMatch(withRemaining patterns: [Pattern] = []) -> PatternMatcher {
+        return PatternMatcher(for: self.definition, count: self.count + 1, remaining: patterns)
     }
     
-    func match(_ form: Token.Form) -> [PatternMatcher] {
-        print("matching .\(form) to", self)
-        if let firstPattern = self.firstPattern {
+    public func match(_ form: Token.Form) -> [PatternMatcher] { // TO DO: need to take Token in order to match whitespace
+        //print("matching .\(form) to", self, "…")
+        if let pattern = self.remaining.first {
             var result = [PatternMatcher]()
-           // print("reifying", firstPattern)
-            for patternSeq in firstPattern.reify(self.remainingPatterns) {
+           // print("reifying", pattern)
+            for patternSeq in pattern.reify([Pattern](self.remaining.dropFirst())) { // reify returns one or more pattern sequences, each of which starts with a non-composite pattern which can be matched against current token
                // print("… gave us", patternSeq)
                 if let pattern = patternSeq.first {
                    // print("matching reified:", patternSeq)
                    // if patternSeq.count == 2, case .token(.endList) = patternSeq[0] {
                    /// fatalError()
                    // }
-                    let rest = [Pattern](patternSeq.dropFirst())
+                    let remaining = [Pattern](patternSeq.dropFirst())
                     switch pattern.match(form) {
                     case .fullMatch:
-                        result.append(self.nextMatch(withRemaining: rest))
-                    case .partialMatch(let remaining): // TO DO: is this only place where multiple matches can spawn?
-                        result.append(self.nextMatch(withRemaining: remaining + rest))
+                        result.append(self.nextMatch(withRemaining: remaining))
+                    case .partialMatch(let rest):
+                        result.append(self.nextMatch(withRemaining: rest + remaining))
                     case .noMatch:
                         ()
                     case .noConsume:
-                        result += self.nextMatch(withRemaining: rest).match(form) // TO DO: confirm this is correct (e.g. what if pattern ends with -LF?)
+                        result += self.nextMatch(withRemaining: remaining).match(form) // TO DO: confirm this is correct (e.g. what if pattern ends with -LF?)
                     }
                 }
             }
-            print("… ->", result)
+            //print("  … ->", result)
             return result
         } else {
-           // print(self, "…is already fully matched")
+            //print(self, "  …is already fully matched")
             return [] // already fully matched
         }
     }
     
-    var isComplete: Bool { return self.remaining.isEmpty } // if true, stack item is last Reduction in this match
+    public var isBeginning: Bool { return self.count == 1 } // if true, stack item is first Reduction in this match
+    public var isCompleted: Bool { return self.remaining.isEmpty } // if true, stack item is last Reduction in this match
     
 }

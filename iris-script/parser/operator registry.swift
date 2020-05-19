@@ -140,14 +140,17 @@ extension OperatorRegistry {
     func atom(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
         self.add(OperatorDefinition(pattern: [.keyword(name)], precedence: precedence, associate: associate, reducer: reduceAtomOperator))
     }
-    func prefix(_ name: Keyword, conjunction: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
+    func prefix(_ name: Keyword, conjunction: Keyword,
+                _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
         self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(conjunction), .expression], precedence: precedence, associate: associate, reducer: reducePrefixOperatorWithConjunction))
     }
-    func prefix(_ name: Keyword, suffix: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
+    func prefix(_ name: Keyword, suffix: Keyword,
+                _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
         self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(suffix)], precedence: precedence, associate: associate, reducer: reducePrefixOperatorWithSuffix))
     }
     
-    func add(_ pattern: [Pattern], _ precedence: Precedence = -100, _ associate: OperatorDefinition.Associativity = .left, reducer: @escaping ReduceFunc) {
+    func add(_ pattern: [Pattern], _ precedence: Precedence = -100,
+             _ associate: OperatorDefinition.Associativity = .left, reducer: @escaping Parser.ReduceFunc) {
         self.add(OperatorDefinition(pattern: pattern, precedence: precedence, associate: associate, reducer: reducer))
     }
 }

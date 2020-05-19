@@ -230,6 +230,13 @@ struct InternalError: NativeError {
 
     let description: String
     
+    init(description: String) {
+        self.description = description
+    }
+    
+    init(_ error: Error) {
+        self.init(description: String(describing: error))
+    }
 }
 
 

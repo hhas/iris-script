@@ -34,6 +34,8 @@ struct Record: Value, Accessor {
     let fields: Fields // TO DO: why is this not named data as per BoxedSwiftValue?
     private var namedFields = [Symbol: Value]() // Q. any performance benefit over `first(where:…)`? (bearing in mind a typical record would have <20 slots) if not, get rid of this
     
+    // TO DO: would it be better to collapse duplicate keys (i.e. discard all but first/last) rather than throw error? (depends on what, if any, commands we provide for joining/splicing records)
+    
     init(_ fields: Fields) throws { // field names may be omitted, but must be unique
         var isMemoizable = true
         var nominalFields = [AsRecord.Field]()

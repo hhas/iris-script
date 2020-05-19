@@ -16,20 +16,20 @@
 
 import Foundation
 
+extension Array where Element == Pattern {
 
-func formatPattern(_ pattern: [Pattern]) -> String {
-    return "(\(pattern.map{String(describing:$0)}.joined(separator: " ")))"
+    var debugDescription: String {
+        return "(\(self.map{String(describing:$0)}.joined(separator: " ")))"
+    }
+
 }
-
-
-typealias ReduceFunc = (inout Parser.Stack, Int) -> Void
 
 
 
 struct OperatorDefinition: CustomDebugStringConvertible { // TO DO: Equatable
         
     var debugDescription: String {
-        return formatPattern(self.pattern)
+        return String(describing: self.pattern)
     }
     
     // Q. should spoken aliases be distinguished from written aliases?
@@ -57,17 +57,35 @@ struct OperatorDefinition: CustomDebugStringConvertible { // TO DO: Equatable
     let precedence: Precedence
     let associate: Associativity // only relevant to infix operators, e.g. `^`, `else`
     
-    let reduce: ReduceFunc
+    let reduce: Parser.ReduceFunc
     let autoReduce: Bool
     
     init(name: Symbol? = nil, pattern: [Pattern], precedence: Precedence = 0,
-         associate: Associativity = .left, autoReduce: Bool = false, reducer: @escaping ReduceFunc) {
+         associate: Associativity = .left, autoReduce: Bool = false, reducer: @escaping Parser.ReduceFunc) {
         self._name = name
         self.pattern = pattern
         self.precedence = precedence
         self.associate = associate
         self.autoReduce = autoReduce
         self.reduce = reducer
+    }
+    
+    var fullName: String {
+        if let name = self._name { return name.label }
+        return self.pattern.map{
+            switch $0 {
+            case .keyword(let kw): return kw.name.label
+            case .token(.startList): return "["
+            case .token(.endList): return "]"
+            case .token(.startRecord): return "{"
+            case .token(.endRecord): return "}"
+            case .token(.startGroup): return "("
+            case .token(.endGroup): return ")"
+            case .token(.colon): return ":"
+            case .expression, .value(_), .test(_), .label, .name: return "…"
+            default: return "…"
+            }
+        }.joined(separator: "")
     }
     
     // TO DO: `fullName` property that returns e.g. `if…then…` representation (or should full name be the canonical name? e.g. `repeat…while…`, `repeat…until…` will be ambiguous - "repeat" - unless written in full; conversely, if non-numeric comparison operators - `same_as`, etc - have an optional `as` clause, do we want that clause to appear in canonical name?)

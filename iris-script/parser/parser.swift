@@ -90,6 +90,10 @@ case .colon: // push onto stack; what about pattern matching? what should `value
     // when matching operator keywords such as `to`, `do`, `done`, should pattern specify leftDelimited/rightDelimited/leftDelimited? i.e. we want to 'encourage' `to` to appear at start of line, to minimize it being treated as an operand/argument in more ambiguous contexts (e.g. in `tell foo to bar`, we want to avoid parsing as `tell {foo {to bar}}`)
     */
 
+// TO DO: debugger may want to insert hooks (e.g. step) at line-endings too; as before, to preserve LF-delimited list/record items, this needs to operate on preceding value without changing no. of values on stack; it should probably onalso ignore if LF was also preceded by punctuation
+
+// this may or may not fully reduce preceding tokens (e.g. if list wraps multiple lines); Q. any situation where the last token isn't reduced but can legitimately be reduced later? (versus e.g. a dangling operator, which should probably be treated as syntax error even if remaining operand appears at start of next line); yes, e.g. if last token is `[`; if we use patterns to match, patterns should specify where LFs are allowed - upon reaching lineBreak, any patterns that don't permit LF at that point are discontinued (i.e. they remain partially matched up to last token, but don't carry forward to next line); the alternative is we do allow patterns to carry forward in hopes of completing parse, then have PP render as a single line of code (but that isn't necessarily what user intended, e.g. `foo + LF to bar: baz`)
+
 
 
 typealias ScriptAST = Block
@@ -98,10 +102,26 @@ typealias ScriptAST = Block
 
 class Parser {
 
-    typealias Reduction = Token.Form
+    typealias Form = Token.Form
+    
+    enum Reduction {
+        case value(Value)
+        case error(NativeError)
+        
+        init(_ value: Value) {
+            self = .value(value)
+        }
+        
+        init(_ error: Error) {
+            self = .error(error as? NativeError ?? InternalError(error))
+        }
+    }
+    
+    typealias ReduceFunc = (Stack, Int, Int) -> Reduction // (token stack, start, end)
+
     
     // TO DO: also capture source code ranges? (how will these be described in per-line vs whole-script parsing? in per-line, each line needs a unique ID (incrementing UInt64) that is invalidated when that line is edited; that allows source code positions to be referenced with some additional indirection: the stack frame captures first and last line IDs plus character offset from start of line)
-    typealias StackItem = (reduction: Reduction, matches: [PatternMatcher]) // in-progress/completed matches
+    typealias StackItem = (reduction: Form, matches: [PatternMatcher]) // in-progress/completed matches
 
     typealias Stack = [StackItem]
     
@@ -144,34 +164,53 @@ class Parser {
     
     //
     
-    func shift(adding newMatches: [PatternMatcher] = []) { // newMatches have already matched this token
-        // TO DO: who is responsible for back-matching infix/postfix operators? // what API should PatternMatcher provide for this?
+    // shift moves the current token from lexer to parser's stack and applies any in-progress matchers to it
+    // if the shift completes a list/record/group literal, it is immediately reduced to a value
+    // anything else is left on the stack until an explicit reduction phase is triggered
+    func shift(adding newMatches: [PatternMatcher] = []) { // newMatches have already matched this token; used by parseScript() when adding [literal] patterns directly (in principle, we could define lists and records as 'block operators', but it'd require another lookup table for `[{(`, etc chars, or else defining those chars as keywords, and not sure that provides any benefits over hardwiring them; we don't really want users rewiring core data types to behave as anything else; think lingua-franca data format a-la JSON: if it looks like pure data it should always evaluate as pure data, not as - say - commands)
+        // TO DO: who is responsible for back-matching infix/postfix operators? (currently this is done by parser when an .operatorName token is encountered) // what API should PatternMatcher provide for this?
         let form = self.current.token.form
-        var matches = [PatternMatcher]()
+        var continuingMatches = [PatternMatcher]()
+        var completedMatches = [PatternMatcher]()
         // advance/discard any in-progress matches
+        //print("SHIFT received \(newMatches.count) new", newMatches)
         if let partialMatches = self.stack.last?.matches {
-            //print(partialMatches)
-            for partialMatch in partialMatches {
-                // match() returns [] if match was complete on the previous token or has failed to match this token, else one or more matchers for the next token after this
-                matches += partialMatch.match(form)
-                print("Matched .\(form) to", partialMatch.definition.name.label, "leaving", partialMatch.remaining)
-                
-                
-                if partialMatch.isComplete {
-                    print("@@@Fully matched", partialMatch)
-                    if partialMatch.definition.autoReduce {
-                        print("\nAUTO-REDUCE", partialMatch.definition.name.label)
-                        partialMatch.definition.reduce(&self.stack, partialMatch.start)
-                    }
+            //print("SHIFT WILL TRY TO MATCH \(partialMatches.count):", partialMatches)
+            for match in partialMatches {
+                if match.isCompleted {
+                    //print("…completed", match)
+                    completedMatches.append(match)
+                } else {
+                    // match() returns [] if match was complete on the previous token or has failed to match this token, else one or more matchers for the next token after this
+                    continuingMatches += match.match(form)
                 }
-                
-                // TO DO: what about having stack carry forward previous precedence?
-                
             }
         }
-        // TO DO: also need to check if any newMatches are complete (atomic)
-        matches += newMatches
-        self.stack.append((form, matches))
+        // TO DO: also need to check if any newMatches are complete (atomic operators, e.g. `nothing`, `true`, `false`), but do we want to do that here? (Q. is there any situation where atomics shouldn't immediately reduce?)
+        for match in newMatches {
+            if match.isCompleted {
+                completedMatches.append(match)
+            } else {
+                continuingMatches += match.match(form)
+            }
+        }
+        // TO DO: if >1 complete match, we can only reduce one of them (i.e. need to resolve any reduce conflicts *before* reducing, otherwise 2nd will get wrong stack items to operate on; alternative would be to fork multiple parsers and have each try a different strategy, which might be helpful during editing)
+        // TO DO: what if there are still in-progress matches running? (can't start reducing ops till those are done as we want longest match and precedence needs resolved anyway, but ops shouldn't auto-reduce anyway [at least not unless they start AND end with keyword])
+        if !completedMatches.isEmpty { print("SHIFT fully matched", completedMatches) }
+        self.autoReduceLongestMatch(in: completedMatches)
+        self.stack.append((form, continuingMatches))
+    }
+    
+    // TO DO: not sure if reasoning is correct here
+    func autoReduceLongestMatch(in completedMatches: [PatternMatcher]) {
+        if let longestMatch = completedMatches.max(by: { $0.count < $1.count }), longestMatch.definition.autoReduce {
+            print("\nAUTO-REDUCE", longestMatch.definition.name.label)
+            reduce(completedMatch: longestMatch, endingAt: self.stack.count)
+            if completedMatches.count > 1 {
+                // TO DO: what if there are 2 completed matches of same length?
+                print("discarding extra matches in", completedMatches.sorted{ $0.count < $1.count })
+            }
+        }
     }
     
     // TO DO: any advantage in reducing lists, groups, records as soon as they're completed, rather than waiting for a delimiter to trigger reduction? (obvious case is operands: we need to reduce those before operator pattern matching can start)
@@ -179,16 +218,31 @@ class Parser {
     // TO DO: how to deal with SR conflicts where two patterns start and end on same stack indices? (presumably this'll only happen if pattern definitions are sloppy/conflicting; for now, might just want to throw fatalError if detected); also need to favor longest-match, e.g. `YYYY-MM-DD` will match as date or two `minus` operations
     
     // TO DO: another challenge with reductions: if we work right-to-left, how do we resolve overlapping matches, e.g. `ABC/DE` vs `AB/CDE`? longest-match presumably should work left-to-right
-    
+    func reduce(completedMatch: PatternMatcher, endingAt endIndex: Int) {
+        let startIndex = self.stack.count - completedMatch.count
+        let reduction: StackItem
+        switch completedMatch.definition.reduce(self.stack, startIndex, endIndex) {
+        case .value(let v): reduction = (Form.value(v), [])
+        case .error(let e): reduction = (Form.error(e), [])
+        }
+        self.stack.replaceSubrange((startIndex..<endIndex), with: [reduction])
+        if startIndex > 0 {
+            // TO DO: [re]apply preceding frame's matchers to the newly reduced frame (if it's a Value)
+        }
+    }
+
     
     func reduceNow() { // called on encountering a right-hand delimiter (punctuation, linebreak, operator keyword); TO DO: reduce any fully matched patterns
+        
+        // TO DO: when comparing precedence, look for .values in stack that have overlapping operator matches where one isBeginning and other isCompleted; whichever match has the higher definition.precedence (or if both are same definition and associate==.right) reduce that first
+
         guard let item = self.stack.last else { return } // this'll only occur if a separator appears at start of script
-        print("reduceNow:", item)
+       // print("reduceNow:", item)
         
         // TO DO: should stack track previous delimiter index, allowing us to know number of stack frames to be reduced (if 1, and it's .value, we know it's already fully reduced)
         
-        for m in item.matches where m.isComplete {
-           // print("  found edge of fully matched ‘\(m.operatorDefinition.name.label)’ operation")
+        for m in item.matches where m.isCompleted {
+            print("  found edge of fully matched ‘\(m.definition.name.label)’ operation")
            // print("  ", self.stack[m.start]) // check start of match for contention, e.g. in `1 + 2 * 3` there is an SR conflict on `2` which requires comparing operator precedences to determine which operation to reduce first
             // in addition, if an EXPR operand match is not a fully-reduced .value(_) then that reduction needs to be performed first
         }
@@ -230,6 +284,7 @@ class Parser {
                 self.reduceNow() // ensure last item is reduced
                 self.shift() // shift the closing token onto stack
                 // TO DO: call PatternMatcher.reduce() (directly, or via another reduceNow call?)
+                
             case .separator(let sep):
                 self.reduceNow() // [attempt to] reduce the preceding value
                 switch sep { // attach any caller-supplied debug hooks
@@ -248,19 +303,20 @@ class Parser {
                 self.reduceNow()
                 self.shift()
                 
-                // TO DO: debugger may want to insert hooks (e.g. step) at line-endings too; as before, to preserve LF-delimited list/record items, this needs to operate on preceding value without changing no. of values on stack; it should probably onalso ignore if LF was also preceded by punctuation
-                
-                // this may or may not fully reduce preceding tokens (e.g. if list wraps multiple lines); Q. any situation where the last token isn't reduced but can legitimately be reduced later? (versus e.g. a dangling operator, which should probably be treated as syntax error even if remaining operand appears at start of next line); yes, e.g. if last token is `[`; if we use patterns to match, patterns should specify where LFs are allowed - upon reaching lineBreak, any patterns that don't permit LF at that point are discontinued (i.e. they remain partially matched up to last token, but don't carry forward to next line); the alternative is we do allow patterns to carry forward in hopes of completing parse, then have PP render as a single line of code (but that isn't necessarily what user intended, e.g. `foo + LF to bar: baz`)
-                
-                
-                
-                // TO DO: .colon, .semicolon are probably easiest implemented as patterns which are pushed onto stack when those tokens are encountered
-                
             case .operatorName(let operatorGroup):
                 //   print("FOUND OP", operatorGroup.name)
-                let m = match(operatorGroup: operatorGroup, to: &self.stack)
-                self.shift(adding: m)
-                                
+                let (backMatches, newMatches) = match(operatorGroup: operatorGroup, to: self.stack)
+                stack[stack.count-1].matches += backMatches
+                self.shift(adding: newMatches)
+                
+            case .semicolon:
+                self.reduceNow() // TO DO: confirm this is correct (i.e. punctuation should always have lowest precedence so that operators on either side always bind first)
+                self.shift() //self.shift(adding: [PatternMatcher(for: pipeOperator)]) // TO DO: need to backmatch pipe operator
+                
+            case .colon:
+                self.reduceNow()
+                self.shift()
+
             default:
                 self.shift()
             }
@@ -274,7 +330,7 @@ class Parser {
             } else {
                 //print("Found unreduced token: \(reduction)")
             }
-            print("  .\(reduction)", matches.map{"\n    - \($0)"}.joined(separator: ""))// .filter{$0.isComplete}
+            print("  .\(reduction)", matches.map{"\n    - \($0)"}.joined(separator: ""))// .filter{$0.isCompleted}
             print()
         }
         print()

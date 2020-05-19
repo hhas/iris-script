@@ -23,22 +23,24 @@ import Foundation
 
 
 
-func reifySequence(_ patterns: [Pattern]) -> [[Pattern]] { // given a pattern sequence, ensures the first pattern is not a composite
-    if let pattern = patterns.first {
-        return pattern.reify([Pattern](patterns.dropFirst()))
+extension Array where Element == Pattern {
+
+func reify() -> [[Pattern]] { // given a pattern sequence, ensures the first pattern is not a composite
+    if let pattern = self.first {
+        return pattern.reify([Pattern](self.dropFirst()))
     } else {
         return []
     }
 }
-
+}
 
 indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
 
     enum MatchResult {
-        case fullMatch
-        case partialMatch([Pattern]) // this Reduction was matched, but the given sequence of Reductions need to be matched as well
-        case noMatch // match failed, so stop matching this pattern at this point
-        case noConsume // match current Reduction to next pattern; e.g. when .ignoreLineBreaks is used, return .partialMatch([.ignoreLineBreaks]) if Reduction is .token(.lineBreak) or .noConsume if it's anything else
+        case fullMatch // token was matched and consumed by this pattern
+        case partialMatch([Pattern]) // token was matched and consumed, but the given sequence of patterns need to be matched to subsequent tokens as well // TO DO: this case is currently unused (reify transforms patterns prior to matching so that first pattern in sequence matches 1 token) so can we delete it, or could Pattern.test(…) need it?
+        case noMatch // the match has failed so do not bother trying to subsequent patterns
+        case noConsume // match failed but is allowed to do so, so try matching token to next pattern instead; e.g. when .ignoreLineBreaks is used, return .partialMatch([.ignoreLineBreaks]) if Reduction is .token(.lineBreak) or .noConsume if it's anything else
     }
     
     case keyword(Keyword)
@@ -102,12 +104,12 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
     }
     
     
-    // if self is a composite pattern, decompose it to one or more new pattern sequences, each of which starts with a non-composite pattern
+    // if self is a composite pattern, decompose it to one or more new pattern sequences, each of which starts with a non-composite pattern; ideally, a token should match one (or zero) of the returned sequences, though this is not enforced so it is possible for two or more returned patterns to match if the original composite pattern is sloppily constructed (e.g. `(ABC|ADC)` will spawn two patterns, both of which match A token, so would be better written as `A(B|D)C` to avoid redundancy; it is not illegal, however, so parser needs to allow for possibility that >1 pattern matcher may match the same token sequence and resolve that S/R conflict same as any other)
     func reify(_ remaining: [Pattern]) -> [[Pattern]] { // for each sub-array returned, fork a new match
         //print("REIFYING", self, "+", remaining)
         switch self {
         case .optional(let pattern):
-            return reifySequence(remaining) + pattern.reify(remaining)
+            return remaining.reify() + pattern.reify(remaining) // return patternseqs without and with the optional sequence
         case .sequence(let patterns):
             guard let pattern = patterns.first else { fatalError("Empty Pattern.sequence() not allowed.") }
             return pattern.reify(patterns.dropFirst() + remaining)
@@ -116,18 +118,18 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
             for pattern in patterns {
                 result += pattern.reify(remaining)
             }
-            print("ANYOF", result)
+            //print("ANYOF", result)
             return result
-        case .zeroOrMore(let pattern):
-            return reifySequence(remaining) + pattern.reify([.zeroOrMore(pattern)] + remaining)
-        case .oneOrMore(let pattern):
-            return pattern.reify(remaining) + pattern.reify([.zeroOrMore(pattern)] + remaining)
+        case .zeroOrMore(let pattern): // sequence without pattern, then with pattern and zero or more additional instances
+            return remaining.reify() + pattern.reify([.zeroOrMore(pattern)] + remaining)
+        case .oneOrMore(let pattern): // sequence with one instance of pattern, then zero or more additional instances
+            return pattern.reify([.zeroOrMore(pattern)] + remaining)
         default:
             return [[self] + remaining]
         }
     }
     
-    func match(_ form: Parser.Reduction) -> MatchResult { // needs to take Token, not Form, in order to match adjoining whitespace (this means parser stack has to capture Token)
+    func match(_ form: Parser.Form) -> MatchResult { // needs to take Token, not Form, in order to match adjoining whitespace (this means parser stack has to capture Token)
         switch self {
         case .keyword(let k):
             if case .operatorName(let d) = form, k.matches(d.name) { return .fullMatch }

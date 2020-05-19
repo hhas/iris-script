@@ -13,6 +13,12 @@ import Foundation
 // TO DO: still need to decide how to back-match infix/postfix operators
 
 
+let pipeOperator = OperatorDefinition(name: ";", pattern:
+    [.expression, .token(.semicolon), .expression],
+                                      precedence: Token.Form.semicolon.precedence, associate: .right,
+                                      reducer: reducePipeOperator)
+
+
 // ordered list
 
 let orderedListLiteral = OperatorDefinition(name: "[…]", pattern:
@@ -75,47 +81,3 @@ let commandLiteral = OperatorDefinition(name: "COMMAND", pattern:
 // TO DO: what about colon pairs for `interface:action` callable definitions?
 
 
-
-// need a way to reify a pattern up to first operatorName
-
-// TO DO: conjunctions should trigger reduction (what if conjunction is also non-conjunction)
-
-func match(operatorGroup: OperatorGroup, to stack: inout Parser.Stack) -> [PatternMatcher] {
-    
-    var m = [PatternMatcher]()
-    
-    // TO DO: should this be moved to shift()? (it would mean shift's 2nd parameter becomes [OpDef] instead of [PatternMatcher])
-    print("MATCH OP")
-    for definition in operatorGroup.definitions {
-        // TO DO: is there any situation where neither first nor second pattern is a keyword?
-        //print("back-matching:", definition)
-        // temporary kludge
-        for pattern in reifySequence(definition.pattern) {
-            print("--matching ", pattern)
-            if case .keyword(let k) = pattern[0], k.matches(operatorGroup.name) { // prefix operator
-                let newMatch = PatternMatcher(for: definition)
-                print("  adding matcher for ‘\(operatorGroup.name.label)’:", newMatch)
-                m.append(newMatch)
-                // print("matched prefix op", newMatch)
-            } else if case .expression = pattern[0] {
-                print("backmatching…")
-                for pattern in reifySequence([Pattern](pattern.dropFirst())) {
-                    
-                    if let next = pattern.first, case .keyword(let k) = next, k.matches(operatorGroup.name) { // infix/postfix operator
-                        if let last = stack.last {
-                            // print("checking last", last.reduction)
-                            if case .value(_) = last.reduction { // TO DO: this needs work as .value is not the only valid Reduction: stack's head can also be an unreduced command or LP argument, but we don't know if we should reduce that command now or later (we have to finish matching the operator in order to know the operator's precedence, at which point we can determine which to reduce first: command (into an operand) or operator (into an argument)); Q. do we actually need to know if EXPR is a valid expression to proceed with the match? if it looks like it *could* be reduced later on (i.e. it's not a linebreak or punctuation), that might be enough to proceed with match for now
-                                let newMatch = PatternMatcher(for: definition)
-                                print("  adding matcher for ‘\(operatorGroup.name.label)’:", newMatch)
-                                stack[stack.count-1].matches.append(newMatch) // add matcher to head of stack, before operator name is shifted onto it
-                                // shift() will carry this forward from head of stack
-                                //print("matched infix/postfix op", newMatch)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return []
-}
