@@ -46,7 +46,6 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         case fullMatch // token was matched and consumed by this pattern
         case partialMatch([Pattern]) // token was matched and consumed, but the given sequence of patterns need to be matched to subsequent tokens as well // TO DO: this case is currently unused (reify transforms patterns prior to matching so that first pattern in sequence matches 1 token) so can we delete it, or could Pattern.test(…) need it?
         case noMatch // the match has failed so do not bother trying to subsequent patterns
-        case noConsume // match failed but is allowed to do so, so try matching token to next pattern instead; e.g. when .ignoreLineBreaks is used, return .partialMatch([.ignoreLineBreaks]) if Reduction is .token(.lineBreak) or .noConsume if it's anything else
     }
     
     case keyword(Keyword)
@@ -69,8 +68,7 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
     
     case value(Value.Type) // match specific type of literal value, e.g. Command; e.g. pipe operator has pattern [.expression, .keyword(";"), .value(Command.self)]; note: this should ignore grouping parens when testing value type (but not blocks?) - that shouldn't be an issue as parser should discard grouping parens around single expr (elective or precedence-overriding) while parens wrapped around expr-seq will be parsed as Block
     case delimiter // punctuation or linebreak required; e.g. prefix `to` operator should be left-delimited to avoid confusion with infix `to` conjunction; that delimiter may be start of code, linebreak, `(` (`[` and `{` would also work, although that implies `to` is being used within a record or list which is typically a semantic error as a list of closures should be defined using `as [handler]` cast; using `to` will bind them to current namespace as well) // TO DO: what about requiring a leading/trailing delimiter without consuming it? any situations where that might be helpful/necessary (e.g. indicating clear-left for the prefix `to` operator, to prevent it being confused for a command argument, e.g. `tell foo to bar` *should* longest-match the `tell…to…` op, but if the prefix `to` operator can require a LH delimiter then that will also help to disambiguate by making it impossible for `foo to bar` to be interpreted as `foo{to{bar}}`, particularly when reading incomplete/invalid code where a syntax error may prevent the `tell…to…` operator being matched)
-    case lineBreaks // one or more // TO DO: needed? (i.e. are there any cases where punctuation isn't sufficient to delimit) // TO DO: singular or plural (i.e. are there any use-cases where we need to disallow *multiple* linebreaks?)
-    case ignoreLineBreaks // skip over any contiguous linebreaks (normally linebreaks within an operation are a syntax error; exceptions are e.g. in `do … done` block)
+    case lineBreak
     
     init(arrayLiteral patterns: Pattern...) {
         self = .sequence(patterns)
@@ -91,8 +89,7 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         case .test(_):              return "TEST"
         case .value(let t):         return String(describing: t)
         case .delimiter:            return "DELIM"
-        case .lineBreaks:           return "LF"
-        case .ignoreLineBreaks:     return "-LF" // redundant; use .zeroOrMore(.lineBreak)
+        case .lineBreak:           return "LF"
         }
     }
     
@@ -157,15 +154,17 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
             return f(form)
         case .value(let t):
             if case .value(let v) = form, type(of: v) == t { return .fullMatch } // Q. what about subclasses? also numbers // this is likely to be troublesome for any Value composed of more than one token (command/record/list/block, and possibly string)
-        case .delimiter: // note: this only matches separator OR linebreak; to match separator followed by zero or more linebreaks, use `.delimiter, .ignoreLineBreak`
+        case .delimiter: // this matches separator punctuation OR linebreak; to match e.g. a list separator, where the comma can be followed by a linebreak, use `[.delimiter, .zeroOrMore(.lineBreak)]`
             switch form {
             case .separator(_): return .fullMatch
             case .lineBreak:    return .fullMatch
             default: ()
             }
-            // TO DO: fix: this should match .separator(_) or .lineBreak
-        case .lineBreaks:        return .noMatch // TO DO: fix: this should match one or more linebreaks (might be better to use .oneOrMore)
-        case .ignoreLineBreaks:  return .noMatch // TO DO: fix: this needs to avoid consuming form if it's not .lineBreak
+        case .lineBreak:
+            switch form {
+            case .lineBreak: return .fullMatch
+            default: ()
+            }
         default: fatalError("Unreified pattern: \(self)") // this should never happen as composite patterns should recursively reify themselves, the final result being an array of one or more pattern sequences where the first pattern is *always* non-composite
         }
         return .noMatch

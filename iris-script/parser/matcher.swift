@@ -45,7 +45,7 @@ struct PatternMatcher: CustomDebugStringConvertible { // a single pattern; this 
     
     // TO DO: change this to class method that returns [PatternMatcher] after reifying pattern
     
-    // TO DO: how to back-match operator patterns? (presumably keep reifying until we reach the relevant keyword, then backmatch all of those patterns against topmost frame[s] of parser stack; Q. how to match .noConsume when doing this?)
+    // TO DO: how to back-match operator patterns? (presumably keep reifying until we reach the relevant keyword, then backmatch all of those patterns against topmost frame[s] of parser stack)
     
     public init(for operatorDefinition: OperatorDefinition) {
         self.init(for: operatorDefinition, count: 1, remaining: [Pattern](operatorDefinition.pattern.dropFirst()))
@@ -77,8 +77,6 @@ struct PatternMatcher: CustomDebugStringConvertible { // a single pattern; this 
                         result.append(self.nextMatch(withRemaining: rest + remaining))
                     case .noMatch:
                         ()
-                    case .noConsume:
-                        result += self.nextMatch(withRemaining: remaining).match(form) // TO DO: confirm this is correct (e.g. what if pattern ends with -LF?)
                     }
                 }
             }

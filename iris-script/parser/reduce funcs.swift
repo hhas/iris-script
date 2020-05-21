@@ -19,9 +19,9 @@ import Foundation
 // TO DO: how to trigger LH reduction on conjunctions/suffixes? e.g. `if 1 + 2 * 3 then action` needs to reduce the first expr upon reaching `then` keyword
 
 
-func show(_ stack: Parser.Stack, _ start: Int, _ end: Int) {
+func show(_ stack: Parser.Stack, _ start: Int, _ end: Int, _ label: String = "STACK") {
     print()
-    print("STACK DUMP [\(start)..<\(end)]:")
+    print("DUMP \(label) \(start)...\(end-1):")
     for f in stack[start..<end] { print(" -", f.reduction, "\t\t", f.matches) }
     print()
 }
@@ -112,7 +112,7 @@ func reduceInfixOperatorWithConjunction(stack: Parser.Stack, definition: Operato
 
 // TO DO: can we guarantee reduce always applies to end of stack (probably not, e.g. when stitching per-line)
 
-// note: these reduce funcs will ignore a trailing comma after last item (c.f. Python lists), although the literal patterns currently do not permit that
+// note: literal list/record/group reduce funcs will ignore a trailing comma after last item (c.f. Python lists),
 
 func reduceOrderedListLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction {
     //show(stack, start, end)
@@ -120,10 +120,7 @@ func reduceOrderedListLiteral(stack: Parser.Stack, definition: OperatorDefinitio
     var i = start + 1 // ignore `[`
     skipLineBreaks(stack, &i)
     while i < end - 1 { // ignore `]`
-        guard case .value(let value) = stack[i].reduction else {
-            fatalError("Bad Value") // should never happen
-        }
-        items.append(value)
+        items.append(stack.expression(at: i))
         i += 1 // step over value
         skipSeparator(stack, &i)
         skipLineBreaks(stack, &i)
@@ -138,14 +135,10 @@ func reduceKeyedListLiteral(stack: Parser.Stack, definition: OperatorDefinition,
     var i = start + 1 // ignore `[`
     skipLineBreaks(stack, &i)
     while i < end - 1 { // ignore `]`
-        guard case .value(let k) = stack[i].reduction, let key = (k as? HashableValue)?.dictionaryKey else {
-            fatalError("Bad Key") // should never happen
-        }
+        let key = (stack.expression(at: i) as! HashableValue).dictionaryKey
         i += 2 // step over key + colon
         skipLineBreaks(stack, &i)
-        guard case .value(let value) = stack[i].reduction else {
-            fatalError("Bad Value") // should never happen
-        }
+        let value = stack.expression(at: i)
         items[key] = value
         print(key, value)
         i += 1 // step over value
@@ -169,9 +162,7 @@ func reduceRecordLiteral(stack: Parser.Stack, definition: OperatorDefinition, st
         }
         i += 2 // step over label + colon
         skipLineBreaks(stack, &i)
-        guard case .value(let value) = stack[i].reduction else {
-            fatalError("Bad Value") // should never happen
-        }
+        let value = stack.expression(at: i)
         items.append((label, value))
         i += 1 // step over value
         skipSeparator(stack, &i)
@@ -189,20 +180,20 @@ func reduceRecordLiteral(stack: Parser.Stack, definition: OperatorDefinition, st
 func reduceGroupLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction { // `( LF* EXPR LF* )`
     var i = start + 1
     skipLineBreaks(stack, &i)
-    guard case .value(let expr) = stack[i].reduction else { fatalError("Bad Expr") }
+    let expr = stack.expression(at: i)
+    skipLineBreaks(stack, &i)
     return Parser.Reduction(expr) // TO DO: how to annotate expr with elective parens/LFs
 }
 
 func reduceParenthesizedBlockLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction {
-    show(stack, start, end)
+    //show(stack, start, end)
     print(stack[start..<end].map{$0.reduction})
     var items = [Value]()
     var i = start + 1 // ignore `(`
     skipLineBreaks(stack, &i)
     while i < stack.count - 1 { // ignore `)`
-        print(">>>", stack[i].reduction)
-        guard case .value(let expr) = stack[i].reduction else { fatalError("Bad Expr") }
-        items.append(expr)
+        //print(">>>", stack[i].reduction)
+        items.append(stack.expression(at: i))
         i += 1 // step over value
         skipSeparator(stack, &i)
         skipLineBreaks(stack, &i)
@@ -218,6 +209,6 @@ func reduceCommandLiteral(stack: Parser.Stack, definition: OperatorDefinition, s
 
 
 func reducePipeOperator(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction { // pipe (";") is a special case as it transforms its two operands (of which the right-hand operand must be a command) such that `A;B{C,D};E` -> `E{B{A,C,D}}`
-    print("Reduce pipe")
+    //print("Reduce pipe")
     return .error(NotYetImplementedError())
 }

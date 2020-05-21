@@ -85,6 +85,7 @@ extension Token.Form {
 
 
 
+// called by reduceNow() when a RH expr delimiter is found
 func reduceOperators(parser: Parser) {
     let stack = parser.stack
     // TO DO: should stack track previous delimiter index, allowing us to know number of stack frames to be reduced (if 1, and it's .value, we know it's already fully reduced)
@@ -118,15 +119,17 @@ func reduceOperators(parser: Parser) {
             print("Found command name: \(name)")
             commandComponents.insert((i, i, form.toName(), false), at: 0)
         case .separator(_), .lineBreak:
+            i += 1
             break loop
         case .startList, .startRecord, .startGroup:
+            i += 1
             break loop
         // TO DO: what about colon, semicolon?
         default: ()
         }
     }
     let start = i
-    print("REDUCE NOW: \(start)..<\(end)")
+    print("REDUCE NOW: \(start)...\(end-1)")
     for item in stack[start..<end] {
         print(" - ", item.reduction, item.matches.filter{$0.isCompleted})
     }
@@ -154,19 +157,19 @@ func reduceOperators(parser: Parser) {
     print("found command parts:")
     print(commandComponents)
     print()
+    
     print("found operations:")
-
     for m in matchers { print(" - \(m.start)...\(m.end) \(m.matcher.definition.name.label)") }
     matchers.sort{ $0.start < $1.start || $0.start == $1.start && $0.end < $1.end }
+    
     print()
     for m in matchers { print(" - \(m.start)...\(m.end) \(m.matcher.definition.name.label)") }
     
-    do {
-        let (_, end, match) = matchers[0]
-        
-        parser.reduce(completedMatch: match, endingAt: end+1)
-        
-    }
+    // TO DO: precedence
+    
+    //if let (_, end, match) = matchers.first { // test
+   //     parser.reduce(completedMatch: match, endingAt: end+1)
+   // }
     
     // TO REDUCE:
     // if matches[0].start != 0, ops haven't matched exactly

@@ -6,15 +6,17 @@
 import Foundation
 
 
-// TO DO: ignore linebreaks
-
 // CAUTION: for now, avoid creating matchers for patternseqs that start with a composite pattern as that is not yet supported
 
-// TO DO: still need to decide how to back-match infix/postfix operators
+
+private let EXPR: Pattern = .expression
+private let LF: Pattern = .zeroOrMore(.lineBreak)
+private let DELIM: Pattern = [.delimiter, LF] // e.g. comma, linebreak, or comma followed by linebreak
+
 
 
 let pipeOperator = OperatorDefinition(name: ";", pattern:
-    [.expression, .token(.semicolon), .expression],
+    [EXPR, .token(.semicolon), EXPR], // TO DO: allow LF after semicolon?
                                       precedence: Token.Form.semicolon.precedence, associate: .right,
                                       reducer: reducePipeOperator)
 
@@ -22,7 +24,7 @@ let pipeOperator = OperatorDefinition(name: ";", pattern:
 // ordered list
 
 let orderedListLiteral = OperatorDefinition(name: "[…]", pattern:
-    [.token(.startList), .optional([.expression, .zeroOrMore([.delimiter, .expression])]), .token(.endList)],
+    [.token(.startList), LF, .optional([EXPR, .zeroOrMore([DELIM, EXPR])]), LF, .token(.endList)],
                                             autoReduce: true, reducer: reduceOrderedListLiteral)
 
 
@@ -35,31 +37,31 @@ private func isHashableLiteral(_ form: Token.Form) -> Pattern.MatchResult {
     if case .value(let v) = form, v is HashableValue { return .fullMatch } else { return .noMatch }
 }
 
-let keyValuePair: Pattern = [.test(isHashableLiteral), .token(.colon), .expression]
+let keyValuePair: Pattern = [.test(isHashableLiteral), .token(.colon), EXPR] // TO DO: allow LF after colon? (the reducefunc does allow it)
 
 let keyValueListLiteral = OperatorDefinition(name: "[…:…]", pattern:
     [.token(.startList), .anyOf([
         .token(.colon),
-        [keyValuePair, .zeroOrMore([.delimiter, keyValuePair])]
+        [keyValuePair, LF, .zeroOrMore([DELIM, keyValuePair]), LF]
     ]), .token(.endList)], autoReduce: true, reducer: reduceKeyedListLiteral)
 
 
 // record
 
-let recordField: Pattern = [.optional([.label, .token(.colon)]), .expression]
+let recordField: Pattern = [.optional([.label, .token(.colon)]), EXPR]
 
 let recordLiteral = OperatorDefinition(name: "{…}", pattern:
-    [.token(.startRecord), .optional([recordField, .zeroOrMore([.delimiter, recordField])]), .token(.endRecord)],
+    [.token(.startRecord), LF, .optional([recordField, .zeroOrMore([DELIM, recordField])]), LF, .token(.endRecord)],
                                        autoReduce: true, reducer: reduceRecordLiteral)
 
 
 // group/parenthesized block
 
 let groupLiteral = OperatorDefinition(name: "(…)", pattern:
-    [.token(.startGroup), .expression, .token(.endGroup)], autoReduce: true, reducer: reduceGroupLiteral)
+    [.token(.startGroup), LF, EXPR, LF, .token(.endGroup)], autoReduce: true, reducer: reduceGroupLiteral)
 
 let parenthesizedBlockLiteral = OperatorDefinition(name: "(…,…)", pattern:
-    [.token(.startGroup), .optional([.expression, .oneOrMore([.delimiter, .expression])]), .token(.endGroup)],
+    [.token(.startGroup), LF, .optional([EXPR, .oneOrMore([DELIM, EXPR])]), LF, .token(.endGroup)],
                                       autoReduce: true, reducer: reduceParenthesizedBlockLiteral)
 
 
@@ -68,11 +70,11 @@ let parenthesizedBlockLiteral = OperatorDefinition(name: "(…,…)", pattern:
 // challenge with matching commands is that 1. LP syntax is superset of standard `NAME EXPR` syntax, and 2. LP syntax should not nest (reducefunc will need to handle nested commands somehow); one more gotcha of LP syntax is when first arg is itself a record literal (i.e. command must be written `name {{…}}`; the advantages of LP syntax, particularly when using the language as a command shell, are such that this compromise should be worth it, but it will have to be tested in real-world use to verify)
 
 //let commandLiteral = OperatorDefinition(name: "COMMAND", pattern:
-//    [.name, .optional(.expression), .zeroOrMore(recordField)], reducer: reduceCommandLiteral)
+//    [.name, .optional(EXPR), .zeroOrMore(recordField)], reducer: reduceCommandLiteral)
 
 // for now, match FP command syntax only
 let commandLiteral = OperatorDefinition(name: "COMMAND", pattern:
-    [.name, .optional(.expression)], reducer: reduceCommandLiteral)
+    [.name, .optional(EXPR)], reducer: reduceCommandLiteral)
 
 
 

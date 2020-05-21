@@ -195,27 +195,26 @@ class Parser {
         // TO DO: if >1 complete match, we can only reduce one of them (i.e. need to resolve any reduce conflicts *before* reducing, otherwise 2nd will get wrong stack items to operate on; alternative would be to fork multiple parsers and have each try a different strategy, which might be helpful during editing)
         // TO DO: what if there are still in-progress matches running? (can't start reducing ops till those are done as we want longest match and precedence needs resolved anyway, but ops shouldn't auto-reduce anyway [at least not unless they start AND end with keyword])
  //       if !completedMatches.isEmpty { print("SHIFT fully matched", completedMatches) }
-        self.autoReduceLongestMatch(in: completedMatches) // TO DO: how to carry forward previous in-progress matches that can now match the reduced .value
-        self.stack.append((form, continuingMatches))
-    }
-    
-    // TO DO: not sure if reasoning is correct here; if we limit auto-reduction to builtins (which we control) then it's safe to say there will be max 1 match, but do…done blocks should also auto-reduce and those are library-defined; leave it for now as it solves the immediate need (reducing literal values as soon as they're complete so operator patterns can match them as operands)
-    func autoReduceLongestMatch(in completedMatches: [PatternMatcher]) {
+
+        
+        
+        
+        // automatically reduce atomic operators and list/record/group/block literals (i.e. anything that starts and ends with a static token, not an expr, so is not subject to precedence or association rules)
+        // TO DO: not sure if reasoning is correct here; if we limit auto-reduction to builtins (which we control) then it's safe to say there will be max 1 match, but do…done blocks should also auto-reduce and those are library-defined; leave it for now as it solves the immediate need (reducing literal values as soon as they're complete so operator patterns can match them as operands)
         if let longestMatch = completedMatches.max(by: { $0.count < $1.count }), longestMatch.definition.autoReduce {
- //           print("\nAUTO-REDUCE", longestMatch.definition.name.label)
+            //           print("\nAUTO-REDUCE", longestMatch.definition.name.label)
             reduce(completedMatch: longestMatch, endingAt: self.stack.count)
             if completedMatches.count > 1 {
                 // TO DO: what if there are 2 completed matches of same length?
                 print("discarding extra matches in", completedMatches.sorted{ $0.count < $1.count })
             }
         }
+        // this order is a bit confusing, but auto-reduce is applying to a just-completed pattern at head of stack; it seems odd not to auto-reduce as soon as the completing token was shifted instead of waiting for start of next shift to trigger it [also, if we fix the lexer's dangling LF, presumably there's nothing to trigger that extra shift so a trailing literal won't be auto-reduced, although it should reduce on final reduceNow]
+        self.stack.append((form, continuingMatches))
     }
     
-    // TO DO: any advantage in reducing lists, groups, records as soon as they're completed, rather than waiting for a delimiter to trigger reduction? (obvious case is operands: we need to reduce those before operator pattern matching can start)
     
-    // TO DO: how to deal with SR conflicts where two patterns start and end on same stack indices? (presumably this'll only happen if pattern definitions are sloppy/conflicting; for now, might just want to throw fatalError if detected); also need to favor longest-match, e.g. `YYYY-MM-DD` will match as date or two `minus` operations
     
-    // TO DO: another challenge with reductions: if we work right-to-left, how do we resolve overlapping matches, e.g. `ABC/DE` vs `AB/CDE`? longest-match presumably should work left-to-right
     func reduce(completedMatch: PatternMatcher, endingAt endIndex: Int) {
         let startIndex = endIndex - completedMatch.count
         let reduction: StackItem
@@ -238,9 +237,8 @@ class Parser {
         }
         print("reduce()", completedMatch, "->", reduction)
         self.stack.replaceSubrange((startIndex..<endIndex), with: [reduction])
-        show(self.stack, 0, self.stack.count)
+        //show(self.stack, 0, self.stack.count, "after reduction")
         
-        // aaand now we've changed all the indices of previously gathered complete matchers, and we need to progress the new matchers we've just added
     }
 
     
@@ -254,6 +252,8 @@ class Parser {
         
         // TO DO: how to reduce commands? (both `name record` and LP syntax, with added caveat about nested LP syntax)
     }
+    
+    //
     
     private func handlePunctuation(using handler: PunctuationHandler?) {
         // don't insert debugger command if preceding tokens can't be reduced to Value (i.e. punctuation modifies run-time behavior of the preceding value only, e.g. `Delete my_files!`)
@@ -329,7 +329,7 @@ class Parser {
         
         print("\nReductions:")
         var result = [Value]()
-        // TO DO: prob. easier to pop
+        // TO DO: how to represent unreduced tokens as syntax errors? (e.g. what about runs caused by unbalanced braces? e.g. `[1,2,3 LF foo bar` will treat 1,2,3 as top-level exprs, which isn't intent; otoh, matcher will treat `foo bar` as list item, which probably isn't intended either; can we make reasonable guess as to where missing `]` should appear and re-parse based on that, flagging the proposed reduced list for user attention [i.e. approve or amend] before script can run)
         
         var i = 0
         var wasValue = false
@@ -358,6 +358,7 @@ class Parser {
             i += 1
         }
         print()
+        // TO DO: need error tally; in theory script should be [partially] runnable even with [some?] syntax errors, but problematic sections need marked and script should run in debug mode only with extra guards around anything IO (what about unmatched operators? can we infer where an opname is accidentally used where quoted name is needed [i.e. user needs to resolve naming conflict] vs an opname that has incorrect operands [user needs to fix operands]; how do we represent such unresolved syntax errors as Values [again, allowing other code to execute at least in debug mode])
         return ScriptAST(result)
     }
 }
