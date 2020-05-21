@@ -1,8 +1,8 @@
 //
-//  operator keyword.swift
+//  keyword.swift
 //  iris-script
 //
-//  an operator-defined keyword (including any aliases); used in patterns
+//  an operator-defined keyword (including any aliases); used in Pattern
 
 import Foundation
 

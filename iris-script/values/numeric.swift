@@ -16,10 +16,10 @@ import Darwin
 // TO DO: Unit and Quantity(Number,Unit); also UnitType (length, weight, temperature, etc)
 
 
-protocol NumericValue: ScalarValue, KeyConvertible {}
+protocol NumericValue: ScalarValue, HashableValue {}
 
 
-extension Int: NumericValue {
+extension Int: NumericValue, KeyConvertible {
     
     var swiftLiteralDescription: String { return String(self) }
     
@@ -40,7 +40,7 @@ extension Int: NumericValue {
     }
 }
 
-extension Double: NumericValue {
+extension Double: NumericValue, KeyConvertible {
     
     var swiftLiteralDescription: String { return String(self) }
     
@@ -64,7 +64,7 @@ extension Double: NumericValue {
 
 
 
-enum Number: NumericValue { // what about fractions? (this may require `indirect` to allow nested composition; alternatively, might be best to implement as PrecisionNumber struct/class, possibly in optional library)
+enum Number: NumericValue, KeyConvertible { // what about fractions? (this may require `indirect` to allow nested composition; alternatively, might be best to implement as PrecisionNumber struct/class, possibly in optional library)
     
     var swiftLiteralDescription: String {
         switch self {

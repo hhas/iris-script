@@ -117,7 +117,7 @@ class Parser {
         }
     }
     
-    typealias ReduceFunc = (Stack, Int, Int) -> Reduction // (token stack, start, end)
+    typealias ReduceFunc = (Stack, OperatorDefinition, Int, Int) -> Reduction // (token stack, operator definition, start, end)
 
     
     // TO DO: also capture source code ranges? (how will these be described in per-line vs whole-script parsing? in per-line, each line needs a unique ID (incrementing UInt64) that is invalidated when that line is edited; that allows source code positions to be referenced with some additional indirection: the stack frame captures first and last line IDs plus character offset from start of line)
@@ -175,36 +175,34 @@ class Parser {
         // advance/discard any in-progress matches
         //print("SHIFT received \(newMatches.count) new", newMatches)
         if let partialMatches = self.stack.last?.matches {
-            //print("SHIFT WILL TRY TO MATCH \(partialMatches.count):", partialMatches)
+            //print("SHIFT will try to match \(partialMatches.count):", partialMatches)
             for match in partialMatches {
                 if match.isCompleted {
-                    //print("…completed", match)
                     completedMatches.append(match)
-                } else {
-                    // match() returns [] if match was complete on the previous token or has failed to match this token, else one or more matchers for the next token after this
+                } else { // match() returns [] if it failed to match this token, or one or more matchers for next token
                     continuingMatches += match.match(form)
                 }
             }
         }
-        // TO DO: also need to check if any newMatches are complete (atomic operators, e.g. `nothing`, `true`, `false`), but do we want to do that here? (Q. is there any situation where atomics shouldn't immediately reduce?)
+        // check if any newMatches are complete, i.e. they’re atomic operators (`nothing`, `true`, `false`, etc) which can be immediately reduced
         for match in newMatches {
             if match.isCompleted {
                 completedMatches.append(match)
             } else {
-                continuingMatches += match.match(form)
+                continuingMatches.append(match)
             }
         }
         // TO DO: if >1 complete match, we can only reduce one of them (i.e. need to resolve any reduce conflicts *before* reducing, otherwise 2nd will get wrong stack items to operate on; alternative would be to fork multiple parsers and have each try a different strategy, which might be helpful during editing)
         // TO DO: what if there are still in-progress matches running? (can't start reducing ops till those are done as we want longest match and precedence needs resolved anyway, but ops shouldn't auto-reduce anyway [at least not unless they start AND end with keyword])
-        if !completedMatches.isEmpty { print("SHIFT fully matched", completedMatches) }
-        self.autoReduceLongestMatch(in: completedMatches)
+ //       if !completedMatches.isEmpty { print("SHIFT fully matched", completedMatches) }
+        self.autoReduceLongestMatch(in: completedMatches) // TO DO: how to carry forward previous in-progress matches that can now match the reduced .value
         self.stack.append((form, continuingMatches))
     }
     
-    // TO DO: not sure if reasoning is correct here
+    // TO DO: not sure if reasoning is correct here; if we limit auto-reduction to builtins (which we control) then it's safe to say there will be max 1 match, but do…done blocks should also auto-reduce and those are library-defined; leave it for now as it solves the immediate need (reducing literal values as soon as they're complete so operator patterns can match them as operands)
     func autoReduceLongestMatch(in completedMatches: [PatternMatcher]) {
         if let longestMatch = completedMatches.max(by: { $0.count < $1.count }), longestMatch.definition.autoReduce {
-            print("\nAUTO-REDUCE", longestMatch.definition.name.label)
+ //           print("\nAUTO-REDUCE", longestMatch.definition.name.label)
             reduce(completedMatch: longestMatch, endingAt: self.stack.count)
             if completedMatches.count > 1 {
                 // TO DO: what if there are 2 completed matches of same length?
@@ -219,33 +217,38 @@ class Parser {
     
     // TO DO: another challenge with reductions: if we work right-to-left, how do we resolve overlapping matches, e.g. `ABC/DE` vs `AB/CDE`? longest-match presumably should work left-to-right
     func reduce(completedMatch: PatternMatcher, endingAt endIndex: Int) {
-        let startIndex = self.stack.count - completedMatch.count
+        let startIndex = endIndex - completedMatch.count
         let reduction: StackItem
-        switch completedMatch.definition.reduce(self.stack, startIndex, endIndex) {
-        case .value(let v): reduction = (Form.value(v), [])
-        case .error(let e): reduction = (Form.error(e), [])
+        
+        switch completedMatch.definition.reduce(self.stack, completedMatch.definition, startIndex, endIndex) {
+        case .value(let v):
+            
+            var updatedMatchers = [PatternMatcher]()
+            
+            if startIndex > 0 { // reapply the preceding stack frame's matchers to newly reduced value
+                for match in stack[startIndex - 1].matches {
+                    updatedMatchers += match.match(.value(v))
+                }
+                print("updated matchers:", updatedMatchers)
+            }
+            
+            reduction = (Form.value(v), updatedMatchers)
+        case .error(let e):
+            reduction = (Form.error(e), [])
         }
+        print("reduce()", completedMatch, "->", reduction)
         self.stack.replaceSubrange((startIndex..<endIndex), with: [reduction])
-        if startIndex > 0 {
-            // TO DO: [re]apply preceding frame's matchers to the newly reduced frame (if it's a Value)
-        }
+        show(self.stack, 0, self.stack.count)
+        
+        // aaand now we've changed all the indices of previously gathered complete matchers, and we need to progress the new matchers we've just added
     }
 
     
     func reduceNow() { // called on encountering a right-hand delimiter (punctuation, linebreak, operator keyword); TO DO: reduce any fully matched patterns
-        
-        // TO DO: when comparing precedence, look for .values in stack that have overlapping operator matches where one isBeginning and other isCompleted; whichever match has the higher definition.precedence (or if both are same definition and associate==.right) reduce that first
 
-        guard let item = self.stack.last else { return } // this'll only occur if a separator appears at start of script
-       // print("reduceNow:", item)
+        //print("REDUCE NOW")
         
-        // TO DO: should stack track previous delimiter index, allowing us to know number of stack frames to be reduced (if 1, and it's .value, we know it's already fully reduced)
-        
-        for m in item.matches where m.isCompleted {
-            print("  found edge of fully matched ‘\(m.definition.name.label)’ operation")
-           // print("  ", self.stack[m.start]) // check start of match for contention, e.g. in `1 + 2 * 3` there is an SR conflict on `2` which requires comparing operator precedences to determine which operation to reduce first
-            // in addition, if an EXPR operand match is not a fully-reduced .value(_) then that reduction needs to be performed first
-        }
+        reduceOperators(parser: self)
         
         // Q. how to deal with unreduced/incomplete operands; how to deal with operator precedence/associativity?
         
@@ -303,15 +306,16 @@ class Parser {
                 self.reduceNow()
                 self.shift()
                 
-            case .operatorName(let operatorGroup):
-                //   print("FOUND OP", operatorGroup.name)
-                let (backMatches, newMatches) = match(operatorGroup: operatorGroup, to: self.stack)
+            case .operatorName(let definitions):
+                //   print("FOUND OP", definitions.name)
+                let (backMatches, newMatches) = match(previousToken: self.stack.last?.reduction, followedBy: definitions)
+                //print(definitions.name.label, backMatches, newMatches)
                 stack[stack.count-1].matches += backMatches
                 self.shift(adding: newMatches)
                 
             case .semicolon:
                 self.reduceNow() // TO DO: confirm this is correct (i.e. punctuation should always have lowest precedence so that operators on either side always bind first)
-                self.shift() //self.shift(adding: [PatternMatcher(for: pipeOperator)]) // TO DO: need to backmatch pipe operator
+                self.shift() //self.shift(adding: [PatternMatcher(for: pipeOperator)]) // TO DO: need to backmatch pipe operator (need to split `match(previousToken:followedBy:)` so backmatch can be done here; alternatively, wrap pipeOp definition in OperatorDefinitions and pass that)
                 
             case .colon:
                 self.reduceNow()
@@ -322,16 +326,36 @@ class Parser {
             }
             self.advance()
         }
+        
         print("\nReductions:")
         var result = [Value]()
-        for (reduction, matches) in self.stack {
-            if case .value(let value) = reduction {
+        // TO DO: prob. easier to pop
+        
+        var i = 0
+        var wasValue = false
+        skipLineBreaks(self.stack, &i)
+        while i < self.stack.count {
+            let (reduction, matches) = self.stack[i]
+            switch reduction {
+            case .value(let value):
+                print(" `\(value)` \(matches.map{"\n    - \($0)"}.joined(separator: ""))") // .filter{$0.isCompleted}
+                print()
+                if wasValue { print("Syntax error (adjacent values): `\(result.last!)` `\(value)`\n") }
                 result.append(value)
-            } else {
-                //print("Found unreduced token: \(reduction)")
+                wasValue = true
+            case .separator(let sep):
+                if !wasValue {
+                    print("Syntax error (stray punctuation): `\(sep)`\n")
+                }
+                wasValue = false
+                skipLineBreaks(self.stack, &i)
+            case .lineBreak:
+                wasValue = false
+            default:
+                print("Syntax error (unreduced token): \(reduction)\n")
+                wasValue = false
             }
-            print("  .\(reduction)", matches.map{"\n    - \($0)"}.joined(separator: ""))// .filter{$0.isCompleted}
-            print()
+            i += 1
         }
         print()
         return ScriptAST(result)

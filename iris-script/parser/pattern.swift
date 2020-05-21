@@ -1,7 +1,9 @@
 //
-//  operator pattern.swift
+//  pattern.swift
 //  iris-script
 //
+
+//  composable Pattern enum describes how to match one or more tokens; used by PatternMatcher
 
 import Foundation
 
@@ -21,18 +23,22 @@ import Foundation
 
 
 
-
-
 extension Array where Element == Pattern {
-
-func reify() -> [[Pattern]] { // given a pattern sequence, ensures the first pattern is not a composite
-    if let pattern = self.first {
-        return pattern.reify([Pattern](self.dropFirst()))
-    } else {
-        return []
+    
+    var debugDescription: String {
+        return "(\(self.map{String(describing:$0)}.joined(separator: " ")))"
+    }
+    
+    func reify() -> [[Pattern]] { // given a pattern sequence, ensures the first pattern is not a composite
+        if let pattern = self.first {
+            return pattern.reify([Pattern](self.dropFirst()))
+        } else {
+            return []
+        }
     }
 }
-}
+
+
 
 indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
 

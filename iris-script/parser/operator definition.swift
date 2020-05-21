@@ -16,14 +16,6 @@
 
 import Foundation
 
-extension Array where Element == Pattern {
-
-    var debugDescription: String {
-        return "(\(self.map{String(describing:$0)}.joined(separator: " ")))"
-    }
-
-}
-
 
 
 struct OperatorDefinition: CustomDebugStringConvertible { // TO DO: Equatable

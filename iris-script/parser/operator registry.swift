@@ -25,7 +25,7 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
     
     var debugDescription: String { return "OperatorRegistry<\(self.wordOperators.keys) \(self.symbolOperators.keys)>" }
     
-    typealias OperatorTable = [String: OperatorGroup] // maps a single keyword to all operators that use that keyword
+    typealias OperatorTable = [String: OperatorDefinitions] // maps a single keyword to all operators that use that keyword
     
     private var wordOperators   = OperatorTable() // whole-token matches
     private var symbolOperators = OperatorTable() // whole-token matches (this is quicker than sub-token matching when a single symbolic operator is clearly delimited by words/punctuation/whitespace)
@@ -42,9 +42,9 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
     struct PartialMatch { // tree structure where each node can match a sequence of symbol characters to an operator class; used to perform longest match of symbol-based operator names
         
         private var matches = [Character: PartialMatch]()
-        private var definitions: OperatorGroup? // nil if this isn't a complete match
+        private var definitions: OperatorDefinitions? // nil if this isn't a complete match
         
-        mutating func add(_ name: Substring, _ definition: OperatorGroup) {
+        mutating func add(_ name: Substring, _ definition: OperatorDefinitions) {
             if let char = name.first {
                 if self.matches[char] == nil { self.matches[char] = PartialMatch() }
                 self.matches[char]!.add(name.dropFirst(1), definition)
@@ -54,7 +54,7 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
             }
         }
         
-        func match(_ value: Substring) -> (endIndex: String.Index, definition: OperatorGroup)? {
+        func match(_ value: Substring) -> (endIndex: String.Index, definition: OperatorDefinitions)? {
             guard let char = value.first else { // else reached end
                 if let definitions = self.definitions {
                     return (value.endIndex, definitions)
@@ -77,11 +77,11 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
             for name in keyword.allNames {
                 assert(!name.isEmpty)
                 if name.isSymbolic {
-                    if self.symbolOperators[name.key] == nil { self.symbolOperators[name.key] = OperatorGroup(name: name) }
+                    if self.symbolOperators[name.key] == nil { self.symbolOperators[name.key] = OperatorDefinitions(name: name) }
                     self.symbolOperators[name.key]!.add(definition)
                     self.symbolMatcher.add(Substring(name.key), self.symbolOperators[name.key]!)
                 } else {
-                    if self.wordOperators[name.key] == nil { self.wordOperators[name.key] = OperatorGroup(name: name) }
+                    if self.wordOperators[name.key] == nil { self.wordOperators[name.key] = OperatorDefinitions(name: name) }
                     self.wordOperators[name.key]!.add(definition)
                 }
             }
@@ -91,16 +91,16 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
     
     // TO DO: should matchWord/matchSymbols take token and return tokens?
     
-    func matchWord(_ value: Substring) -> OperatorGroup? {
+    func matchWord(_ value: Substring) -> OperatorDefinitions? {
         assert(!value.isEmpty)
         return self.wordOperators[value.lowercased()]
     }
     
-    func matchSymbols(_ value: Substring) -> [(Substring, OperatorGroup)] { // returned substrings should be slices of same underlying string as value
+    func matchSymbols(_ value: Substring) -> [(Substring, OperatorDefinitions)] { // returned substrings should be slices of same underlying string as value
         assert(!value.isEmpty)
         if let result = self.symbolOperators[String(value)] { return [(value, result)] }
         var symbols = value
-        var result = [(Substring, OperatorGroup)]()
+        var result = [(Substring, OperatorDefinitions)]()
         while !symbols.isEmpty {
             if let (endIndex, definitions) = self.symbolMatcher.match(symbols) {
                 result.append((symbols.prefix(upTo: endIndex), definitions))
@@ -112,15 +112,14 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
         return result
     }
     
-    func get(_ name: Symbol) -> OperatorGroup? {
+    func get(_ name: Symbol) -> OperatorDefinitions? {
         return self.wordOperators[name.key] ?? self.symbolOperators[name.key]
     }
 }
 
 
 
-extension OperatorRegistry {
-    
+extension OperatorRegistry { // convenience methods for standard operator forms
     
     //     registry.prefix("NOT", 400)
     //     registry.infix(Keyword("≤", "<="), 540)
@@ -128,29 +127,52 @@ extension OperatorRegistry {
     
     // as in original, need sub-token matching of symbol char sequences
 
-    func prefix(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.keyword(name), .expression], precedence: precedence, associate: associate, reducer: reducePrefixOperator))
-    }
-    func infix(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.expression, .keyword(name), Pattern.expression], precedence: precedence, associate: associate, reducer: reduceInfixOperator))
-    }
-    func postfix(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.expression, .keyword(name)], precedence: precedence, associate: associate, reducer: reducePostfixOperator))
-    }
-    func atom(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.keyword(name)], precedence: precedence, associate: associate, reducer: reduceAtomOperator))
-    }
-    func prefix(_ name: Keyword, conjunction: Keyword,
-                _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(conjunction), .expression], precedence: precedence, associate: associate, reducer: reducePrefixOperatorWithConjunction))
-    }
-    func prefix(_ name: Keyword, suffix: Keyword,
-                _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left) {
-        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(suffix)], precedence: precedence, associate: associate, reducer: reducePrefixOperatorWithSuffix))
+    // `OPNAME`
+    func atom(_ name: Keyword, reducer: Parser.ReduceFunc? = nil) {
+        self.add(OperatorDefinition(pattern: [.keyword(name)], autoReduce: true, reducer: reducer ?? reduceAtomOperator))
     }
     
-    func add(_ pattern: [Pattern], _ precedence: Precedence = -100,
-             _ associate: OperatorDefinition.Associativity = .left, reducer: @escaping Parser.ReduceFunc) {
-        self.add(OperatorDefinition(pattern: pattern, precedence: precedence, associate: associate, reducer: reducer))
+    // `OPNAME EXPR`
+    func prefix(_ name: Keyword, _ precedence: Precedence, reducer: Parser.ReduceFunc? = nil) {
+        self.add(OperatorDefinition(pattern: [.keyword(name), .expression],
+                                    precedence: precedence, reducer: reducer ?? reducePrefixOperator))
     }
+    
+    // `EXPR OPNAME EXPR`
+    func infix(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left, reducer: Parser.ReduceFunc? = nil) {
+        self.add(OperatorDefinition(pattern: [.expression, .keyword(name), Pattern.expression],
+                                    precedence: precedence, associate: associate, reducer: reducer ?? reduceInfixOperator))
+    }
+    
+    // `EXPR OPNAME`
+    func postfix(_ name: Keyword, _ precedence: Precedence, reducer: Parser.ReduceFunc? = nil) {
+        self.add(OperatorDefinition(pattern: [.expression, .keyword(name)],
+                                    precedence: precedence, reducer: reducer ?? reducePostfixOperator))
+    }
+    
+    // `OPNAME EXPR OPNAME EXPR`
+    func prefix(_ name: Keyword, conjunction: Keyword, _ precedence: Precedence, reducer: Parser.ReduceFunc? = nil) {
+        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(conjunction), .expression],
+                                    precedence: precedence, reducer: reducer ?? reducePrefixOperatorWithConjunction))
+    }
+    
+    // `OPNAME DELIM (EXPR DELIM)* OPNAME`
+    func prefix(_ name: Keyword, suffix: Keyword, reducer: Parser.ReduceFunc? = nil) {
+        self.add(OperatorDefinition(pattern:
+            [.keyword(name), .delimiter, .zeroOrMore([.expression, .delimiter]), .keyword(suffix)], // TO DO: LF*
+                                    autoReduce: true, reducer: reducer ?? reducePrefixOperatorWithSuffix))
+    }
+    
+    // `EXPR OPNAME EXPR OPNAME EXPR`
+    func infix(_ name: Keyword, conjunction: Keyword, _ precedence: Precedence, reducer: Parser.ReduceFunc? = nil) {
+        self.add(OperatorDefinition(pattern: [.expression, .keyword(name), .expression, .keyword(conjunction), .expression],
+                                    precedence: precedence, reducer: reducer ?? reduceInfixOperatorWithConjunction))
+    }
+    
+    /*
+    func add(_ pattern: [Pattern], _ precedence: Precedence = Precedence.min,
+             _ associate: OperatorDefinition.Associativity = .left,
+             autoReduce: Bool = false, reducer: @escaping Parser.ReduceFunc) {
+        self.add(OperatorDefinition(pattern: pattern, precedence: precedence, associate: associate, autoReduce: autoReduce, reducer: reducer))
+    }*/
 }

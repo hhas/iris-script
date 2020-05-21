@@ -130,11 +130,12 @@ struct Token: CustomStringConvertible {
         
         case letters // undifferentiated text (may be command name, operator name, numeric prefix/suffix, etc, or a mixture of these; it's up to downstream readers to interpret as appropriate) // TO DO: may want to rename 'letters', to avoid singular vs plural inconsistency with other names
         
+        // TO DO: capture names as Symbol? (commands and records use Symbol)
         case unquotedName(String)
         case quotedName(String) // 'WORD' (quotes may be any of '‘’; WORD may be any character other than linebreaks or single/double/annotation quotes) // single-quotes always appear on single line, without leading/trailing whitespace around the quoted text (the outer edges of the quotes should always be separator/delimiter punctuation or whitespace, although we do need to confirm this, e.g. it's probably reasonable [and sensible] to treat `'foo'mod'bar'` as bad syntax, but what about `'foo'*'bar'`? note that `'foo'.'bar'` is legal [if ugly], as `.` is core punctuation and has its own whitespace-based disambiguation rules)
         
         // tokens created by single-task interim parsers
-        case operatorName(OperatorGroup) // Swift enums are not runtime-extensible so we provide an 'extensibility' slot; used by OperatorReader (and, potentially, other partial readers) when decomposing words
+        case operatorName(OperatorDefinitions) // Swift enums are not runtime-extensible so we provide an 'extensibility' slot; used by OperatorReader (and, potentially, other partial readers) when decomposing words
         case value(Value) // holds any completed value; this'd allow chained parsers to convert token stream from lexer tokens to parsed nodes, with the expectation that the final parser in chain emits a single .value containing the entire AST as a single Value [caveat the whole single-line lexing thing, which'll require some kind of 'stitcher' that tries to balance lines as best it can, inserting best-guess 'fixers' to rebalance where unbalanced]; having a pure token stream for each line is, on the one hand, a bit inefficient (string and annotation literals are presented as sequences of tokens instead of just one atomic .stringLiteral [we could optimize a bit by keeping a per-line list of where the .stringDelimiter tokens appear, allowing us to splice the string's entire content from the original code using beginning and end string indices [caution: if `""` indicates escaped quote, there will be some extra wrangling involved as the splices won't be contiguous]])
         
         case annotation(Annotation) // TO DO: need to decide how/where to put annotations, and how to encode them (annotation content follows its own syntactic rules, which are specific to annotation type, e.g. structural headings and dev/user docs are in Markdown, includes/excludes are comma-delimited lists of superglobal [library] names with optional syntax version suffix), TODOs and comments are unstructured plaintext; Q. what about disabled/macro'd code? (might want to retain tokens for pretty printing)
@@ -200,18 +201,18 @@ struct Token: CustomStringConvertible {
             case .hashtag: return 2000      // name modifier; this must always bind to following name
             case .mentions: return 2000     // name modifier; Q. what if the name is multipart (reverse domain name, aka UTI), e.g. `@com.example.my_lib`? one option is to construct it as standard specifier, with pp annotations so that it prints as `A.B` instead of `B of A`; in this case, binding `@` to first part only means that `@com` is the superglobal's name; OTOH, binding `@` to entire name means that `com.example.my_lib` is the superglobal's name, thus `@` is effectively a prefix operator that switches the context in which the chunk expr is evaluated from current to superglobal; we could even implement this as a [non-maskable] command: `'@'{com.example.my_lib}`. It all comes down to how we want to evaluate chunk exprs in general and UTIs in particular; e.g. if we use a partial LineReader to extract UTIs to value representation, binding the `@` to the entire UTI later on will occur naturally. Also note that .period form's precedence is that of expr sep punctuation; if we want full parser to treat .period differently when left-and-right-contiguous (property selector) vs left- and/or right-delimited (expr sep) then we'll need to move `Form.precedence` to `Token`. Thus question becomes: do we want contiguous .period to act as a general Swift/JS/etc-style 'dot' operator (which can be used even when stdlib's `of` operator/command isn't loaded)? (if so, it needs to play nice with parameterized commands, e.g. `foo.item{at:1}.item{named:"bar"}`? or does that run too far counter to "speakable-friendly" syntax? after all, UTI pronounciation is simple enough - e.g. "com dot example dot foo" - but using "dot" when speaking commands is likely to get awkward, especially as it won't play well with lp command syntax). Think we should look at UTI literal syntax in same way as we should look at, say, date and time literals, e.g. `2019-07-12` should be directly extractable using a 'DateTime' LineReader.
 
-            case .operatorName(let operatorGroup): // Q. what range to use for operators? 100-999?
+            case .operatorName(let definitions): // Q. what range to use for operators? 100-999?
                 
                 // TO DO: where to put precedence info?
                 
-                fatalError("precedence not available for operator class \(operatorGroup)")
+                fatalError("precedence not available for operator class \(definitions)")
                 
                 // e.g. v1 o1 v2 o2 … -- once v2 is parsed, peek ahead to o2 to determine if v2 is operand to o2 or o1
-                //if let a = operatorGroup.infix, let b = operatorGroup.postfix, a.precedence != b.precedence {
+                //if let a = definitions.infix, let b = definitions.postfix, a.precedence != b.precedence {
                //     print("warning: mismatched precedences for \(a) vs \(b)")
                     // note that prefix and infix can have different precedences (e.g. `+`/`-`); however, `Form.precedence` is only being used when determining if current operator binds tighter than preceding operator (i.e. the operator cannot be .prefix or .atom) // TO DO: what about .custom? (e.g. if non-numeric comparison operators take an optional `as` clause)
                // }
-                //return operatorGroup.infix?.precedence ?? operatorGroup.postfix?.precedence ?? 0
+                //return definitions.infix?.precedence ?? definitions.postfix?.precedence ?? 0
 //            case .error(_): return 0
 //            case .invalid: return 0
             case .endOfScript: return -10000
@@ -312,7 +313,7 @@ struct Token: CustomStringConvertible {
     var isEndOfSequence: Bool { // TO DO: still needed
         switch self.form {
         case .endList, .endRecord, .endGroup: return true
-        case .operatorName(let operatorGroup): fatalError("Can't get Token.isEndOfSequence for \(operatorGroup)") //return operatorGroup.name == .word("done") // kludge
+        case .operatorName(let definitions): fatalError("Can't get Token.isEndOfSequence for \(definitions)") //return definitions.name == .word("done") // kludge
         case .endOfScript: return true
         default: return false
         }
@@ -341,12 +342,13 @@ struct Token: CustomStringConvertible {
         }
     }
     
-    var requiresLeftOperand: Bool { if let oc = self.operatorGroup { fatalError("Can't get Token.requiresLeftOperand for \(oc)") } else { return false } /*return self.operatorGroup?.requiresLeftOperand ?? false*/ }
+    var requiresLeftOperand: Bool { if let oc = self.definitions { fatalError("Can't get Token.requiresLeftOperand for \(oc)") } else { return false } /*return self.definitions?.requiresLeftOperand ?? false*/ }
     
-    var operatorGroup: OperatorGroup? {
-        if case .operatorName(let operatorGroup) = self.form { return operatorGroup } else { return nil }
+    var definitions: OperatorDefinitions? {
+        if case .operatorName(let definitions) = self.form { return definitions } else { return nil }
     }
     
+    /*
     // TO DO: these are currently unused
     var isOperatorName: Bool { if case .operatorName(_) = self.form { return true } else { return false } }
     
@@ -356,7 +358,7 @@ struct Token: CustomStringConvertible {
         default:                                                                return false
         }
     }
-    
+    */
 }
 
 let nullToken = Token(.lineBreak, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source

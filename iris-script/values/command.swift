@@ -178,8 +178,9 @@ class Command: ComplexValue {
 }
 
 
-let leftOperand = Symbol("left")
-let rightOperand = Symbol("right")
+let leftOperand   = Symbol("left")
+let middleOperand = Symbol("middle")
+let rightOperand  = Symbol("right")
 
 extension Command {
     
@@ -191,11 +192,17 @@ extension Command {
     convenience init(_ definition: OperatorDefinition, left: Value) {
         self.init(definition.name, [(leftOperand, left)])
     }
+    convenience init(_ definition: OperatorDefinition, middle: Value) {
+        self.init(definition.name, [(middleOperand, middle)])
+    }
     convenience init(_ definition: OperatorDefinition, right: Value) {
         self.init(definition.name, [(rightOperand, right)])
     }
     convenience init(_ definition: OperatorDefinition, left: Value, right: Value) {
         self.init(definition.name, [(leftOperand, left), (rightOperand, right)])
+    }
+    convenience init(_ definition: OperatorDefinition, left: Value, middle: Value, right: Value) {
+        self.init(definition.name, [(leftOperand, left), (middleOperand, middle), (rightOperand, right)])
     }
 }
 

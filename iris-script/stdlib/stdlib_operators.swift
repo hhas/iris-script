@@ -4,15 +4,20 @@
 //  Bridging code for primitive handlers. This file is auto-generated; do not edit directly.
 //
 
+// TO DO: need to update glue generator and glue definition before regenerating this file
+
 import Foundation
 
 func stdlib_loadOperators(into registry: OperatorRegistry) {
     
-    registry.atom("nothing", 0) // TO DO: operator or command?
+    registry.atom("nothing") // analogous to Python's `None`
+    registry.atom("did_nothing") // returned by `if`, loops when their action is not performed; it can be intercepted by `else` to perform its alternate action, otherwise it should degrade to standard `nothing` when next evaled
     
-    // TO DO: need to decide on Swift- vs Icon-style semantics (one option might be to define 'true' as a wrapper struct that encloses the actual value, allowing it to be obtained when needed, e.g. when chaining conditional operators as `a < b < c`, while displaying as "true" by default; similarly, 'false' would enclose only those values that may represent a false state: `false`, `nothing`, `did_nothing` [Q. should `did_nothing` be the standard return value for comparison tests, same as for `if`, `while` flow control tests? need to ensure `did_nothing` is immediately promoted to `nothing`/`false` if not intercepted by `else` clause])
-    registry.atom("true", 0)
-    registry.atom("false", 0)
+    // TO DO: need to decide on Swift- vs Icon-style semantics (one option might be to define 'true' as a wrapper struct that encloses the actual value, allowing it to be obtained when needed, e.g. when chaining conditional operators as `a < b < c`, while displaying as "true" by default; similarly, 'false' would enclose only those values that may represent a false state: `false`, `nothing`, `did_nothing` [Q. should `did_nothing` be the standard "false" value returned by comparison operators, same as for `if`, `while` flow control tests? could be dicey? if so, would need to ensure `did_nothing` is immediately promoted to `nothing`/`false` if not intercepted by `else` clause])
+    registry.atom("true")
+    registry.atom("false")
+    
+    // TO DO: `optional`, `editable` prefix operators for constructing coercions (they're commonly used so will allow command operand to use LP syntax as long as their precedence is set lower than argument precedence, e.g. `foo as optional list of: string min: 1 max: 10` -> `as{foo{},optional{list{of:string{},min:1,max:10}}}`)
     
     // flow control
     registry.prefix("if", conjunction: "then", 104)
@@ -25,15 +30,15 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.infix("returning", 300)
     
     // block
-    registry.prefix("do", suffix: "done", 100)
+    registry.prefix("do", suffix: "done")
     
     // assignment // TO DO: what should LH operand pattern be?
     registry.prefix("set", conjunction: "to", 102)
 
     
     registry.infix(Keyword("^", "to_the_power_of"), 600, .right) // TO DO: rename "pow"? (AS uses caret accent char, but that rather abuses our "honest symbols" rule [e.g. don't use `$` to denote anything except currency])
-    registry.prefix(Keyword("positive", "+", "＋"), 598) // TO DO: canonical name should be "+" and operator should determine which handler to bind by matching argument record label[s] (we need to implement some form of multimethods for this)
-    registry.prefix(Keyword("negative", "-", "－", "−", "﹣"), 598) // TO DO: ditto
+    registry.prefix(Keyword("positive", "+", "＋"), 598, reducer: reducePositiveOperator) // TO DO: canonical name should be "+" and operator should determine which handler to bind by matching argument record label[s] (we need to implement some form of multimethods for this)
+    registry.prefix(Keyword("negative", "-", "－", "−", "﹣"), 598, reducer: reduceNegativeOperator) // TO DO: ditto
     registry.infix(Keyword("*", "×", "multiplied_by"), 596)
     registry.infix(Keyword("/", "÷", "divided_by"), 596)
     registry.infix("div", 596)
@@ -60,7 +65,7 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.infix("ends_with", 542)
     registry.infix("contains", 542)
     registry.infix("is_in", 542)
-    registry.infix("&", 340)
+    registry.infix(Keyword("&", "joined_with"), 340)
     registry.infix("is_a", 540) // TO DO: pattern? (RH should always be a command)
     registry.infix("as", 350) // TO DO: pattern? (RH should always be a command)
     registry.prefix("to", 180) // TO DO: pattern? (RH operand should always be colon pair)
@@ -82,8 +87,8 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.infix("after", 320)
     registry.prefix("before", 320)
     registry.prefix("after", 320)
-    registry.atom("beginning", 320)
-    registry.atom("end", 320)
+    registry.atom("beginning")
+    registry.atom("end")
 }
 
 

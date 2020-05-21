@@ -8,7 +8,7 @@ import Foundation
 
 
 
-struct OperatorGroup: CustomDebugStringConvertible { // TO DO: define as class rather than struct? it would reduce no. of method calls needed to populate PartialMatch tree to one add() per OpGrp rather than one add() per OpDef
+struct OperatorDefinitions: CustomDebugStringConvertible { // TO DO: define as class rather than struct? it would reduce no. of method calls needed to populate PartialMatch tree to one add() per OpGrp rather than one add() per OpDef
     
     var debugDescription: String {
         return "<\(self.name.label) \(self.definitions.map{String(describing: $0)}.joined(separator: " "))>"

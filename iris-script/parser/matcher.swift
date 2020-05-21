@@ -1,8 +1,8 @@
 //
-//  pattern matcher.swift
+//  matcher.swift
 //  iris-script
 //
-//  used by parser
+//  PatternMatcher; used by parser to identify complex literals (list, record, group, block) and library-defined operators in token stream
 
 import Foundation
 
@@ -12,6 +12,12 @@ import Foundation
 // Q. how to carry forward current precedence and associativity? or should parser detect `OPNAME EXPR OPNAME` sequences itself?
 
 // note that composite matches such as OptionalMatch can spawn multiple PatternMatches, one for each branch
+
+
+// important: the first pattern in OperatorDefinition.pattern array must be a non-composite (it should be possible to eliminate this restriction - it's an artifact of current implementation)
+
+// important: operator patterns must be one of the following: (OPNAME), (OPNAME EXPR […]), (EXPR OPNAME […])
+
 
 struct PatternMatcher: CustomDebugStringConvertible { // a single pattern; this should advance when a .value is pushed onto stack (assuming no unreduced tokens between it and the previous .value which holds the previous match)
     

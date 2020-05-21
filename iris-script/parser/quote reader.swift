@@ -28,7 +28,7 @@ struct QuoteReader: BlockReader { // reduces quoted text (string literal or anno
         case .startAnnotation:
             var s = String(startToken.whitespaceAfter ?? "")
             while reader.token.form != .endAnnotation {
-                if reader.token.form == .endOfScript { fatalError("expected `»` but found end of code") }
+                if reader.token.form == .endOfScript { fatalError("expected `»` but found end of code") } // TO DO: output .error(…)
                 s += reader.token.content + (reader.token.whitespaceAfter ?? "")
                 reader = reader.next()
             }
@@ -40,7 +40,7 @@ struct QuoteReader: BlockReader { // reduces quoted text (string literal or anno
                                startToken.position.span(to: endToken.position)) // TO DO: make sure this picks up entire content
             reader = reader.next()
         case .endAnnotation:
-            fatalError("found unbalanced `»`") // TO DO
+            fatalError("found unbalanced `»`") // TO DO: ditto
         case .stringDelimiter:
             var s = String(startToken.whitespaceAfter ?? "")
             while true {
