@@ -92,6 +92,10 @@ class Command: ComplexValue {
         self.arguments = arguments
     }
     
+    convenience init(_ name: Symbol, _ record: Record) {
+        self.init(name, record.fields)
+    }
+    
     internal var _handler: Handler = _bindHandlerOnFirstUse
 
     // TO DO: also capture operator? or leave that to pretty-printer? (it depends: Command.eval() needs operator info to generate decent error messages); suppose Handler might provide operator info itself

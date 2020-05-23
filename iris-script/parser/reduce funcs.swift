@@ -38,6 +38,19 @@ func skipLineBreaks(_ stack: Parser.Stack, _ i: inout Int) {
 
 extension Array where Element == Parser.StackItem {
 
+    func name(at i: Int) -> Symbol {
+        switch self[i].reduction {
+        case .quotedName(let n), .unquotedName(let n): return n
+        default: fatalError("Bad label") // should never happen
+        }
+    }
+    func label(at i: Int) -> Symbol {
+        switch self[i].reduction {
+        case .quotedName(let n), .unquotedName(let n): return n
+        case .operatorName(let operatorClass): return operatorClass.name
+        default: fatalError("Bad label") // should never happen
+        }
+    }
     func expression(at i: Int) -> Value {
         guard case .value(let expr) = self[i].reduction else { fatalError("Bad reduction.") }
         return expr
@@ -156,7 +169,7 @@ func reduceRecordLiteral(stack: Parser.Stack, definition: OperatorDefinition, st
         // TO DO: support unlabeled fields
         let label: Symbol
         switch stack[i].reduction {
-        case .quotedName(let n), .unquotedName(let n): label = Symbol(n)
+        case .quotedName(let n), .unquotedName(let n): label = n
         case .operatorName(let operatorClass): label = operatorClass.name
         default: fatalError("Bad label") // should never happen
         }
@@ -187,7 +200,7 @@ func reduceGroupLiteral(stack: Parser.Stack, definition: OperatorDefinition, sta
 
 func reduceParenthesizedBlockLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction {
     //show(stack, start, end)
-    print(stack[start..<end].map{$0.reduction})
+    //print(stack[start..<end].map{$0.reduction})
     var items = [Value]()
     var i = start + 1 // ignore `(`
     skipLineBreaks(stack, &i)
@@ -203,9 +216,30 @@ func reduceParenthesizedBlockLiteral(stack: Parser.Stack, definition: OperatorDe
 }
 
 func reduceCommandLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction {
-    return .error(NotYetImplementedError())
+    let name = stack.name(at: start)
+    if start == end - 1 {
+        return .value(Command(name)) // no argument
+    } else if start == end - 2 {
+        let expr = stack.expression(at: start + 1)
+        if let record = expr as? Record {
+            return .value(Command(name, record)) // FP syntax
+        } else {
+            return .value(Command(name, [(nullSymbol, expr)])) // direct param only
+        }
+    } else {
+        // TO DO: LP syntax (direct param and/or labeled params)
+        print("\nREDUCE LP command:")
+        show(stack, start, end)
+        print()
+        return .error(NotYetImplementedError())
+    }
 }
 
+func reducePairLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction {
+    print("REDUCE PAIR:")
+    assert(start == end + 2) // this only holds if we disallow LFs after colon
+    return .value(Pair((stack.label(at: start), stack.expression(at: end - 1))))
+}
 
 
 func reducePipeOperator(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction { // pipe (";") is a special case as it transforms its two operands (of which the right-hand operand must be a command) such that `A;B{C,D};E` -> `E{B{A,C,D}}`

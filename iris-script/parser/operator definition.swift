@@ -18,11 +18,9 @@ import Foundation
 
 
 
-struct OperatorDefinition: CustomDebugStringConvertible { // TO DO: Equatable
+struct OperatorDefinition: CustomStringConvertible { // TO DO: Equatable
         
-    var debugDescription: String {
-        return String(describing: self.pattern)
-    }
+    var description: String { return self.pattern.description }
     
     // Q. should spoken aliases be distinguished from written aliases?
     
@@ -37,7 +35,7 @@ struct OperatorDefinition: CustomDebugStringConvertible { // TO DO: Equatable
     enum Associativity {
         case left
         case right
-        // TO DO: `case none` (e.g. `1 thru 2 thru 3` should be a syntax error)
+        // TO DO: `case none` (e.g. `1 thru 2 thru 3` should be a syntax error) [note that treating `a OP b OP c` as syntax error isn't absolute protection as parenthesizing one or other operation will allow it to parse, as will using underlying command syntax, at which point it's up to argument unpacking to reject the bad operand as being the wrong type]
     }
     
     let _name: Symbol?
@@ -62,7 +60,7 @@ struct OperatorDefinition: CustomDebugStringConvertible { // TO DO: Equatable
         self.reduce = reducer
     }
     
-    var fullName: String {
+    var precis: String {
         if let name = self._name { return name.label }
         return self.pattern.map{
             switch $0 {
@@ -79,13 +77,6 @@ struct OperatorDefinition: CustomDebugStringConvertible { // TO DO: Equatable
             }
         }.joined(separator: "")
     }
-    
-    // TO DO: `fullName` property that returns e.g. `if…then…` representation (or should full name be the canonical name? e.g. `repeat…while…`, `repeat…until…` will be ambiguous - "repeat" - unless written in full; conversely, if non-numeric comparison operators - `same_as`, etc - have an optional `as` clause, do we want that clause to appear in canonical name?)
-    
-    /*
-    func reduce(_ stack: inout Parser.Stack) {
-        print("\nREDUCE", self, " ", stack, "\n")
-    }*/
 }
 
 

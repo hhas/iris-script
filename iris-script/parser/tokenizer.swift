@@ -135,7 +135,7 @@ struct Tokenizer: LineReader { // don't think lexer should care if it's at start
                 if let endOffset = self.code.suffix(from: start).firstIndex(where: { !quotedNameCharacters.contains($0) }) {
                     if quotedNameDelimiterCharacters.contains(self.code[endOffset]) { // found closing quote
                         tokenEnd = self.code.index(after: endOffset) // step over closing quote
-                        form = .quotedName(String(self.code[start..<endOffset]))
+                        form = .quotedName(Symbol(String(self.code[start..<endOffset])))
                     } else { // found a character not allowed within single-quoted text (e.g. double quote/annotation delimiter); whether or not this actually is a syntax error depends on whether it's outside or inside a string/annotation literal; either way, we terminate this token on it so that the rest of the line is tokenized as usual
                         tokenEnd = endOffset
                         form = .error(BadSyntax.unterminatedQuotedName)

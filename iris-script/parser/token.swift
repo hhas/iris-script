@@ -53,7 +53,7 @@ struct Token: CustomStringConvertible {
         case full // a token can span the entire line, in which case it is both first and last
         
         var isFirst: Bool { return self == .first || self == .full }
-        var isLast: Bool { return self == .last || self == .full }
+        var isAFullMatch: Bool { return self == .last || self == .full }
         
         func span(to endPosition: Position) -> Position {
             switch (self, endPosition) {
@@ -130,9 +130,8 @@ struct Token: CustomStringConvertible {
         
         case letters // undifferentiated text (may be command name, operator name, numeric prefix/suffix, etc, or a mixture of these; it's up to downstream readers to interpret as appropriate) // TO DO: may want to rename 'letters', to avoid singular vs plural inconsistency with other names
         
-        // TO DO: capture names as Symbol? (commands and records use Symbol)
-        case unquotedName(String)
-        case quotedName(String) // 'WORD' (quotes may be any of '‘’; WORD may be any character other than linebreaks or single/double/annotation quotes) // single-quotes always appear on single line, without leading/trailing whitespace around the quoted text (the outer edges of the quotes should always be separator/delimiter punctuation or whitespace, although we do need to confirm this, e.g. it's probably reasonable [and sensible] to treat `'foo'mod'bar'` as bad syntax, but what about `'foo'*'bar'`? note that `'foo'.'bar'` is legal [if ugly], as `.` is core punctuation and has its own whitespace-based disambiguation rules)
+        case unquotedName(Symbol)
+        case quotedName(Symbol) // 'WORD' (quotes may be any of '‘’; WORD may be any character other than linebreaks or single/double/annotation quotes) // single-quotes always appear on single line, without leading/trailing whitespace around the quoted text (the outer edges of the quotes should always be separator/delimiter punctuation or whitespace, although we do need to confirm this, e.g. it's probably reasonable [and sensible] to treat `'foo'mod'bar'` as bad syntax, but what about `'foo'*'bar'`? note that `'foo'.'bar'` is legal [if ugly], as `.` is core punctuation and has its own whitespace-based disambiguation rules)
         
         // tokens created by single-task interim parsers
         case operatorName(OperatorDefinitions) // Swift enums are not runtime-extensible so we provide an 'extensibility' slot; used by OperatorReader (and, potentially, other partial readers) when decomposing words
@@ -303,7 +302,7 @@ struct Token: CustomStringConvertible {
     // caution: these only indicate presence/absence of adjoining whitespace; they do not indicate if contiguous tokens are self-delimiting (e.g. `foo123` vs `foo]`; `123.45` vs `123. 45`); only parsers can determine that (this is a problem for e.g. numeric parser, which needs to know start of number match is left-delimited)
     
     var hasLeadingWhitespace: Bool { return self.whitespaceBefore != nil || self.position.isFirst }
-    var hasTrailingWhitespace: Bool { return self.whitespaceAfter != nil || self.position.isLast }
+    var hasTrailingWhitespace: Bool { return self.whitespaceAfter != nil || self.position.isAFullMatch }
     
     var isLeftContiguous: Bool { return !self.hasLeadingWhitespace }
     var isRightContiguous: Bool { return !self.hasTrailingWhitespace }

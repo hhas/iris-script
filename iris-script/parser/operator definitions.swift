@@ -8,9 +8,9 @@ import Foundation
 
 
 
-struct OperatorDefinitions: CustomDebugStringConvertible { // TO DO: define as class rather than struct? it would reduce no. of method calls needed to populate PartialMatch tree to one add() per OpGrp rather than one add() per OpDef
+struct OperatorDefinitions: Sequence, CustomStringConvertible { // TO DO: define as class rather than struct? it would reduce no. of method calls needed to populate PartialMatch tree to one add() per OpGrp rather than one add() per OpDef
     
-    var debugDescription: String {
+    var description: String {
         return "<\(self.name.label) \(self.definitions.map{String(describing: $0)}.joined(separator: " "))>"
     }
     
@@ -25,6 +25,10 @@ struct OperatorDefinitions: CustomDebugStringConvertible { // TO DO: define as c
     mutating func add(_ definition: OperatorDefinition) {
         // TO DO: how to detect conflicting definitions? (could be tricky, plus it could impact bootstrap times)
         self.definitions.append(definition)
+    }
+    
+    __consuming func makeIterator() -> IndexingIterator<[OperatorDefinition]> {
+        return self.definitions.makeIterator()
     }
 }
 

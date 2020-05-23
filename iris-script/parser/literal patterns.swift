@@ -15,12 +15,6 @@ private let DELIM: Pattern = [.delimiter, LF] // e.g. comma, linebreak, or comma
 
 
 
-let pipeOperator = OperatorDefinition(name: ";", pattern:
-    [EXPR, .token(.semicolon), EXPR], // TO DO: allow LF after semicolon?
-                                      precedence: Token.Form.semicolon.precedence, associate: .right,
-                                      reducer: reducePipeOperator)
-
-
 // ordered list
 
 let orderedListLiteral = OperatorDefinition(name: "[…]", pattern:
@@ -33,8 +27,8 @@ let orderedListLiteral = OperatorDefinition(name: "[…]", pattern:
 
 // keyed list
 
-private func isHashableLiteral(_ form: Token.Form) -> Pattern.MatchResult {
-    if case .value(let v) = form, v is HashableValue { return .fullMatch } else { return .noMatch }
+private func isHashableLiteral(_ form: Token.Form) -> Bool {
+    if case .value(let v) = form, v is HashableValue { return true } else { return false }
 }
 
 let keyValuePair: Pattern = [.test(isHashableLiteral), .token(.colon), EXPR] // TO DO: allow LF after colon? (the reducefunc does allow it)
@@ -69,17 +63,22 @@ let parenthesizedBlockLiteral = OperatorDefinition(name: "(…,…)", pattern:
 
 // challenge with matching commands is that 1. LP syntax is superset of standard `NAME EXPR` syntax, and 2. LP syntax should not nest (reducefunc will need to handle nested commands somehow); one more gotcha of LP syntax is when first arg is itself a record literal (i.e. command must be written `name {{…}}`; the advantages of LP syntax, particularly when using the language as a command shell, are such that this compromise should be worth it, but it will have to be tested in real-world use to verify)
 
-//let commandLiteral = OperatorDefinition(name: "COMMAND", pattern:
-//    [.name, .optional(EXPR), .zeroOrMore(recordField)], reducer: reduceCommandLiteral)
 
-// for now, match FP command syntax only
 let commandLiteral = OperatorDefinition(name: "COMMAND", pattern:
-    [.name, .optional(EXPR)], reducer: reduceCommandLiteral)
+    [.name, .optional(EXPR)], reducer: reduceCommandLiteral) // TO DO: optional EXPR isn't working
 
+
+let pairLiteral = OperatorDefinition(name: "LABEL", pattern:
+    [.label, .token(.colon), EXPR], reducer: reducePairLiteral) // TO DO: what precedence? (should be very low, but presumably not as low as `to` operator) what associativity? (.none or .right?)
 
 
 // TO DO: what about colon pairs for name-value bindings in block contexts? (convenient for declaring constants, properties)
 
 // TO DO: what about colon pairs for `interface:action` callable definitions?
 
+
+let pipeLiteral = OperatorDefinition(name: ";", pattern:
+[EXPR, .token(.semicolon), EXPR], // TO DO: allow LF after semicolon?
+                                  precedence: Token.Form.semicolon.precedence,
+                                  reducer: reducePipeOperator)
 
