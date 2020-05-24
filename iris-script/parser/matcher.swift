@@ -39,8 +39,10 @@ extension OperatorDefinition {
 struct PatternMatcher: CustomStringConvertible { // a single pattern; this should advance when a .value is pushed onto stack (assuming no unreduced tokens between it and the previous .value which holds the previous match)
     
     var description: String {
-        return "«matcher for \(self.patterns.description) of `\(self.definition.precis)`»"
+        return "«matcher for \(self.pattern.description) of `\(self.definition.precis)`»"
     }
+    
+    var name: Symbol { return self.definition.name }
     
     // note: PatternMatchers are initialized on first operator/punctuation in definition's pattern; if the pattern starts with an EXPR, the matcher is added to the preceding stack frame, otherwise it is added to the current one // TO DO: for now, if the preceding frame is not already reduced to .value, the match will fail
     
@@ -49,15 +51,15 @@ struct PatternMatcher: CustomStringConvertible { // a single pattern; this shoul
     let count: Int // no. of stack items matched by this pattern
     
     // pattern[0] is the pattern being matched and has already been reified
-    private let patterns: [Pattern] // any patterns to match to next Reduction[s] in parser stack; caution: do not assume these patterns are the same as definition.patterns[OFFSET..<END_INDEX]; they may be transformations of composite patterns
+    private let pattern: [Pattern] // any patterns to match to next Reduction[s] in parser stack; caution: do not assume these patterns are the same as definition.patterns[OFFSET..<END_INDEX]; they may be transformations of composite patterns
     
     // think EXPR needs to match unreduced values (e.g. .operatorName, where fixity allows)
     
     // called by OperatorDefinition.patternMatchers()
-    init(for definition: OperatorDefinition, matching patterns: [Pattern], count: Int = 1) {
-        if patterns.isEmpty { fatalError("Invalid pattern (zero-length): \(patterns)") }
+    init(for definition: OperatorDefinition, matching pattern: [Pattern], count: Int = 1) {
+        if pattern.isEmpty { fatalError("Invalid pattern (zero-length): \(pattern)") }
         self.definition = definition
-        self.patterns = patterns
+        self.pattern = pattern
         self.count = count
     }
     
@@ -67,13 +69,20 @@ struct PatternMatcher: CustomStringConvertible { // a single pattern; this shoul
     
     // TO DO: to determine operator precedence parser needs to know matched operations' fixity; to do that, it needs to know the final pattern that was matched (or at least its first and last matches)… or does it? parser should be able to see which token.form was matched first/last: opname/punc or .value(_); if it's .value,
     
-    public func match(_ form: Token.Form) -> Bool {
+    public func match(_ form: Token.Form, allowingPartialMatch: Bool = false) -> Bool {
         //print("matching .\(form) to", self, "…")
-        return self.patterns[0].match(form)
+        if allowingPartialMatch {
+            if self.isAtBeginningOfMatch {
+                return self.pattern[0].match(form, extent: .end)
+            } else if self.isAFullMatch {
+                return self.pattern[0].match(form, extent: .start)
+            }
+        }
+        return self.pattern[0].match(form)
     }
     
     func next() -> [PatternMatcher] {
-        return [Pattern](self.patterns.dropFirst()).reify().filter{!$0.isEmpty}.map{
+        return [Pattern](self.pattern.dropFirst()).reify().filter{!$0.isEmpty}.map{
             PatternMatcher(for: self.definition, matching: $0, count: self.count + 1)
         }
     }
@@ -82,11 +91,14 @@ struct PatternMatcher: CustomStringConvertible { // a single pattern; this shoul
     
     public var isAFullMatch: Bool { // if match() returns true and a longer match isn't possible, the tokens identified by this matcher can be passed to the operator defintion's reducefunc
         // kludge: pattern array can end with any number of .optional/.zeroOrMore patterns
-        return ([Pattern](self.patterns.dropFirst()).reify().first{$0.isEmpty}) != nil
+        return ([Pattern](self.pattern.dropFirst()).reify().first{$0.isEmpty}) != nil
     } // if true, stack item is last Reduction in this match; caution: this does not mean a longer match cannot be made
     
     public var isLongestPossibleMatch: Bool {
         // also kludgy
         return self.next().isEmpty // in event that pattern ends with .zeroOrMore/.oneOrMore, there will always be a longer match possible
     }
+    
+    var hasLeadingExpression: Bool { return self.pattern.first!.hasLeadingExpression }
+    var hasTrailingExpression: Bool { return self.pattern.last!.hasLeadingExpression }
 }

@@ -5,13 +5,9 @@
 //  a struct encapsulating an operator's canonical name, syntax (pattern), precedence, and associativity
 //  defined by libraries' operator glues and added to operator registry during bootstrap
 
-
-// TO DO: "negative" and "positive" operator definitions need custom reducefuncs that can optimize away the underlying command when RH EXPR is a number literal, e.g. `-a` tokenizes as ["-", "a"] which reduces to Command("-",Command("a")), but `-2` tokenizes as ["-", "2"] which reduces to Int(-2)
-
 // parser resolves operator precedence by either reducing LH expr (if LH operator has higher precedence) or shifting RH operator and finishing that match first (once RH operation is reduced, the LH operation can be reduced as well); similarly, associativity reduces LH operation if the operator is .left associative or shifts operand if .right and matches RH operation first
 
-
-// default reduction funcs for prefix, infix, postfix, atom, prefix+conjunction, block
+// caution: auto-reducing operator patterns must not have more than one end point as they reduce as soon as a full match is made (i.e. they do not look for a longer match before reducing), e.g. `A … B` is acceptable (always ends on B) but `A … B C?` is not (may end on B or C)
 
 
 import Foundation
@@ -77,6 +73,10 @@ struct OperatorDefinition: CustomStringConvertible { // TO DO: Equatable
             }
         }.joined(separator: "")
     }
+    
+    
+    var hasLeadingExpression: Bool { return self.pattern.first!.hasLeadingExpression }
+    var hasTrailingExpression: Bool { return self.pattern.last!.hasLeadingExpression }
 }
 
 

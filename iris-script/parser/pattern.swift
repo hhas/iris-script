@@ -44,8 +44,8 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
     
     case keyword(Keyword)
     case optional(Pattern)
-    case sequence([Pattern])
-    case anyOf([Pattern])
+    case sequence([Pattern]) // TO DO: how to enforce non-empty array?
+    case anyOf([Pattern]) // TO DO: how to enforce non-empty array?
     case zeroOrMore(Pattern)
     case oneOrMore(Pattern)
     
@@ -126,7 +126,13 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         }
     }
     
-    func match(_ form: Parser.Form) -> Bool { // needs to take Token, not Form, in order to match adjoining whitespace (this means parser stack has to capture Token)
+    enum Extent {
+        case whole
+        case start
+        case end
+    }
+    
+    func match(_ form: Parser.Form, extent: Extent = .whole) -> Bool { // be VERY wary of .start/.end: matching the middle operand of conjunction-based operators as anything other than .whole will spawn malformed matches
         switch self {
         case .keyword(let k):
             if case .operatorName(let d) = form, k.matches(d.name) { return true }
@@ -141,7 +147,26 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
             default: return false
             }
         case .expression: // TO DO: is it sufficient to match something that *could* be an expression, e.g. if .endList appears to left of a postfix operator, that implies the LH operand will eventually be a List value, even if it hasn't yet been reduced to one (i.e. the operator pattern can match it; it just can't reduce to an annotated Command yet)
-            if case .value(_) = form { return true }
+            switch extent {
+            case .whole:
+                if case .value(_) = form { return true }
+            case .start:
+                switch form {
+                case .value(_): return true
+                case .startList, .startRecord, .startGroup: return true // fairly sure these will already be reduced
+                case .unquotedName(_), .quotedName(_): return true
+                    // the problem remains operatorName(_) as we need to know if none/some/all of those defs has leading expr; also, what if mixed? (e.g. unary `-` can match as .start of expr, but we also have to consider binary `-`)
+                default: ()
+                }
+            case .end:
+                switch form {
+                case .value(_): return true
+                case .endList, .endRecord, .endGroup: return true // ditto
+                case .unquotedName(_), .quotedName(_): return true
+                // the problem remains operatorName(_) as we need to know if none/some/all of those defs has trailing expr
+                default: ()
+                }
+            }
         case .token(let t):
             return form == t // TO DO: why does Form.==() not compare exactly? (probably because we currently only use `==` when matching punctuation tokens; it is dicey though; we probably should define a custom method for this, or else implement exact comparison [the other problem with `==` is that it's no use for matching names and other parameterized cases unless we use dummy values, which makes code very confusing/potentially misleading - best to implement those tests as Form.isName:Bool, etc])
         case .test(let f):
@@ -164,5 +189,28 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         return false
     }
 
+    var hasLeadingExpression: Bool { // very crude; assumes all branches are consistent and can't return a meaningful answer for .test
+        switch self {
+        case .expression, .value(_): return true
+        case .optional(let p):       return p.hasLeadingExpression
+        case .sequence(let p):       return p.first!.hasLeadingExpression
+        case .anyOf(let p):          return p.reduce(false){ $0 || $1.hasLeadingExpression }
+        case .zeroOrMore(let p):     return p.hasLeadingExpression
+        case .oneOrMore(let p):      return p.hasLeadingExpression
+        default: return false
+        }
+    }
+    
+    var hasTrailingExpression: Bool {
+        switch self {
+        case .expression, .value(_): return true
+        case .optional(let p):       return p.hasTrailingExpression
+        case .sequence(let p):       return p.last!.hasTrailingExpression
+        case .anyOf(let p):          return p.reduce(false){ $0 || $1.hasTrailingExpression }
+        case .zeroOrMore(let p):     return p.hasTrailingExpression
+        case .oneOrMore(let p):      return p.hasTrailingExpression
+        default: return false
+        }
+    }
 }
 

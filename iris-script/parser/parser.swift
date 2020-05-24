@@ -180,22 +180,25 @@ class Parser {
                 
                 // move this section onto matcher? (presumably pass stack.last as `previous:` arg)
                 
-                if matcher.match(form) { // apply to current token; this matches prefix operators
+                if matcher.match(form, allowingPartialMatch: true) { // apply to current token; this matches prefix operators
                     currentMatches.append(matcher)
-                } else if let previous = self.stack.last, matcher.match(previous.reduction) { // apply to previous token (expr) and current token (opName); this matches infix operators // TO DO: this has disadvantage that it fails if first token is an unreduced expression, in which case the matcher is not attached to the infix operator - thus to re-match the operator later on we have to re-run this entire method; alternative is for matcher to special-case a leading EXPR pattern, but not sure how that'd work (e.g. might set requiresBackMatch flag on matcher when attaching it to current [operatorName] token)
+                } else if let previous = self.stack.last, matcher.match(previous.reduction, allowingPartialMatch: true) { // apply to previous token (expr) and current token (opName); this matches infix operators // TO DO: this has disadvantage that it fails if first token is an unreduced expression, in which case the matcher is not attached to the infix operator - thus to re-match the operator later on we have to re-run this entire method; alternative is for matcher to special-case a leading EXPR pattern, but not sure how that'd work (e.g. might set requiresBackMatch flag on matcher when attaching it to current [operatorName] token)
                     
-                    let matches = matcher.next().filter{ $0.match(form) } // TO DO: apply this even when previous match fails; as long as it succeeds, put matcher in current token's stack frame, marking it as requiring backmatch
-                    if !matches.isEmpty {
-                        currentMatches += matches
-                        previousMatches.append(matcher)
+                    let matches = matcher.next().filter{ $0.match(form) } // TO DO: apply this even when previous match fails(?); as long as it succeeds, put matcher in current token's stack frame, marking it as requiring backmatch
+                    if !matches.isEmpty { // check opname was 2nd pattern (i.e. primary keyword, not a conjunction); kludgy
+                        //currentMatches += matches
+                        previousMatches.append(matcher) // for now, put left expr matcher in previous frame; it'll advance back onto .operatorName when next shift(); caution: this works only inasmuch as previous token can be matched as EXPR, otherwise matcher is not attached and is lost from stack
                     }
                 }
             }
         }
+        print("PREV", previousMatches, "CURR", currentMatches)
         return (previousMatches, currentMatches)
     }
     
     //
+    
+    // one might argue for Pratt parsing EXPR
     
     // shift moves the current token from lexer to parser's stack and applies any in-progress matchers to it
     //
@@ -203,17 +206,20 @@ class Parser {
     // anything else is left on the stack until an explicit reduceExpression() phase is triggered
     func shift(adding newMatchers: [PatternMatcher] = []) { // newMatchers have (presumably) already matched this token, but we match them again to be sure
         let form = self.current.token.form
+        print("\nCURRENT:", form)
         let matchers: [PatternMatcher]
         if let previousMatches = self.stack.last?.matches { // advance any in-progress matches
+            print("PREV:", previousMatches, "\nNEW:", newMatchers)
             matchers = previousMatches.flatMap{$0.next()} + newMatchers
         } else {
+            print("NEW:", newMatchers)
             matchers = newMatchers
         }
         // apply in-progress and newly-started matchers to current token, noting any that end on this token
         var continuingMatches = [PatternMatcher]()
         var completedMatches = [PatternMatcher]()
         for matcher in matchers {
-            if matcher.match(form) { // match succeeded for this token
+            if matcher.match(form, allowingPartialMatch: true) { // match succeeded for this token
                 continuingMatches.append(matcher)
                 if matcher.isAFullMatch { completedMatches.append(matcher) }
             }
@@ -254,6 +260,8 @@ class Parser {
                 for match in stack[startIndex - 1].matches {
                     if match.match(.value(v)) {
                         updatedMatchers += match.next()
+                        
+                        // TO DO: what if match is completed?
                     }
                 }
                 print("updated matchers:", updatedMatchers)
@@ -329,10 +337,13 @@ class Parser {
                 
             case .operatorName(let operatorDefinitions):
                 
+                for def in operatorDefinitions.definitions {
+                    print(def.name, def.hasLeadingExpression, def.hasTrailingExpression)
+                }
                 // one could argue the only matches worth starting here are the ones that can auto-reduce
                 
                 //   print("FOUND OP", definitions.name)
-                let (previousMatches, currentMatches) = self.match(operatorDefinitions: operatorDefinitions.definitions)
+                let (previousMatches, currentMatches) = self.match(operatorDefinitions: operatorDefinitions.definitions)//.filter{$0.autoReduce}) // TO DO: `do done` should probably be rejected as syntax error, but this would match it (twice; once starting at `do`, then backmatching from `done`)
                 if !previousMatches.isEmpty { stack[stack.count-1].matches += previousMatches }
                 self.shift(adding: currentMatches)
                 

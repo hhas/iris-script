@@ -138,18 +138,17 @@ func reduceExpression(_ self: Parser) {
     for item in stack[start..<end] {
         print(" - ", item.reduction, item.matches.filter{$0.isAFullMatch})
     }
-    print()
-    print("operation matchers:")
     do {
         var cleanedMatches = [MatchInfo]()
         var start = 0, end = -1
         for m in allMatches.values.sorted(by: {$0.start < $1.start})  {
-            if !(m.start >= start && m.end <= end) {
+            do {//if !(m.start >= start && m.end <= end) {
                 cleanedMatches.append(m)
                 start = m.start; end = m.end
             }
         }
-        //print("CLEANED:")
+        print()
+        print("operation matchers:")
         for m in cleanedMatches {
             print(" - \(m.start)...\(m.end) \(m.matcher.isAFullMatch ? "Y" : "N") `\(m.matcher.definition.name.label)`")
         }
