@@ -20,11 +20,13 @@ struct OperatorDefinition: CustomStringConvertible { // TO DO: Equatable
     
     // Q. should spoken aliases be distinguished from written aliases?
     
-    // note: returned arrays may contain duplicate keywords/names
+    // note: returned arrays _may_ contain duplicate keywords/names (i.e. if pattern branches, and both branches include same keyword, that keyword is collected twice); we don't bother discarding duplicates here as it shouldn't matter to code that currently uses these methods
     
     var keywords: [Keyword] { return self.pattern.flatMap{$0.keywords} }
     
-    var allNames: [Symbol] { return self.pattern.flatMap{$0.keywords.flatMap{$0.allNames}} } // all names used by this operator, including aliases and conjunctions; canonical name typically appears first, although that depends on pattern structure and may not hold in future
+    var allNames: [Symbol] { return self.keywords.flatMap{$0.allNames} } // all names used by this operator, including aliases and conjunctions; canonical name typically appears first, although that depends on pattern structure and may not hold in future
+    
+    // TO DO: var for getting primary keywords only? (these are the ones for which we want to spawn matchers - unless we plan on full bidirectional matching support, in which case matchers could legitimately spawn at any opname [i.e. it should be possible to transform a branching pattern so that branches radiate both forwards and backwards from a single keyword anywhere in pattern])
     
     // TO DO: precedence, associativity (any cases where these aren't the same for all keywords in pattern?)
     
@@ -68,8 +70,8 @@ struct OperatorDefinition: CustomStringConvertible { // TO DO: Equatable
             case .token(.startGroup): return "("
             case .token(.endGroup): return ")"
             case .token(.colon): return ":"
-            case .expression, .value(_), .test(_), .label, .name: return "…"
-            default: return "…"
+            case .expression, .label, .name: return "…"
+            default: return "…" // Q. what about .testToken?
             }
         }.joined(separator: "")
     }

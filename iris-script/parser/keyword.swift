@@ -16,7 +16,7 @@ extension Symbol {
 }
 
 
-public struct Keyword: CustomDebugStringConvertible, ExpressibleByStringLiteral { // each operator keyword has a canonical (preferred) name and zero or more aliases, e.g. the division operator has the canonical name `÷` but can also be referred to by aliases `/` and `divided_by` (`/` is for convenience when entering code via ASCII keyboard while `divided_by` facilitates entering code via dictation; the PP will rewrite user's code to use the canonical name except when instructed otherwise)
+public struct Keyword: CustomDebugStringConvertible, ExpressibleByStringLiteral, Equatable { // each operator keyword has a canonical (preferred) name and zero or more aliases, e.g. the division operator has the canonical name `÷` but can also be referred to by aliases `/` and `divided_by` (`/` is for convenience when entering code via ASCII keyboard while `divided_by` facilitates entering code via dictation; the PP will rewrite user's code to use the canonical name except when instructed otherwise)
     
     public var debugDescription: String {
         return "Kw(\"\(self.name.label)\"\(self.aliases.map{ ", \"\($0.label)\"" }.joined(separator: "")))"
@@ -50,5 +50,10 @@ public struct Keyword: CustomDebugStringConvertible, ExpressibleByStringLiteral 
     
     public func hasAliasName(_ name: Symbol) -> Bool {
         return self.aliases.contains(name)
+    }
+    
+    public static func == (lhs: Keyword, rhs: Keyword) -> Bool {
+        for name in lhs.allNames { if rhs.matches(name) { return true } }
+        return false
     }
 }

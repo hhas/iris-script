@@ -21,6 +21,8 @@ import Foundation
 // TO DO: assuming EXPR can match the start/end of a not-yet-reduced operand (which would greatly simplify pattern matching of incomplete code) as well as a completely reduced .value, exactly which token forms does this involve? (also be aware that handedness must be taken into account, e.g. a list to the left of the operator would appear as .endList but to its right as .startList); also consider that matchers' start indexes will be invalidated by reductions occurring mid-stack; caution: partial expr matches can only be performed when EXPR is at start/end of pattern, e.g. `tell EXPR to EXPR` requires a full match of first expr in order to locate `to` but can partially-match the start of the second expr (however, it cannot reduce the 2nd expr until that is reduced to a .value)
 
 
+// worth noting that patterns could/should be able to match AS's monolithic `if TEST then EXPR ( else if TEST then EXPR )* ( else EXPR )? end if` conditional statement; while we don't use that hairy mess of a block structure ourselves (instead we decompose conditional operations into two simple, composable operators, `if…then…` and `…else…`) it may serve as a useful test case [if/when we ever get around to writing unit tests] as it contains multiple conjunctions, adjacent keywords, and is generally horrible
+
 
 
 extension Array where Element == Pattern {
@@ -39,30 +41,34 @@ extension Array where Element == Pattern {
 }
 
 
+// TO DO: need to annotate expression cases with [optional?] arg label for command (might help if it can take a binding name too, as that is used in auto-generated interface documentation)
+
 
 indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
     
     case keyword(Keyword)
+    case expression // any value
+    
+    // PEG-style patterns
     case optional(Pattern)
     case sequence([Pattern]) // TO DO: how to enforce non-empty array?
-    case anyOf([Pattern]) // TO DO: how to enforce non-empty array?
+    case anyOf([Pattern]) // TO DO: how to enforce non-empty array? // slightly different to PEG’s `first` in that it pursues all branches with equal priority, not just the first which satisfies the condition (this is both unavoidable and probably preferable, since our pattern matching is stack-based, not recursive)
     case zeroOrMore(Pattern)
     case oneOrMore(Pattern)
     
-    // TO DO: whitespace patterns
+    // TO DO: whitespace patterns?
     
-    case name
-    case label
+    // .name and .label should only be needed if patterns are used to match command syntax; if commands are matched directly by parser code then probably get rid of these (Q. what about `name:value` bindings? note: might want to consider AS-style `property name:value` syntax as it's clear and unambiguous to parse, and avoids stray colon-pairs being misinterpreted as anything other than syntax error)
+    case name  // `NAME` // TO DO: this will match even if followed by colon; is that appropriate?
+    case label // `NAME COLON`
     
-    case expression // any value
     case token(Token.Form) // TO DO: .token(…)? (this might be a subset of Token.Form - braces and punctuation only; powerful, e.g. able to match `HH:MM:SS`, but could also be dangerous)
-    // TO DO: .regepx(…) rather than .value(T)? that'd match the token's raw string rather than form; or maybe take (Token)->Bool
     
-    case test((Token.Form)->Bool)
+    case testToken((Token.Form)->Bool) // currently unused; TO DO: get rid of this? (it makes it harder to reason about patterns) // TO DO: String precis? (would help when generating error messages)
+    case testValue((Value)->Bool) // currently used to match dictionary keys // TO DO: ditto
     
-    case value(Value.Type) // match specific type of literal value, e.g. Command; e.g. pipe operator has pattern [.expression, .keyword(";"), .value(Command.self)]; note: this should ignore grouping parens when testing value type (but not blocks?) - that shouldn't be an issue as parser should discard grouping parens around single expr (elective or precedence-overriding) while parens wrapped around expr-seq will be parsed as Block
     case delimiter // punctuation or linebreak required; e.g. prefix `to` operator should be left-delimited to avoid confusion with infix `to` conjunction; that delimiter may be start of code, linebreak, `(` (`[` and `{` would also work, although that implies `to` is being used within a record or list which is typically a semantic error as a list of closures should be defined using `as [handler]` cast; using `to` will bind them to current namespace as well) // TO DO: what about requiring a leading/trailing delimiter without consuming it? any situations where that might be helpful/necessary (e.g. indicating clear-left for the prefix `to` operator, to prevent it being confused for a command argument, e.g. `tell foo to bar` *should* longest-match the `tell…to…` op, but if the prefix `to` operator can require a LH delimiter then that will also help to disambiguate by making it impossible for `foo to bar` to be interpreted as `foo{to{bar}}`, particularly when reading incomplete/invalid code where a syntax error may prevent the `tell…to…` operator being matched)
-    case lineBreak
+    case lineBreak // linebreak required
     
     init(arrayLiteral patterns: Pattern...) {
         self = .sequence(patterns)
@@ -80,8 +86,8 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         case .label:                return "LABEL"
         case .expression:           return "EXPR"
         case .token(let t):         return ".\(t)"
-        case .test(_):              return "TEST"
-        case .value(let t):         return String(describing: t)
+        case .testToken(_):         return "TESTTOK"
+        case .testValue(_):         return "TESTVAL"
         case .delimiter:            return "DELIM"
         case .lineBreak:            return "LF"
         }
@@ -169,10 +175,11 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
             }
         case .token(let t):
             return form == t // TO DO: why does Form.==() not compare exactly? (probably because we currently only use `==` when matching punctuation tokens; it is dicey though; we probably should define a custom method for this, or else implement exact comparison [the other problem with `==` is that it's no use for matching names and other parameterized cases unless we use dummy values, which makes code very confusing/potentially misleading - best to implement those tests as Form.isName:Bool, etc])
-        case .test(let f):
+        case .testToken(let f): // use this to match non-exprs only // TO DO: needed?
+            if case .value(_) = form { return false }
             return f(form)
-        case .value(let t):
-            if case .value(let v) = form, type(of: v) == t { return true } // Q. what about subclasses? also numbers // this is likely to be troublesome for any Value composed of more than one token (command/record/list/block, and possibly string)
+        case .testValue(let f): // this matches an expr that's been reduced to a Value which satisfies the provided test, e.g. `{$0 is HashableValue}`
+            if case .value(let v) = form { return f(v) }
         case .delimiter: // this matches separator punctuation OR linebreak; to match e.g. a list separator, where the comma can be followed by a linebreak, use `[.delimiter, .zeroOrMore(.lineBreak)]`
             switch form {
             case .separator(_): return true
@@ -189,28 +196,42 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         return false
     }
 
-    var hasLeadingExpression: Bool { // very crude; assumes all branches are consistent and can't return a meaningful answer for .test
+    var hasLeadingExpression: Bool { // crude; assumes all branches are consistent
         switch self {
-        case .expression, .value(_): return true
-        case .optional(let p):       return p.hasLeadingExpression
-        case .sequence(let p):       return p.first!.hasLeadingExpression
-        case .anyOf(let p):          return p.reduce(false){ $0 || $1.hasLeadingExpression }
-        case .zeroOrMore(let p):     return p.hasLeadingExpression
-        case .oneOrMore(let p):      return p.hasLeadingExpression
-        default: return false
+        case .expression, .testValue(_): return true
+        case .optional(let p):           return p.hasLeadingExpression
+        case .sequence(let p):           return p.first!.hasLeadingExpression
+        case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasLeadingExpression }
+        case .zeroOrMore(let p):         return p.hasLeadingExpression
+        case .oneOrMore(let p):          return p.hasLeadingExpression
+        default:                         return false // TO DO: how should .expression, etc. patterns treat .error(…) tokens? will .errors always be [malformed] exprs?
         }
     }
     
     var hasTrailingExpression: Bool {
         switch self {
-        case .expression, .value(_): return true
-        case .optional(let p):       return p.hasTrailingExpression
-        case .sequence(let p):       return p.last!.hasTrailingExpression
-        case .anyOf(let p):          return p.reduce(false){ $0 || $1.hasTrailingExpression }
-        case .zeroOrMore(let p):     return p.hasTrailingExpression
-        case .oneOrMore(let p):      return p.hasTrailingExpression
-        default: return false
+        case .expression, .testValue(_): return true
+        case .optional(let p):           return p.hasTrailingExpression
+        case .sequence(let p):           return p.last!.hasTrailingExpression
+        case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasTrailingExpression }
+        case .zeroOrMore(let p):         return p.hasTrailingExpression
+        case .oneOrMore(let p):          return p.hasTrailingExpression
+        default:                         return false
         }
     }
+    
+    //var nextConjunction: Set<Symbol> {
+        
+    //}
+    /*
+    func nextConjunction(_ result: inout Set<Symbol>) {
+        switch self {
+        case .keyword(let keyword):
+            for name in keyword.allNames { result.insert(name) }
+        case .optional(let p):
+            p.nextConjunction(&result)
+        default: ()
+        }
+    }*/
 }
 

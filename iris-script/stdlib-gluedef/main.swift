@@ -12,6 +12,8 @@ import Foundation
 
 // TO DO: glue handler names shouldn't normally need single-quoted as (except for ‘to’, ‘as’, ‘returning’) they're not defined as operators when glue code is parsed
 
+// TO DO: generic `left`/`right` arg labels are awful; use meaningful labels and binding names where practical and store that info in OperatorDefinition to be used when reducing operators to annotated Commands
+
 let stdlibGlue = """
 
 «= stdlib glue definition =»

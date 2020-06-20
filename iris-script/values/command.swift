@@ -182,6 +182,7 @@ class Command: ComplexValue {
 }
 
 
+// TO DO: get rid of these
 let leftOperand   = Symbol("left")
 let middleOperand = Symbol("middle")
 let rightOperand  = Symbol("right")
@@ -193,7 +194,7 @@ extension Command {
     convenience init(_ definition: OperatorDefinition) {
         self.init(definition.name)
     }
-    convenience init(_ definition: OperatorDefinition, left: Value) {
+    convenience init(_ definition: OperatorDefinition, left: Value) { // TO DO: get rid of keywords; pass Values as Array and/or varargs and rely on OperatorDefinition to supply correct arg labels (we need arg labels to distinguish overloaded operators, e.g. `op arg` vs `arg op`)
         self.init(definition.name, [(leftOperand, left)])
     }
     convenience init(_ definition: OperatorDefinition, middle: Value) {

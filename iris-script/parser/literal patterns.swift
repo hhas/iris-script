@@ -27,11 +27,8 @@ let orderedListLiteral = OperatorDefinition(name: "[…]", pattern:
 
 // keyed list
 
-private func isHashableLiteral(_ form: Token.Form) -> Bool {
-    if case .value(let v) = form, v is HashableValue { return true } else { return false }
-}
 
-let keyValuePair: Pattern = [.test(isHashableLiteral), .token(.colon), EXPR] // TO DO: allow LF after colon? (the reducefunc does allow it)
+let keyValuePair: Pattern = [.testValue({$0 is HashableValue}), .token(.colon), EXPR] // TO DO: allow LF after colon? (the reducefunc does allow it)
 
 let keyValueListLiteral = OperatorDefinition(name: "[…:…]", pattern:
     [.token(.startList), .anyOf([
@@ -64,8 +61,12 @@ let parenthesizedBlockLiteral = OperatorDefinition(name: "(…,…)", pattern:
 // challenge with matching commands is that 1. LP syntax is superset of standard `NAME EXPR` syntax, and 2. LP syntax should not nest (reducefunc will need to handle nested commands somehow); one more gotcha of LP syntax is when first arg is itself a record literal (i.e. command must be written `name {{…}}`; the advantages of LP syntax, particularly when using the language as a command shell, are such that this compromise should be worth it, but it will have to be tested in real-world use to verify)
 
 
+//let commandLiteral = OperatorDefinition(name: "«COMMAND»", pattern:
+//    [.name, .optional(EXPR)], reducer: reduceCommandLiteral)
+
+// TO DO: for now, implement command as auto-reducing `NAME RECORD`; this lets us solve operator parsing
 let commandLiteral = OperatorDefinition(name: "«COMMAND»", pattern:
-    [.name, .optional(EXPR)], reducer: reduceCommandLiteral) // TO DO: optional EXPR isn't working
+    [.name] + recordLiteral.pattern, autoReduce: true, reducer: reduceCommandLiteral)
 
 
 let pairLiteral = OperatorDefinition(name: "«LABEL»", pattern:
@@ -74,7 +75,7 @@ let pairLiteral = OperatorDefinition(name: "«LABEL»", pattern:
 
 // TO DO: what about colon pairs for name-value bindings in block contexts? (convenient for declaring constants, properties)
 
-// TO DO: what about colon pairs for `interface:action` callable definitions?
+// TO DO: what about colon pairs for `interface:action` callable definitions? (to avoid parsing problems, we're using `to…run…`, `when…run…`; to define an unbound proc, use `procedure…run…`? Q. what about `ignoring unknown arguments` option?)
 
 
 let pipeLiteral = OperatorDefinition(name: "«PIPE»", pattern:

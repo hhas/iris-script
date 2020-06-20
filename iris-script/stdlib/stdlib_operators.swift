@@ -68,8 +68,8 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.infix(Keyword("&", "joined_with"), 340)
     registry.infix("is_a", 540) // TO DO: pattern? (RH should always be a command)
     registry.infix("as", 350) // TO DO: pattern? (RH should always be a command)
-    registry.prefix("to", 180) // TO DO: pattern? (RH operand should always be colon pair)
-    registry.prefix("when", 180) // TO DO: ditto
+    registry.prefix("to", conjunction: "run", 180) // TO DO: precedence, associativity? // TO DO: one problem with defining `run` as keyword is that `run…` is also a standard command name (still, the same can be said of `set…to…` and `get…[as…]` and those will probably be defined as operators for usability [e.g. allows `set`'s RH operand to be an LP command])
+    registry.prefix("when", conjunction: "run", 180) // TO DO: ditto
 
     registry.infix("of", 306, .right)
     registry.infix("at", 310)

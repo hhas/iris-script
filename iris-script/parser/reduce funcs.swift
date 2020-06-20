@@ -18,6 +18,8 @@ import Foundation
 
 // TO DO: how to trigger LH reduction on conjunctions/suffixes? e.g. `if 1 + 2 * 3 then action` needs to reduce the first expr upon reaching `then` keyword
 
+// TO DO: custom reducefunc for `as` operator could treat RH list/record literal as visual shorthand for `list{of:}` and `record{…}`, and convert to corresponding commands (note that this shorthand wouldn't be available when written as `‘as’{…}` command, unless we want to perform extra run-time tests)
+
 
 func show(_ stack: Parser.Stack, _ start: Int, _ end: Int, _ label: String = "STACK") {
     print()
@@ -52,7 +54,7 @@ extension Array where Element == Parser.StackItem {
         }
     }
     func expression(at i: Int) -> Value {
-        guard case .value(let expr) = self[i].reduction else { fatalError("Bad reduction.") }
+        guard case .value(let expr) = self[i].reduction else { fatalError("Bad reduction; expected token \(i) to be Value but found unreduced \(self[i]).") }
         return expr
     }
         
@@ -101,13 +103,13 @@ func reducePostfixOperator(stack: Parser.Stack, definition: OperatorDefinition, 
 // TO DO: optimize away commands in favor of returning Symbol directly (caveat: safest way to do that is by getting symbols from populated env, but that'd require libraries to be loaded first)
 
 func reduceAtomOperator(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction {
-    assert(end == start + 1)
+    assert(end == start + 1) // TO DO: check this
     return .value(Command(definition))
 }
 
 func reducePrefixOperatorWithConjunction(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction {
-    assert(end == start + 3)
-    return .value(Command(definition, left: stack.expression(at: start), right: stack.expression(at: end - 1)))
+    assert(end == start + 4) // TO DO: check this
+    return .value(Command(definition, left: stack.expression(at: start + 1), right: stack.expression(at: end - 1))) // TO DO: this uses convenience initializer
 }
 
 func reducePrefixOperatorWithSuffix(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction {
@@ -244,5 +246,6 @@ func reducePairLiteral(stack: Parser.Stack, definition: OperatorDefinition, star
 
 func reducePipeOperator(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) -> Parser.Reduction { // pipe (";") is a special case as it transforms its two operands (of which the right-hand operand must be a command) such that `A;B{C,D};E` -> `E{B{A,C,D}}`
     //print("Reduce pipe")
+    // TO DO: if RH operand is LP command that already has direct arg (e.g. `foo; bar 1 baz: 2`) return syntax error
     return .error(NotYetImplementedError())
 }
