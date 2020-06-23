@@ -6,7 +6,7 @@
 import Foundation
 
 
-// CAUTION: for now, avoid creating matchers for patternseqs that start with a composite pattern as that is not yet supported
+// remember: homonyms bad (e.g. don't overload […] or {…} syntax to describe anything except lists and records)
 
 
 private let EXPR: Pattern = .expression

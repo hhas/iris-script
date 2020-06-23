@@ -47,7 +47,7 @@ extension Array where Element == Pattern {
 indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
     
     case keyword(Keyword)
-    case expression // any value
+    case expression // any value // TO DO: case expression(label: Symbol); label is arg label in constructed Command (while we could supply a descriptive binding name here for documentation purposes, since operators are defined as part of handler definition the documentation generator can already obtain binding name from that; for now, operands are treated as positional only, which is fine for the common case where there operator has no optional clauses); TO DO: what about `do…done` blocks, where the body is an expression sequence? (these use a custom reducefunc which can simply ignore any labels, but it could be a problem for tooling that reads these patterns for other purposes)
     
     // PEG-style patterns
     case optional(Pattern)

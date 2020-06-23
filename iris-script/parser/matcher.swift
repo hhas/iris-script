@@ -28,17 +28,20 @@ extension OperatorDefinition {
     
     // list/record/group/block literals are also defined as operators for pattern-matching purposes
 
-    var patternMatchers: [PatternMatcher] { // returns one or more new pattern matchers for matching this operator
-        return self.pattern.reify().map{ PatternMatcher(for: self, matching: $0) }
+    func patternMatchers(groupID: Int = -1) -> [PatternMatcher] { // returns one or more new pattern matchers for matching this operator
+        return self.pattern.reify().map{ PatternMatcher(for: self, matching: $0, groupID: groupID) }
     }
 }
 
 extension OperatorDefinitions {
     
+    private static var _matchID = 0
+    
     // list/record/group/block literals are also defined as operators for pattern-matching purposes
 
-    var patternMatchers: [PatternMatcher] { // returns one or more new pattern matchers for matching this operator
-        return self.flatMap{ $0.patternMatchers }
+    func patternMatchers() -> [PatternMatcher] { // returns one or more new pattern matchers for matching this operator
+        OperatorDefinitions._matchID += 1
+        return self.flatMap{ $0.patternMatchers(groupID: OperatorDefinitions._matchID) }
     }
 }
 
@@ -61,6 +64,7 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     var name: Symbol { return self.definition.name }
     
     let matchID: Int
+    let groupID: Int // all matchers returned by a OperatorDefinitions.patternMatchers() call share a common group ID; this should make it easier to discard non-longest match[es] where the operator name is overloaded, e.g. `+`/`-` (caution: this assumes that patternMatchers() is called once only per .operatorName token; it would probably be safer for parser to supply an ID based on the token's identity) (caution: for list/record/group literals the ID is always -1; being built-in primitives we assume they are never overloaded by libraries, although that is not currently enforced)
     
     static func == (lhs: PatternMatcher, rhs: PatternMatcher) -> Bool {
         return lhs.matchID == rhs.matchID
@@ -78,13 +82,14 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     // think EXPR needs to match unreduced values (e.g. .operatorName, where fixity allows)
     
     // called by OperatorDefinition.patternMatchers
-    init(for definition: OperatorDefinition, matching pattern: [Pattern], count: Int = 1) {
+    init(for definition: OperatorDefinition, matching pattern: [Pattern], count: Int = 1, groupID: Int) {
         if pattern.isEmpty { fatalError("Invalid pattern (zero-length): \(pattern)") }
         self.definition = definition
         self.pattern = pattern
         self.count = count
         PatternMatcher._matchID += 1
         self.matchID = PatternMatcher._matchID
+        self.groupID = groupID
     }
     
     // TO DO: how to back-match operator patterns? (presumably keep reifying until we reach the relevant keyword, then backmatch all of those patterns against topmost frame[s] of parser stack)
@@ -107,7 +112,7 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     
     func next() -> [PatternMatcher] {
         return [Pattern](self.pattern.dropFirst()).reify().filter{!$0.isEmpty}.map{
-            PatternMatcher(for: self.definition, matching: $0, count: self.count + 1)
+            PatternMatcher(for: self.definition, matching: $0, count: self.count + 1, groupID: self.groupID)
         }
     }
     
@@ -127,6 +132,8 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     
     public var isAFullMatch: Bool { // if match() returns true and a longer match isn't possible, the tokens identified by this matcher can be passed to the operator defintion's reducefunc
         // kludge: pattern array can end with any number of .optional/.zeroOrMore patterns
+      ///  print(self.definition.precis,"full?", //[Pattern](self.pattern.dropFirst()).reify(),
+      //        ([Pattern](self.pattern.dropFirst()).reify().first{$0.isEmpty}) != nil)
         return ([Pattern](self.pattern.dropFirst()).reify().first{$0.isEmpty}) != nil
     } // if true, stack item is last Reduction in this match; caution: this does not mean a longer match cannot be made
     
@@ -148,4 +155,20 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
         // TO DO: this returns *all* conjunctions (in the event pattern contains > 1 conjunction); is this appropriate? or do we just want to get the next conjunction[s] that appears? (although given the freedom allowed by patterns, it's possible to create all kinds of weird combinations)
         return Conjunctions(self.pattern.dropFirst().flatMap{ $0.keywords.map{ $0.name } })
     }
+    
+    // precedence resolution // important: this should only be called for completed matchers that share a common operand, e.g. given `OP1 EXPR OP2`, if OP2.reduceBefore(OP1) then reduce `EXPR OP2` first, otherwise reduce `OP1 EXPR` first
+    
+    func reduceBefore(precedingMatcher: PatternMatcher) -> Bool {
+        let left = precedingMatcher.definition, right = self.definition
+        if left.precedence == right.precedence {
+            return left.associate == .right // if both operators are the same, e.g. `2 ^ 3 ^ 4` // TO DO: what if two different operators with same precedence?
+        } else {
+            return left.precedence < right.precedence
+        }
+    }
+    
+    func startIndex(from endIndex: Int) -> Int {
+        return endIndex - self.count + 1
+    }
+    
 }

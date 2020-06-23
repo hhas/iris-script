@@ -21,7 +21,7 @@ import Foundation
 // TO DO: custom reducefunc for `as` operator could treat RH list/record literal as visual shorthand for `list{of:}` and `record{…}`, and convert to corresponding commands (note that this shorthand wouldn't be available when written as `‘as’{…}` command, unless we want to perform extra run-time tests)
 
 
-func show(_ stack: Parser.Stack, _ start: Int, _ end: Int, _ label: String = "STACK") {
+func show(_ stack: Parser.Stack, _ start: Int, _ end: Int, _ label: String = "STACK") { // start..<end
     print()
     print("DUMP \(label) \(start)...\(end-1):")
     for f in stack[start..<end] { print(" -", f.reduction, "\t\t", f.matches) }

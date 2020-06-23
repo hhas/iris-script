@@ -14,6 +14,8 @@ import Foundation
 
 // TO DO: generic `left`/`right` arg labels are awful; use meaningful labels and binding names where practical and store that info in OperatorDefinition to be used when reducing operators to annotated Commands
 
+// TO DO: precedence should eventually be defined by tables describing relative ordering: for each group of operators (arithmetic, comparison, concatenative, reference, etc), ordering of operators within that group are described as a named table, i.e. (TABLENAME,Array<Set<OPNAME>>); these tables are then ordered relative to one another by Array<TABLENAME>; upon loading all operator definitions, the parser can assign numeric precedences for efficiency (although it may be simpler to store this as a separate [OPNAME:Int] dictionary rather than update OperatorDefinition structs in-situ; one more level of indirection is unlikely to make any difference as it's not a bottleneck); main challenge is in deciding how to declare relative ordering of operator groups when these groups are defined across multiple libraries; e.g. if two unrelated third-party libraries define operator groups, those groups can be ordered relative to stdlib groups (e.g.. stdgrp3 < FOOGRP < stdgrp4), but not relative to each other (potentially a problem if BARGRP appears between stdgrp3 and 4 as well; for practical purposes the parser would have to forbid their direct composition, requiring explicit parentheses around one or other: `OP1 (EX OPB)` or `(OP1 EX) OPB`)
+
 let stdlibGlue = """
 
 «= stdlib glue definition =»

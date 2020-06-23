@@ -8,6 +8,8 @@ import Foundation
 
 // Q. what about quantities? (this'd include weights and measurements, temperature, currency; what else?) [A. not here; that stuff's for the numeric parser - or an extension to it - to identify, extract, and turn into completed .value tokens plus leftovers]
 
+// Q. what about dates and times? e.g. `0000-00-00`, `00:00:00(.0+)?(±0000|Z)?`
+
 
 // see also sylvia-lang's Lexer.readNumber(), although may not want to use that particular implementation
 

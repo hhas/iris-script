@@ -129,9 +129,13 @@ func test() {
     
     script = " 1 + 2 * -3 "
     
-    script = " if 1 = 1 then 4 "
+    script = " 1 = 2 + 3 "
+    script = " 1 + 2 = 3 "
+    script = " 1 + 2 * 3 = 4 "
     
-  //  script = " if 1 + 1 = 2 then 4 " // TO DO: middle EXPR needs to be fully reduced before operator will fully match (right now parser's unfinished reduce methods can only reduce a simple expression)
+    //script = " if 1 = 1 then 4 "
+    
+   // script = " if 1 + 1 = 2 then 4 " // TO DO: middle EXPR needs to be fully reduced before operator will fully match (right now parser's unfinished reduce methods can only reduce a simple expression)
     
  //   script = " a -1 "
     
