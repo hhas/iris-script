@@ -166,6 +166,14 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
             return left.precedence < right.precedence
         }
     }
+    func reduceBefore(followingMatcher: PatternMatcher) -> Bool {
+        let left = self.definition, right = followingMatcher.definition
+        if left.precedence == right.precedence {
+            return left.associate == .left // if both operators are the same, e.g. `2 ^ 3 ^ 4` // TO DO: what if two different operators with same precedence?
+        } else {
+            return left.precedence > right.precedence
+        }
+    }
     
     func startIndex(from endIndex: Int) -> Int {
         return endIndex - self.count + 1

@@ -133,7 +133,11 @@ func test() {
     script = " 1 + 2 = 3 "
     script = " 1 + 2 * 3 = 4 "
     
-    //script = " if 1 = 1 then 4 "
+    script = " if 1 * 2 + 3 = 4 then 5 + 6 else 7 ÷ 8 "
+    
+    //script = " 1 + 2 * -3 " // TO DO: currently fails on `2 * -3`
+    
+    //script = " if 1 * 2 - 3 = 4 then 5 "
     
    // script = " if 1 + 1 = 2 then 4 " // TO DO: middle EXPR needs to be fully reduced before operator will fully match (right now parser's unfinished reduce methods can only reduce a simple expression)
     
@@ -215,9 +219,10 @@ func test() {
     
     let p = Parser(tokenStream: QuoteReader(doc.tokenStream), operatorRegistry: operatorRegistry)
     do {
-        let _ = try p.parseScript()
-        //print("PARSED:", script)
-        //print("RESULT:", try script.eval(in: env, as: asAnything))
+        let ast = try p.parseScript()
+        //print("PARSED:", ast)
+        //print("RESULT:", try ast.eval(in: env, as: asAnything))
+        let _ = ast
     } catch {
         print(error)
     }

@@ -145,11 +145,11 @@ public class Parser {
         }
     }
     
-    typealias ReduceFunc = (Stack, OperatorDefinition, Int, Int) -> Reduction // (token stack, operator definition, start, end)
+    typealias ReduceFunc = (Stack, OperatorDefinition, Int, Int) throws -> Value // (token stack, operator definition, start, end)
 
     
     // TO DO: also capture source code ranges? (how will these be described in per-line vs whole-script parsing? in per-line, each line needs a unique ID (incrementing UInt64) that is invalidated when that line is edited; that allows source code positions to be referenced with some additional indirection: the stack frame captures first and last line IDs plus character offset from start of line)
-    typealias StackItem = (reduction: Form, matches: [PatternMatcher], hasLeadingWhitespace: Bool, token: Token) // in-progress/completed matches
+    typealias StackItem = (reduction: Form, matches: [PatternMatcher], hasLeadingWhitespace: Bool) // in-progress/completed matches
 
     typealias Stack = [StackItem]
     
@@ -287,7 +287,7 @@ public class Parser {
             }
         }
         //print("SHIFT matched", form, "to", continuingMatches, "with completions", completedMatches)
-        self.stack.append((form, continuingMatches, self.current.token.hasLeadingWhitespace, self.current.token))
+        self.stack.append((form, continuingMatches, self.current.token.hasLeadingWhitespace))
         // TO DO: if >1 complete match, we can only reduce one of them (i.e. need to resolve any reduce conflicts *before* reducing, otherwise 2nd will get wrong stack items to operate on; alternative would be to fork multiple parsers and have each try a different strategy, which might be helpful during editing)
         // TO DO: what if there are still in-progress matches running? (can't start reducing ops till those are done as we want longest match and precedence needs resolved anyway, but ops shouldn't auto-reduce anyway [at least not unless they start AND end with keyword])
  //       if !completedMatches.isEmpty { print("SHIFT fully matched", completedMatches) }
@@ -435,7 +435,7 @@ public class Parser {
         var wasValue = false
         skipLineBreaks(self.stack, &i)
         while i < self.stack.count {
-            let (reduction, matches, _ , _) = self.stack[i]
+            let (reduction, matches, _) = self.stack[i]
             switch reduction {
             case .value(let value):
                 print(" `\(value)` \(matches.map{"\n  \($0)"}.joined(separator: ""))") // .filter{$0.isAFullMatch}
