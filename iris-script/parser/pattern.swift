@@ -155,21 +155,27 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         case .expression: // TO DO: is it sufficient to match something that *could* be an expression, e.g. if .endList appears to left of a postfix operator, that implies the LH operand will eventually be a List value, even if it hasn't yet been reduced to one (i.e. the operator pattern can match it; it just can't reduce to an annotated Command yet)
             switch extent {
             case .whole:
-                if case .value(_) = form { return true }
-            case .start:
+                if case .value(_) = form { return true } // TO DO: what about .error? should it always be immediately reduced to error value, or are there cases where it's preferable to put .error token on parser stack for later processing?
+            case .start: // *could* token be the first token in a multi-token expression?
                 switch form {
                 case .value(_): return true
                 case .startList, .startRecord, .startGroup: return true // fairly sure these will already be reduced
                 case .unquotedName(_), .quotedName(_): return true
-                    // the problem remains operatorName(_) as we need to know if none/some/all of those defs has leading expr; also, what if mixed? (e.g. unary `-` can match as .start of expr, but we also have to consider binary `-`)
+                case .operatorName(let definitions):
+                    //print("Checking if .\(form) could be the start of an EXPR", definitions.map{ $0.hasLeadingExpression })
+                    // TO DO: the problem remains operatorName(_) as we need to know if none/some/all of those defs has leading expr; also, what if mixed? (e.g. unary `-` can match as .start of expr, but we also have to consider binary `-`) // as long as we re-match the fully reduced operand, we should be okay returning true here, as long as at least one definition has trailing expr
+                    return definitions.first{ !$0.hasLeadingExpression } != nil // _could_ this be a prefix/atom operator? (we can't ask if it is definitely a prefix/atom operator, because that requires completing that match as well, and Pattern [intentionally] has no lookahead capability; however, “could be” should be good enough for now; a greater problem is hasLeadingExpression's inability to guarantee a correct result when custom .testValue(…) patterns are used as those can only match tokens that have already been fully reduced; for now, .testValue is only used to match keyed-list keys, which are atomic .values when whole-script parsing is used [per-line parsing remains TBD, given the challenges of parsing incomplete multi-line string literals, so we aren't even going to think about that right now])
+
                 default: ()
                 }
-            case .end:
+            case .end: // *could* token be the last token in a multi-token expression?
                 switch form {
                 case .value(_): return true
                 case .endList, .endRecord, .endGroup: return true // ditto
                 case .unquotedName(_), .quotedName(_): return true
-                // the problem remains operatorName(_) as we need to know if none/some/all of those defs has trailing expr
+                case .operatorName(let definitions):
+                    //print("Checking if .\(form) could be the end of an EXPR", definitions.map{ $0.hasTrailingExpression })
+                    return definitions.first{ !$0.hasTrailingExpression } != nil
                 default: ()
                 }
             }
@@ -179,6 +185,7 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
             if case .value(_) = form { return false }
             return f(form)
         case .testValue(let f): // this matches an expr that's been reduced to a Value which satisfies the provided test, e.g. `{$0 is HashableValue}`
+            // TO DO: this is very problematic when expr being matched hasn't yet been reduced to .value (i.e. it's fine for single-token values, but it'll return bad result on values composed of multiple tokens when performing a partial expr match)
             if case .value(let v) = form { return f(v) }
         case .delimiter: // this matches separator punctuation OR linebreak; to match e.g. a list separator, where the comma can be followed by a linebreak, use `[.delimiter, .zeroOrMore(.lineBreak)]`
             switch form {

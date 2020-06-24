@@ -100,11 +100,12 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     
     public func match(_ form: Token.Form, allowingPartialMatch: Bool = false) -> Bool {
         //print("matching .\(form) to", self, "…")
-        if allowingPartialMatch {
+        if true {//allowingPartialMatch {
             if self.isAtBeginningOfMatch {
-                return self.pattern[0].match(form, extent: .end)
+                return self.pattern[0].match(form, extent: .end) // a new, unconsumed pattern sequence
             } else if self.isAFullMatch {
-                return self.pattern[0].match(form, extent: .start)
+                assert(self.pattern.count == 1)
+                return self.pattern[0].match(form, extent: .start) // a fully consumed pattern sequence, where the final pattern (i.e. pattern[0]) has already been matched
             }
         }
         return self.pattern[0].match(form)

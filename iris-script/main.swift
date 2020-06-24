@@ -133,13 +133,13 @@ func test() {
     script = " 1 + 2 = 3 "
     script = " 1 + 2 * 3 = 4 "
     
-    script = " if 1 * 2 + 3 = 4 then 5 + 6 else 7 ÷ 8 "
+    script = " if 1 * - 2 + 3 = 4 then 5 + 6 else -7 ÷ -8 " // TO DO: fix: currently the first and third unary `-` reduce correctly; however, the second disappears (should reduce to `-7` but reduces to `7` instead); also, replacing `1` with `-1` causes a whole chunk of parse tree to disappear
     
-    //script = " 1 + 2 * -3 " // TO DO: currently fails on `2 * -3`
+  //  script = " 1 + 2 * - 3 " // note: `-` must match as unary operator; `*` match as binary operator even though its right operand is only partially matched as `-`, i.e. it *could* be the start of an EXPR [but isn't yet known for sure]
     
     //script = " if 1 * 2 - 3 = 4 then 5 "
     
-   // script = " if 1 + 1 = 2 then 4 " // TO DO: middle EXPR needs to be fully reduced before operator will fully match (right now parser's unfinished reduce methods can only reduce a simple expression)
+   // script = " if 1 + 2 = 3 then 4 "
     
  //   script = " a -1 "
     
