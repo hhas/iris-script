@@ -144,6 +144,7 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     }
     
     
+    // TO DO: these are confusing/wrong; they test the remaining pattern, not the matched pattern; see also TODO on reductionOrderFor(): whereas a sub-optimally designed pattern sequence could return misleading result due to optionals and branching, examining the actual matches made by a completed matcher should always give an accurate answer
     var hasLeadingExpression: Bool { return self.pattern.first!.hasLeadingExpression }
     var hasTrailingExpression: Bool { return self.pattern.last!.hasLeadingExpression }
     
@@ -151,29 +152,10 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
         return self.pattern.reduce(0, {$0 + $1.keywords.count}) > 1 // TO DO: this [incorrect logic] assumes multiple keywords appear sequentially, which is not necessarily true: e.g. a poorly composed pattern such as `.anyOf(["FOO", "BAR"])` will currently break the parser by corrupting the blockMatchers stack; for now, we'll use this naive implementation while we get the rest of the parser working, as it's "good enough" for current operators such as `if…then…` and `do…done`; eventually we'll need to rework to make it return an accurate result regardless of how a pattern is constructed // TO DO: also bear in mind that this will only report correct result while the first keyword is being matched (what it should really do is always ignore the first [primary] keyword and only count the remaining conjunction keywords; e.g. consider an operator with two or more conjunctions)
     }
     
-    var conjunction: Conjunctions { // KLUDGE
+    var conjunctions: Conjunctions { // KLUDGE
         if case .keyword(_) = self.pattern[0] {} else { print("BUG: conjunction should be called immediately after matching first keyword") }
         // TO DO: this returns *all* conjunctions (in the event pattern contains > 1 conjunction); is this appropriate? or do we just want to get the next conjunction[s] that appears? (although given the freedom allowed by patterns, it's possible to create all kinds of weird combinations)
         return Conjunctions(self.pattern.dropFirst().flatMap{ $0.keywords.map{ $0.name } })
-    }
-    
-    // precedence resolution // important: this should only be called for completed matchers that share a common operand, e.g. given `OP1 EXPR OP2`, if OP2.reduceBefore(OP1) then reduce `EXPR OP2` first, otherwise reduce `OP1 EXPR` first
-    
-    func reduceBefore(precedingMatcher: PatternMatcher) -> Bool {
-        let left = precedingMatcher.definition, right = self.definition
-        if left.precedence == right.precedence {
-            return left.associate == .right // if both operators are the same, e.g. `2 ^ 3 ^ 4` // TO DO: what if two different operators with same precedence?
-        } else {
-            return left.precedence < right.precedence
-        }
-    }
-    func reduceBefore(followingMatcher: PatternMatcher) -> Bool {
-        let left = self.definition, right = followingMatcher.definition
-        if left.precedence == right.precedence {
-            return left.associate == .left // if both operators are the same, e.g. `2 ^ 3 ^ 4` // TO DO: what if two different operators with same precedence?
-        } else {
-            return left.precedence > right.precedence
-        }
     }
     
     func startIndex(from endIndex: Int) -> Int {

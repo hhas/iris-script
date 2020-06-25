@@ -298,7 +298,7 @@ public class Parser {
         // TO DO: not sure if reasoning is correct here; if we limit auto-reduction to builtins (which we control) then it's safe to say there will be max 1 match, but do…done blocks should also auto-reduce and those are library-defined; leave it for now as it solves the immediate need (reducing literal values as soon as they're complete so operator patterns can match them as operands)
         if let longestMatch = completedMatches.max(by: { $0.count < $1.count }), longestMatch.definition.autoReduce {
             //           print("\nAUTO-REDUCE", longestMatch.definition.name.label)
-            self.reduce(completedMatch: longestMatch, endingAt: self.stack.count)
+            self.stack.reduce(completedMatch: longestMatch)
             if completedMatches.count > 1 {
                 // TO DO: what if there are 2 completed matches of same length?
                 print("discarding extra matches in", completedMatches.sorted{ $0.count < $1.count })
@@ -306,7 +306,7 @@ public class Parser {
         }
 //        print(self.stack.last!)
     }
-
+    
     
     // TO DO: when reducing, how far back to go? e.g. in `tell EXPR1 to EXPR2`, EXPR should be bounded by `to` and should not attempt to consume it (e.g. `tell foo to bar` could parse RHS as `foo{to{bar}}`)
     
@@ -388,7 +388,7 @@ public class Parser {
                     // TO DO: these are new matchers; we need them advanced to match conjunction keyword (can't do that: they may have >1 pattern, e.g. `do…done` yields 2 matchers, one that takes delimiter and `done` and the other takes delimiter followed by zero or more expr+delim then `done`)
                     var conjunctions = [Symbol: [PatternMatcher]]()
                     for m in conjunctionMatches {
-                        for n in m.conjunction {
+                        for n in m.conjunctions {
                             if conjunctions[n] == nil {
                                 conjunctions[n] = [m]
                             } else {
