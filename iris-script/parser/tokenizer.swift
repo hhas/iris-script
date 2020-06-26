@@ -31,9 +31,9 @@ import Foundation
 
 - contiguous whitespace [excluding linebreaks] (this is affixed to adjoining tokens; it is not a token itself)
  
-- non-whitespace control characters and illegal Unicode (.invalid)
+- non-whitespace control characters and illegal Unicode (these are stored as `.error(BadSyntax.illegalCharacters)`)
 
-- all other contiguous chars (.letters) (in future this might be inclusive [L*], rather than exclusive [everything but the above], with .invalid as the catchall)
+- all other contiguous chars (.letters) (in future this might be inclusive [L*], rather than exclusive [everything but the above], with BadSyntax.illegalCharacters as the catchall)
  
  */
 
@@ -161,7 +161,7 @@ struct Tokenizer: LineReader { // don't think lexer should care if it's at start
                 form = .symbols
                 tokenEnd = self.advanceOver(symbolCharacters) // decomposing a run of symbol characters is left to downstream readers (while we could return single characters here, it generates more tokens than necessary when reading annotations and string literals; e.g. `«==== WORD ====»` [a Markdown heading] generates 5 tokens, not 11)
             default:
-                form = .invalid
+                form = .error(BadSyntax.illegalCharacters)
                 tokenEnd = self.advanceByOne() // this assumes invalid chars are relatively rare; if common, we'd want to match sequences
             }
         }

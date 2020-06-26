@@ -255,6 +255,7 @@ enum BadSyntax: NativeError { // while tokens containing invalid code are marked
         case .missingExpression:        return "missing expression"
         case .missingName:              return "missing name"
         case .unterminatedExpression:   return "unterminated expression"
+        case .illegalCharacters:         return "illegal character[s]"
         }
     }
     
@@ -270,4 +271,5 @@ enum BadSyntax: NativeError { // while tokens containing invalid code are marked
     case missingExpression // TO DO: parameterize with expected expression type?
     case missingName // e.g. handler name or pair label; TO DO: how should missing colon be reported?
     // TO DO: what else?
+    case illegalCharacters
 }

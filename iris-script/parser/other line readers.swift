@@ -11,6 +11,8 @@ import Foundation
 
 // TO DO: reader[s] for reducing #…, @…, A.B.C (note: hashtags are currently reduced by main parser, but wouldn't hurt to move this forward) // Q. should `com.example.foo` convert to `‘com.example.foo’` rather than `foo of example of com`? or should we define a `UTI`/`Namespace` struct that encodes it as linked list/array of symbols? (or convert to an objspec with PP annotation?)
 
+// TO DO: if we use UTI line readers for namespace access, users should be able to write `tell @com.apple.TextEdit to …` rather than `tell app “…” to …`; the same syntax can work for libraries too, with the obvious caveat that if a library has the same UTI-based name as an app's bundle ID, we'll need some way to disambiguate
+
 
 struct NullReader: LineReader { // returned once line reader is exhausted; always outputs .lineBreak token
     

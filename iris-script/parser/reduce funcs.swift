@@ -21,14 +21,6 @@ import Foundation
 // TO DO: custom reducefunc for `as` operator could treat RH list/record literal as visual shorthand for `list{of:}` and `record{…}`, and convert to corresponding commands (note that this shorthand wouldn't be available when written as `‘as’{…}` command, unless we want to perform extra run-time tests)
 
 
-func show(_ stack: Parser.Stack, _ start: Int, _ end: Int, _ label: String = "STACK") { // start..<end
-    print()
-    print("DUMP \(label) \(start)...\(end-1):")
-    for f in stack[start..<end] { print(" -", f.reduction, "\t\t", f.matches) }
-    print()
-}
-
-
 // caution: skip functions step over specific tokens if found; they do not check if tokens exist (pattern matchers are responsible for checking punctuation)
 
 func skipSeparator(_ stack: Parser.Stack, _ i: inout Int) {
@@ -47,13 +39,10 @@ extension Array where Element == Parser.StackItem {
         }
     }
     func label(at i: Int) -> Symbol {
-        switch self[i].reduction {
-        case .quotedName(let n), .unquotedName(let n): return n
-        case .operatorName(let operatorClass): return operatorClass.name
-        default: fatalError("Bad label") // should never happen
-        }
+        guard case .label(let name) = self[i].reduction else { fatalError("Bad label") }
+        return name
     }
-    func expression(at i: Int) -> Value {
+    func value(at i: Int) -> Value {
         guard case .value(let expr) = self[i].reduction else { fatalError("Bad reduction; expected token \(i) to be Value but found unreduced \(self[i]).") }
         return expr
     }
@@ -64,13 +53,13 @@ extension Array where Element == Parser.StackItem {
 
 func reducePositiveOperator(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
     assert(end == start + 2)
-    let expr = stack.expression(at: end - 1)
+    let expr = stack.value(at: end - 1)
     return expr is NumericValue ? expr : Command(definition, right: expr)
 }
 
 func reduceNegativeOperator(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
     assert(end == start + 2)
-    let expr = stack.expression(at: end - 1)
+    let expr = stack.value(at: end - 1)
     if let n = expr as? NumericValue {
         switch n { // TO DO: bit clumsy
         case let n as Int:    return -n // TO DO: doesn't handle edge case where n is Int.min
@@ -87,17 +76,17 @@ func reduceNegativeOperator(stack: Parser.Stack, definition: OperatorDefinition,
 
 func reducePrefixOperator(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
     assert(end == start + 2)
-    return Command(definition, right: stack.expression(at: end - 1))
+    return Command(definition, right: stack.value(at: end - 1))
 }
 
 func reduceInfixOperator(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value { // TO DO: need to pass operator definition? or can we pick up from stack? (problem is when two matchers complete on same frame, but again that's an SR conflict problem which parser needs to solve in order to decide which reduce func to call); if we pass Parser, could set var on Parser to hold the opdef for the duration
     assert(end == start + 3)
-    return Command(definition, left: stack.expression(at: start), right: stack.expression(at: end - 1))
+    return Command(definition, left: stack.value(at: start), right: stack.value(at: end - 1))
 }
 
 func reducePostfixOperator(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
     assert(end == start + 2)
-    return Command(definition, left: stack.expression(at: end - 1))
+    return Command(definition, left: stack.value(at: end - 1))
 }
 
 // TO DO: optimize away commands in favor of returning Symbol directly (caveat: safest way to do that is by getting symbols from populated env, but that'd require libraries to be loaded first)
@@ -109,7 +98,7 @@ func reduceAtomOperator(stack: Parser.Stack, definition: OperatorDefinition, sta
 
 func reducePrefixOperatorWithConjunction(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
     assert(end == start + 4) // TO DO: check this
-    return Command(definition, left: stack.expression(at: start + 1), right: stack.expression(at: end - 1)) // TO DO: this uses convenience initializer
+    return Command(definition, left: stack.value(at: start + 1), right: stack.value(at: end - 1)) // TO DO: this uses convenience initializer
 }
 
 func reducePrefixOperatorWithSuffix(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
@@ -120,9 +109,9 @@ func reducePrefixOperatorWithSuffix(stack: Parser.Stack, definition: OperatorDef
 
 func reduceInfixOperatorWithConjunction(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value { // trinary operator (c.f. Swift's `…?…:…`)
     assert(end == start + 5)
-    return Command(definition, left: stack.expression(at: start),
-                             middle: stack.expression(at: start + 2),
-                              right: stack.expression(at: start + 4))
+    return Command(definition, left: stack.value(at: start),
+                             middle: stack.value(at: start + 2),
+                              right: stack.value(at: start + 4))
 }
 
 // TO DO: can we guarantee reduce always applies to end of stack (probably not, e.g. when stitching per-line)
@@ -135,7 +124,7 @@ func reduceOrderedListLiteral(stack: Parser.Stack, definition: OperatorDefinitio
     var i = start + 1 // ignore `[`
     skipLineBreaks(stack, &i)
     while i < end - 1 { // ignore `]`
-        items.append(stack.expression(at: i))
+        items.append(stack.value(at: i))
         i += 1 // step over value
         skipSeparator(stack, &i)
         skipLineBreaks(stack, &i)
@@ -150,10 +139,10 @@ func reduceKeyedListLiteral(stack: Parser.Stack, definition: OperatorDefinition,
     var i = start + 1 // ignore `[`
     skipLineBreaks(stack, &i)
     while i < end - 1 { // ignore `]`
-        let key = (stack.expression(at: i) as! HashableValue).dictionaryKey
+        let key = (stack.value(at: i) as! HashableValue).dictionaryKey
         i += 2 // step over key + colon
         skipLineBreaks(stack, &i)
-        let value = stack.expression(at: i)
+        let value = stack.value(at: i)
         items[key] = value
         print(key, value)
         i += 1 // step over value
@@ -165,19 +154,18 @@ func reduceKeyedListLiteral(stack: Parser.Stack, definition: OperatorDefinition,
 
 func reduceRecordLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
     var items = Record.Fields()
-    var i = start + 1 // ignore `[`
+    var i = start + 1 // ignore `{`
     skipLineBreaks(stack, &i)
-    while i < end - 1 { // ignore `]`
-        // TO DO: support unlabeled fields
+    while i < end - 1 { // ignore `}`
         let label: Symbol
-        switch stack[i].reduction {
-        case .quotedName(let n), .unquotedName(let n): label = n
-        case .operatorName(let operatorClass): label = operatorClass.name
-        default: fatalError("Bad label") // should never happen
+        if case .label(let n) = stack[i].reduction {
+            label = n
+            i += 1 // step over label
+            skipLineBreaks(stack, &i)
+        } else { // unlabeled field
+            label = nullSymbol
         }
-        i += 2 // step over label + colon
-        skipLineBreaks(stack, &i)
-        let value = stack.expression(at: i)
+        let value = stack.value(at: i)
         items.append((label, value))
         i += 1 // step over value
         skipSeparator(stack, &i)
@@ -194,7 +182,7 @@ func reduceRecordLiteral(stack: Parser.Stack, definition: OperatorDefinition, st
 func reduceGroupLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value { // `( LF* EXPR LF* )`
     var i = start + 1
     skipLineBreaks(stack, &i)
-    let expr = stack.expression(at: i)
+    let expr = stack.value(at: i)
     skipLineBreaks(stack, &i)
     return expr // TO DO: how to annotate expr with elective parens/LFs
 }
@@ -207,7 +195,7 @@ func reduceParenthesizedBlockLiteral(stack: Parser.Stack, definition: OperatorDe
     skipLineBreaks(stack, &i)
     while i < stack.count - 1 { // ignore `)`
         //print(">>>", stack[i].reduction)
-        items.append(stack.expression(at: i))
+        items.append(stack.value(at: i))
         i += 1 // step over value
         skipSeparator(stack, &i)
         skipLineBreaks(stack, &i)
@@ -221,26 +209,28 @@ func reduceCommandLiteral(stack: Parser.Stack, definition: OperatorDefinition, s
     if start == end - 1 {
         return Command(name) // no argument
     } else if start == end - 2 {
-        let expr = stack.expression(at: start + 1)
+        let expr = stack.value(at: start + 1)
         if let record = expr as? Record {
             return Command(name, record) // FP syntax
         } else {
-            return Command(name, [(nullSymbol, expr)]) // direct param only
+            return Command(name, [(nullSymbol, expr)]) // direct param only // TO DO: this assumes expr is already reduced; if it's multi-token it won't be as fullyReduceExpression needs to determine its bounds in order to reduce it, and the find func isn't smart enough to determine if command name delimits the expr or is part of it (e.g. `foo * 3` requires knowledge of operator arity, while `foo + 2` is inherently ambiguous requiring whitespace analysis to resolve)
         }
     } else {
         // TO DO: LP syntax (direct param and/or labeled params)
         print("\nREDUCE LP command:")
-        show(stack, start, end)
+        stack.show(start, end)
         print()
         throw NotYetImplementedError()
     }
 }
 
+/*
 func reducePairLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
     print("REDUCE PAIR:")
-    assert(start == end + 2) // this only holds if we disallow LFs after colon
-    return Pair((stack.label(at: start), stack.expression(at: end - 1)))
-}
+    stack.show(start, end)
+    //assert(start == end - 2) // this only holds if we disallow LFs after colon
+    return Pair((stack.label(at: start), stack.value(at: end - 1)))
+}*/
 
 
 func reducePipeOperator(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value { // pipe (";") is a special case as it transforms its two operands (of which the right-hand operand must be a command) such that `A;B{C,D};E` -> `E{B{A,C,D}}`

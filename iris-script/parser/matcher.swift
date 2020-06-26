@@ -7,19 +7,12 @@
 import Foundation
 
 
-// TO DO: FIX: match fails to complete if last pattern is .optional(…); need to revise initialization to generate all matchers and return them to be matched one at a time against token; those that succeed are shifted onto stack frame along with token
-
-
 // Q. given two different operators of same precedence but different associativity, should the latter affect which binds first?
 
-// Q. how to carry forward current precedence and associativity? or should parser detect `OPNAME EXPR OPNAME` sequences itself?
 
 // note that composite matches such as OptionalMatch can spawn multiple PatternMatches, one for each branch
 
-
 // important: the first pattern in OperatorDefinition.pattern array must be a non-composite (it should be possible to eliminate this restriction - it's an artifact of current implementation)
-
-// important: operator patterns must be one of the following: (OPNAME), (OPNAME EXPR […]), (EXPR OPNAME […])
 
 // TO DO: matcher should keep a complete record of the exact pattern sequence matched, with expr patterns annotated with the arg labels to use in Command (at minimum, it needs to keep a list of the arg labels to use, as those will be required to disambiguate overloaded operators with the same name but different operand count and/or position[s])
 
@@ -47,8 +40,6 @@ extension OperatorDefinitions {
 
 
 typealias Conjunctions = Set<Symbol>
-
-// match(form) should return MatchResult.completed/.partial([remaining])/.none, and that should be put on stack
 
 // might want to return .yes/.maybe/.no for EXPR match
 
@@ -78,9 +69,7 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     
     // pattern[0] is the pattern being matched and has already been reified
     private let pattern: [Pattern] // any patterns to match to next Reduction[s] in parser stack; caution: do not assume these patterns are the same as definition.patterns[OFFSET..<END_INDEX]; they may be transformations of composite patterns
-    
-    // think EXPR needs to match unreduced values (e.g. .operatorName, where fixity allows)
-    
+        
     // called by OperatorDefinition.patternMatchers
     init(for definition: OperatorDefinition, matching pattern: [Pattern], count: Int = 1, groupID: Int) {
         if pattern.isEmpty { fatalError("Invalid pattern (zero-length): \(pattern)") }
@@ -91,14 +80,9 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
         self.matchID = PatternMatcher._matchID
         self.groupID = groupID
     }
-    
-    // TO DO: how to back-match operator patterns? (presumably keep reifying until we reach the relevant keyword, then backmatch all of those patterns against topmost frame[s] of parser stack)
-    
-    // problem with backmatching is that it doesn't capture the matcher in stack if preceding frame isn't already reduced
-    
-    // TO DO: to determine operator precedence parser needs to know matched operations' fixity; to do that, it needs to know the final pattern that was matched (or at least its first and last matches)… or does it? parser should be able to see which token.form was matched first/last: opname/punc or .value(_); if it's .value,
-    
+        
     public func match(_ form: Token.Form, allowingPartialMatch: Bool = false) -> Bool {
+        // currently, allowingPartialMatch is [almost?] always true as we need to match yet-to-be-reduced operands in order to determine operator precedence, which we need to know before we can decide which operands to reduce first (i.e. provisionally match then reduce in order of priority, confirming those matches still hold; it's not ideal and it's a bit brittle (e.g. using .testValue patterns to match anything except atomic literals will break), plus there's a fair amount of duct-tape currently holding it together too, but at least it gets something working which allows further development to proceed)
         //print("matching .\(form) to", self, "…")
         if true {//allowingPartialMatch {
             if self.isAtBeginningOfMatch {

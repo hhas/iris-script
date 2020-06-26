@@ -23,9 +23,9 @@ typealias Annotation = String
 typealias Precedence = Int16
 
 
-let argumentPrecedence: Precedence = 300 // used when parsing low-punctuation commands only // important: this must have higher precedence than punctuation // TO DO: what should argument precedence be? e.g. given `foo 1 + 2`, should it parse as `foo {1 + 2}` or `foo {1} + 2`; currently math operators are ~600; `else` is 90
+let commandPrecedence: Precedence = 999 // used when parsing low-punctuation commands to determine if a right-hand infix/postfix operator should be part of command’s argument or if command should be operator's left operand, e.g. `foo 1 + 1` vs `foo bar of baz`; note that PP should automatically parenthesize where clarity is needed, e.g. `(foo 1) + 1` // TO DO: what should argument precedence be? e.g. given `foo 1 + 2`, should it parse as `foo {1 + 2}` or `foo {1} + 2`; currently math operators are ~600; `else` is 90
 
-let operatorPrecedences: Range<Int16> = 100..<1000 // TO DO: decide valid range; currently unused
+//let operatorPrecedences: Range<Int16> = 100..<1000 // TO DO: decide valid range; currently unused
 
 
 
@@ -130,6 +130,10 @@ struct Token: CustomStringConvertible {
         
         case letters // undifferentiated text (may be command name, operator name, numeric prefix/suffix, etc, or a mixture of these; it's up to downstream readers to interpret as appropriate) // TO DO: may want to rename 'letters', to avoid singular vs plural inconsistency with other names
         
+        case label(Symbol)
+        case pair(Symbol, Value) // temporary accumulator for LP commands
+        case command(Symbol, [Command.Argument]) // temporary accumulator for LP commands
+        
         case unquotedName(Symbol)
         case quotedName(Symbol) // 'WORD' (quotes may be any of '‘’; WORD may be any character other than linebreaks or single/double/annotation quotes) // single-quotes always appear on single line, without leading/trailing whitespace around the quoted text (the outer edges of the quotes should always be separator/delimiter punctuation or whitespace, although we do need to confirm this, e.g. it's probably reasonable [and sensible] to treat `'foo'mod'bar'` as bad syntax, but what about `'foo'*'bar'`? note that `'foo'.'bar'` is legal [if ugly], as `.` is core punctuation and has its own whitespace-based disambiguation rules)
         
@@ -143,7 +147,7 @@ struct Token: CustomStringConvertible {
         
         // TO DO: separate case for haltingError? (readers would return this to indicate it's not worth continuing; single-to-multiline readers would need to check the final token returned by each line reader and discard rest of job; alternatively, this check could be implemented as dedicated single-line and multi-line readers that are inserted into reader chains when needed, in which case it's probably simpler for it to detect .error tokens and decide which categories of error should trigger a halt)
         
-        case invalid // characters that are not allowed anywhere in code: anything in CharacterSet.illegalCharacters, non-printing control characters [not counting whitespace/linebreaks] (Q. how many non-valid character constructs are there in Unicode standard/ObjC UTF16 NSStrings/Swift Strings; i.e. what do we need to look for, vs what can we trust Swift to reject outright before it ever gets to us?)
+        // characters that are not allowed anywhere in code should be represented as `.error(BadSyntax.illegalCharacters)`: anything in CharacterSet.illegalCharacters, non-printing control characters [not counting whitespace/linebreaks] (Q. how many non-valid character constructs are there in Unicode standard/ObjC UTF16 NSStrings/Swift Strings; i.e. what do we need to look for, vs what can we trust Swift to reject outright before it ever gets to us?)
 
         case lineBreak
         case endOfScript
@@ -171,51 +175,15 @@ struct Token: CustomStringConvertible {
             case (.digits, .digits): return true
             case (.symbols, .symbols): return true
             case (.letters, .letters): return true
+            case (.label(let a), .label(let b)): return a == b
             case (.unquotedName(let a), .unquotedName(let b)): return a == b
             case (.quotedName(let a), .quotedName(let b)): return a == b
             case (.operatorName(let a), .operatorName(let b)): return a.name == b.name
             case (.value(_), .value(_)): return true
             case (.error(_), .error(_)): return true
-            case (.invalid, .invalid): return true
             case (.lineBreak, .lineBreak): return true
             case (.endOfScript, .endOfScript): return true
             default: return false // caution: this will mask missing cases, but Swift compiler insists on it; make sure these cases are updated whenever Form enum is modified
-            }
-        }
-
-        // TO DO: how to describe precedences by name/category? (using hardcoded ints will become problematic) e.g. arithmetic operators should be one category, with relative precedences between operators within that category (`+` = `-` < `*` = `/`; caveat we need to distinguish operands as well)
-        
-        // 0 is default precedence (literal values)
-        var precedence: Precedence { // TO DO: this needs moved/deleted as operator precedence cannot be determined from .operatorName(_) tokens, only from matched patterns
-            switch self {
-                
-            // expression sequence separators // TO DO: what about adjoining whitespace as precedence modifier? e.g. `com.example.foo` has different precedence to `com. example. foo`
-            
-            case .separator(_): return -10 // TO DO: what precedence?
-            case .lineBreak: return 90
-            case .semicolon: return 96 // important: precedence needs to be higher than expr sep punctuation (comma, period, etc), but lower than lp command’s argument label [Q. lp command argument shouldn't have precedence]
-            case .colon: return 94 // caution: this must be higher than .separator/.lineBreak to ensure dict/record items parse correctly (TO DO: is this still an issue with SR parser?)
-                                
-                
-            case .hashtag: return 2000      // name modifier; this must always bind to following name
-            case .mentions: return 2000     // name modifier; Q. what if the name is multipart (reverse domain name, aka UTI), e.g. `@com.example.my_lib`? one option is to construct it as standard specifier, with pp annotations so that it prints as `A.B` instead of `B of A`; in this case, binding `@` to first part only means that `@com` is the superglobal's name; OTOH, binding `@` to entire name means that `com.example.my_lib` is the superglobal's name, thus `@` is effectively a prefix operator that switches the context in which the chunk expr is evaluated from current to superglobal; we could even implement this as a [non-maskable] command: `'@'{com.example.my_lib}`. It all comes down to how we want to evaluate chunk exprs in general and UTIs in particular; e.g. if we use a partial LineReader to extract UTIs to value representation, binding the `@` to the entire UTI later on will occur naturally. Also note that .period form's precedence is that of expr sep punctuation; if we want full parser to treat .period differently when left-and-right-contiguous (property selector) vs left- and/or right-delimited (expr sep) then we'll need to move `Form.precedence` to `Token`. Thus question becomes: do we want contiguous .period to act as a general Swift/JS/etc-style 'dot' operator (which can be used even when stdlib's `of` operator/command isn't loaded)? (if so, it needs to play nice with parameterized commands, e.g. `foo.item{at:1}.item{named:"bar"}`? or does that run too far counter to "speakable-friendly" syntax? after all, UTI pronounciation is simple enough - e.g. "com dot example dot foo" - but using "dot" when speaking commands is likely to get awkward, especially as it won't play well with lp command syntax). Think we should look at UTI literal syntax in same way as we should look at, say, date and time literals, e.g. `2019-07-12` should be directly extractable using a 'DateTime' LineReader.
-
-            case .operatorName(let definitions): // Q. what range to use for operators? 100-999?
-                
-                // TO DO: where to put precedence info?
-                
-                fatalError("precedence not available for operator class \(definitions)")
-                
-                // e.g. v1 o1 v2 o2 … -- once v2 is parsed, peek ahead to o2 to determine if v2 is operand to o2 or o1
-                //if let a = definitions.infix, let b = definitions.postfix, a.precedence != b.precedence {
-               //     print("warning: mismatched precedences for \(a) vs \(b)")
-                    // note that prefix and infix can have different precedences (e.g. `+`/`-`); however, `Form.precedence` is only being used when determining if current operator binds tighter than preceding operator (i.e. the operator cannot be .prefix or .atom) // TO DO: what about .custom? (e.g. if non-numeric comparison operators take an optional `as` clause)
-               // }
-                //return definitions.infix?.precedence ?? definitions.postfix?.precedence ?? 0
-//            case .error(_): return 0
-//            case .invalid: return 0
-            case .endOfScript: return -10000
-            default: return 0
             }
         }
     }
@@ -309,7 +277,7 @@ struct Token: CustomStringConvertible {
     
     var isContiguous: Bool { return self.isLeftContiguous && self.isRightContiguous }
     
-    var isEndOfSequence: Bool { // TO DO: still needed
+    var isEndOfSequence: Bool { // TO DO: still needed? currently unused
         switch self.form {
         case .endList, .endRecord, .endGroup: return true
         case .operatorName(let definitions): fatalError("Can't get Token.isEndOfSequence for \(definitions)") //return definitions.name == .word("done") // kludge
@@ -318,7 +286,7 @@ struct Token: CustomStringConvertible {
         }
     }
     
-    var isName: Bool {
+    var isName: Bool { // TO DO: still needed? currently unused
         switch self.form {
         case .letters, .symbols, .underscore, .quotedName(_), .unquotedName(_): return true
         default: return false

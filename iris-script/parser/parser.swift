@@ -267,8 +267,8 @@ public class Parser {
     //
     // note: if shift completes a list/record/group literal, it is immediately reduced to a value (see OperatorDefinition.autoReduce; i.e. any pattern which has explicit start and end delimiters can be safely auto-reduced as precedence and associativity rules only apply to operators that start and/or end with an EXPR)
     // anything else is left on the stack until an explicit reduceExpression() phase is triggered
-    func shift(adding newMatchers: [PatternMatcher] = []) { // newMatchers have (presumably) already matched this token, but we match them again to be sure
-        let form = self.current.token.form
+    func shift(form: Token.Form? = nil, adding newMatchers: [PatternMatcher] = []) { // newMatchers have (presumably) already matched this token, but we match them again to be sure
+        let form = form ?? self.current.token.form
   //      print("\nCURRENT:", form)
         let matchers: [PatternMatcher]
         if let previousMatches = self.stack.last?.matches { // advance any in-progress matches
@@ -317,8 +317,6 @@ public class Parser {
             switch form {
             case .endOfScript: break loop // the only time we break out of this loop
             case .annotation(_): () // discard annotations for now
-            case .unquotedName(_), .quotedName(_): // command name or record label
-                self.shift(adding: commandLiteral.patternMatchers())
             case .startList:
                 self.blockMatchers.start(.list)
                 self.shift(adding: orderedListLiteral.patternMatchers() + keyValueListLiteral.patternMatchers())
@@ -336,11 +334,26 @@ public class Parser {
                 try self.blockMatchers.stop(.record) // TO DO: what to do with error?
                 self.fullyReduceExpression() // ensure last item in record is reduced to single .value
                 self.shift() // shift the closing token onto stack; shift() will autoreduce list/record/group literal
+                // if top of stack is a full-punctuation command (i.e. `NAME RECORD`)then reduce it now
+                // (note: while we could use a `NAME RECORD` PatternMatcher to auto-reduce FP commands, it’s simpler just to hardcode it here)
+                // (note: name-only and low-punctuation commands require additional scanning to determine right-hand boundary to their argument list so will be dealt with later by fullyReduceExpression)
+                if self.stack.count > 1 {
+                    switch self.stack[self.stack.count - 2].reduction {
+                    case .unquotedName(let name), .quotedName(let name):
+                        guard case .value(let v) = self.stack[self.stack.count - 1].reduction, let record = v as? Record else {
+                            fatalError("This should never fail")
+                        }
+                        let command = Command(name, record)
+                        self.stack.replace(from: self.stack.count - 2, to: self.stack.count, withReduction: .value(command))
+                    default: ()
+                    }
+                }
             case .endGroup:
                 try self.blockMatchers.stop(.group) // TO DO: what to do with error?
                 self.fullyReduceExpression() // ensure last item in group is reduced to single .value
                 self.shift() // shift the closing token onto stack; shift() will autoreduce list/record/group literal
             case .separator(let sep):
+                // TO DO: this should only reduce expr up to the preceeding expr delimiter, but currently goes all the way back to start of stack; how do we determine the correct boundary? (ditto for other fullyReduceExpression calls too); is it safe to set a Parser-wide var with last boundary token's index? answer: no (reductions will invalidate it)
                 self.fullyReduceExpression() // [attempt to] reduce the preceding value to single .value
                 switch sep { // attach any caller-supplied debug hooks
                 case .comma:
@@ -358,7 +371,21 @@ public class Parser {
                 self.fullyReduceExpression() // confirm this
                 self.shift()
                 
+            case .unquotedName(let name), .quotedName(let name): // command name or record label
+                // if we assume `NAME COLON` is ALWAYS a label, we can reduce it here to intermediate .label(NAME), which hopefully simplifies LP command parsing
+                if case .colon = self.current.next().token.form {
+                    self.shift(form: .label(name)) //, adding: labeledValue.patternMatchers())
+                    self.advance() // since we reduced two tokens (`NAME COLON`) on the fly, we need an extra advance()
+                } else {
+                    self.shift()
+                }
+                
             case .operatorName(let operatorDefinitions):
+                // if we assume `NAME COLON` is ALWAYS a label, we can reduce it here to intermediate .label(NAME), which hopefully simplifies LP command parsing
+                if case .colon = self.current.next().token.form {
+                    self.shift(form: .label(Symbol(String(self.current.token.content)))) //,adding: labeledValue.patternMatchers())
+                    self.advance() // since we reduced two tokens (`NAME COLON`) on the fly, we need an extra advance()
+                } else {
                 
                 // first check if keyword is an expected conjunction (e.g. `then` in `if…then…`); if so, fully reduce the preceding EXPR (for this, we need to backsearch the shift stack for that matcher by matchID; once we find it, we know the range of tokens to reduce; e.g. given `if…then…` we want to reduce everything between the `if` and the `then` keywords to a single .value, but we don't want to risk reducing the `if EXPR` as well in the event that `if` is overloaded as a prefix operator as well; i.e. we can't make assumptions about library-defined operators)
                 if case .conjunction(let conjunctions) = self.blockMatchers.last! {
@@ -396,20 +423,22 @@ public class Parser {
                             }
                         }
                     }
-                    print("Found \(operatorDefinitions.name); will look for conjunction:", conjunctions.map{$0.key})
+                    //print("Found \(operatorDefinitions.name); will look for conjunction:", conjunctions.map{$0.key})
                     self.blockMatchers.start(.conjunction(conjunctions))
                 } // TO DO: confirm this is appropriate
                 self.shift(adding: currentMatches)
+                }
                 
             case .colon:
                 // TO DO: could we safely reduce `NAME COLON` to .label(NAME) here?
                 
                 //self.reduceExpression() // TO DO: not sure about this; in kv-lists key should already be .value(HASHABLEVALUE) else it's a syntax error; in records, we want to match unreduced [c]name/opname token; we've abandoned `(to|when)? INTERFACE:ACTION` as a handler syntax as it's too ambiguous; and `NAME:VALUE` as shorthand binding syntax may be dropped as well
                 //self.shift()
-                let (previousMatches, currentMatches, _) = self.match(patterns: pairLiteral.patternMatchers()) // TO DO: currently ignores conjunctionMatchers as operator patterns currently don't mix colons and keywords; however, we'd need to rethink if `property NAME:EXPR` is adopted, otherwise decide final policy and implement (e.g. up-front pattern validation) once rest of parser is working
+                //let (previousMatches, currentMatches, _) = self.match(patterns: pairLiteral.patternMatchers()) // TO DO: currently ignores conjunctionMatchers as operator patterns currently don't mix colons and keywords; however, we'd need to rethink if `property NAME:EXPR` is adopted, otherwise decide final policy and implement (e.g. up-front pattern validation) once rest of parser is working
                 //print(definitions.name.label, backMatches, newMatches)
-                if !previousMatches.isEmpty { stack[stack.count-1].matches += previousMatches }
-                self.shift(adding: currentMatches)
+                //if !previousMatches.isEmpty { stack[stack.count-1].matches += previousMatches }
+                //self.shift(adding: currentMatches)
+                self.shift()
                 
             case .semicolon:
                 self.fullyReduceExpression() // TO DO: confirm this is correct (i.e. punctuation should always have lowest precedence so that operators on either side always bind first)
@@ -438,7 +467,8 @@ public class Parser {
             let (reduction, matches, _) = self.stack[i]
             switch reduction {
             case .value(let value):
-                print(" `\(value)` \(matches.map{"\n  \($0)"}.joined(separator: ""))") // .filter{$0.isAFullMatch}
+                print(value); let _ = matches
+                //print(" `\(value)` \(matches.map{"\n  \($0)"}.joined(separator: ""))") // .filter{$0.isAFullMatch}
 //                print()
                 if wasValue { print("Syntax error (adjacent values): `\(result.last!)` `\(value)`\n") }
                 result.append(value)

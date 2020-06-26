@@ -30,6 +30,20 @@ struct OperatorDefinitions: Sequence, CustomStringConvertible { // TO DO: define
     __consuming func makeIterator() -> IndexingIterator<[OperatorDefinition]> {
         return self.definitions.makeIterator()
     }
+    
+    func reduceBeforeCommand() -> Bool {
+        // count no. of operators that have higher precedence than command
+        // TO DO: this isn't right
+        let operators = self.filter{ $0.hasLeadingExpression }
+        let count = operators.reduce(0, { $1.precedence > commandPrecedence ? $0 + 1 : $0 })
+        if count == 0 {
+            return false
+        } else if count == operators.count {
+            return true
+        } else {
+            fatalError("\(self.name) operators must have precedences all less than or all greater than command precedence (\(commandPrecedence)) but has both: \(self)") // TO DO: this should be parse error, requiring user to add explicit parentheses to disambiguate
+        }
+    }
 }
 
 

@@ -86,8 +86,8 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         case .label:                return "LABEL"
         case .expression:           return "EXPR"
         case .token(let t):         return ".\(t)"
-        case .testToken(_):         return "TESTTOK"
-        case .testValue(_):         return "TESTVAL"
+        case .testToken(_):         return "TESTTOKEN"
+        case .testValue(_):         return "TESTVALUE"
         case .delimiter:            return "DELIM"
         case .lineBreak:            return "LF"
         }
@@ -149,7 +149,8 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
             }
         case .label:
             switch form {
-            case .quotedName(_), .unquotedName(_), .operatorName(_): return true // TO DO: ditto
+            case .label(_): return true
+            case .quotedName(_), .unquotedName(_), .operatorName(_): return true // TO DO: ditto; `NAME COLON` should probably be reduced to `Form.label(NAME)` before matchers are applied
             default: return false
             }
         case .expression: // TO DO: is it sufficient to match something that *could* be an expression, e.g. if .endList appears to left of a postfix operator, that implies the LH operand will eventually be a List value, even if it hasn't yet been reduced to one (i.e. the operator pattern can match it; it just can't reduce to an annotated Command yet)
@@ -161,6 +162,7 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
                 case .value(_): return true
                 case .startList, .startRecord, .startGroup: return true // fairly sure these will already be reduced
                 case .unquotedName(_), .quotedName(_): return true
+                //case .label(_): return false // TO DO: is this appropriate?
                 case .operatorName(let definitions):
                     //print("Checking if .\(form) could be the start of an EXPR", definitions.map{ $0.hasLeadingExpression })
                     // TO DO: the problem remains operatorName(_) as we need to know if none/some/all of those defs has leading expr; also, what if mixed? (e.g. unary `-` can match as .start of expr, but we also have to consider binary `-`) // as long as we re-match the fully reduced operand, we should be okay returning true here, as long as at least one definition has trailing expr

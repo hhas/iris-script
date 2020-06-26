@@ -43,6 +43,7 @@ struct UnicodeReader: LineReader { // needs applied before NumericReader
         let startToken = token
         var result = ""
         var (endToken, endReader) = (token, reader)
+        // TO DO: token.isLeftDelimited is always true
         while case .digits = token.form, token.isLeftDelimited, token.isRightContiguous, token.content == "0" {
             guard let (c, t, r) = self.readCodepoint(reader) else { break }
             result += String(c)

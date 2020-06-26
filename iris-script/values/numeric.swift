@@ -8,12 +8,15 @@ import Darwin
 // TO DO: how safe/practical to write ISO date and time literals without string quoting? e.g. `2019-06-01` and `12:01` can be parsed as date and time if we have whitespace-sensitivity rules for `-` and `:` (which we require anyway in order to support punctuation-less command syntax)
 
 
-// TO DO: replace Number's .overflow and .invalid cases with .error(NumericError), and capture the details in Error; this can also be used to capture errors thrown by standard arithmetic and comparison operators defined on Number extension, as `==() throws` breaks conformance required for Hashable protocol, which Number ought to support (although there are general caveats here wrt the interchangeability of String/Int/Double representations of numbers, particularly once we allow script localization of numeric literals)
+// TO DO: replace Number's .overflow and .notANumber cases with .error(NumericError), and capture the details in Error; this can also be used to capture errors thrown by standard arithmetic and comparison operators defined on Number extension, as `==() throws` breaks conformance required for Hashable protocol, which Number ought to support (although there are general caveats here wrt the interchangeability of String/Int/Double representations of numbers, particularly once we allow script localization of numeric literals)
 
 
 // TO DO: Number supports mixed type math; how should extended Int/Double do it?
 
 // TO DO: Unit and Quantity(Number,Unit); also UnitType (length, weight, temperature, etc)
+
+
+// TO DO: .nonStandard(…) case for numbers written with atypical formatting, e.g. leading zeroes (000123); alternatively, format-preserving might be handled independently by an appropriate line line reader (typically such `numbers` are found in 24-hr times, barcode numbers, etc, so using line readers to convert them to custom string-based Values that support coercion to Number (either by converting the string each time or by capturing both original string and Int/Double/Number representations) provides a general solution that covers all use cases there, and avoids the need to implement special one-off cases here)
 
 
 protocol NumericValue: ScalarValue, HashableValue {}
@@ -87,7 +90,7 @@ enum Number: NumericValue, KeyConvertible { // what about fractions? (this may r
         case .integer(let n, radix: _): return n.hash(into: &hasher)
         case .floatingPoint(let n):     return n.hash(into: &hasher)
         case .overflow(let s, _):       return s.hash(into: &hasher)
-        case .invalid(let s):           return s.hash(into: &hasher)
+        case .notANumber(let s):           return s.hash(into: &hasher)
         }
     }
     
@@ -105,7 +108,7 @@ enum Number: NumericValue, KeyConvertible { // what about fractions? (this may r
     case floatingPoint(Double)
     // TO DO: decimal?
     case overflow(String, Any.Type)
-    case invalid(String) // not a number
+    case notANumber(String)
     
     init(_ n: Int, radix: Int = 10) {
         self = .integer(n, radix: radix)
@@ -197,7 +200,7 @@ enum Number: NumericValue, KeyConvertible { // what about fractions? (this may r
             return String(n)
         case .overflow(let s, _):
             return s
-        case .invalid(let s):
+        case .notANumber(let s):
             return s
         }
     }
@@ -241,7 +244,7 @@ enum Number: NumericValue, KeyConvertible { // what about fractions? (this may r
 // Arithmetic and comparison operators are defined on Number so that primitive procs can perform basic
 // numerical operations without having to check or care about underlying representations (Int or Double).
 
-// TO DO: once BigNum support is implemented, only other reason for throwing is if scalar is .invalid, in which case might be as well just to concatenate both scalar string representations with operator symbol and return as 'unevaluated expression string' instead of throwing (since throwing creates work of its own)
+// TO DO: once BigNum support is implemented, only other reason for throwing is if scalar is .notANumber, in which case might be as well just to concatenate both scalar string representations with operator symbol and return as 'unevaluated expression string' instead of throwing (since throwing creates work of its own)
 
 // TO DO: think all these operators need to be non-throwing, instead capturing deferred .failed(Error) and have that throw when next evaled
 

@@ -133,7 +133,17 @@ func test() {
     script = " 1 + 2 = 3 "
     script = " 1 + 2 * 3 = 4 "
     
-    script = " if -1 * 2 + -3 = -4 then 5 + 6 else -7 ÷ -8 " 
+    script = " if -1 * 2 + -3 = -4 then 5 + 6 else -7 ÷ -8 "
+    
+    script = "  {1, bar: 2, baz: fub, mod: 3} "
+    
+    script = " foo {1} "
+    
+    script = " foo 1 baz: 2 mod: 3 "
+    
+   // script = " foo 1 "
+    
+   // script = " foo 1 bar: 2 mod: 3 "
     
     //script = " if -1 * - 2 + ---3 = -4 then -5 + -6 else -7 ÷ -8 "
     
@@ -170,7 +180,6 @@ func test() {
     // TO DO: name arg is currently limited to AsLiteralName, but also needs to accept a reference
     //script = "set a of b to: 3"
     
-
     //script = "set n to app “com.apple.TextEdit”, tell n to get document 1" // TO DO: parser prematurely exits after the 1st `n`; how to match `to` as stop word here? might pass closure thru parser that performs all stop-word/boundary checks; alternatively, leave it for now and address in table-driven parser
     
    // script = "tell app “com.apple.Finder” to get document_files from 2 thru -1 of home"
