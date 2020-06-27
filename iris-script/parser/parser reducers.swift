@@ -8,10 +8,6 @@
 import Foundation
 
 
-
-
-
-
 extension Parser {
     
     // TO DO: two options for parsing commands: 1. leave it entirely to fullyReduceExpression(), which can search for names and labels and call itself to reduce arguments in LP syntax (the delimiter being `NAME COLON` labels); or 2. put commands on Parser.blockMatches and read them in main loop
@@ -21,40 +17,22 @@ extension Parser {
     
     // problem with using PatternMatcher to match commands is that command parsing is context-sensitive: if a command appears as argument to a low-punctuation command, the nested command cannot also be low-punctuation and any `NAME:VALUE` pairs that appear after it must be associated with the outer, not inner, command (a pattern matcher would associate it with the most recently encountered command name, i.e. the inner one)
 
-        
-    func findStartIndex(from startIndex: Int, to stopIndex: Int) -> (Int, [CommandIndex]) {
-        // TO DO: what if labels are found but no command names? presumably that's a syntax error
-        var commandIndexes = [CommandIndex]()
-        var hasCommands = false
-        for i in stride(from: stopIndex - 1, to: startIndex - 1, by: -1) {
-            let form = self.stack[i].reduction
-            switch form { // can't use Token.isLeftDelimited as that's not implemented
-            case .semicolon, .colon, .separator(_), .startList, .startRecord, .startGroup, .lineBreak:
-                // note that .colon here typically denotes kv-list item; TO DO: what about records? when we reduce record values, we need to stop on the colon even though it's already been partly reduced to a .label
-                return (i + 1, commandIndexes.reversed()) // TO DO: what if this returns on the first token checked? the index returned will be stopIndex, which is out of range
-            case .unquotedName(let n), .quotedName(let n):
-                commandIndexes.append((i, .name(n)))
-                hasCommands = true
-            case .label(let n):
-                commandIndexes.append((i, .label(n)))
-            case .operatorName(let d): // we need this to determine where commands are right-delimited by infix/postfix operators of lower precedence
-                // when parsing commands, we only need consider operators that appear after a command name
-                if hasCommands { commandIndexes.append((i, .operatorName(d))) }
+    func reductionForOperatorExpression(from startIndex: Int, to stopIndex: Int) -> Token.Form {
+        // reduces an expression composed of one or more operations (this includes unreduced nested commands for which matchers have been added, but not LP commands which must be custom-reduced beforehand)
+        // important: any commands within the expression must already be reduced to .value(Command(…))
+        if startIndex == stopIndex - 1 {
+            switch self.stack[startIndex].reduction {
+            case .value(let v):
+                return .value(v)
+            case .error(let e):
+                return .error(e) // TO DO: where should .error transform to .value(BadSyntaxValue(…))?
             default: ()
             }
         }
-        return (startIndex, commandIndexes.reversed())
-    }
-    
-    
-    
-    func reductionForOperatorExpression(from startIndex: Int, to stopIndex: Int) -> Token.Form {
-        // reduces an expression composed of one or more operations
-        // important: any commands within the expression must already be reduced to .value(Command(…))
-        if startIndex == stopIndex - 1 {
-            return self.stack[startIndex].reduction // presumably already reduced
-        }
+       // print("reductionForOperatorExpression:")
+       // self.stack.show(startIndex, stopIndex)
         var matches = self.stack.findLongestMatches(from: startIndex, to: stopIndex)
+      //  print("->", matches)
         if matches.isEmpty { // TO DO: also empty if it's already a reduced .value/.error
             print("BUG/WARNING: Can't fully reduce \(startIndex)..<\(stopIndex) as no full matches found:")
             self.stack.show(startIndex, stopIndex)
@@ -63,7 +41,7 @@ extension Parser {
         if matches[0].start != startIndex {print("BUG: Missing first matcher[s] for \(startIndex)...\(matches[0].start)")}
         if matches.last!.stop != stopIndex-1 {print("BUG: Missing last matcher[s] for \(matches.last!.stop)...\(stopIndex-1)")}
         
-        matches.show() // DEBUG
+      //  matches.show() // DEBUG
         //print(">>>", matches[0])
         
         // starting from head (right) of stack, shift left to find the highest-precedence operator and reduce that; rinse and repeat until only one operator is left to reduce
@@ -132,150 +110,132 @@ extension Parser {
         return matches[0].tokens.reductionFor(completedMatch: matches[0].match)
     }
     
-    func fullyReduceExpression(from _startIndex: Int = 0, to stopIndex: Int? = nil, allowLPCommands: Bool = false) {
-        var stopIndex = stopIndex ?? self.stack.count // caution: stopIndex is nearest head of stack, so will no longer be valid once a reduction is performed
-        print("fullyReduceExpression:"); self.stack.show(_startIndex, stopIndex)
-        // scan back from stopIndex until an expression delimiter is found or given startIndex is reached; that then becomes the startIndex for findLongestMatches
-        // TO DO: this only goes as far back as last label; to read an entire LP command we'll need additional smarts
-        let (startIndex, commandIndexes) = self.findStartIndex(from: _startIndex, to: stopIndex)
-        
-        // TO DO: we might be able to read LP commands using matchers if we add those matchers here (i.e. for nested commands, add non-LP matcher only)
-
-        print("…found startIndex", startIndex)
-        if !commandIndexes.isEmpty {
-            print("…found commandIndexes:", commandIndexes)
-            guard case .name(let commandName) = commandIndexes[0].form else {
-                // found a label but no command name before it; for now, treat this as an error
-                print("Found label before command name:", commandIndexes[0].form)
-                return
+    
+    
+    
+    func reductionForArgument(_ label: Symbol, from startIndex: Int, to stopIndex: Int) -> Value {
+        //print("Label \(name) terminates \(argumentLabel) argument at \(argumentStopIndex).")
+        let value: Value
+      //  print("reducing \(label.isEmpty ? "direct" : label.label) argument:"); self.stack.show(startIndex, stopIndex)
+        let form = self.reductionForOperatorExpression(from: startIndex, to: stopIndex)
+        switch form {
+        case .value(let v): value = v
+        default: fatalError("TODO: \(label.isEmpty ? "direct" : label.label) argument did not fully reduce: \(form)")
+        }
+        return value
+    }
+    
+    
+    
+    func addMatchersForNestedCommand(at index: Int, to stopIndex: Int) {
+        // caution: caller is responsible for ensuring Parser.stack[index] is an .[un]quotedName(…) as we don't bother to re-match it here before adding the command matchers to it
+        // nested commands accept an optional record or direct value argument but no LP labeled args; thus they are always terminated by a label (which is then added to outer command); where a nested command is followed by infix/postfix operator, if the operator’s precedence is greater than commandPrecedence it takes the innermost command as its left operand (this terminates the innermost command), otherwise it takes the outermost command (this terminates all commands); users can still disambiguate/override by parenthesizing, of course, e.g.:
+        //    `foo bar of baz` -> `foo {bar of baz}`
+        //    `foo bar + baz` -> `(foo {bar}) + baz`
+        //    `(foo bar) of baz` -> `(foo {bar}) of baz`
+        //    `foo (bar + baz)` -> `foo {bar + baz}`
+        // this means that nested commands can be matched by a simple `NAME EXPR?` operator pattern, which is added here and reduced by reductionForOperatorExpression()
+        //print("NESTED COMMAND at \(index): .\(form)")
+        let matchers = nestedCommandLiteral.patternMatchers(groupID: OperatorDefinitions.newGroupID())
+        self.stack[index].matches += matchers
+        if index + 1 < stopIndex { // if there's more tokens after the name
+            // advance the command matchers and try to match the [start of its] direct argument EXPR (if it has one)
+            let matchers = matchers.flatMap{ $0.next() }
+            let form = self.stack[index+1].reduction
+            self.stack[index+1].matches += matchers.filter{ $0.match(form, allowingPartialMatch: true) }
+            // reductionForOperatorExpression() can now reduce our newly added matchers as standard atomic/prefix operators of commandPrecedence
+        }
+    }
+    
+    
+    func readLowPunctuationCommand(_ commandName: (Symbol), commandTokens: inout [CommandToken], from startIndex: Int, to stopIndex: Int) -> (command: Command, stopIndex: Int) { // startIndex..<stopIndex; these are parser stack indexes
+        // reads the first command in expression (this includes reading any nested commands in its arguments and reducing those argument tokens down to argument values in the final Command; on return, commandTokens is partly/fully consumed and the new stopIndex is given)
+       // print("Found command name:", commandName, "at:", startIndex)
+        // TO DO: if the command name is followed by a record literal, the command *always* binds the record as FP argument syntax; if record is followed by a label that’s a syntax error
+        var stopIndex = stopIndex // if command is terminated by a lower-precedence operator, that index is returned, otherwise it terminates at end of main expression
+        var arguments = [Command.Argument]()
+        var argumentLabel = nullSymbol
+        var startIndex = startIndex + 1 // start index is initially the command name, so step over that and look for a direct argument, e.g. `foo 1 …`
+        if !commandTokens.isEmpty {
+            if case .label(let name) = commandTokens[0].form { // found an argument label instead (i.e. LP command has no direct argument), e.g. `foo bar: 1 …`
+                commandTokens.removeFirst()
+                startIndex += 1 // step over label to the argument expression
+                argumentLabel = name
             }
-            print("Reading command:", commandName, commandIndexes[0].index)
-            /*
-            if commandIndexes.count == 1 { // there are no labeled args, no trailing operators, and no other commands so we can immediately reduce this command // TO DO: this is wrong: LP command may have a direct [non-record literal] arg so we need to look for that before concluding [un]quotedName token is an arg-less command
-                let index = commandIndexes[0].index
-                let value = Command(commandName)
-                self.stack.replace(from: index, to: index + 1, withReduction: .value(value))
-            } */
-            
-            var i = 0
-            
-            var outerCommands = [(start: Int, stop: Int, name: Symbol, arguments: [Command.Argument])]()
-            
-            
-            //var foundArguments = [(label: Symbol, start: Int, stop: Int, tokens: [StackItem])]()
-            // Q. what about using same divide strategy as operators?
-            
-            while i < commandIndexes.count {
-                let (index, form) = commandIndexes[i]
-                i += 1 // step over command name to start of LP arguments (if any); this item may be an EXPR or LABEL
-                var commandStopIndex = -1
-                if case .name(let commandName) = form {
-                    print("Found command name:", commandName, "at:", index)
-                    // TO DO: if the command name is followed by a record literal, the command *always* binds the record as FP argument syntax; if record is followed by a label that’s a syntax error
-                    outerCommands.append((start: index, stop: -1, name: commandName, arguments: []))
-                    var argumentLabel = nullSymbol
-                    var argumentStartIndex = index + 1 // this assumes nothing between
-                    argumentLoop: while i < commandIndexes.count {
-                        let (index, form) = commandIndexes[i]
-                        switch form {
-                        case .operatorName(let d):
-                            // determine if operator terminates the command or is part of an LP argument
-                            let (minPrecedence, maxPrecedence) = d.filter{ $0.hasLeadingExpression }.reduce(
-                                (Precedence.max, Precedence.min), { (min($0.0, $1.precedence), max($0.1, $1.precedence)) })
-                            if maxPrecedence > commandPrecedence && minPrecedence < commandPrecedence {
-                                fatalError("Cannot resolve precedence between command \(commandName) and overloaded operator \(d.name) as operator precedences are not all higher or all lower than command.")
-                            }
-                            if maxPrecedence < commandPrecedence { // reduce command first (i.e. operator right-terminates command's arguments)
-                                commandStopIndex = index // non-inclusive
-                                print("Operator \(d.name) terminates command \(commandName)’s arguments at \(commandStopIndex)")
-                                break argumentLoop
-                            } else {
-                                print("Operator \(d.name) at \(index) is part of command \(commandName)’s arguments.")
-                                
-                                
-                            }
-                        case .label(let name): // a label always terminates the previous LP argument
-                            let argumentStopIndex = index // non-inclusive
-                            print("Label \(name) terminates \(argumentLabel) argument at \(argumentStopIndex).")
-                            let value: Value
-                            print("reducing argument:"); self.stack.show(argumentStartIndex, argumentStopIndex)
-                            let form = self.reductionForOperatorExpression(from: argumentStartIndex, to: argumentStopIndex)
-                            switch form {
-                            case .value(let v): value = v
-                            default: fatalError("TODO: \(argumentLabel) argument did not fully reduce: \(form)")
-                            }
-                            outerCommands[outerCommands.count - 1].arguments.append((argumentLabel, value))
-                            argumentStartIndex = argumentStopIndex + 1 // subsequent arguments have label
-                            argumentLabel = name
-                        case .name(let n):
-                            // important: nested commands accept an optional record or direct value argument but no LP labeled args; thus they are always terminated by a label (which is then added to outer command); where a nested command is followed by infix/postfix operator, the operator binds the inner command as its left operand if its precedence is greater than commandPrecedence, or binds the outer command if its precedence is less than commandPrecedence (users can still override by parenthesizing, of course); e.g.:
-                            // `foo bar of baz` -> `foo {bar of baz}`
-                            // `foo bar + baz` -> `(foo {bar} + baz`
-                            print("Found nested command \(n) at \(index).")
-                        }
-                        
-                        
-                        
-                        
-                        
-                        i += 1
-                    }
-                    if commandStopIndex == -1 { commandStopIndex = stopIndex }
-
-                    outerCommands[outerCommands.count - 1].stop = commandStopIndex
-
-                    if argumentStartIndex < commandStopIndex { // TO DO: not sure what this check should be
-                        print("Add last LP argument: \(argumentLabel) \(argumentStartIndex)..<\(commandStopIndex)")
-                        let value: Value
-                        let form = self.reductionForOperatorExpression(from: argumentStartIndex, to: commandStopIndex)
-                        switch form {
-                        case .value(let v): value = v
-                        default: fatalError("TODO: \(argumentLabel) argument did not fully reduce: \(form)")
-                        }
-                        outerCommands[outerCommands.count - 1].arguments.append((argumentLabel, value))
-                    }
-                    
-                    /*
-                    if index < stopIndex - 1 { // command name is followed by an argument (this might be a .value, an unreduced operator expr, another command name) or argument label
-                        let form = self.stack[index + 1].reduction
-                        if case .label(let argumentName) = form {
-                            
-                        } else {
-                            
-                        }
-                    }*/
-                    
-                    //let record = self.stack[index] as? Record
-                    //let value = Command(commandName, record)
-                    //self.stack.replace(from: index, to: index + 2, withReduction: .value(value))
+            // now scan for argument expressions, which may be delimited by lower-precedence operators, next argument label, or the main expression’s stopIndex (e.g. linebreaks, closing parens, conjunctions)
+            argumentLoop: while !commandTokens.isEmpty {
+                let (index, form) = commandTokens.removeFirst()
+                switch form {
+                case .label(let name): // a label always terminates the previous LP argument/nested command, so reduce the preceding argument expression…
+                    arguments.append((argumentLabel, self.reductionForArgument(name, from: startIndex, to: index)))
+                    argumentLabel = name // …and begin reading the next argument
+                    startIndex = index + 1 // step over argument label
+                case .name(_):
+                    self.addMatchersForNestedCommand(at: index, to: stopIndex)
+                case .terminatingOperator: // a lower-precedence infix/postfix operator always right-terminates an LP/nested command's arguments list
+                    stopIndex = index
+                    break argumentLoop
                 }
             }
-            print("FOUND outer commands:", outerCommands)
-            
-            let oldStackSize = self.stack.count
-            
-            for (start, stop, name, arguments) in outerCommands.reversed() {
-                self.stack.replace(from: start, to: stop, withReduction: .value(Command(name, arguments)))
-            }
-            
-            stopIndex = stopIndex - (oldStackSize - self.stack.count)
-            
-            // having found all commands in expr, probably best to reduce them immediately (in reverse order) then update stopIndex
-            
-            // Q. would it be simpler to iterate backwards? (this means we'd detect nested command names first)
-            
-            
-            // command names have no leading operand so can be treated as start of expr range (where expr is entire command); however, before we can reduce command expr to value, we must identify and reduce its arguments (if any)
-            // this suggests we call fullyReduceExpression recursively (however, we really want to avoid repeating all this prep work, so probably best to split)
-            
-            
-            
         }
-        // TO DO: can we introduce command matchers here? we're basically looking for `command EXPR? (LABEL EXPR)*` with the added caveats that an infix/postfix operator of lower precedence acts as right delimiter for LP command, while commands appearing in argument EXPRs must be of form `command RECORD?` only // Q. when is a LABEL *not* a right delimiter for preceding EXPR?
+        // reduce the preceding argument expression (i.e. last argument of LP/nested command)
+        if startIndex < stopIndex { // startIndex = name/label index + 1; stopIndex is non-inclusive
+            //print("Add last LP argument: \(argumentLabel) \(startIndex)..<\(stopIndex)")
+            //self.stack.show(startIndex, stopIndex)
+           // print()
+            let value: Value
+            let form = self.reductionForOperatorExpression(from: startIndex, to: stopIndex)
+            switch form {
+            case .value(let v): value = v
+            default: fatalError("TODO: \(argumentLabel) argument did not fully reduce: \(form)")
+            }
+            arguments.append((argumentLabel, value))
+        }
+        return (Command(commandName, arguments), stopIndex)
+    }
+    
+    
+    
+    
+    func reduceCommands(_ commandTokens: [(index: Int, form: CommandTokenForm)], _ stopIndex: inout Int) {
+        var commandTokens = commandTokens
+       // print("…found commandTokens:", commandTokens)
+        while case .terminatingOperator = commandTokens[0].form {
+            commandTokens.removeFirst()
+        }
+        guard case .name(let commandName) = commandTokens[0].form else {
+            // found a label but no command name before it; for now, treat this as an error
+            print("Found label before command name:", commandTokens[0].form)
+            return
+        }
+        //print("Reading command:", commandName, commandTokens[0].index)
+        var outerCommands = [(start: Int, stop: Int, command: Command)]()
+        while !commandTokens.isEmpty {
+            let (index, form) = commandTokens.removeFirst()
+            if case .name(let commandName) = form {
+                let (command, commandStopIndex) = self.readLowPunctuationCommand(commandName, commandTokens: &commandTokens, from: index, to: stopIndex) // TO DO: either return both stopIndex and commandTokens values, or pass both as inout and update in-place
+                outerCommands.append((index, commandStopIndex, command))
+            } // else it's either stray label (syntax error) or lower-precedence infix/postfix operator (command terminator)
+        }
+        //print("FOUND outer commands:", outerCommands)
+        let oldStackSize = self.stack.count
+        for (start, stop, command) in outerCommands.reversed() {
+            self.stack.replace(from: start, to: stop, withReduction: .value(command))
+        }
+        stopIndex = stopIndex - (oldStackSize - self.stack.count)
+    }
+    
+    func fullyReduceExpression(from _startIndex: Int = 0, to stopIndex: Int? = nil, allowLPCommands: Bool = false) {
+        var stopIndex = stopIndex ?? self.stack.count // caution: stopIndex is nearest head of stack, so will no longer be valid once a reduction is performed
+       // print("fullyReduceExpression:"); self.stack.show(_startIndex, stopIndex)
+        // scan back from stopIndex until an expression delimiter is found or given startIndex is reached; that then becomes the startIndex for findLongestMatches
+        // TO DO: this only goes as far back as last label; to read an entire LP command we'll need additional smarts
+        let (startIndex, commandTokens) = self.stack.findStartIndex(from: _startIndex, to: stopIndex)
+        //print("…found startIndex", startIndex)
         
-        // if two labels are separated by an infix/postfix operator of lower precedence, the operator right-delimits the left command
-        
-        // TO DO: if final startIndex == stopIndex - 1, it should be a .value, .error, or argless command name (anything else?) so we should be able to skip straight to reducing that to .value and updating stack
+        if !commandTokens.isEmpty {
+            self.reduceCommands(commandTokens, &stopIndex)
+        }
         
         if startIndex == stopIndex - 1 { // only one token in this expression
             switch self.stack[startIndex].reduction {

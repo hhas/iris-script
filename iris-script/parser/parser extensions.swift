@@ -5,34 +5,6 @@
 
 import Foundation
 
-/*
-extension Token.Form { // TO DO: still needed? currently unused
-
-    var canBeLabel: Bool {
-        switch self {
-        case .operatorName(_), .quotedName(_), .unquotedName(_): return true
-        default:                                                 return false
-        }
-    }
-    
-    var isName: Bool {
-        switch self {
-        case .quotedName(_), .unquotedName(_): return true
-        default:                               return false
-        }
-    }
-    
-    func toName() -> Symbol {
-        switch self {
-        case .quotedName(let name), .unquotedName(let name): return name
-        case .operatorName(let definitions):                 return definitions.name
-        default:                                             return nullSymbol
-        }
-    }
-}
-*/
-
-
 
 
 typealias ReductionOrder = OperatorDefinition.Associativity
@@ -52,6 +24,34 @@ func reductionOrderFor(_ leftMatch: PatternMatcher, _ rightMatch: PatternMatcher
 
 
 
+
+extension OperatorDefinitions {
+    
+    // TO DO: this should return a 4-case enum: .yes, .no, .maybe (has both prefix and infix forms, requiring further analysis to decide), .error (operators have precedences both higher AND lower than command’s); it might also be better to analyze the *matched* patterns on the stack as that may help narrow the decision (caveat it might create more confusion than it solves: sometimes dumb—i.e. easily learned—rules are the best)
+    
+    func terminatesCommand() -> Bool? { // returns true if operator is infix/postfix with precedence[s] lower than command’s (i.e. a lower-precedence), false if operator has no infix/postfix forms or precedence is higher than command’s, or nil if overloaded operators’ precedence is both less AND greater than command’s (i.e. user MUST add explicit parentheses to disambiguate as parser cannot decide for itself)
+        let (minPrecedence, maxPrecedence) = self.definitions.filter{ $0.hasLeadingExpression }.reduce(
+            (Precedence.max, Precedence.min), { (Swift.min($0.0, $1.precedence), Swift.max($0.1, $1.precedence)) })
+        if maxPrecedence > commandPrecedence && minPrecedence < commandPrecedence {
+            return nil // overloaded infix/postfix operator has precedences higher AND lower than command
+            // TO DO: this should be encapsulated as a syntax error allowing parsing to continue (Q. what should this error encompass? the current argument only or the current command, or even the whole expression? in any case it should indicate to user that they must explicitly parenthesize either the argument or the entire command to disambiguate the code and allow it to parse as intended)
+            //fatalError("Cannot resolve precedence between command \(commandName) and overloaded operator \(d.name) as the operators’ precedences are higher AND lower than command’s.")
+        }
+        return maxPrecedence < commandPrecedence
+    }
+    
+    var hasPrefixForms: Bool {
+        return self.first{ $0.hasLeadingExpression } != nil
+    }
+    
+    var hasInfixForms: Bool {
+        return self.first{ $0.hasLeadingExpression } == nil
+    }
+}
+
+
+
+
 extension Array where Element == LongestMatch {
     
     func show() { // DEBUG
@@ -62,23 +62,66 @@ extension Array where Element == LongestMatch {
 }
 
 
-typealias LongestMatch = (start: Int, stop: Int, match: PatternMatcher, tokens: [Parser.StackItem])
+typealias LongestMatch = (start: Int, stop: Int, match: PatternMatcher, tokens: [Parser.StackItem]) // important: stop index is INclusive (start...stop), i.e. to check for overlapping operations: left.stop == right.start (assumes the shared operand is already reduced to a single .value token)
 
-enum CommandIndexType {
+enum CommandTokenForm { // tokens within an expression that denote commands
     case name(Symbol)
     case label(Symbol)
-    case operatorName(OperatorDefinitions) // TO DO: can we exclude operators that don't have a leading expr?
+    case terminatingOperator // operators *may* right-terminate a command // TO DO: we should probably filter these as they're read so that only operators that WILL terminate a command are included (in fact, we should be able to calculate commands' spans immediately); that then gives us command ranges, from which we should be able to identify nested commands and reduce those immediately, then pass the resulting sub-stack array straight to reductionForOperator
 }
 
-typealias CommandIndex = (index: Int, form: CommandIndexType)
+typealias CommandToken = (index: Int, form: CommandTokenForm)
 
 
 
 extension Array where Element == Parser.StackItem {
     
+    
     func show(_ startIndex: Int = 0, _ stopIndex: Int? = nil) { // startIndex..<stopIndex // DEBUG: list stack tokens + their associated partial/complete matchers
         print("Stack[\(startIndex)..<\(stopIndex ?? self.count)]:")
         print(self[startIndex..<(stopIndex ?? self.count)].map{ "\t.\($0.reduction)\($0.matches.map{"\n\t\t\t\t\($0)"}.joined(separator: ""))" }.joined(separator: "\n"))
+    }
+    
+    // starting from end of a range of tokens, search backwards to find a left-hand expression delimiter
+    // this search also returns a list of significant tokens needed to parse commands
+    
+    func findStartIndex(from startIndex: Int, to stopIndex: Int) -> (Int, [CommandToken]) {
+        // TO DO: what if labels are found but no command names? presumably that's a syntax error (Q. what if we use AS-style `property NAME : EXPR`? presumably a pattern matcher can read that; however, .label will remain on stack; one solution *might* be to define `property` as a command handler, in which case `NAME:` is an arbitrary label in LP syntax [this'd also allow multiple NAME:EXPR definitions in LP syntax]; only difference to standard commands is that this requires the argument record to be passed to handler as a single parameter; currently primitive/native handlers don't support this form of argument mapping but it's something we need to accept arbitrary arguments, c.f. Python's `name(*args,**kwargs)`, which is useful e.g. in implementing dynamic bridging wrappers around foreign APIs)
+        var commandTokens = [CommandToken]() // tokens that denote/delimit LP commands
+        for index in stride(from: stopIndex - 1, to: startIndex - 1, by: -1) {
+            let form = self[index].reduction
+            switch form { // can't use Token.isLeftDelimited as that's not yet implemented
+            case .semicolon, .colon, .separator(_), .startList, .startRecord, .startGroup, .lineBreak:
+                // note that .colon here typically denotes kv-list item; TO DO: what about records? when we reduce record values, we need to stop on the colon even though it's already been partly reduced to a .label
+                return (index + 1, commandTokens.reversed()) // TO DO: what if this returns on the first token checked? the index returned will be stopIndex, which is out of range
+            case .unquotedName(let n), .quotedName(let n):
+                commandTokens.append((index, .name(n)))
+            case .label(let n):
+                commandTokens.append((index, .label(n)))
+            case .operatorName(let d): // we need this to determine where commands are right-delimited by infix/postfix operators of lower precedence
+                // when parsing commands, we only need consider operators that appear after a command name
+                // we only really need to consider operators that appear after a command name; however, we're scanning right-to-left here
+                guard let mayEndCommand = d.terminatesCommand() else {
+                    fatalError("Cannot resolve precedence between commandand overloaded operator \(d.name) as the operators’ precedences are higher AND lower than command’s.")
+                }
+                if mayEndCommand {
+                    // TO DO: this only applies if preceding token in stack is a name (e.g. `foo - 1`)
+                    if d.hasPrefixForms {
+                        if index > startIndex {
+                            switch self[index - 1].reduction {
+                            case .quotedName(_), .unquotedName(_): ()
+                            default:
+                                print("TODO: \(d.name) operator has both prefix and infix forms, so needs further analysis to determine if it's the start of a direct argument or end of command")
+                        // TO DO: need to append .maybeTerminatingOperator(OperatorDefinitions); readLowPunctuationCommand can then do whitespace analysis to make judgement call (caveat: WS analysis only really works for symbolic prefix+infix operators; word-based prefix+infix operators will require WS on both sides [or explicit parenthesization of the operand, e.g. `cmd op(1)`, which is rather pointless as it's easier and a lot less confusing just to write `cmd {op 1}` in the first place])
+                            }
+                        }
+                    }
+                    commandTokens.append((index, .terminatingOperator))
+                }
+            default: ()
+            }
+        }
+        return (startIndex, commandTokens.reversed())
     }
     
     // find full operation matchers in the given range; reductionForOperatorExpression() uses the result in determining the order in which to reduce nested operators according to the operators’ arity, precedence, and/or associativity
@@ -91,16 +134,6 @@ extension Array where Element == Parser.StackItem {
         //print("findLongestMatches:")
         for rightExpressionIndex in (startIndex..<stopIndex).reversed() { // TO DO: confirm right-to-left vs left-to-right
             let form = self[rightExpressionIndex]
-            /*
-             switch form.reduction { // DEBUG
-             case .unquotedName(let n), .quotedName(let n):
-             print("NAME", n)
-             case .label(let n):
-             print("LABEL", n)
-             default:
-             print(form.reduction)
-             }*/
-            //          print("…matchers new:", form.matches.filter({$0.isAtBeginningOfMatch}), "\n         part:", form.matches.filter({!$0.isAtBeginningOfMatch && !$0.isAFullMatch}), "\n         full:", form.matches.filter({$0.isAFullMatch}))
             for m in form.matches {
                 if m.isAFullMatch {
                     //print("full",m)
@@ -120,7 +153,7 @@ extension Array where Element == Parser.StackItem {
                 }
             }
         }
-        return longestMatches.values.sorted{ $0.stop < $1.stop }
+        return longestMatches.values.sorted{ $0.start < $1.start }
     }
     
     

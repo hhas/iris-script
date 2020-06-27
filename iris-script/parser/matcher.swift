@@ -28,13 +28,18 @@ extension OperatorDefinition {
 
 extension OperatorDefinitions {
     
-    private static var _matchID = 0
+    private static var _groupID = 0
+    
+    static func newGroupID() -> Int {
+        self._groupID += 1
+        return self._groupID
+    }
     
     // list/record/group/block literals are also defined as operators for pattern-matching purposes
 
     func patternMatchers() -> [PatternMatcher] { // returns one or more new pattern matchers for matching this operator
-        OperatorDefinitions._matchID += 1
-        return self.flatMap{ $0.patternMatchers(groupID: OperatorDefinitions._matchID) }
+        let groupID = OperatorDefinitions.self.newGroupID()
+        return self.flatMap{ $0.patternMatchers(groupID: groupID) }
     }
 }
 
@@ -49,7 +54,7 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     private static var _matchID = 0
     
     var description: String {
-        return "«matcher for \(self.pattern.description) of `\(self.definition.precis)`\(self.isAFullMatch ? (self.isLongestPossibleMatch ? "✔︎" : "✓") : "") \(self.definition.precedence)»"
+        return "«matcher \(self.groupID)/\(self.matchID) for \(self.pattern.description) of `\(self.definition.precis)`\(self.isAFullMatch ? (self.isLongestPossibleMatch ? "✔︎" : "✓") : "") \(self.definition.precedence)»"
     }
     
     var name: Symbol { return self.definition.name }

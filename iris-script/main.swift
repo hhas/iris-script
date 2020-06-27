@@ -135,11 +135,44 @@ func test() {
     
     script = " if -1 * 2 + -3 = -4 then 5 + 6 else -7 ÷ -8 "
     
+    // full punctuation command syntax
     script = "  {1, bar: 2, baz: fub, mod: 3} "
-    
     script = " foo {1} "
+    script = " foo "
     
+    // low-punctuation command syntax
+    script = " foo "
+    script = " foo 1 "
+    script = " foo baz: 2 "
+    script = " foo baz: 2 mod: 3 "
     script = " foo 1 baz: 2 mod: 3 "
+    script = " foo baz: 2 mod: 3 of 4 + bar fub: 5 " // ‘+’ {‘foo’ {baz: 2, mod: ‘of’ {3, 4}}, ‘bar’ {fub: 5}}
+
+    // low-punctuation command syntax with nested commands (commands nested within an LP command can have record argument, non-record direct argument, or no argument only; i.e. labeled arguments after a nested command belong to the outer LP command)
+    script = " foo fub: bar baz: 2" // ‘foo’ {fub: ‘bar’, baz: 2}
+    script = " foo fub: bar 3 baz: 2" // ‘foo’ {fub: ‘bar’ {3}, baz: 2}
+    script = " foo fub: bar zim boo 3 baz: 2" // ‘foo’ {fub: ‘bar’ {3}, baz: 2}
+
+    script = " foo fub: bar zim boo baz: 2"
+
+    script = " foo fub: bar baz: 2"
+    script = " foo baz: bar"
+    script = " foo bar baz"
+    script = " foo bar "
+    
+    // TO DO: where an operator is both infix and prefix, need to decide if it's an argument to left command or if the left command is the left operand to the operator; currently these all parse `-` as infix operator
+    script = " foo - bar " // infix `-`
+   // script = " foo -bar " // assuming this follows WS rule and parses as `foo {'-' {bar}}`, we may want the PP to parenthesize the argument as `foo {-bar}` to make clear to user how it has interpreted that code
+    script = " foo - 1 " // infix `-`
+    script = " foo -1 " // PP might not need to parenthesize the argument here as `-1` is fairly obviously a number literal, and thus clearly intended by the user(?) as an argument to `foo`
+
+    
+    
+   //script = "tell app “com.apple.TextEdit” to get documents from 2 thru -1" // TO DO: this currently fails
+
+    
+    
+    //script = " foo -1 bar: 2 "
     
    // script = " foo 1 "
     

@@ -6,6 +6,9 @@
 import Foundation
 
 
+// caution: calling OperatorDefinition.patternMatchers() returns matchers with groupID -1; if a groupID is needed (i.e. if the definition is not auto-reducing), use OperatorDefinition.patternMatchers(groupID: OperatorDefinitions.newGroupID()) // TO DO: this is kludgy and fragile; needs a proper API
+
+
 // remember: homonyms bad (e.g. don't overload […] or {…} syntax to describe anything except lists and records)
 
 
@@ -71,7 +74,8 @@ let parenthesizedBlockLiteral = OperatorDefinition(name: "(…,…)", pattern:
 //let commandLiteral = OperatorDefinition(name: "«COMMAND»", pattern:
 //    [.name, .testValue({$0 is Record})], autoReduce: true, reducer: reduceCommandLiteral)
 
-
+let nestedCommandLiteral = OperatorDefinition(name: "«COMMAND»", pattern:
+    [.name, .optional(.expression)], precedence: commandPrecedence, associate: .right, reducer: reduceCommandLiteral)
 
 //let pairLiteral = OperatorDefinition(name: "«LABEL»", pattern:
 //    [.label, .token(.colon), EXPR], reducer: reducePairLiteral) // TO DO: what precedence? (should be very low, but presumably not as low as `to` operator) what associativity? (.none or .right?)

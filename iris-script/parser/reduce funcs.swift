@@ -35,7 +35,7 @@ extension Array where Element == Parser.StackItem {
     func name(at i: Int) -> Symbol {
         switch self[i].reduction {
         case .quotedName(let n), .unquotedName(let n): return n
-        default: fatalError("Bad label") // should never happen
+        default: fatalError("Bad name") // should never happen
         }
     }
     func label(at i: Int) -> Symbol {
@@ -204,8 +204,11 @@ func reduceParenthesizedBlockLiteral(stack: Parser.Stack, definition: OperatorDe
 
 }
 
-func reduceCommandLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
+func reduceCommandLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value { // used to reduce nested commands (`NAME EXPR?`) which have optional direct argument only
     let name = stack.name(at: start)
+    //print("reduceCommandLiteral:", name)
+    //stack.show(start, end)
+    //print()
     if start == end - 1 {
         return Command(name) // no argument
     } else if start == end - 2 {
@@ -213,14 +216,10 @@ func reduceCommandLiteral(stack: Parser.Stack, definition: OperatorDefinition, s
         if let record = expr as? Record {
             return Command(name, record) // FP syntax
         } else {
-            return Command(name, [(nullSymbol, expr)]) // direct param only // TO DO: this assumes expr is already reduced; if it's multi-token it won't be as fullyReduceExpression needs to determine its bounds in order to reduce it, and the find func isn't smart enough to determine if command name delimits the expr or is part of it (e.g. `foo * 3` requires knowledge of operator arity, while `foo + 2` is inherently ambiguous requiring whitespace analysis to resolve)
+            return Command(name, [(nullSymbol, expr)]) // direct param only
         }
-    } else {
-        // TO DO: LP syntax (direct param and/or labeled params)
-        print("\nREDUCE LP command:")
-        stack.show(start, end)
-        print()
-        throw NotYetImplementedError()
+    } else { // this should never happen
+        fatalError("reduceCommandLiteral() does not support LP command syntax")
     }
 }
 
