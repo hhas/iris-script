@@ -75,7 +75,7 @@ let parenthesizedBlockLiteral = OperatorDefinition(name: "(…,…)", pattern:
 //    [.name, .testValue({$0 is Record})], autoReduce: true, reducer: reduceCommandLiteral)
 
 let nestedCommandLiteral = OperatorDefinition(name: "«COMMAND»", pattern:
-    [.name, .optional(.expression)], precedence: commandPrecedence, associate: .right, reducer: reduceCommandLiteral)
+    [.name, .optional(.expression)], precedence: commandPrecedence, reducer: reduceCommandLiteral)
 
 //let pairLiteral = OperatorDefinition(name: "«LABEL»", pattern:
 //    [.label, .token(.colon), EXPR], reducer: reducePairLiteral) // TO DO: what precedence? (should be very low, but presumably not as low as `to` operator) what associativity? (.none or .right?)

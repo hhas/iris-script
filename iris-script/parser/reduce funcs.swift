@@ -24,27 +24,23 @@ import Foundation
 // caution: skip functions step over specific tokens if found; they do not check if tokens exist (pattern matchers are responsible for checking punctuation)
 
 func skipSeparator(_ stack: Parser.Stack, _ i: inout Int) {
-    if case .separator(_) = stack[i].reduction { i += 1 }
+    if case .separator(_) = stack[i].form { i += 1 }
 }
 func skipLineBreaks(_ stack: Parser.Stack, _ i: inout Int) {
-    while case .lineBreak = stack[i].reduction { i += 1 }
+    while case .lineBreak = stack[i].form { i += 1 }
 }
 
 extension Array where Element == Parser.StackItem {
 
-    func name(at i: Int) -> Symbol {
-        switch self[i].reduction {
-        case .quotedName(let n), .unquotedName(let n): return n
-        default: fatalError("Bad name") // should never happen
-        }
-    }
-    func label(at i: Int) -> Symbol {
-        guard case .label(let name) = self[i].reduction else { fatalError("Bad label") }
-        return name
-    }
     func value(at i: Int) -> Value {
-        guard case .value(let expr) = self[i].reduction else { fatalError("Bad reduction; expected token \(i) to be Value but found unreduced \(self[i]).") }
-        return expr
+        if case .value(let expr) = self[i].form {
+            return expr
+        } else if let matcher = self[i].matches.first(where: { $0.isAFullMatch }) {// KLUDGE
+            if let reduction = try? matcher.definition.reduce(self, matcher.definition, i, i+1) {
+                return reduction
+            }
+        }
+        fatalError("Bad reduction; expected token \(i) to be Value but found unreduced \(self[i]).")
     }
         
 }
@@ -158,7 +154,7 @@ func reduceRecordLiteral(stack: Parser.Stack, definition: OperatorDefinition, st
     skipLineBreaks(stack, &i)
     while i < end - 1 { // ignore `}`
         let label: Symbol
-        if case .label(let n) = stack[i].reduction {
+        if case .label(let n) = stack[i].form {
             label = n
             i += 1 // step over label
             skipLineBreaks(stack, &i)
@@ -189,12 +185,12 @@ func reduceGroupLiteral(stack: Parser.Stack, definition: OperatorDefinition, sta
 
 func reduceParenthesizedBlockLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
     //show(stack, start, end)
-    //print(stack[start..<end].map{$0.reduction})
+    //print(stack[start..<end].map{$0.form})
     var items = [Value]()
     var i = start + 1 // ignore `(`
     skipLineBreaks(stack, &i)
     while i < stack.count - 1 { // ignore `)`
-        //print(">>>", stack[i].reduction)
+        //print(">>>", stack[i].form)
         items.append(stack.value(at: i))
         i += 1 // step over value
         skipSeparator(stack, &i)
@@ -205,7 +201,10 @@ func reduceParenthesizedBlockLiteral(stack: Parser.Stack, definition: OperatorDe
 }
 
 func reduceCommandLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value { // used to reduce nested commands (`NAME EXPR?`) which have optional direct argument only
-    let name = stack.name(at: start)
+    guard let name = stack[start].form.asCommandName() else {
+        if case .value(let v) = stack[start].form, v is Command { return v } // KLUDGE; TO DO: there is a problem with arg-less command that appears as left operand not being reduced prior to reducing the operation, e.g. `document` in `get document at 1`; there is a nasty hack in `[StackItem].value(at:)` to reduce it on the fly, but that causes further problems when reduceCommandLiteral is subsequently called on it; once commands are properly parsing we need to revisit the logic involved; see the reductionOrderFor switch in reductionForOperatorExpression(): there should be a .left reduction for the LH command
+        fatalError("Bad name") // should never happen
+    }
     //print("reduceCommandLiteral:", name)
     //stack.show(start, end)
     //print()
@@ -222,14 +221,6 @@ func reduceCommandLiteral(stack: Parser.Stack, definition: OperatorDefinition, s
         fatalError("reduceCommandLiteral() does not support LP command syntax")
     }
 }
-
-/*
-func reducePairLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
-    print("REDUCE PAIR:")
-    stack.show(start, end)
-    //assert(start == end - 2) // this only holds if we disallow LFs after colon
-    return Pair((stack.label(at: start), stack.value(at: end - 1)))
-}*/
 
 
 func reducePipeOperator(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value { // pipe (";") is a special case as it transforms its two operands (of which the right-hand operand must be a command) such that `A;B{C,D};E` -> `E{B{A,C,D}}`

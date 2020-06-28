@@ -56,7 +56,7 @@ import Foundation
 case .colon: // push onto stack; what about pattern matching? what should `value:value` transform to?
     //self.reduceExpression() // TO DO: is this appropriate? probably not: need to take care not to over-reduce LH (e.g. `foo bar:baz` should not reduce to `foo{bar}:baz`) i.e. is there any situation where LH is *not* a single token ([un]quotedName or symbol/string/number literal) - obvious problem here is that it won't handle string literals that haven't already been reduced to .value (which is something we defer when reading per-line)
     let m: [PatternMatcher]
-    if case .value(_) = self.stack.last?.reduction {
+    if case .value(_) = self.stack.last?.form {
         m = []//patternMatchers(for: colonPair, remaining: [colonPair.pattern[2]])]
     } else {
         m = []
@@ -149,7 +149,7 @@ public class Parser {
 
     
     // TO DO: also capture source code ranges? (how will these be described in per-line vs whole-script parsing? in per-line, each line needs a unique ID (incrementing UInt64) that is invalidated when that line is edited; that allows source code positions to be referenced with some additional indirection: the stack frame captures first and last line IDs plus character offset from start of line)
-    typealias StackItem = (reduction: Form, matches: [PatternMatcher], hasLeadingWhitespace: Bool) // in-progress/completed matches
+    typealias StackItem = (form: Form, matches: [PatternMatcher], hasLeadingWhitespace: Bool) // in-progress/completed matches
 
     typealias Stack = [StackItem]
     
@@ -221,8 +221,8 @@ public class Parser {
     private func handlePunctuation(using handler: PunctuationHandler?) {
         // don't insert debugger command if preceding tokens can't be reduced to Value (i.e. punctuation modifies run-time behavior of the preceding value only, e.g. `Delete my_files!`)
         if self.stack.isEmpty { return } // this could happen if punctuation appears at start of line; parser should reject that case before it gets to here
-        if case .value(let value) = self.stack[self.stack.count-1].reduction { // assuming preceding token[s] have already reduced to a value (expr), get that value for passing to hook
-            if let fn = handler { self.stack[self.stack.count-1].reduction = .value(fn(value)) }
+        if case .value(let value) = self.stack[self.stack.count-1].form { // assuming preceding token[s] have already reduced to a value (expr), get that value for passing to hook
+            if let fn = handler { self.stack[self.stack.count-1].form = .value(fn(value)) }
         } // else if preceding tokens haven't [yet] been reduced, leave the punctuation token for later processing; TO DO: how to avoid double-handling when re-scanning stack (punctuation tokens are left on stack for pattern matching); simplest is to define DebugValue protocol and require callbacks to return that; current stack value can then be tested to see if it's already wrapped
     }
     
@@ -245,7 +245,7 @@ public class Parser {
             if matcher.match(form, allowingPartialMatch: true) { // apply to current token; this matches prefix operators
                 currentMatches.append(matcher)
                 if matcher.hasConjunction { conjunctionMatchers.append(matcher) }
-            } else if let previous = self.stack.last, matcher.match(previous.reduction, allowingPartialMatch: true) { // apply to previous token (expr) and current token (opName); this matches infix operators
+            } else if let previous = self.stack.last, matcher.match(previous.form, allowingPartialMatch: true) { // apply to previous token (expr) and current token (opName); this matches infix operators
                 // confirm opname was 2nd pattern (i.e. primary keyword, not a conjunction); kludgy
                 let matches = matcher.next().filter{ $0.match(form) } // caution: since opdefs currently include conjunctions, we need to rematch operatorName here; this'll match infix/postfix ops and discard conjunctions // TO DO: apply this match even when previous match fails and, if it succeeds, put matcher in current token's stack frame, marking it as requiring backmatch?
                 if !matches.isEmpty {
@@ -338,9 +338,9 @@ public class Parser {
                 // (note: while we could use a `NAME RECORD` PatternMatcher to auto-reduce FP commands, it’s simpler just to hardcode it here)
                 // (note: name-only and low-punctuation commands require additional scanning to determine right-hand boundary to their argument list so will be dealt with later by fullyReduceExpression)
                 if self.stack.count > 1 {
-                    switch self.stack[self.stack.count - 2].reduction {
+                    switch self.stack[self.stack.count - 2].form {
                     case .unquotedName(let name), .quotedName(let name):
-                        guard case .value(let v) = self.stack[self.stack.count - 1].reduction, let record = v as? Record else {
+                        guard case .value(let v) = self.stack[self.stack.count - 1].form, let record = v as? Record else {
                             fatalError("This should never fail")
                         }
                         let command = Command(name, record)

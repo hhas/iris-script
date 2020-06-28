@@ -186,6 +186,33 @@ struct Token: CustomStringConvertible {
             default: return false // caution: this will mask missing cases, but Swift compiler insists on it; make sure these cases are updated whenever Form enum is modified
             }
         }
+        
+        func asCommandName() -> Symbol? { // caution: this assumes line readers have already reduced contiguous .letters, .digits, .underscore, etc. to an .[un]quotedName(…)
+            switch self {
+            case .unquotedName(let n), .quotedName(let n): return n
+            default: return nil
+            }
+        }
+        
+        var isCommandName: Bool {
+            switch self {
+            case .unquotedName(_), .quotedName(_): return true
+            default: return false
+            }
+        }
+        
+        func asArgumentLabel() -> Symbol? { // TO DO: currently unused
+            switch self {
+            case .label(let n): return n
+            default: return nil
+            }
+        }
+        var isArgumentLabel: Bool {
+            switch self {
+            case .label(_): return true
+            default: return false
+            }
+        }
     }
     
     static let predefinedSymbols: [Character:Form] = [
@@ -314,18 +341,6 @@ struct Token: CustomStringConvertible {
     var definitions: OperatorDefinitions? {
         if case .operatorName(let definitions) = self.form { return definitions } else { return nil }
     }
-    
-    /*
-    // TO DO: these are currently unused
-    var isOperatorName: Bool { if case .operatorName(_) = self.form { return true } else { return false } }
-    
-    var isCommandName: Bool {
-        switch self.form {
-        case .letters, .symbols, .underscore, .quotedName(_), .unquotedName(_): return true
-        default:                                                                return false
-        }
-    }
-    */
 }
 
 let nullToken = Token(.lineBreak, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source

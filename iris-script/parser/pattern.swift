@@ -166,7 +166,7 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
                 case .operatorName(let definitions):
                     //print("Checking if .\(form) could be the start of an EXPR", definitions.map{ $0.hasLeadingExpression })
                     // TO DO: the problem remains operatorName(_) as we need to know if none/some/all of those defs has leading expr; also, what if mixed? (e.g. unary `-` can match as .start of expr, but we also have to consider binary `-`) // as long as we re-match the fully reduced operand, we should be okay returning true here, as long as at least one definition has trailing expr
-                    return definitions.first{ !$0.hasLeadingExpression } != nil // _could_ this be a prefix/atom operator? (we can't ask if it is definitely a prefix/atom operator, because that requires completing that match as well, and Pattern [intentionally] has no lookahead capability; however, “could be” should be good enough for now; a greater problem is hasLeadingExpression's inability to guarantee a correct result when custom .testValue(…) patterns are used as those can only match tokens that have already been fully reduced; for now, .testValue is only used to match keyed-list keys, which are atomic .values when whole-script parsing is used [per-line parsing remains TBD, given the challenges of parsing incomplete multi-line string literals, so we aren't even going to think about that right now])
+                    return definitions.contains{ !$0.hasLeadingExpression } // _could_ this be a prefix/atom operator? (we can't ask if it is definitely a prefix/atom operator, because that requires completing that match as well, and Pattern [intentionally] has no lookahead capability; however, “could be” should be good enough for now; a greater problem is hasLeadingExpression's inability to guarantee a correct result when custom .testValue(…) patterns are used as those can only match tokens that have already been fully reduced; for now, .testValue is only used to match keyed-list keys, which are atomic .values when whole-script parsing is used [per-line parsing remains TBD, given the challenges of parsing incomplete multi-line string literals, so we aren't even going to think about that right now])
 
                 default: ()
                 }
@@ -177,7 +177,7 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
                 case .unquotedName(_), .quotedName(_): return true
                 case .operatorName(let definitions):
                     //print("Checking if .\(form) could be the end of an EXPR", definitions.map{ $0.hasTrailingExpression })
-                    return definitions.first{ !$0.hasTrailingExpression } != nil
+                    return definitions.contains{ !$0.hasTrailingExpression }
                 default: ()
                 }
             }

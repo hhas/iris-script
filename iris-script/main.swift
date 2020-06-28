@@ -168,17 +168,30 @@ func test() {
 
     
     
-   //script = "tell app “com.apple.TextEdit” to get documents from 2 thru -1" // TO DO: this currently fails
+    script = " document at 1 " // `document at 1` *must* take `document` as the left operand to `at`, regardless of precedence, since `at` has no prefix form (infix only)
+    
+    script = " get document at 1 " // should reduce to `get{'at'{document{}, 1}}`
+    
+
+
+    script = " foo of bar " // here the infix `of` operator MUST terminate `foo` command, regardless of precedence (command precedence only comes into play if there is an expr inbetween `foo` and `of`, e.g. `foo 1 of 2`)
+    
+    script = " foo 1 bar: 2 "
+    
+    
+    script = " foo 1 "
+    
+    script = " foo 1 bar: 2 mod: 3 " // ‘foo’ {1, bar: 2, mod: 3}
+    
+    script = " foo 1 bar: baz mod: 3 " // ‘foo’ {1, bar: ‘baz’, mod: 3}
+
+    script = " foo 1 bar: baz fub 4 mod: 3 " // ‘foo’ {1, bar: ‘baz’ {‘fub’ {4}}, mod: 3}
 
     
-    
-    //script = " foo -1 bar: 2 "
-    
-   // script = " foo 1 "
-    
-   // script = " foo 1 bar: 2 mod: 3 "
-    
-    //script = " if -1 * - 2 + ---3 = -4 then -5 + -6 else -7 ÷ -8 "
+//    script = " foo -1 bar: 2 " // TO DO: still breaks (need to work on ambiguous operator)
+
+
+    script = " if -1 * - 2 + ---3 = -4 then -5 + -6 else -7 ÷ -8 " // ‘else’ {‘if’ {‘=’ {‘+’ {‘*’ {-1, -2}, -3}, -4}, ‘+’ {-5, -6}}, ‘/’ {-7, -8}}
     
    // script = " -1 else - 2 + 3 "
     

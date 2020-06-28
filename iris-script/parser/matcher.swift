@@ -122,9 +122,8 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     
     public var isAFullMatch: Bool { // if match() returns true and a longer match isn't possible, the tokens identified by this matcher can be passed to the operator defintion's reducefunc
         // kludge: pattern array can end with any number of .optional/.zeroOrMore patterns
-      ///  print(self.definition.precis,"full?", //[Pattern](self.pattern.dropFirst()).reify(),
-      //        ([Pattern](self.pattern.dropFirst()).reify().first{$0.isEmpty}) != nil)
-        return ([Pattern](self.pattern.dropFirst()).reify().first{$0.isEmpty}) != nil
+      ///  print(self.definition.precis,"full?", //[Pattern](self.pattern.dropFirst()).reify(), [Pattern](self.pattern.dropFirst()).reify().contains{$0.isEmpty})
+        return [Pattern](self.pattern.dropFirst()).reify().contains{ $0.isEmpty}
     } // if true, stack item is last Reduction in this match; caution: this does not mean a longer match cannot be made
     
     public var isLongestPossibleMatch: Bool {
