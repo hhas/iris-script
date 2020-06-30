@@ -21,6 +21,13 @@ let operatorReader = newOperatorReader(for: operatorRegistry)
 
 func test() {
     
+    runScript("  do, 1, 2,\n 3\ndone ") // `do \n 1 \n 2 \n 3 \n done` (note: reduceKeywordBlock and Block struct don't yet preserve original expr delimiters, and the indent level will always be 1 tab until a full pretty printer is implemented)
+        
+    // runScript("1, do, 2, done, 3") // TO DO: FIX: this crashes
+    
+    //runScript("1, ( 2, 3 ), 4")
+   // return;
+    
     runScript("foo * bar") // ‘*’ {‘foo’, ‘bar’}
     runScript("foo - 1") // TO DO: determine if `-` operator is prefix or infix/postfix based on whitespace before/after (currently defaults here to prefix)
     
@@ -86,7 +93,7 @@ func test() {
 
     runScript("if 1 + 2 = 5 then write “ok”.")
 
-    runScript("set Bob to: “Tim”. if 1 + 2 = 3 then write 6, write bob, write 9 ÷ 2.") // TO DO: make sure operator definition + handler interface describes right-hand operand as an expr sequence ('sentence'?), esp. in documentation
+    runScript("set Bob to: “Tim”. if 1 + 2 = 3 then write 6, write bob, write 9 ÷ 2.") // TO DO: couple issues with this: 1. comma after `write 6` should probably be autocorrected to period to make clear that `if` expr ends there; 2. `write 9 ÷ 2` is most likely intended by user to print result of 9÷2, but `÷` is lower precedence than `write` so parses as `(write 9) ÷ 2`; how best to identify potental ambiguities between user’s intent and machine’s interpretation, and how best to clarify automatically/flag for user attention/prompt for user to make her intent explicit?
 
     runScript("Set name to: “Bob”. If 1 + 2 = 3 then write true, write name, write [9 ÷ 2].")
 
@@ -351,7 +358,7 @@ func runScript(_ script: String) {
         //print("RESULT:", try ast.eval(in: env, as: asAnything))
         let _ = ast
     } catch {
-        print(error)
+        print("ERROR:", error)
     }
     //print(script)
 }

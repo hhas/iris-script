@@ -2,26 +2,28 @@
 //  literal patterns.swift
 //  iris-script
 //
+// special-purpose patterns hardcoded into the parser; unlike library-defined operators (which are completely customizable), these patterns are part of the language’s core syntax and cannot be modified, overloaded, removed, or replaced
+
 
 import Foundation
 
+// note that list/record/group/block literals (which, unlike true library-defined operators, are constructed using the language’s reserved punctuation symbols) are also treated as operators for pattern-matching purposes, as are full-punctuation commands (`NAME RECORD`) and nested commands (`NAME EXPR?`); however, unlike library-defined operators (which are loaded from file into a standard lookup table), these non-operator matchers are instantiated and attached directly to the parser stack by the parser itself when the relevant tokens are encountered (i.e. don’t futz with the below definitions and don't try to overload them with standard operator glues)
 
-// caution: calling OperatorDefinition.patternMatchers() returns matchers with groupID -1; if a groupID is needed (i.e. if the definition is not auto-reducing), use OperatorDefinition.patternMatchers(groupID: OperatorDefinitions.newGroupID()) // TO DO: this is kludgy and fragile; needs a proper API
+// (remember: homonyms are a bad idea in general; even if the parser did allow it, overloading […] or {…} syntax to describe anything other than list and record literals would be bad design practice, confusing users as to their meaning and correct usage)
+
+// caution: each time parser directly calls OperatorDefinition.patternMatchers() on one of the definitions below, the returned matchers are assigned a new groupID; this means the hardcoded patterns in `literal patterns.swift` must not be overloaded, as the findLongestMatches() method relies on shared group IDs to prune multiple matches of the same tokens (this is does not apply to overloaded library-defined operators as those are stored in OperatorDefinitions instances, and OperatorDefinitions.patternMatchers() assigns a common group ID to all matchers)
 
 
-// remember: homonyms bad (e.g. don't overload […] or {…} syntax to describe anything except lists and records)
-
-
-private let EXPR: Pattern = .expression
-private let LF: Pattern = .zeroOrMore(.lineBreak)
-private let DELIM: Pattern = [.delimiter, LF] // e.g. comma, linebreak, or comma followed by linebreak
+let EXPR: Pattern = .expression
+let SKIP_LF: Pattern = .zeroOrMore(.lineBreak)
+let DELIM: Pattern = [.delimiter, SKIP_LF] // e.g. comma, linebreak, or comma followed by linebreak
 
 
 
 // ordered list
 
 let orderedListLiteral = OperatorDefinition(name: "[…]", pattern:
-    [.token(.startList), LF, .optional([EXPR, .zeroOrMore([DELIM, EXPR])]), LF, .token(.endList)],
+    [.token(.startList), SKIP_LF, .optional([EXPR, .zeroOrMore([DELIM, EXPR])]), SKIP_LF, .token(.endList)],
                                             autoReduce: true, reducer: reduceOrderedListLiteral)
 
 
@@ -36,7 +38,7 @@ let keyValuePair: Pattern = [.testValue({$0 is HashableValue}), .token(.colon), 
 let keyValueListLiteral = OperatorDefinition(name: "[…:…]", pattern:
     [.token(.startList), .anyOf([
         .token(.colon), // empty kv-list uses same literal syntax as Swift, `[:]`
-        [keyValuePair, LF, .zeroOrMore([DELIM, keyValuePair]), LF] // a kv-list with one or more items
+        [keyValuePair, SKIP_LF, .zeroOrMore([DELIM, keyValuePair]), SKIP_LF] // a kv-list with one or more items
     ]), .token(.endList)], autoReduce: true, reducer: reduceKeyedListLiteral)
 
 
@@ -45,49 +47,30 @@ let keyValueListLiteral = OperatorDefinition(name: "[…:…]", pattern:
 let recordField: Pattern = [.optional(.label), EXPR] // Parser and Pattern now define .label as `NAME COLON` token sequence
 
 let recordLiteral = OperatorDefinition(name: "{…}", pattern:
-    [.token(.startRecord), LF, .optional([recordField, .zeroOrMore([DELIM, recordField])]), LF, .token(.endRecord)],
+    [.token(.startRecord), SKIP_LF, .optional([recordField, .zeroOrMore([DELIM, recordField])]), SKIP_LF, .token(.endRecord)],
                                        autoReduce: true, reducer: reduceRecordLiteral)
 
 
 // group/parenthesized block
 
 let groupLiteral = OperatorDefinition(name: "(…)", pattern:
-    [.token(.startGroup), LF, EXPR, LF, .token(.endGroup)], autoReduce: true, reducer: reduceGroupLiteral)
+    [.token(.startGroup), SKIP_LF, EXPR, SKIP_LF, .token(.endGroup)], autoReduce: true, reducer: reduceGroupLiteral)
 
 let parenthesizedBlockLiteral = OperatorDefinition(name: "(…,…)", pattern:
-    [.token(.startGroup), LF, .optional([EXPR, .oneOrMore([DELIM, EXPR])]), LF, .token(.endGroup)],
+    [.token(.startGroup), SKIP_LF, .optional([EXPR, .oneOrMore([DELIM, EXPR])]), SKIP_LF, .token(.endGroup)],
                                       autoReduce: true, reducer: reduceParenthesizedBlockLiteral)
 
 
 // command
 
-// challenge with matching commands is that 1. LP syntax is superset of standard `NAME EXPR` syntax, and 2. LP syntax should not nest (reducefunc will need to handle nested commands somehow); one more gotcha of LP syntax is when first arg is itself a record literal (i.e. command must be written `name {{…}}`; the advantages of LP syntax, particularly when using the language as a command shell, are such that this compromise should be worth it, but it will have to be tested in real-world use to verify)
-
-
-
-// TO DO: using patterns to match FP commands will only conflict with hardcoded behavior for LP commands, so best delete
-
-//let labeledValue = OperatorDefinition(name: "«LABELEDVALUE»", pattern:
-//    [.label, .expression], precedence: commandPrecedence, reducer: reducePairLiteral)
-
-// full punctuation command with argument can be implemented as pattern
-//let commandLiteral = OperatorDefinition(name: "«COMMAND»", pattern:
-//    [.name, .testValue({$0 is Record})], autoReduce: true, reducer: reduceCommandLiteral)
+// note: the challenge with pattern-matching commands is that 1. LP syntax is superset of standard `NAME EXPR` syntax, and 2. LP syntax should not nest (as that creates ambiguity over which command owns trailing labeled arguments, c.f. C’s “dangling else”); one more gotcha of LP syntax is when first arg is itself a record literal (i.e. that command must be written as `name {{…},…}` to distinguish the argument record of an FP command from a record literal to be passed as command’s direct argument. The requirement for this special-case syntax rule is an irritation; however, the advantages of LP syntax, particularly when using the language as a command shell (where typing commands many not incur too many additional keystrokes when compared to a traditional *nix CLI such as bash), are such that this compromise should be worth it, but it will have to be tested in real-world use to verify).
 
 let nestedCommandLiteral = OperatorDefinition(name: "«COMMAND»", pattern:
     [.name, .optional(.expression)], precedence: commandPrecedence, reducer: reduceCommandLiteral)
 
-//let pairLiteral = OperatorDefinition(name: "«LABEL»", pattern:
-//    [.label, .token(.colon), EXPR], reducer: reducePairLiteral) // TO DO: what precedence? (should be very low, but presumably not as low as `to` operator) what associativity? (.none or .right?)
 
 
-// TO DO: what about colon pairs for name-value bindings in block contexts? (convenient for declaring constants, properties)
-
-// TO DO: what about colon pairs for `interface:action` callable definitions? (to avoid parsing problems, we're using `to…run…`, `when…run…`; to define an unbound proc, use `procedure…run…`? Q. what about `ignoring unknown arguments` option?)
-
-
-// TO DO: pretty sure `;` shouldn't need precedence: it should always delimit exprs in the same way that comma, period, etc do; for now though we keep the value that was defined in Token.Form.precedence
-let pipeLiteralPrecedence: Precedence = 96 // important: precedence needs to be higher than expr sep punctuation (comma, period, etc), but lower than lp command’s argument label [Q. lp command argument shouldn't have precedence]
+let pipeLiteralPrecedence: Precedence = 96 // TO DO: check that `;` doesn't need precedence or associativity: it should always delimit exprs in the same way that other built-in punctuation (comma, period, etc) do (for now though we keep the values it had in the old recursive descent parser)
 
 
 let pipeLiteral = OperatorDefinition(name: "«PIPE»", pattern:

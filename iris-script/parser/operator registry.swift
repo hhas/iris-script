@@ -157,10 +157,10 @@ extension OperatorRegistry { // convenience methods for standard operator forms
     }
     
     // `OPNAME DELIM (EXPR DELIM)* OPNAME`
-    func prefix(_ name: Keyword, suffix: Keyword, reducer: Parser.ReduceFunc? = nil) {
+    func prefix(_ name: Keyword, suffix: Keyword, reducer: @escaping Parser.ReduceFunc = reduceKeywordBlock) {
         self.add(OperatorDefinition(pattern:
-            [.keyword(name), .delimiter, .zeroOrMore([.expression, .delimiter]), .keyword(suffix)], // TO DO: LF*
-                                    autoReduce: true, reducer: reducer ?? reducePrefixOperatorWithSuffix))
+            [.keyword(name), DELIM, .zeroOrMore([.expression, DELIM]), .keyword(suffix)], // TO DO: LF*
+                                    autoReduce: true, reducer: reducer))
     }
     
     // `EXPR OPNAME EXPR OPNAME EXPR`

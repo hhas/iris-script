@@ -8,6 +8,11 @@ import Foundation
 // caution: endIndex is non-inclusive (i.e. use i<endIndex, stack[startIndex..<endIndex]) // TO DO: should endIndex be inclusive? (probably; easier when selecting first/last stack indices)
 
 
+// TO DO: pass completed match rather than OperatorDefinition?
+
+// TO DO: pass ArraySlice<StackItem> rather than full stack?
+
+
 // TO DO: allow LF after colon in record/kv-list?
 
 // TO DO: how to preserve user's line breaks? (and when should PP apply its own choice of linebreaking/indents?)
@@ -97,10 +102,20 @@ func reducePrefixOperatorWithConjunction(stack: Parser.Stack, definition: Operat
     return Command(definition, left: stack.value(at: start + 1), right: stack.value(at: end - 1)) // TO DO: this uses convenience initializer
 }
 
-func reducePrefixOperatorWithSuffix(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
-    // TO DO: this is typically keyword-based block (`do…done`) and probably not much use for anything else, in which case custom reducer is more appropriate
-    // TO DO: start and end are keywords; any number of exprs with delimiters (and optional LFs) inbetween
-    throw NotYetImplementedError()
+func reduceKeywordBlock(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
+    // TO DO: this is default reducer for OperatorRegistry.prefix(_:suffix:) used to parse a keyword-based block of form `START_KEYWORD DELIMITER (EXPR DELIMITER*) STOP_KEYWORD` (e.g. `do…done`)
+    assert(end >= start + 2)
+    var items = [Value]()
+    var i = start + 1 // ignore opening keyword (e.g. `do`)
+    skipSeparator(stack, &i)
+    skipLineBreaks(stack, &i)
+    while i < end - 1 { // ignore closing keyword (e.g. `done`)
+        items.append(stack.value(at: i))
+        i += 1 // step over value
+        skipSeparator(stack, &i)
+        skipLineBreaks(stack, &i)
+    }
+    return Block(items, operatorDefinition: definition)
 }
 
 func reduceInfixOperatorWithConjunction(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value { // trinary operator (c.f. Swift's `…?…:…`)

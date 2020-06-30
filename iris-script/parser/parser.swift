@@ -362,8 +362,6 @@ public class Parser {
             case .separator(let sep):
                 // TO DO: this should only reduce expr up to the preceeding expr delimiter, but currently goes all the way back to start of stack; how do we determine the correct boundary? (ditto for other fullyReduceExpression calls too); is it safe to set a Parser-wide var with last boundary token's index? answer: no (reductions will invalidate it)
                 self.fullyReduceExpression() // [attempt to] reduce the preceding value to single .value
-                
-                
                 switch sep { // attach any caller-supplied debug hooks
                 case .comma:
                     self.handlePunctuation(using: self.handleComma)

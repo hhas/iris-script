@@ -17,16 +17,6 @@ import Foundation
 // TO DO: matcher should keep a complete record of the exact pattern sequence matched, with expr patterns annotated with the arg labels to use in Command (at minimum, it needs to keep a list of the arg labels to use, as those will be required to disambiguate overloaded operators with the same name but different operand count and/or position[s])
 
 
-extension OperatorDefinition {
-    
-    // list/record/group/block literals are also defined as operators for pattern-matching purposes
-
-    func patternMatchers(groupID: Int? = nil) -> [PatternMatcher] { // returns one or more new pattern matchers for matching this operator
-        let groupID = groupID ?? OperatorDefinitions.newGroupID()
-        return self.pattern.reify().map{ PatternMatcher(for: self, matching: $0, groupID: groupID) }
-    }
-}
-
 extension OperatorDefinitions {
     
     private static var _groupID = 0
@@ -36,11 +26,17 @@ extension OperatorDefinitions {
         return self._groupID
     }
     
-    // list/record/group/block literals are also defined as operators for pattern-matching purposes
-
     func patternMatchers() -> [PatternMatcher] { // returns one or more new pattern matchers for matching this operator
         let groupID = OperatorDefinitions.self.newGroupID()
         return self.flatMap{ $0.patternMatchers(groupID: groupID) }
+    }
+}
+
+extension OperatorDefinition {
+    
+    func patternMatchers(groupID: Int? = nil) -> [PatternMatcher] { // returns one or more new pattern matchers for matching this operator
+        let groupID = groupID ?? OperatorDefinitions.newGroupID()
+        return self.pattern.reify().map{ PatternMatcher(for: self, matching: $0, groupID: groupID) }
     }
 }
 
@@ -179,3 +175,28 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     }
     
 }
+
+
+
+typealias ReductionOrder = OperatorDefinition.Associativity
+
+func reductionOrderFor(_ leftMatch: PatternMatcher, _ rightMatch: PatternMatcher) -> ReductionOrder {
+    // caution: if left op is postfix and right op is prefix, that's an `EXPR EXPR` syntax error; TO DO: should we detect and throw that here, or somewhere else?
+    // caution: reductionOrderFor only indicates which of two overlapping operations should be reduced first; it does not indicate how that reduction should be performed, as the process for reducing unary operations is not quite the same as for binary operations
+    if !leftMatch.hasLeadingExpression && !rightMatch.hasTrailingExpression {
+        print("TODO: Found postfix \(leftMatch.name) operator followed by prefix \(rightMatch.name) operator (i.e. two adjacent expressions with no delimiter between). This should be treated as syntax error.")
+    }
+    let left = leftMatch.definition, right = rightMatch.definition
+  //  print("reductionOrderFor:", leftMatch, rightMatch)
+  //  print("\t…", left.name, leftMatch.hasTrailingExpression, " / ", right.name, rightMatch.hasLeadingExpression)
+    if !leftMatch.hasTrailingExpression { // left operator is postfix so MUST reduce before right infix/postfix op
+        return .left
+    } else if !rightMatch.hasLeadingExpression { // right operator is prefix so MUST reduce before left prefix/infix op
+        return .right
+    } else if left.precedence != right.precedence {
+        return left.precedence > right.precedence ? .left : .right
+    } else { // both operators are the same precedence, e.g. `2 ^ 3 ^ 4`, so use associativity // TO DO: what if they're different operators with same precedence? // TO DO: what about operators that shouldn't compose (e.g. `A thru B`); report as syntax error or leave Command to throw coercion error at eval time?
+        return left.associate == .left ? .left : .right
+    }
+}
+

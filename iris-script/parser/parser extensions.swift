@@ -7,29 +7,6 @@ import Foundation
 
 
 
-typealias ReductionOrder = OperatorDefinition.Associativity
-
-func reductionOrderFor(_ leftMatch: PatternMatcher, _ rightMatch: PatternMatcher) -> ReductionOrder {
-    // caution: if left op is postfix and right op is prefix, that's an `EXPR EXPR` syntax error; TO DO: should we detect and throw that here, or somewhere else?
-    if !leftMatch.hasLeadingExpression && !rightMatch.hasTrailingExpression {
-        print("TODO: Found postfix \(leftMatch.name) operator followed by prefix \(rightMatch.name) operator (i.e. two adjacent expressions with no delimiter between). This should be treated as syntax error.")
-    }
-    let left = leftMatch.definition, right = rightMatch.definition
-  //  print("reductionOrderFor:", leftMatch, rightMatch)
-  //  print("\t…", left.name, leftMatch.hasTrailingExpression, " / ", right.name, rightMatch.hasLeadingExpression)
-    if !leftMatch.hasTrailingExpression { // left operator is postfix so MUST reduce before right infix/postfix op
-        return .left
-    } else if !rightMatch.hasLeadingExpression { // right operator is prefix so MUST reduce before left prefix/infix op
-        return .right
-    } else if left.precedence != right.precedence {
-        return left.precedence > right.precedence ? .left : .right
-    } else { // both operators are the same precedence, e.g. `2 ^ 3 ^ 4`, so use associativity // TO DO: what if they're different operators with same precedence? // TO DO: what about operators that shouldn't compose (e.g. `A thru B`); report as syntax error or leave Command to throw coercion error at eval time?
-        return left.associate == .left ? .left : .right
-    }
-}
-
-
-
 
 extension OperatorDefinitions {
         
@@ -94,17 +71,6 @@ extension Array where Element == LongestMatch {
 
 
 
-
-enum CommandTokenForm { // tokens within an expression that denote commands
-    case name(Symbol)
-    case label(Symbol)
-    case operatorName(OperatorDefinitions) // operators *may* right-terminate a command // TO DO: we should probably filter these as they're read so that only operators that WILL terminate a command are included (in fact, we should be able to calculate commands' spans immediately); that then gives us command ranges, from which we should be able to identify nested commands and reduce those immediately, then pass the resulting sub-stack array straight to reductionForOperator
-}
-
-typealias CommandToken = (index: Int, form: CommandTokenForm)
-
-
-
 extension Array where Element == Parser.StackItem {
     
     
@@ -115,7 +81,8 @@ extension Array where Element == Parser.StackItem {
     func dump(_ startIndex: Int = 0, _ stopIndex: Int? = nil) -> String { // startIndex..<stopIndex // DEBUG: list stack tokens + their associated partial/complete matchers
         let stopIndex = stopIndex ?? self.count
         return "Stack[\(startIndex)..<\(stopIndex)]:\n" + self[startIndex..<(stopIndex)].map{
-            "\t.\($0.form)\($0.matches.map{"\n\t\t\t\t\($0)"}.joined(separator: ""))" }.joined(separator: "\n")
+            "\t.\($0.form)\($0.matches.map{ "\n\t\t\t\t\($0)" }.joined(separator: ""))"
+        }.joined(separator: "\n")
     }
     
     // starting from end of a range of tokens, search backwards to find a left-hand expression delimiter
@@ -137,6 +104,7 @@ extension Array where Element == Parser.StackItem {
     // find full operation matchers in the given range; reductionForOperatorExpression() uses the result in determining the order in which to reduce nested operators according to the operators’ arity, precedence, and/or associativity
     
     func findLongestMatches(from startIndex: Int, to stopIndex: Int) -> [LongestMatch] { // startIndex..<stopIndex // given a range of shifted stack frames denoting a delimited simple/compound expression, returns the longest full matches grouped with their associated tokens // TO DO: decide if end index is inclusive or exclusive and standardize across all code
+        // TO DO: would it be easier to work with if findLongestMatches() returned a single array/doubly-linked list containing [mostly alternating] .operatorName()/.operand() enums and have reductionForOperatorExpression() traverse that?
         assert(startIndex >= 0)
         assert(stopIndex <= self.count) // non-inclusive
         // important: this should only be used to identify longest matches in a contiguous sequence; it cannot be used to identify matches that span over other matches (at least, not until all those nested matches have already been reduced; e.g. given `if EXPR1 then EXPR2`, findLongestMatches should be called for EXPR1 only, then for EXPR2 only, and only then for `if VALUE1 then VALUE2` once its operands are all reduced to .values)
