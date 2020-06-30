@@ -27,7 +27,7 @@ func test() {
     runScript("get name of file at 1 of home")
     
 
-    return;
+  //  return;
     
     runScript("1 + 1")
     
@@ -68,7 +68,7 @@ func test() {
 
     runScript("get name of file at 1 of home")
 
-    runScript("1, do 2, 3, 4, 5 done \n 6") // note: no separator between `done` and `6` ends parsing prematurely; hopefully table-driven parser will be better at autocorrecting punctuation
+ //   runScript("1, do, 2, 3, 4, 5, done \n 6") // note: no separator between `done` and `6` ends parsing prematurely; hopefully table-driven parser will be better at autocorrecting punctuation // TO DO: this currently fails in reduce(conjunction:…), mostly likely a bug when parsing `do…done`
 
     runScript("if 1 + 1 = 2 then beep, write “ok”! 5, 6, 7, 8, 9! 000.")
 
@@ -101,6 +101,7 @@ func test() {
     runScript("tell app “com.apple.TextEdit” to get every word of text of document at 1")
         // ["hello", "again"]
 
+    /*
     runScript("""
         tell app “com.apple.TextEdit” to do
             make new: #document at: end of documents with_properties: {
@@ -109,7 +110,7 @@ func test() {
             }
         done
         """)
-
+    */
     runScript("tell app “com.apple.TextEdit” to get first document whose text is “” and name begins_with “Untitled”")
     
         // TO DO: problem is that 'thru' binds tighter than 'at'; we could make 'thru' bind looser than [inner] at if we change outer 'at' to different operator, e.g. 'documents from document at 2 thru document at 3'; Q. would it be practical/wise to define infix 'to' operator for constructing ranges, e.g. `1 to 10`? Q. how does `to` know when to clear left? e.g. `a to b` is ambiguous, as it could read as `a {'to' {b}}`
@@ -312,17 +313,19 @@ func test() {
 
     runScript("if (1 + 2 = 5, true) then write “ok”.") // this also parses successfully; Q. should parser/pp have the smarts to flag the parensed sequence as "suspect", given that the `1+2=5` is effectively a no-op (bear in mind it's also a way to accidentally/deliberately hide effectful operations)
 
-    runScript("map {foo, using: {i}: bar}; fub") // this works and is unambiguous
+    
+    // TO DO: changes to colon rules mean that `{i}:bar` is no longer legal structure; the [nested/parent?] record subsequently fails to reduce and parser aborts complaining about unreduced the .endToken
+ //   runScript("map {foo, using: {i}: bar}; fub") // this works and is unambiguous
+  //  runScript("foo; map using: {i}: bar; fub") // this works [as long as proc has explicit label], but the right-side of colon pair captures `bar; fub` whereas the user may reasonably expect both colons to be top-level, as they are in `foo; bar; baz` (i.e. semicolons should probably terminate nested sentences)
 
-    runScript("foo; map using: {i}: bar; fub") // this works [as long as proc has explicit label], but the right-side of colon pair captures `bar; fub` whereas the user may reasonably expect both colons to be top-level, as they are in `foo; bar; baz` (i.e. semicolons should probably terminate nested sentences)
+    
+    //runScript("foo; map {i}: bar; fub") // TO DO: reject this syntax as ambiguous? it parses as `((‘map’ {‘foo’, ‘i’}: ‘fub’ {‘bar’}))`, which isn't what's intended (left side of colon pair within a block expr should always be a literal name; thus any form of `cmd, name{…}:…` or `cmd; name:…` should be rejected due to existence of argument record)
 
-    runScript("foo; map {i}: bar; fub") // TO DO: reject this syntax as ambiguous? it parses as `((‘map’ {‘foo’, ‘i’}: ‘fub’ {‘bar’}))`, which isn't what's intended (left side of colon pair within a block expr should always be a literal name; thus any form of `cmd, name{…}:…` or `cmd; name:…` should be rejected due to existence of argument record)
+    //runScript("foo; map ({i}: bar); fub") // this works: `(‘fub’ {‘map’ {‘foo’, ({‘i’}: ‘bar’)}})`
 
-    runScript("foo; map ({i}: bar); fub") // this works: `(‘fub’ {‘map’ {‘foo’, ({‘i’}: ‘bar’)}})`
+    //runScript("foo; map {{i}: bar}; fub") // TO DO: this needs to provide better error description (the procedure Pair needs to be parensed to distinguish it from a record field Pair [albeit one with an invalid label type])
 
-    runScript("foo; map {{i}: bar}; fub") // TO DO: this needs to provide better error description (the procedure Pair needs to be parensed to distinguish it from a record field Pair [albeit one with an invalid label type])
-
-    runScript("foo; map {({i}: bar)}; fub") // TO DO: this fails due to parser bug (probably readRecord being unaware of parens)
+    //runScript("foo; map {({i}: bar)}; fub") // TO DO: this fails due to parser bug (probably readRecord being unaware of parens)
 
     runScript("if t1 then if t2 then a1 else a2 else a3") // TO DO: this doesn't parse correctly
 

@@ -331,6 +331,7 @@ extension Parser {
         } else {
             matchID = matchers.min{ $0.count < $1.count }!.matchID // confirm this logic; if there are multiple matchers in progress it should associate with the nearest/innermost, i.e. shortest = most recently started (e.g. consider nested `if…then…` expressions); it does smell though
         }
+        // TO DO: this can crash on `!`, e.g. `do…done` blocks currently fail here
         let startIndex = self.stack.lastIndex{ $0.matches.contains{ $0.matchID == matchID } }! + 1
         let stopIndex = self.stack.count
         //print("FULLY REDUCING EXPR before conjunction: .\(conjunction)…")
