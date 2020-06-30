@@ -205,6 +205,17 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         return false
     }
 
+    var isExpression: Bool {
+        switch self {
+        case .expression, .testValue(_): return true
+        case .optional(let p), .zeroOrMore(let p), .oneOrMore(let p):
+            fatalError("Cannot get isExpression for non-reified pattern: \(p)")
+        case .sequence(let p), .anyOf(let p):
+            fatalError("Cannot get isExpression for non-reified pattern: \(p)")
+        default:                         return false // TO DO: how should .expression, etc. patterns treat .error(…) tokens? will .errors always be [malformed] exprs?
+        }
+    }
+
     var hasLeadingExpression: Bool { // crude; assumes all branches are consistent
         switch self {
         case .expression, .testValue(_): return true

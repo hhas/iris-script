@@ -6,6 +6,10 @@
 import Foundation
 
 
+// TO DO: upon reducing .label, can we set up pattern matcher for `LABEL EXPR` where it matches as a prefix operator (of commandPrecedence and .invalid associativity when reading LP commands, or Precedence.min when reading record fields)?
+
+
+
 // simplest is to invoke list reduce func on `]` token, and let reduce func pop stack until it finds corresponding `[` (this isn't table-driven pattern-matching, which is what we ultimately want as tables provide introspectable information that can drive auto-suggest/-correct/-complete, and auto-generate user documentation for operator syntax)
 
 // for now, syntax errors are detected late (but this isn't necessarily a problem as we want to parse the entire script, reducing as much as possible, then prompt user to resolve any remaining issues)
@@ -279,11 +283,11 @@ public class Parser {
             matchers = newMatchers
         }
         // apply in-progress and newly-started matchers to current token, noting any that end on this token
-        var continuingMatches = [PatternMatcher](), completedMatches = [PatternMatcher]()
+        var continuingMatches = [PatternMatcher](), fullMatches = [PatternMatcher]()
         for matcher in matchers {
             if matcher.match(form, allowingPartialMatch: true) { // match succeeded for this token
                 continuingMatches.append(matcher)
-                if matcher.isAFullMatch { completedMatches.append(matcher) }
+                if matcher.isAFullMatch { fullMatches.append(matcher) }
             }
         }
         //print("SHIFT matched", form, "to", continuingMatches, "with completions", completedMatches)
@@ -292,16 +296,16 @@ public class Parser {
         // TO DO: what if there are still in-progress matches running? (can't start reducing ops till those are done as we want longest match and precedence needs resolved anyway, but ops shouldn't auto-reduce anyway [at least not unless they start AND end with keyword])
  //       if !completedMatches.isEmpty { print("SHIFT fully matched", completedMatches) }
 
-        
+     //   print("SHIFT \(self.stack.count - 1): .\(form)")
         
         // automatically reduce atomic operators and list/record/group/block literals (i.e. anything that starts and ends with a static token, not an expr, so is not subject to precedence or association rules)
         // TO DO: not sure if reasoning is correct here; if we limit auto-reduction to builtins (which we control) then it's safe to say there will be max 1 match, but do…done blocks should also auto-reduce and those are library-defined; leave it for now as it solves the immediate need (reducing literal values as soon as they're complete so operator patterns can match them as operands)
-        if let longestMatch = completedMatches.max(by: { $0.count < $1.count }), longestMatch.definition.autoReduce {
+        if let longestMatch = fullMatches.max(by: { $0.count < $1.count }), longestMatch.definition.autoReduce {
             //           print("\nAUTO-REDUCE", longestMatch.definition.name.label)
-            self.stack.reduce(completedMatch: longestMatch)
-            if completedMatches.count > 1 {
+            self.stack.reduce(fullMatch: longestMatch)
+            if fullMatches.count > 1 {
                 // TO DO: what if there are 2 completed matches of same length?
-                print("discarding extra matches in", completedMatches.sorted{ $0.count < $1.count })
+                print("discarding extra matches in", fullMatches.sorted{ $0.count < $1.count })
             }
         }
 //        print(self.stack.last!)
@@ -332,12 +336,15 @@ public class Parser {
                 self.shift() // shift the closing token onto stack; shift() will autoreduce list/record/group literal
             case .endRecord:
                 try self.blockMatchers.stop(.record) // TO DO: what to do with error?
-                self.fullyReduceExpression() // ensure last item in record is reduced to single .value
+                self.fullyReduceExpression() // ensure last item in record is reduced to single .value before reducing the record itself // TO DO: what about remembering index of each field’s left delimiter, avoiding need to scan for it each time?
                 self.shift() // shift the closing token onto stack; shift() will autoreduce list/record/group literal
                 // if top of stack is a full-punctuation command (i.e. `NAME RECORD`)then reduce it now
-                // (note: while we could use a `NAME RECORD` PatternMatcher to auto-reduce FP commands, it’s simpler just to hardcode it here)
-                // (note: name-only and low-punctuation commands require additional scanning to determine right-hand boundary to their argument list so will be dealt with later by fullyReduceExpression)
+                guard case .value(let v) = self.stack.last?.form, v is Record else {
+                    fatalError("This should never fail: expected fully reduced Record at top of parser stack but found: \(self.stack.last?.form as Any)")
+                }
                 if self.stack.count > 1 {
+                    // (note: while we could use a `NAME RECORD` PatternMatcher to auto-reduce FP commands, it’s simpler just to hardcode it here)
+                    // (note: name-only and low-punctuation commands require additional scanning to determine right-hand boundary to their argument list so will be dealt with later by fullyReduceExpression)
                     switch self.stack[self.stack.count - 2].form {
                     case .unquotedName(let name), .quotedName(let name):
                         guard case .value(let v) = self.stack[self.stack.count - 1].form, let record = v as? Record else {
@@ -355,6 +362,8 @@ public class Parser {
             case .separator(let sep):
                 // TO DO: this should only reduce expr up to the preceeding expr delimiter, but currently goes all the way back to start of stack; how do we determine the correct boundary? (ditto for other fullyReduceExpression calls too); is it safe to set a Parser-wide var with last boundary token's index? answer: no (reductions will invalidate it)
                 self.fullyReduceExpression() // [attempt to] reduce the preceding value to single .value
+                
+                
                 switch sep { // attach any caller-supplied debug hooks
                 case .comma:
                     self.handlePunctuation(using: self.handleComma)
@@ -428,8 +437,9 @@ public class Parser {
                 } // TO DO: confirm this is appropriate
                 self.shift(adding: currentMatches)
                 }
-                
-            case .colon:
+            
+            // note: `NAME COLON` is automatically reduced in .[un]quotedName(…) and .operatorName(…) cases above (we do it there rather than here as it avoids unnecessary work initially processing e.g. `to:` as an operator)
+            //case .colon:
                 // TO DO: could we safely reduce `NAME COLON` to .label(NAME) here?
                 
                 //self.reduceExpression() // TO DO: not sure about this; in kv-lists key should already be .value(HASHABLEVALUE) else it's a syntax error; in records, we want to match unreduced [c]name/opname token; we've abandoned `(to|when)? INTERFACE:ACTION` as a handler syntax as it's too ambiguous; and `NAME:VALUE` as shorthand binding syntax may be dropped as well
@@ -438,7 +448,7 @@ public class Parser {
                 //print(definitions.name.label, backMatches, newMatches)
                 //if !previousMatches.isEmpty { stack[stack.count-1].matches += previousMatches }
                 //self.shift(adding: currentMatches)
-                self.shift()
+                //self.shift()
                 
             case .semicolon:
                 self.fullyReduceExpression() // TO DO: confirm this is correct (i.e. punctuation should always have lowest precedence so that operators on either side always bind first)

@@ -273,3 +273,17 @@ enum BadSyntax: NativeError { // while tokens containing invalid code are marked
     // TO DO: what else?
     case illegalCharacters
 }
+
+
+class BadSyntaxValue: NativeError {
+    
+    var description: String {
+        return "«Syntax Error: \(self.error)»"
+    }
+    
+    let error: NativeError
+    
+    init(error: NativeError) {
+        self.error = error
+    }
+}

@@ -21,7 +21,8 @@ extension OperatorDefinition {
     
     // list/record/group/block literals are also defined as operators for pattern-matching purposes
 
-    func patternMatchers(groupID: Int = -1) -> [PatternMatcher] { // returns one or more new pattern matchers for matching this operator
+    func patternMatchers(groupID: Int? = nil) -> [PatternMatcher] { // returns one or more new pattern matchers for matching this operator
+        let groupID = groupID ?? OperatorDefinitions.newGroupID()
         return self.pattern.reify().map{ PatternMatcher(for: self, matching: $0, groupID: groupID) }
     }
 }
@@ -54,12 +55,12 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     private static var _matchID = 0
     
     var description: String {
-        return "«matcher \(self.groupID)/\(self.matchID) for \(self.pattern.description) of `\(self.definition.precis)`\(self.isAFullMatch ? (self.isLongestPossibleMatch ? "✔︎" : "✓") : "") \(self.definition.precedence)»"
+        return "«match \(self.matchID) of \(self.groupID) for \(self.remainingPattern.description) of `\(self.definition.precis)`\(self.isAFullMatch ? (self.isLongestPossibleMatch ? "✔︎" : "✓") : "") \(self.definition.precedence)»"
     }
     
     var name: Symbol { return self.definition.name }
     
-    let matchID: Int
+    let matchID: Int // unique to a given match instance; TO DO: is this needed/used?
     let groupID: Int // all matchers returned by a OperatorDefinitions.patternMatchers() call share a common group ID; this should make it easier to discard non-longest match[es] where the operator name is overloaded, e.g. `+`/`-` (caution: this assumes that patternMatchers() is called once only per .operatorName token; it would probably be safer for parser to supply an ID based on the token's identity) (caution: for list/record/group literals the ID is always -1; being built-in primitives we assume they are never overloaded by libraries, although that is not currently enforced)
     
     static func == (lhs: PatternMatcher, rhs: PatternMatcher) -> Bool {
@@ -73,13 +74,18 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     let count: Int // no. of stack items matched by this pattern; initially 1 (caution: this count is incremented *before* the match is actually performed, the assumption being that parser will immediately discard failed matchers and keep only those whose match() returned true, at which point the count is correct)
     
     // pattern[0] is the pattern being matched and has already been reified
-    private let pattern: [Pattern] // any patterns to match to next Reduction[s] in parser stack; caution: do not assume these patterns are the same as definition.patterns[OFFSET..<END_INDEX]; they may be transformations of composite patterns
+    private let remainingPattern: [Pattern] // any patterns to match to next Reduction[s] in parser stack; caution: do not assume these patterns are the same as definition.patterns[OFFSET..<END_INDEX]; they may be transformations of composite patterns
+    
+    // TO DO: logic would be easier to understand if the already-reified pattern currently being matched was held in `let currentPattern:Pattern` rather than being remainingPattern[0]
+    
+    private let matchedPattern: [Pattern]
         
     // called by OperatorDefinition.patternMatchers
-    init(for definition: OperatorDefinition, matching pattern: [Pattern], count: Int = 1, groupID: Int) {
-        if pattern.isEmpty { fatalError("Invalid pattern (zero-length): \(pattern)") }
+    init(for definition: OperatorDefinition, matching remainingPattern: [Pattern], matched matchedPattern: [Pattern] = [], count: Int = 1, groupID: Int) {
+        if remainingPattern.isEmpty { fatalError("Invalid pattern (zero-length): \(remainingPattern)") }
         self.definition = definition
-        self.pattern = pattern
+        self.remainingPattern = remainingPattern
+        self.matchedPattern = matchedPattern
         self.count = count
         PatternMatcher._matchID += 1
         self.matchID = PatternMatcher._matchID
@@ -91,23 +97,25 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
         //print("matching .\(form) to", self, "…")
         if true {//allowingPartialMatch {
             if self.isAtBeginningOfMatch {
-                return self.pattern[0].match(form, extent: .end) // a new, unconsumed pattern sequence
+                return self.remainingPattern[0].match(form, extent: .end) // a new, unconsumed pattern sequence
             } else if self.isAFullMatch {
-                assert(self.pattern.count == 1)
-                return self.pattern[0].match(form, extent: .start) // a fully consumed pattern sequence, where the final pattern (i.e. pattern[0]) has already been matched
+                assert(self.remainingPattern.count == 1)
+                return self.remainingPattern[0].match(form, extent: .start) // a fully consumed pattern sequence, where the final pattern (i.e. pattern[0]) has already been matched
             }
         }
-        return self.pattern[0].match(form)
+        return self.remainingPattern[0].match(form)
     }
     
     func next() -> [PatternMatcher] {
-        return [Pattern](self.pattern.dropFirst()).reify().filter{!$0.isEmpty}.map{
-            PatternMatcher(for: self.definition, matching: $0, count: self.count + 1, groupID: self.groupID)
+        var remaining = self.remainingPattern
+        let matched = self.matchedPattern + [remaining.removeFirst()]
+        return remaining.reify().filter{!$0.isEmpty}.map{
+            PatternMatcher(for: self.definition, matching: $0, matched: matched, count: self.count + 1, groupID: self.groupID)
         }
     }
     
     public var wantsExpression: Bool {
-        switch self.pattern.first! {
+        switch self.remainingPattern.first! {
         case .expression: return true
         // TO DO: what about .test?
         default: return false
@@ -117,13 +125,13 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     public var isAtBeginningOfMatch: Bool { return self.count == 1 } // if true, match() will match the first pattern in the operator definition's pattern array
     
     public var isAtConjunction: Bool {
-        if self.count > 2, case .keyword(_) = self.pattern[0] { return true } else { return false }
+        if self.count > 2, case .keyword(_) = self.remainingPattern[0] { return true } else { return false }
     }
     
     public var isAFullMatch: Bool { // if match() returns true and a longer match isn't possible, the tokens identified by this matcher can be passed to the operator defintion's reducefunc
         // kludge: pattern array can end with any number of .optional/.zeroOrMore patterns
       ///  print(self.definition.precis,"full?", //[Pattern](self.pattern.dropFirst()).reify(), [Pattern](self.pattern.dropFirst()).reify().contains{$0.isEmpty})
-        return [Pattern](self.pattern.dropFirst()).reify().contains{ $0.isEmpty}
+        return [Pattern](self.remainingPattern.dropFirst()).reify().contains{ $0.isEmpty}
     } // if true, stack item is last Reduction in this match; caution: this does not mean a longer match cannot be made
     
     public var isLongestPossibleMatch: Bool {
@@ -132,22 +140,42 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     }
     
     
-    // TO DO: these are confusing/wrong; they test the remaining pattern, not the matched pattern; see also TODO on reductionOrderFor(): whereas a sub-optimally designed pattern sequence could return misleading result due to optionals and branching, examining the actual matches made by a completed matcher should always give an accurate answer
-    var hasLeadingExpression: Bool { return self.pattern.first!.hasLeadingExpression }
-    var hasTrailingExpression: Bool { return self.pattern.last!.hasLeadingExpression }
+    // TO DO: these are confusing/wrong; they test the remaining pattern, not the matched pattern; see also TODO on reductionOrderFor(): whereas a sub-optimally designed pattern sequence could return misleading result due to optionals and branching (it does: commands with optional direct arg _always_ report as having trailing expr, even when they don't), examining the actual matches made by a completed matcher should always give an accurate answer
+    var hasLeadingExpression: Bool {
+        if self.isAFullMatch {
+            // remainingPattern[0] = pattern currently being matched; caller is responsible for calling match() to confirm it actually has matched the given token prior to calling hasLeadingExpression/hasTrailingExpression
+            return (self.matchedPattern.first ?? self.remainingPattern.first!).isExpression // matched patterns are always non-composite; no optionals or branching
+        } else {
+            fatalError("WARNING: called hasLeadingExpression on incomplete match: \(self)")
+            //print("WARNING: calling hasLeadingExpression on incomplete match: \(self)")
+            //return self.remainingPattern.first!.hasLeadingExpression
+        }
+    }
+    
+    var hasTrailingExpression: Bool {
+        if self.isAFullMatch {
+         //   print("hasTrailingExpression:", self.definition.name, self.matchedPattern)
+            // remainingPattern[0] = pattern currently being matched; caller is responsible for calling match() to confirm it actually has matched the given token prior to calling hasLeadingExpression/hasTrailingExpression
+            return self.remainingPattern.first!.isExpression
+        } else {
+            fatalError("WARNING: called hasTrailingExpression on incomplete match: \(self)")
+            //print("WARNING: calling hasTrailingExpression on incomplete match:", self)
+            //return self.remainingPattern.last!.hasTrailingExpression
+        }
+    }
     
     var hasConjunction: Bool {
-        return self.pattern.reduce(0, {$0 + $1.keywords.count}) > 1 // TO DO: this [incorrect logic] assumes multiple keywords appear sequentially, which is not necessarily true: e.g. a poorly composed pattern such as `.anyOf(["FOO", "BAR"])` will currently break the parser by corrupting the blockMatchers stack; for now, we'll use this naive implementation while we get the rest of the parser working, as it's "good enough" for current operators such as `if…then…` and `do…done`; eventually we'll need to rework to make it return an accurate result regardless of how a pattern is constructed // TO DO: also bear in mind that this will only report correct result while the first keyword is being matched (what it should really do is always ignore the first [primary] keyword and only count the remaining conjunction keywords; e.g. consider an operator with two or more conjunctions)
+        return self.remainingPattern.reduce(0, {$0 + $1.keywords.count}) > 1 // TO DO: this [incorrect logic] assumes multiple keywords appear sequentially, which is not necessarily true: e.g. a poorly composed pattern such as `.anyOf(["FOO", "BAR"])` will currently break the parser by corrupting the blockMatchers stack; for now, we'll use this naive implementation while we get the rest of the parser working, as it's "good enough" for current operators such as `if…then…` and `do…done`; eventually we'll need to rework to make it return an accurate result regardless of how a pattern is constructed // TO DO: also bear in mind that this will only report correct result while the first keyword is being matched (what it should really do is always ignore the first [primary] keyword and only count the remaining conjunction keywords; e.g. consider an operator with two or more conjunctions)
     }
     
     var conjunctions: Conjunctions { // KLUDGE
-        if case .keyword(_) = self.pattern[0] {} else { print("BUG: conjunction should be called immediately after matching first keyword") }
+        if case .keyword(_) = self.remainingPattern[0] {} else { print("BUG: conjunction should be called immediately after matching first keyword") }
         // TO DO: this returns *all* conjunctions (in the event pattern contains > 1 conjunction); is this appropriate? or do we just want to get the next conjunction[s] that appears? (although given the freedom allowed by patterns, it's possible to create all kinds of weird combinations)
-        return Conjunctions(self.pattern.dropFirst().flatMap{ $0.keywords.map{ $0.name } })
+        return Conjunctions(self.remainingPattern.dropFirst().flatMap{ $0.keywords.map{ $0.name } })
     }
     
-    func startIndex(from endIndex: Int) -> Int {
-        return endIndex - self.count + 1
+    func startIndex(from lastTokenIndex: Int) -> Int { // lastTokenIndex is inclusive
+        return lastTokenIndex - self.count + 1
     }
     
 }

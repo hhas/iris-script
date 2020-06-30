@@ -18,256 +18,321 @@ let operatorReader = newOperatorReader(for: operatorRegistry)
 
 
 
+
 func test() {
     
-    // TO DO: need underscore reader
+    runScript("foo * bar") // ‘*’ {‘foo’, ‘bar’}
+    runScript("foo - 1") // TO DO: determine if `-` operator is prefix or infix/postfix based on whitespace before/after (currently defaults here to prefix)
     
-    var script:String = "1 + 1"
-    //script = "foo [1, 2,\n3\n [:]] arg: “yes” um: false."
-    //script = "1 + 2 / 4.6" // TO DO: operator parsing is still buggy
-    //script = "foo bar baz: fub zim: bip {dob} nag: 0"
-    
-    //    script = "tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}"
-    
-    
-    //
-    script = "[1, 2, 3, 4, 5, 6], 7."
-    
-    script = "1, [2, 3]! 4, 5."
-    
-    script = "Foo, bar; baz to: bip; fub, bim." //     Foo, fub {baz {bar, to: bip}}, bim
-
-    
-    script = "make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}."
-    
-    script = "get name of file at 1 of home"
-    
-    
-    
-    script = "1, do 2, 3, 4, 5 done \n 6" // note: no separator between `done` and `6` ends parsing prematurely; hopefully table-driven parser will be better at autocorrecting punctuation
-    
-    script = "if 1 + 1 = 2 then beep, write “ok”! 5, 6, 7, 8, 9! 000."
-    
-    script = "tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}."
-    
-    
-    script = "to foo: write “ok”, bar. baz, gub, guf."
-    
-    script = "To say_hello to: name: write “Hello, ” & name & “!”. Say_hello to: “World”."
-    
-    script = "write 2 + 2"
-    
-    script = "document at 1"
-    
-    script = "1 + 1 = 2" // -> true
-    
-    script = "if 1 + 2 = 5 then write “ok”."
-    script = "set Bob to: “Tim”. if 1 + 2 = 3 then write 6, write bob, write 9 ÷ 2." // TO DO: make sure operator definition + handler interface describes right-hand operand as an expr sequence ('sentence'?), esp. in documentation
-    
-    script = "Set name to: “Bob”. If 1 + 2 = 3 then write true, write name, write [9 ÷ 2]."
-    
-    script = "if 1 + 1 = 5 then “BOO!”"
-    
-    script = "tell app “iTunes” to get name of current_track" // TO DO: readCommand should return on encountering `to` keyword but throws instead
-    
-    //script = "if 1+1=4 then 1 else -1"
-    
-    script = "document at 1"
-    
-    script = "tell app “com.apple.TextEdit” to get every word of text of document at 1"
-    // ["hello", "again"]
-    
-    script = """
-    tell app “com.apple.TextEdit” to do
-        make new: #document at: end of documents with_properties: {
-            name: “Test”,
-            text: “hello again”
-        }
-    done
-    """
-    
-    script = "tell app “com.apple.TextEdit” to get first document whose text is “” and name begins_with “Untitled”"
-    
-    // TO DO: problem is that 'thru' binds tighter than 'at'; we could make 'thru' bind looser than [inner] at if we change outer 'at' to different operator, e.g. 'documents from document at 2 thru document at 3'; Q. would it be practical/wise to define infix 'to' operator for constructing ranges, e.g. `1 to 10`? Q. how does `to` know when to clear left? e.g. `a to b` is ambiguous, as it could read as `a {'to' {b}}`
-    
-    script = "tell app “com.apple.TextEdit” to get documents from (document at 2) thru (document at 3)"
-    
-    // TO DO: `tell` parsefunc needs to match `to` keyword, but defining an infix `to` operator causes that to match instead, resulting in failed parse
-    //
-    // alternative is to give up on `from…to…` and use `in…thru…` (though ideally we want a generalized solution that will use same rules regardless of i18n)
-    
-    script = "tell app “com.apple.TextEdit” to get documents from 2 thru -1"
-    
-    
-    // TO DO: period/LF needs higher 'precedence' than `else`; might need to change how ExpressionSequence is constructed (e.g. split into ExpressionSeq vs BlockSeq, with the former limited to single sentences; maybe rename `Sentence` and `Paragraph`)
-    
-    
-    
-    
-    script = """
-    
-    Set a to: 3, set b to: true. If 3 + a = 4 then "A" else if b then "B" else "C".
-    
-    """
-    
-    script = " if a then (b, c, d) else (e, f). " // TO DO: sentence blocks (multiple comma-separated exprs) in `then clause` are problematic as punctuation has lower precedence than operators; would need to special-case parsing of block operands
-    script = " if a then (b, c, d) else (e, f). "
-    
-    //script = " a + - b "
-    
-    script = " [1:2, 3:4, 5:6] "
-    
-    //script = " 1 + 2 * -3 "
-    
-    //script = " a 1 b: 2 c: 3"
-    
- //   script = " [1,2,4] "
-    
-    script = " [1:2, 3:4, 5:6], [1,3,6], (7), (), (8,9), {a:0, b:3} "
-    
-  //  script = " 1 + [2,4] * 3 "
-    
-    script = " 1 + 2 * -3 "
-    
-    script = " 1 = 2 + 3 "
-    script = " 1 + 2 = 3 "
-    script = " 1 + 2 * 3 = 4 "
-    
-    script = " if -1 * 2 + -3 = -4 then 5 + 6 else -7 ÷ -8 "
-    
-    // full punctuation command syntax
-    script = "  {1, bar: 2, baz: fub, mod: 3} "
-    script = " foo {1} "
-    script = " foo "
-    
-    // low-punctuation command syntax
-    script = " foo "
-    script = " foo 1 "
-    script = " foo baz: 2 "
-    script = " foo baz: 2 mod: 3 "
-    script = " foo 1 baz: 2 mod: 3 "
-    script = " foo baz: 2 mod: 3 of 4 + bar fub: 5 " // ‘+’ {‘foo’ {baz: 2, mod: ‘of’ {3, 4}}, ‘bar’ {fub: 5}}
-
-    // low-punctuation command syntax with nested commands (commands nested within an LP command can have record argument, non-record direct argument, or no argument only; i.e. labeled arguments after a nested command belong to the outer LP command)
-    script = " foo fub: bar baz: 2" // ‘foo’ {fub: ‘bar’, baz: 2}
-    script = " foo fub: bar 3 baz: 2" // ‘foo’ {fub: ‘bar’ {3}, baz: 2}
-    script = " foo fub: bar zim boo 3 baz: 2" // ‘foo’ {fub: ‘bar’ {3}, baz: 2}
-
-    script = " foo fub: bar zim boo baz: 2"
-
-    script = " foo fub: bar baz: 2"
-    script = " foo baz: bar"
-    script = " foo bar baz"
-    script = " foo bar "
-    
-    // TO DO: where an operator is both infix and prefix, need to decide if it's an argument to left command or if the left command is the left operand to the operator; currently these all parse `-` as infix operator
-    script = " foo - bar " // infix `-`
-   // script = " foo -bar " // assuming this follows WS rule and parses as `foo {'-' {bar}}`, we may want the PP to parenthesize the argument as `foo {-bar}` to make clear to user how it has interpreted that code
-    script = " foo - 1 " // infix `-`
-    script = " foo -1 " // PP might not need to parenthesize the argument here as `-1` is fairly obviously a number literal, and thus clearly intended by the user(?) as an argument to `foo`
-
-    
-    
-    script = " document at 1 " // `document at 1` *must* take `document` as the left operand to `at`, regardless of precedence, since `at` has no prefix form (infix only)
-    
-    script = " get document at 1 " // should reduce to `get{'at'{document{}, 1}}`
+    runScript("get name of file at 1 of home")
     
 
+    return;
+    
+    runScript("1 + 1")
+    
+    runScript(" [] ")
+    runScript(" [:] ")
+    runScript(" () ")
+    runScript(" {} ")
+    
+    runScript(" [1] ")
+    runScript(" [2:3] ")
+    runScript(" (4) ")
+    runScript(" {5} ")
+    
+    runScript(" {foo: 1} ")
+    runScript(" {foo: 1, bar: 2, baz: fub zim bim zub} ")
+    runScript(" {foo: 1, bar: 2, baz: fub zim bim: zub} ")
+    runScript(" {foo: 1, bar: 2, baz: fub zim: bim zub} ")
+    runScript(" {mod: 1, div: 2} ")
 
-    script = " foo of bar " // here the infix `of` operator MUST terminate `foo` command, regardless of precedence (command precedence only comes into play if there is an expr inbetween `foo` and `of`, e.g. `foo 1 of 2`)
+  //  return;
     
-    script = " foo 1 bar: 2 "
-    
-    
-    script = " foo 1 "
-    
-    script = " foo 1 bar: 2 mod: 3 " // ‘foo’ {1, bar: 2, mod: 3}
-    
-    script = " foo 1 bar: baz mod: 3 " // ‘foo’ {1, bar: ‘baz’, mod: 3}
 
-    script = " foo 1 bar: baz fub 4 mod: 3 " // ‘foo’ {1, bar: ‘baz’ {‘fub’ {4}}, mod: 3}
+  //  runScript("foo [1, 2,\n3\n [:]] arg: “yes” um: false.")
+
+    runScript("1 + 2 / 4.6") // TO DO: operator parsing is still buggy
+
+    runScript("foo bar baz: fub zim: bip {dob} nag: 0")
+
+    runScript("tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}")
+
+    runScript("[1, 2, 3, 4, 5, 6], 7.")
+
+    runScript("1, [2, 3]! 4, 5.")
+
+    runScript("Foo, bar; baz to: bip; fub, bim.") //     Foo, fub {baz {bar, to: bip}}, bim
+
+    runScript("make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}.")
+
+    runScript("get name of file at 1 of home")
+
+    runScript("1, do 2, 3, 4, 5 done \n 6") // note: no separator between `done` and `6` ends parsing prematurely; hopefully table-driven parser will be better at autocorrecting punctuation
+
+    runScript("if 1 + 1 = 2 then beep, write “ok”! 5, 6, 7, 8, 9! 000.")
+
+    runScript("tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}.")
+
+    runScript("to foo: write “ok”, bar. baz, gub, guf.")
+
+    runScript("To say_hello to: name: write “Hello, ” & name & “!”. Say_hello to: “World”.")
+
+    runScript("write 2 + 2")
+
+    runScript("document at 1")
+
+    runScript("1 + 1 = 2") // -> true
+
+    runScript("if 1 + 2 = 5 then write “ok”.")
+
+    runScript("set Bob to: “Tim”. if 1 + 2 = 3 then write 6, write bob, write 9 ÷ 2.") // TO DO: make sure operator definition + handler interface describes right-hand operand as an expr sequence ('sentence'?), esp. in documentation
+
+    runScript("Set name to: “Bob”. If 1 + 2 = 3 then write true, write name, write [9 ÷ 2].")
+
+    runScript("if 1 + 1 = 5 then “BOO!”")
+
+    runScript("tell app “iTunes” to get name of current_track") // TO DO: readCommand should return on encountering `to` keyword but throws instead
+
+    runScript("if 1+1=4 then 1 else -1")
+
+    runScript("document at 1")
+
+    runScript("tell app “com.apple.TextEdit” to get every word of text of document at 1")
+        // ["hello", "again"]
+
+    runScript("""
+        tell app “com.apple.TextEdit” to do
+            make new: #document at: end of documents with_properties: {
+                name: “Test”,
+                text: “hello again”
+            }
+        done
+        """)
+
+    runScript("tell app “com.apple.TextEdit” to get first document whose text is “” and name begins_with “Untitled”")
+    
+        // TO DO: problem is that 'thru' binds tighter than 'at'; we could make 'thru' bind looser than [inner] at if we change outer 'at' to different operator, e.g. 'documents from document at 2 thru document at 3'; Q. would it be practical/wise to define infix 'to' operator for constructing ranges, e.g. `1 to 10`? Q. how does `to` know when to clear left? e.g. `a to b` is ambiguous, as it could read as `a {'to' {b}}`
+
+    runScript("tell app “com.apple.TextEdit” to get documents from (document at 2) thru (document at 3)")
+    
+        // TO DO: `tell` parsefunc needs to match `to` keyword, but defining an infix `to` operator causes that to match instead, resulting in failed parse
+        //
+        // alternative is to give up on `from…to…` and use `in…thru…` (though ideally we want a generalized solution that will use same rules regardless of i18n)
+
+    runScript("tell app “com.apple.TextEdit” to get documents from 2 thru -1")
+    
+    
+        // TO DO: period/LF needs higher 'precedence' than `else`; might need to change how ExpressionSequence is constructed (e.g. split into ExpressionSeq vs BlockSeq, with the former limited to single sentences; maybe rename `Sentence` and `Paragraph`)
+
+    runScript("""
+        Set a to: 3, set b to: true. If 3 + a = 4 then "A" else if b then "B" else "C".
+        """)
+
+    runScript(" if a then (b, c, d) else (e, f). ") // TO DO: sentence blocks (multiple comma-separated exprs) in `then clause` are problematic as punctuation has lower precedence than operators; would need to special-case parsing of block operands
+
+    runScript(" if a then (b, c, d) else (e, f). ")
+
+    runScript(" a + - b ")
+
+    runScript(" [1:2, 3:4, 5:6] ")
+
+    runScript(" 1 + 2 * -3 ")
+
+    runScript(" a 1 b: 2 c: 3")
+
+    runScript(" [1,2,4] ")
+
+    runScript(" [1:2, 3:4, 5:6], [1,3,6], (7), (), (8,9), {a:0, b:3} ")
+
+    runScript(" 1 + [2,4] * 3 ")
+
+    runScript(" 1 + 2 * -3 ")
+
+    runScript(" 1 = 2 + 3 ")
+
+    runScript(" 1 + 2 = 3 ")
+
+    runScript(" 1 + 2 * 3 = 4 ")
+
+    runScript(" if -1 * 2 + -3 = -4 then 5 + 6 else -7 ÷ -8 ")
+    
+        // full punctuation command syntax
+
+    runScript("  {1, bar: 2, baz: fub, mod: 3} ")
+
+    runScript(" foo {1} ")
+
+    runScript(" foo ")
+    
+        // low-punctuation command syntax
+
+    runScript(" foo ")
+
+    runScript(" foo 1 ")
+
+    runScript(" foo baz: 2 ")
+
+    runScript(" foo baz: 2 mod: 3 ")
+
+    runScript(" foo 1 baz: 2 mod: 3 ")
+
+    runScript(" foo baz: 2 mod: 3 of 4 + bar fub: 5 ") // ‘+’ {‘foo’ {baz: 2, mod: ‘of’ {3, 4}}, ‘bar’ {fub: 5}}
+
+        // low-punctuation command syntax with nested commands (commands nested within an LP command can have record argument, non-record direct argument, or no argument only; i.e. labeled arguments after a nested command belong to the outer LP command)
+
+    runScript(" foo fub: bar baz: 2") // ‘foo’ {fub: ‘bar’, baz: 2}
+
+    runScript(" foo fub: bar 3 baz: 2") // ‘foo’ {fub: ‘bar’ {3}, baz: 2}
+
+    runScript(" foo fub: bar zim boo 3 baz: 2") // ‘foo’ {fub: ‘bar’ {3}, baz: 2}
+
+    runScript(" foo fub: bar zim boo baz: 2")
+
+    runScript(" foo fub: bar baz: 2")
+
+    runScript(" foo baz: bar")
+
+    runScript(" foo bar baz")
+
+    runScript(" foo bar ")
+    
+        // TO DO: where an operator is both infix and prefix, need to decide if it's an argument to left command or if the left command is the left operand to the operator; currently these all parse `-` as infix operator
+
+    runScript(" foo - bar ") // infix `-`
+
+    runScript(" foo -bar ") // assuming this follows WS rule and parses as `foo {'-' {bar}}`, we may want the PP to parenthesize the argument as `foo {-bar}` to make clear to user how it has interpreted that code
+
+    runScript(" foo - 1 ") // infix `-`
+
+    runScript(" foo -1 ") // PP might not need to parenthesize the argument here as `-1` is fairly obviously a number literal, and thus clearly intended by the user(?) as an argument to `foo`
+
+    runScript(" document at 1 ") // `document at 1` *must* take `document` as the left operand to `at`, regardless of precedence, since `at` has no prefix form (infix only)
+
+    runScript(" get document at 1 ") // should reduce to `get{'at'{document{}, 1}}`
+
+    runScript(" foo of bar ") // here the infix `of` operator MUST terminate `foo` command, regardless of precedence (command precedence only comes into play if there is an expr inbetween `foo` and `of`, e.g. `foo 1 of 2`)
+
+    runScript(" foo 1 bar: 2 ")
+
+    runScript(" foo 1 ")
+
+    runScript(" foo 1 bar: 2 mod: 3 ") // ‘foo’ {1, bar: 2, mod: 3}
+
+    runScript(" foo 1 bar: baz mod: 3 ") // ‘foo’ {1, bar: ‘baz’, mod: 3}
+
+    runScript(" foo 1 bar: baz fub 4 mod: 3 ") // ‘foo’ {1, bar: ‘baz’ {‘fub’ {4}}, mod: 3}
+
+    runScript(" foo -1 bar: 2 ") // TO DO: still breaks (need to work on ambiguous operator)
+
+    runScript(" if -1 * - 2 + ---3 = -4 then -5 + -6 else -7 ÷ -8 ") // ‘else’ {‘if’ {‘=’ {‘+’ {‘*’ {-1, -2}, -3}, -4}, ‘+’ {-5, -6}}, ‘/’ {-7, -8}}
+
+    runScript("To say_hello {to: name} run write “Hello, ” & name & “!”. Say_hello to: “World”.") // TO DO: buggy parse omits `write “Hello, ” &`
+
+    runScript("tell app “com.apple.TextEdit” to get documents at 2 thru -1")
+
+    runScript("if (a) + b = c then get documents at 2 thru -1 ") // TO DO: still got problems with disambiguating `+`/`-` when it appears at start of direct argument
+
+    runScript("  documents at 2 thru -3  ") // ‘at’ {‘documents’, ‘thru’ {2, -3}}
+
+    runScript("  get documents at 2 thru 3  ") // ‘get’ {‘at’ {‘documents’, ‘thru’ {2, 3}}}
+
+    runScript("  get documents at 2 thru -3  ") // this explodes as it's treating `-` as infix even though it must be prefix (since it follows infix operator)
+
+    runScript("bim {foo: bar} ")
+
+    runScript(" -1 else - 2 + 3 ")
+
+    runScript(" 1 + 2 * - 3 ") // note: `-` must match as unary operator; `*` match as binary operator even though its right operand is only partially matched as `-`, i.e. it *could* be the start of an EXPR [but isn't yet known for sure]
+
+    runScript(" if 1 * 2 - 3 = 4 then 5 ")
+
+    runScript(" if 1 + 2 = 3 then 4 ")
+
+    runScript(" a -1 ")
+
+    runScript(" nothing ")
+
+    runScript(" 1 + -2 ")
+
+    runScript(" foo 1 bar: 2 baz: 3 ")
+
+    runScript(" foo 1 + a bar: 3 ")
+
+    runScript(" (8,9) ")
+
+    runScript(" f x - 1") // this should parse as `-{f{x},1}`
+
+    runScript(" f a: b - 1") //
+
+    runScript(" f a: b of c - 1 ") // `of` needs to bind more tightly than arg label, i.e. `-{f{a:of{b,c}},1}`
+
+    runScript(" a b c ") // this throws parsing error as inner commands can't be LP, but could do with better error message (currently 'expected label in ‘a’ command but found <.unquotedName("c") _"c"_>'); Q. how to suggest corrections? e.g. `a {b {c}}`, `a {b, c}`, `a {b, c: …}`
+    
+        // TO DO: "a + 1" mis-parses as `a {+1}`
+    
+        // TO DO: name arg is currently limited to AsLiteralName, but also needs to accept a reference
+
+    runScript("set a of b to: 3")
+
+    runScript("set n to app “com.apple.TextEdit”, tell n to get document 1") // TO DO: parser prematurely exits after the 1st `n`; how to match `to` as stop word here? might pass closure thru parser that performs all stop-word/boundary checks; alternatively, leave it for now and address in table-driven parser
+
+    runScript("tell app “com.apple.Finder” to get document_files from 2 thru -1 of home")
 
     
-//    script = " foo -1 bar: 2 " // TO DO: still breaks (need to work on ambiguous operator)
+        // TO DO: need decision on whether or not to overload `set` command to perform local assignment; within a `tell app…` block it current sends an AE (or tries to); one option is to define `me`/`my` atom for use in references, e.g.:
+        //
+        //  tell app “com.apple.TextEdit” to set my foo to: get document 1"
+        //
+        // we could describe the problem in terms of dispatch-on-first-argument-type, e.g. when first operand is a reference to a target object (e.g. `set end of documents to…` invokes application-defined `set` handler), vs a reference to a local slot (`set end of bars to…` invokes stdlib-defined `set` handler); however, we should also consider that `get`/`set` remote application state is clean simple unambiguous behavior, whereas overloading `set` but not `get` is inconsistent while overloading `get` is redundant (assuming local refs, unlike remote queries, self-resolve on eval)
+        //
+        // on reflection, looks like `set` should be app-only, or reference-only [if get/set apply to local refs, that is arguably more consistent with remote messaging than with local name binding]
+        //
+        // Q. if local queries require explicit `get` to resolve, e.g. `get B of A`, then how should dot-form/superglobals behave, e.g. `@A.B`/`A.B`/`B of @A`?
 
+    runScript("Set Bob to: “Tim”. Write Bob.")
 
-    script = " if -1 * - 2 + ---3 = -4 then -5 + -6 else -7 ÷ -8 " // ‘else’ {‘if’ {‘=’ {‘+’ {‘*’ {-1, -2}, -3}, -4}, ‘+’ {-5, -6}}, ‘/’ {-7, -8}}
-    
-   // script = " -1 else - 2 + 3 "
-    
-  //  script = " 1 + 2 * - 3 " // note: `-` must match as unary operator; `*` match as binary operator even though its right operand is only partially matched as `-`, i.e. it *could* be the start of an EXPR [but isn't yet known for sure]
-    
-    //script = " if 1 * 2 - 3 = 4 then 5 "
-    
-   // script = " if 1 + 2 = 3 then 4 "
-    
- //   script = " a -1 "
-    
-   // script = " nothing "
-    
-   // script = " 1 + -2 "
-    
-   // script = " foo 1 bar: 2 baz: 3 "
-    
-   // script = " foo 1 + a bar: 3 "
-    
-    //script = " (8,9) "
-    
-    //script = " f x - 1" // this should parse as `-{f{x},1}`
-    
-    //script = " f a: b - 1" //
-    
-    //script = " f a: b of c - 1 " // `of` needs to bind more tightly than arg label, i.e. `-{f{a:of{b,c}},1}`
-    
-//    script = " a b c " // this throws parsing error as inner commands can't be LP, but could do with better error message (currently 'expected label in ‘a’ command but found <.unquotedName("c") _"c"_>'); Q. how to suggest corrections? e.g. `a {b {c}}`, `a {b, c}`, `a {b, c: …}`
-    
-    // TO DO: "a + 1" mis-parses as `a {+1}`
-    
-    // TO DO: name arg is currently limited to AsLiteralName, but also needs to accept a reference
-    //script = "set a of b to: 3"
-    
-    //script = "set n to app “com.apple.TextEdit”, tell n to get document 1" // TO DO: parser prematurely exits after the 1st `n`; how to match `to` as stop word here? might pass closure thru parser that performs all stop-word/boundary checks; alternatively, leave it for now and address in table-driven parser
-    
-   // script = "tell app “com.apple.Finder” to get document_files from 2 thru -1 of home"
+    runScript("foo 1 as (editable integer)") // TO DO: possible to treat `editable integer` as non-nested command, given it appears as an operand to `as` operator?
 
-    
-    // TO DO: need decision on whether or not to overload `set` command to perform local assignment; within a `tell app…` block it current sends an AE (or tries to); one option is to define `me`/`my` atom for use in references, e.g.:
-    //
-    //  tell app “com.apple.TextEdit” to set my foo to: get document 1"
-    //
-    // we could describe the problem in terms of dispatch-on-first-argument-type, e.g. when first operand is a reference to a target object (e.g. `set end of documents to…` invokes application-defined `set` handler), vs a reference to a local slot (`set end of bars to…` invokes stdlib-defined `set` handler); however, we should also consider that `get`/`set` remote application state is clean simple unambiguous behavior, whereas overloading `set` but not `get` is inconsistent while overloading `get` is redundant (assuming local refs, unlike remote queries, self-resolve on eval)
-    //
-    // on reflection, looks like `set` should be app-only, or reference-only [if get/set apply to local refs, that is arguably more consistent with remote messaging than with local name binding]
-    //
-    // Q. if local queries require explicit `get` to resolve, e.g. `get B of A`, then how should dot-form/superglobals behave, e.g. `@A.B`/`A.B`/`B of @A`?
-    
-   // script = "Set Bob to: “Tim”. Write Bob."
-    
-   // script = "foo 1 as (editable integer)" // TO DO: possible to treat `editable integer` as non-nested command, given it appears as an operand to `as` operator?
-    
-    //script = "x: 1"
-    
-   // script = "x: 1 as editable integer, y: 2"
-    
-    // colon pair for assignment is simplest [within an expr sequence]; is it sufficient for it to implement eval? // one caution: `foo: bar, baz` will bind result of baz, not bar; use period/linebreak to terminate colon's right operand
-    
-    // TO DO: this still leaves question on how to assign when a reference, not identifier, is given; e.g. `set end of bars to…`
-    
-    
-    //script = "tell app “com.apple.TextEdit” to get text of documents"
-    //script = "write true"
+    runScript("x: 1")
 
-    //script = "if 1 + 2 = 3, 4 then 6, 8, 9." // this (correctly) reports parse error on unexpected `then` keyword
-    //script = "if 1 + 2 = 3, 4, 5, 6." // this does parse successfully (parser treats first comma as equivalent to `then` separator); PP should probably convert to canonical form
-    //script = "if (1 + 2 = 5, true) then write “ok”." // this also parses successfully; Q. should parser/pp have the smarts to flag the parensed sequence as "suspect", given that the `1+2=5` is effectively a no-op (bear in mind it's also a way to accidentally/deliberately hide effectful operations)
-   // script = "map {foo, using: {i}: bar}; fub" // this works and is unambiguous
-  //  script = "foo; map using: {i}: bar; fub" // this works [as long as proc has explicit label], but the right-side of colon pair captures `bar; fub` whereas the user may reasonably expect both colons to be top-level, as they are in `foo; bar; baz` (i.e. semicolons should probably terminate nested sentences)
-    //script = "foo; map {i}: bar; fub" // TO DO: reject this syntax as ambiguous? it parses as `((‘map’ {‘foo’, ‘i’}: ‘fub’ {‘bar’}))`, which isn't what's intended (left side of colon pair within a block expr should always be a literal name; thus any form of `cmd, name{…}:…` or `cmd; name:…` should be rejected due to existence of argument record)
-    //script = "foo; map ({i}: bar); fub" // this works: `(‘fub’ {‘map’ {‘foo’, ({‘i’}: ‘bar’)}})`
-    //script = "foo; map {{i}: bar}; fub" // TO DO: this needs to provide better error description (the procedure Pair needs to be parensed to distinguish it from a record field Pair [albeit one with an invalid label type])
-    //script = "foo; map {({i}: bar)}; fub" // TO DO: this fails due to parser bug (probably readRecord being unaware of parens)
-    //script = "if t1 then if t2 then a1 else a2 else a3" // TO DO: this doesn't parse correctly
+    runScript("x: 1 as editable integer, y: 2")
     
+        // colon pair for assignment is simplest [within an expr sequence]; is it sufficient for it to implement eval? // one caution: `foo: bar, baz` will bind result of baz, not bar; use period/linebreak to terminate colon's right operand
+    
+        // TO DO: this still leaves question on how to assign when a reference, not identifier, is given; e.g. `set end of bars to…`
+
+    runScript("tell app “com.apple.TextEdit” to get text of documents")
+
+    runScript("write true")
+
+    runScript("if 1 + 2 = 3, 4 then 6, 8, 9.") // this (correctly) reports parse error on unexpected `then` keyword
+
+    runScript("if 1 + 2 = 3, 4, 5, 6.") // this does parse successfully (parser treats first comma as equivalent to `then` separator); PP should probably convert to canonical form
+
+    runScript("if (1 + 2 = 5, true) then write “ok”.") // this also parses successfully; Q. should parser/pp have the smarts to flag the parensed sequence as "suspect", given that the `1+2=5` is effectively a no-op (bear in mind it's also a way to accidentally/deliberately hide effectful operations)
+
+    runScript("map {foo, using: {i}: bar}; fub") // this works and is unambiguous
+
+    runScript("foo; map using: {i}: bar; fub") // this works [as long as proc has explicit label], but the right-side of colon pair captures `bar; fub` whereas the user may reasonably expect both colons to be top-level, as they are in `foo; bar; baz` (i.e. semicolons should probably terminate nested sentences)
+
+    runScript("foo; map {i}: bar; fub") // TO DO: reject this syntax as ambiguous? it parses as `((‘map’ {‘foo’, ‘i’}: ‘fub’ {‘bar’}))`, which isn't what's intended (left side of colon pair within a block expr should always be a literal name; thus any form of `cmd, name{…}:…` or `cmd; name:…` should be rejected due to existence of argument record)
+
+    runScript("foo; map ({i}: bar); fub") // this works: `(‘fub’ {‘map’ {‘foo’, ({‘i’}: ‘bar’)}})`
+
+    runScript("foo; map {{i}: bar}; fub") // TO DO: this needs to provide better error description (the procedure Pair needs to be parensed to distinguish it from a record field Pair [albeit one with an invalid label type])
+
+    runScript("foo; map {({i}: bar)}; fub") // TO DO: this fails due to parser bug (probably readRecord being unaware of parens)
+
+    runScript("if t1 then if t2 then a1 else a2 else a3") // TO DO: this doesn't parse correctly
+
+}
+    
+  
+func runScript(_ script: String) {
+
+    print("PARSE: \(script.debugDescription)")
+
     let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }
     
     /*
@@ -285,7 +350,7 @@ func test() {
     } catch {
         print(error)
     }
-    print(script)
+    //print(script)
 }
 
 

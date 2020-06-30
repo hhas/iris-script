@@ -68,6 +68,11 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.infix(Keyword("&", "joined_with"), 340)
     registry.infix("is_a", 540) // TO DO: pattern? (RH should always be a command)
     registry.infix("as", 350) // TO DO: pattern? (RH should always be a command)
+    
+    
+    
+    // TO DO: should we 'special-case' `to` (and `when`) operators to have form `to…do…done`? normally `do…done` denotes a keyword-based block that can be composed with `if…then…`, `while…repeat…`, etc, but it's hard to find a satisfactory conjunction for `to`/`when` and, in practical use, handlers will almost always have >1 expr in action body
+    
     registry.prefix("to", conjunction: "run", 180) // TO DO: precedence, associativity? // TO DO: one problem with defining `run` as keyword is that `run…` is also a standard command name (still, the same can be said of `set…to…` and `get…[as…]` and those will probably be defined as operators for usability [e.g. allows `set`'s RH operand to be an LP command])
     registry.prefix("when", conjunction: "run", 180) // TO DO: ditto
 
@@ -77,7 +82,7 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.infix("at", 1310)
     registry.infix("named", 1310)
     registry.infix("id", 1310)
-    registry.infix("from", 1310)
+//    registry.infix("from", 1310)
     registry.infix(Keyword("where", "whose"), 1310)
     registry.infix("thru", 1330)
     registry.prefix("first", 1320)

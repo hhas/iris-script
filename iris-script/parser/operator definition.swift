@@ -76,9 +76,15 @@ struct OperatorDefinition: CustomStringConvertible { // TO DO: Equatable
         }.joined(separator: "")
     }
     
-    
-    var hasLeadingExpression: Bool { return self.pattern.first!.hasLeadingExpression }
-    var hasTrailingExpression: Bool { return self.pattern.last!.hasLeadingExpression }
+    // caution: these query unmatched patterns, which may branch into forms whose start/end is expr in some cases and non-exprs in other cases, so can only tell you if a particular operator *can* have a leading/trailing expr (constructing such patterns is not recommended, but it's not disallowed; and in case of command pattern is unavoidable as a command’s right operand [argument] is _always_ optional); where possible, use PatternMatcher.has[Leading/Trailing]Expression to check which was *actually* matched
+    var hasLeadingExpression: Bool {
+   //     print("WARNING: OperatorDefinition.hasLeadingExpression should probably not be used")
+        return self.pattern.first!.hasLeadingExpression
+    }
+    var hasTrailingExpression: Bool {
+  //      print("WARNING: OperatorDefinition.hasTrailingExpression should probably not be used")
+        return self.pattern.last!.hasTrailingExpression
+    }
 }
 
 

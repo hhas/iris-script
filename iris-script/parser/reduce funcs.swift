@@ -35,10 +35,10 @@ extension Array where Element == Parser.StackItem {
     func value(at i: Int) -> Value {
         if case .value(let expr) = self[i].form {
             return expr
-        } else if let matcher = self[i].matches.first(where: { $0.isAFullMatch }) {// KLUDGE
-            if let reduction = try? matcher.definition.reduce(self, matcher.definition, i, i+1) {
-                return reduction
-            }
+    //    } else if let matcher = self[i].matches.first(where: { $0.isAFullMatch }) {// KLUDGE
+   //         if let reduction = try? matcher.definition.reduce(self, matcher.definition, i, i+1) {
+   //             return reduction
+    //        }
         }
         fatalError("Bad reduction; expected token \(i) to be Value but found unreduced \(self[i]).")
     }
@@ -131,9 +131,10 @@ func reduceOrderedListLiteral(stack: Parser.Stack, definition: OperatorDefinitio
 func reduceKeyedListLiteral(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
     //show(stack: stack, from: index)
     // TO DO: how to preserve key order in literals?
-    var items = [KeyedList.Key: Value]()
     var i = start + 1 // ignore `[`
+    if case .colon = stack[i].form { return KeyedList([:]) } // `[:]` denotes empty kv-list
     skipLineBreaks(stack, &i)
+    var items = [KeyedList.Key: Value]()
     while i < end - 1 { // ignore `]`
         let key = (stack.value(at: i) as! HashableValue).dictionaryKey
         i += 2 // step over key + colon

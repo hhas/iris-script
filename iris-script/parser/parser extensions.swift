@@ -10,10 +10,16 @@ import Foundation
 typealias ReductionOrder = OperatorDefinition.Associativity
 
 func reductionOrderFor(_ leftMatch: PatternMatcher, _ rightMatch: PatternMatcher) -> ReductionOrder {
+    // caution: if left op is postfix and right op is prefix, that's an `EXPR EXPR` syntax error; TO DO: should we detect and throw that here, or somewhere else?
+    if !leftMatch.hasLeadingExpression && !rightMatch.hasTrailingExpression {
+        print("TODO: Found postfix \(leftMatch.name) operator followed by prefix \(rightMatch.name) operator (i.e. two adjacent expressions with no delimiter between). This should be treated as syntax error.")
+    }
     let left = leftMatch.definition, right = rightMatch.definition
-    if !left.hasTrailingExpression { // TO DO: FIX: need to determine this by examing the *matched* pattern seq (currently previously matched patterns are not carried forward to next matchers)
+  //  print("reductionOrderFor:", leftMatch, rightMatch)
+  //  print("\t…", left.name, leftMatch.hasTrailingExpression, " / ", right.name, rightMatch.hasLeadingExpression)
+    if !leftMatch.hasTrailingExpression { // left operator is postfix so MUST reduce before right infix/postfix op
         return .left
-    } else if !right.hasLeadingExpression { // TO DO: ditto
+    } else if !rightMatch.hasLeadingExpression { // right operator is prefix so MUST reduce before left prefix/infix op
         return .right
     } else if left.precedence != right.precedence {
         return left.precedence > right.precedence ? .left : .right
@@ -55,17 +61,39 @@ extension OperatorDefinitions {
 
 
 
+typealias LongestMatch = (start: Int, stop: Int, match: PatternMatcher, tokens: [Parser.StackItem]) // important: stop index is INclusive (start...stop), i.e. to check for overlapping operations: left.stop == right.start (assumes the shared operand is already reduced to a single .value token)
+
+
 extension Array where Element == LongestMatch {
     
     func show() { // DEBUG
         print("  ->")
-        for m in self { print("    \(m.start)-\(m.stop) [\(m.tokens.map{".\($0.form)"}.joined(separator: ", "))]") }
+        for m in self { print("    \(m.start)-\(m.stop) \(m.match) [\(m.tokens.map{".\($0.form)"}.joined(separator: ", "))]") }
         //print()
+    }
+    
+    mutating func reduceMatch(at index: Int) {
+        let matchInfo = self[index]
+        let form = matchInfo.tokens.reductionFor(fullMatch: matchInfo.match)
+       // print("…TO: \(form)")
+        // e.g. `3 + - 1 * 2`
+        let reduction: Parser.StackItem = (form, [], matchInfo.tokens[0].hasLeadingWhitespace)
+        // if subsequent match takes left operand, copy the reduced value to that
+        if index+1 < self.count && self[index+1].match.hasLeadingExpression {
+            self[index+1].tokens.replaceFirst(with: reduction)
+            self[index+1].start = matchInfo.start // start...stop range absorbs the extra tokens
+        }
+        // if preceding match takes right operand, copy the reduced value to that
+        if index > 0 && self[index-1].match.hasTrailingExpression {
+            self[index-1].tokens.replaceLast(with: reduction)
+            self[index-1].stop = matchInfo.stop // start...stop range absorbs the extra tokens
+        }
+        self.remove(at: index)
     }
 }
 
 
-typealias LongestMatch = (start: Int, stop: Int, match: PatternMatcher, tokens: [Parser.StackItem]) // important: stop index is INclusive (start...stop), i.e. to check for overlapping operations: left.stop == right.start (assumes the shared operand is already reduced to a single .value token)
+
 
 enum CommandTokenForm { // tokens within an expression that denote commands
     case name(Symbol)
@@ -81,24 +109,30 @@ extension Array where Element == Parser.StackItem {
     
     
     func show(_ startIndex: Int = 0, _ stopIndex: Int? = nil) { // startIndex..<stopIndex // DEBUG: list stack tokens + their associated partial/complete matchers
-        print("Stack[\(startIndex)..<\(stopIndex ?? self.count)]:")
-        print(self[startIndex..<(stopIndex ?? self.count)].map{ "\t.\($0.form)\($0.matches.map{"\n\t\t\t\t\($0)"}.joined(separator: ""))" }.joined(separator: "\n"))
+        print(self.dump(startIndex, stopIndex))
+    }
+    
+    func dump(_ startIndex: Int = 0, _ stopIndex: Int? = nil) -> String { // startIndex..<stopIndex // DEBUG: list stack tokens + their associated partial/complete matchers
+        let stopIndex = stopIndex ?? self.count
+        return "Stack[\(startIndex)..<\(stopIndex)]:\n" + self[startIndex..<(stopIndex)].map{
+            "\t.\($0.form)\($0.matches.map{"\n\t\t\t\t\($0)"}.joined(separator: ""))" }.joined(separator: "\n")
     }
     
     // starting from end of a range of tokens, search backwards to find a left-hand expression delimiter
     // this search also returns a list of significant tokens needed to parse commands
     
-    func findStartIndex(from startIndex: Int, to stopIndex: Int) -> Int {
-        // TO DO: what if labels are found but no command names? presumably that's a syntax error (Q. what if we use AS-style `property NAME : EXPR`? presumably a pattern matcher can read that; however, .label will remain on stack; one solution *might* be to define `property` as a command handler, in which case `NAME:` is an arbitrary label in LP syntax [this'd also allow multiple NAME:EXPR definitions in LP syntax]; only difference to standard commands is that this requires the argument record to be passed to handler as a single parameter; currently primitive/native handlers don't support this form of argument mapping but it's something we need to accept arbitrary arguments, c.f. Python's `name(*args,**kwargs)`, which is useful e.g. in implementing dynamic bridging wrappers around foreign APIs)
-        return self.lastIndex{
-            // note that .colon here typically denotes kv-list item; TO DO: what about records? when we reduce record values, we need to stop on the colon even though it's already been partly reduced to a .label
-            // TO DO: what if this returns on the first token checked? the index returned will be stopIndex, which is out of range (this implies a syntax error, e.g. adjacent separators)
-            switch $0.form { // can't use Token.isLeftDelimited as that's not yet implemented
-            case .semicolon, .colon, .separator(_), .startList, .startRecord, .startGroup, .lineBreak: return true
-            default: return false
+    func findStartIndex(from startIndex: Int, to stopIndex: Int) -> Int { // start..<stop
+        // note that when finding the start of a record field, the resulting range includes the field's `.label(NAME)`; it's left to the caller to deal with that
+        for i in (startIndex..<stopIndex).reversed() {
+            switch self[i].form { // can't use Token.isLeftDelimited as that's not yet implemented
+            case .semicolon, .colon, .separator(_), .startList, .startRecord, .startGroup, .lineBreak: return i+1
+            default: ()
             }
-        } ?? startIndex
+        }
+        return startIndex
     }
+    
+    
     
     // find full operation matchers in the given range; reductionForOperatorExpression() uses the result in determining the order in which to reduce nested operators according to the operators’ arity, precedence, and/or associativity
     
@@ -111,24 +145,23 @@ extension Array where Element == Parser.StackItem {
         for rightExpressionIndex in (startIndex..<stopIndex).reversed() { // TO DO: confirm right-to-left vs left-to-right
             let form = self[rightExpressionIndex]
             for m in form.matches {
+                // if it's a full match and doesn't extend outside startIndex..<stopIndex then store it
                 if m.isAFullMatch {
-                    //print("full",m)
                     // TO DO: make sure this respects optional conjunctions (e.g. `EXPR is_before EXPR ( as EXPR )?`; while `EXPR is_before EXPR` is a full match, if it's followed by `as` conjunction then the longer match should be used)
-                    if let pm = longestMatches[m.groupID] {
-                        if pm.match.count < m.count {
-                            let start = m.startIndex(from: rightExpressionIndex)
-                            longestMatches[m.groupID] = (start, rightExpressionIndex, m, [Parser.StackItem](self[start...rightExpressionIndex])) // stop index is inclusive
-                            //print("discard", m)
+                    let matchStartIndex = m.startIndex(from: rightExpressionIndex)
+                    if matchStartIndex >= startIndex {
+                        if let pm = longestMatches[m.groupID] {
+                            if pm.match.count < m.count {
+                                longestMatches[m.groupID] = (matchStartIndex, rightExpressionIndex, m, [Parser.StackItem](self[matchStartIndex...rightExpressionIndex])) // stop index is inclusive
+                            }
+                        } else {
+                            longestMatches[m.groupID] = (matchStartIndex, rightExpressionIndex, m, [Parser.StackItem](self[matchStartIndex...rightExpressionIndex]))
                         }
-                    } else {
-                        let start = m.startIndex(from: rightExpressionIndex)
-                        longestMatches[m.groupID] = (start, rightExpressionIndex, m, [Parser.StackItem](self[start...rightExpressionIndex]))
                     }
-                } else {
-                    //print("part",m)
                 }
             }
         }
+        // once we've collected the longest matches for each operator, make sure they’re ordered from left to right and return
         return longestMatches.values.sorted{ ($0.start, $0.stop) < ($1.start, $1.stop) }
     }
     
@@ -136,25 +169,28 @@ extension Array where Element == Parser.StackItem {
     
     // TO DO: make sure all reductions are applied using these methods, and make absolutely sure that the replace() method updates all in-progress matchers correctly
 
-    func reductionFor(completedMatch: PatternMatcher) -> Token.Form { // reduce a single fully matched expression at head of stack to a single value // TO DO: what to call this method? (it doesn't put the result back onto parser stack or update stack's matchers, so is not a full reduction step in the Shift-Reduce sense)
-        //        print("REDUCING COMPLETED MATCH \(completedMatch) TO:")
+    func reductionFor(fullMatch: PatternMatcher) -> Token.Form { // reduce a single fully matched expression at head of stack to a single value
+        //        print("REDUCING COMPLETED MATCH \(fullMatch) TO:")
         let endIndex = self.count // end index is non-inclusive
-        let startIndex = endIndex - completedMatch.count
+        let startIndex = endIndex - fullMatch.count
         let result: Token.Form
         do {
-            result = .value(try completedMatch.definition.reduce(self, completedMatch.definition, startIndex, endIndex))
+            result = .value(try fullMatch.definition.reduce(self, fullMatch.definition, startIndex, endIndex))
         } catch {
             result = .error(error as? NativeError ?? InternalError(error))
         }
         //        print("…TO: .\(result)")
-        //        print("…reduced \(completedMatch) ➞ .\(result)")
+        //        print("…reduced \(fullMatch) ➞ .\(result)")
         return result
     }
     
     
     mutating func replace(from startIndex: Int, to stopIndex: Int, withReduction form: Token.Form) { // startIndex..<stopIndex
         // reapply the preceding stack frame's matchers to newly reduced value
-        // TO DO: make sure this correctly resumes in-progress matches (right now it's probably wrong)
+        // TO DO: make sure this correctly resumes in-progress matches
+        
+        assert(startIndex < stopIndex, "BUG: trying to reduce zero tokens at \(startIndex); fullyReduceExpression should have already checked if an expr exists between delimiters and returned immediately if none found (e.g. in empty list/record/group).")
+        
         let matches: [PatternMatcher]
         if startIndex > 0 {
             //print(">", form)
@@ -169,11 +205,11 @@ extension Array where Element == Parser.StackItem {
     }
     
     
-    mutating func reduce(completedMatch: PatternMatcher) { // called by Parser.shift() when auto-reducing; this performs a normal SR reduction from head of stack
-        //print("REDUCING", completedMatch)
+    mutating func reduce(fullMatch: PatternMatcher) { // called by Parser.shift() when auto-reducing; this performs a normal SR reduction at head of stack
+        //print("REDUCING", fullMatch)
         let stopIndex = self.count // non-inclusive
-        let startIndex = stopIndex - completedMatch.count
-        let form = self.reductionFor(completedMatch: completedMatch)
+        let startIndex = stopIndex - fullMatch.count
+        let form = self.reductionFor(fullMatch: fullMatch)
         self.replace(from: startIndex, to: stopIndex, withReduction: form)
     }
 }
