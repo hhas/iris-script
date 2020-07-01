@@ -190,8 +190,13 @@ typealias ReductionOrder = OperatorDefinition.Associativity
 func reductionOrderFor(_ leftMatch: PatternMatcher, _ rightMatch: PatternMatcher) -> ReductionOrder {
     // caution: if left op is postfix and right op is prefix, that's an `EXPR EXPR` syntax error; TO DO: should we detect and throw that here, or somewhere else?
     // caution: reductionOrderFor only indicates which of two overlapping operations should be reduced first; it does not indicate how that reduction should be performed, as the process for reducing unary operations is not quite the same as for binary operations
-    if !leftMatch.hasLeadingExpression && !rightMatch.hasTrailingExpression {
-        print("TODO: Found postfix \(leftMatch.name) operator followed by prefix \(rightMatch.name) operator (i.e. two adjacent expressions with no delimiter between). This should be treated as syntax error.")
+    if !leftMatch.hasLeadingExpression && !rightMatch.hasTrailingExpression { // TO DO: this is not quite right; it's producing spurious errors on nested LP commands, e.g. `fub zim bim zub`; for now, silence those warnings with kludgearound:
+        
+        // Q. do we need to test both or only one side here?
+        if !(leftMatch.name == nestedCommandLiteral.name && rightMatch.name == nestedCommandLiteral.name) {
+        
+            print("TODO: Found postfix \(leftMatch.name) operator followed by prefix \(rightMatch.name) operator (i.e. two adjacent expressions with no delimiter between). This should be treated as syntax error.")
+        }
     }
     let left = leftMatch.definition, right = rightMatch.definition
   //  print("reductionOrderFor:", leftMatch, rightMatch)

@@ -85,6 +85,18 @@ extension Array where Element == Parser.StackItem {
         }.joined(separator: "\n")
     }
     
+    
+    func hasLeadingWhitespace(at index: Int) -> Bool {
+        return self[index].hasLeadingWhitespace
+    }
+    func hasTrailingWhitespace(at index: Int) -> Bool {
+        return index + 1 < self.count && self[index+1].hasLeadingWhitespace
+    }
+    
+    func hasBalancedWhitespace(at index: Int) -> Bool {
+        return self.hasLeadingWhitespace(at: index) == self.hasTrailingWhitespace(at: index)
+    }
+    
     // starting from end of a range of tokens, search backwards to find a left-hand expression delimiter
     // this search also returns a list of significant tokens needed to parse commands
     

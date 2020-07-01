@@ -397,7 +397,7 @@ public class Parser {
                 // first check if keyword is an expected conjunction (e.g. `then` in `if…then…`); if so, fully reduce the preceding EXPR (for this, we need to backsearch the shift stack for that matcher by matchID; once we find it, we know the range of tokens to reduce; e.g. given `if…then…` we want to reduce everything between the `if` and the `then` keywords to a single .value, but we don't want to risk reducing the `if EXPR` as well in the event that `if` is overloaded as a prefix operator as well; i.e. we can't make assumptions about library-defined operators)
                 if case .conjunction(let conjunctions) = self.blockMatchers.last! {
                     if let found = conjunctions[operatorDefinitions.name] {
-                        self.reduce(conjunction: form, matchedBy: found)
+                        self.reduceExpression(beforeConjunction: form, matchedBy: found)
                         self.blockMatchers.removeLast()
                     }
                 }

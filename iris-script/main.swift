@@ -20,19 +20,23 @@ let operatorReader = newOperatorReader(for: operatorRegistry)
 
 
 func test() {
+
     
-//    runScript("  do, 1, 2,\n 3\ndone ") // `do \n 1 \n 2 \n 3 \n done` (note: reduceKeywordBlock and Block struct don't yet preserve original expr delimiters, and the indent level will always be 1 tab until a full pretty printer is implemented)
+    
         
-     runScript("1\n do, 2, done, 3") // TO DO: FIX: this crashes
     
-    //runScript("1, ( 2, 3 ), 4")
-    return;
     
     runScript("foo * bar") // ‘*’ {‘foo’, ‘bar’}
-    runScript("foo - 1") // TO DO: determine if `-` operator is prefix or infix/postfix based on whitespace before/after (currently defaults here to prefix)
+    
+    // where a command name is followed by operator with both prefix and infix/postfix forms, determine which form to use based on whitespace before and/or after operator (Swift has similar whitespace-sensitive rules, e.g. `1-2` and `1 - 2` are valid but `1- 2` and `1 -2` are syntax errors)
+    runScript("foo - 1") // ‘-’ {‘foo’, 1}
+    runScript("foo-1")  // ‘-’ {‘foo’, 1}
+    runScript("foo -1") // ‘foo’ {-1}`
+    runScript("foo- 1") // ‘-’ {‘foo’, 1}
     
     runScript("get name of file at 1 of home")
     
+  //  return;
 
   //  return;
     
@@ -56,6 +60,8 @@ func test() {
 
   //  return;
     
+    runScript(" foo bar baz ") // ‘foo’ {‘bar’ {‘baz’}}
+    
 
   //  runScript("foo [1, 2,\n3\n [:]] arg: “yes” um: false.")
 
@@ -75,7 +81,7 @@ func test() {
 
     runScript("get name of file at 1 of home")
 
- //   runScript("1, do, 2, 3, 4, 5, done \n 6") // note: no separator between `done` and `6` ends parsing prematurely; hopefully table-driven parser will be better at autocorrecting punctuation // TO DO: this currently fails in reduce(conjunction:…), mostly likely a bug when parsing `do…done`
+    runScript("1, do, 2, 3, 4, 5, done \n 6") // note: no separator between `done` and `6` ends parsing prematurely; hopefully table-driven parser will be better at autocorrecting punctuation // TO DO: this currently fails in reduceExpression(beforeConjunction:…), mostly likely a bug when parsing `do…done`
 
     runScript("if 1 + 1 = 2 then beep, write “ok”! 5, 6, 7, 8, 9! 000.")
 
@@ -334,8 +340,29 @@ func test() {
 
     //runScript("foo; map {({i}: bar)}; fub") // TO DO: this fails due to parser bug (probably readRecord being unaware of parens)
 
-    runScript("if t1 then if t2 then a1 else a2 else a3") // TO DO: this doesn't parse correctly
 
+
+    // TO DO: this STILL doesn't parse correctly; it should group as:
+    //
+    //  ((if t1 then ((if t2 then a1) else a2)) else a3)
+    //
+    // which parsrs as:
+    //
+    //  ‘else’ {‘if’ {‘t1’, ‘else’ {‘if’ {‘t2’, ‘a1’}, ‘a2’}}, ‘a3’}
+    //
+    runScript("if t1 then if t2 then a1 else a2 else a3")
+
+
+    
+    runScript("  do, 1, 2,\n 3\ndone ") // `do \n 1 \n 2 \n 3 \n done` (note: reduceKeywordBlock and Block struct don't yet preserve original expr delimiters, and the indent level will always be 1 tab until a full pretty printer is implemented)
+    runScript("1\n do, 2,\n done, 3")
+    
+    runScript("1, ( 2, 3 ), 4")
+
+    runScript(" if 1, then 2. ") // returns a syntax error due to misplaced delimiter (`,`) after test EXPR (`1`)
+
+    
+    
 }
     
   
