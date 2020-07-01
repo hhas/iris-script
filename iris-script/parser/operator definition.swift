@@ -14,7 +14,7 @@ import Foundation
 
 
 
-struct OperatorDefinition: CustomStringConvertible { // TO DO: Equatable
+struct OperatorDefinition: CustomStringConvertible { 
         
     var description: String { return self.pattern.description }
     

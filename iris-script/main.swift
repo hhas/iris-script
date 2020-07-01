@@ -21,12 +21,12 @@ let operatorReader = newOperatorReader(for: operatorRegistry)
 
 func test() {
     
-    runScript("  do, 1, 2,\n 3\ndone ") // `do \n 1 \n 2 \n 3 \n done` (note: reduceKeywordBlock and Block struct don't yet preserve original expr delimiters, and the indent level will always be 1 tab until a full pretty printer is implemented)
+//    runScript("  do, 1, 2,\n 3\ndone ") // `do \n 1 \n 2 \n 3 \n done` (note: reduceKeywordBlock and Block struct don't yet preserve original expr delimiters, and the indent level will always be 1 tab until a full pretty printer is implemented)
         
-    // runScript("1, do, 2, done, 3") // TO DO: FIX: this crashes
+     runScript("1\n do, 2, done, 3") // TO DO: FIX: this crashes
     
     //runScript("1, ( 2, 3 ), 4")
-   // return;
+    return;
     
     runScript("foo * bar") // ‘*’ {‘foo’, ‘bar’}
     runScript("foo - 1") // TO DO: determine if `-` operator is prefix or infix/postfix based on whitespace before/after (currently defaults here to prefix)

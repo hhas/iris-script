@@ -60,7 +60,8 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     let groupID: Int // all matchers returned by a OperatorDefinitions.patternMatchers() call share a common group ID; this should make it easier to discard non-longest match[es] where the operator name is overloaded, e.g. `+`/`-` (caution: this assumes that patternMatchers() is called once only per .operatorName token; it would probably be safer for parser to supply an ID based on the token's identity) (caution: for list/record/group literals the ID is always -1; being built-in primitives we assume they are never overloaded by libraries, although that is not currently enforced)
     
     static func == (lhs: PatternMatcher, rhs: PatternMatcher) -> Bool {
-        return lhs.matchID == rhs.matchID
+        return lhs.groupID == rhs.groupID && lhs.definition.name == rhs.definition.name
+            && lhs.matchedPattern == rhs.matchedPattern && lhs.remainingPattern == rhs.remainingPattern
     }
     
     // note: PatternMatchers are initialized on first operator/punctuation in definition's pattern; if the pattern starts with an EXPR, the matcher is added to the preceding stack frame, otherwise it is added to the current one // TO DO: for now, if the preceding frame is not already reduced to .value, the match will fail
@@ -90,16 +91,22 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
         
     public func match(_ form: Token.Form, allowingPartialMatch: Bool = false) -> Bool {
         // currently, allowingPartialMatch is [almost?] always true as we need to match yet-to-be-reduced operands in order to determine operator precedence, which we need to know before we can decide which operands to reduce first (i.e. provisionally match then reduce in order of priority, confirming those matches still hold; it's not ideal and it's a bit brittle (e.g. using .testValue patterns to match anything except atomic literals will break), plus there's a fair amount of duct-tape currently holding it together too, but at least it gets something working which allows further development to proceed)
-        //print("matching .\(form) to", self, "…")
-        if true {//allowingPartialMatch {
+       // print("matching .\(form) to", self, "…")
+        let isMatch: Bool
+        if allowingPartialMatch { // TO DO: always allow partial match?
             if self.isAtBeginningOfMatch {
-                return self.remainingPattern[0].match(form, extent: .end) // a new, unconsumed pattern sequence
+                isMatch = self.remainingPattern[0].match(form, extent: .end) // a new, unconsumed pattern sequence
             } else if self.isAFullMatch {
                 assert(self.remainingPattern.count == 1)
-                return self.remainingPattern[0].match(form, extent: .start) // a fully consumed pattern sequence, where the final pattern (i.e. pattern[0]) has already been matched
+                isMatch = self.remainingPattern[0].match(form, extent: .start) // a fully consumed pattern sequence, where the final pattern (i.e. pattern[0]) has already been matched
+            } else {
+                isMatch = self.remainingPattern[0].match(form)
             }
+        } else {
+            isMatch = self.remainingPattern[0].match(form)
         }
-        return self.remainingPattern[0].match(form)
+       // print("…", isMatch)
+        return isMatch
     }
     
     func next() -> [PatternMatcher] {

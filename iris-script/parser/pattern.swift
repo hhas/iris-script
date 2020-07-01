@@ -44,7 +44,7 @@ extension Array where Element == Pattern {
 // TO DO: need to annotate expression cases with [optional?] arg label for command (might help if it can take a binding name too, as that is used in auto-generated interface documentation)
 
 
-indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
+indirect enum Pattern: Equatable, CustomDebugStringConvertible, ExpressibleByArrayLiteral {
     
     case keyword(Keyword)
     case expression // any value // TO DO: case expression(label: Symbol); label is arg label in constructed Command (while we could supply a descriptive binding name here for documentation purposes, since operators are defined as part of handler definition the documentation generator can already obtain binding name from that; for now, operands are treated as positional only, which is fine for the common case where there operator has no optional clauses); TO DO: what about `do…done` blocks, where the body is an expression sequence? (these use a custom reducefunc which can simply ignore any labels, but it could be a problem for tooling that reads these patterns for other purposes)
@@ -239,6 +239,33 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         default:                         return false
         }
     }
+    
+    static func == (lhs: Pattern, rhs: Pattern) -> Bool {
+        switch (lhs, rhs) {
+        case (.keyword(let k1), .keyword(let k2)):          return k1 == k2
+        case (.optional(let p1), .optional(let p2)):        return p1 == p2
+        case (.sequence(let p1), .sequence(let p2)):        return p1 == p2
+        case (.anyOf(let p1), .anyOf(let p2)):              return p1 == p2
+        case (.zeroOrMore(let p1), .zeroOrMore(let p2)):    return p1 == p2
+        case (.oneOrMore(let p1), .oneOrMore(let p2)):      return p1 == p2
+        case (.name, .name):                                return true
+        case (.label, .label):                              return true
+        case (.expression, .expression):                    return true
+        case (.token(let t1), .token(let t2)):              return t1 == t2
+        case (.testToken(_), .testToken(_)):
+            // TO DO: how to compare function ptrs?
+            print("WARNING: .testToken does not yet support Equatable so will always return true ")
+            return true
+        case (.testValue(_), .testValue(_)):
+            print("WARNING: .testValue does not yet support Equatable so will always return true ")
+            return true
+        case (.delimiter, .delimiter):                      return true
+        case (.lineBreak, .lineBreak):                      return true
+        default: return false
+        }
+
+    }
+    
     
     //var nextConjunction: Set<Symbol> {
         

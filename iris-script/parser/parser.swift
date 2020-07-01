@@ -308,7 +308,7 @@ public class Parser {
                 print("discarding extra matches in", fullMatches.sorted{ $0.count < $1.count })
             }
         }
-//        print(self.stack.last!)
+  //      print("SHIFTED STACK:", self.stack.dump()); print()
     }
     
     
@@ -416,6 +416,9 @@ public class Parser {
                 // current matchers = prefix operators
                 // conjunction matchers = matches already in progress (strictly speaking we only need their matchIDs)
                 let (previousMatches, currentMatches, conjunctionMatches) = self.match(patterns: operatorDefinitions.patternMatchers()) // TO DO: `do done` should probably be rejected as syntax error, but this would match it (twice; once starting at `do`, then backmatching from `done` [nope, shouldn't: as long as pattern requires at least one delimiter between the two keywords, the `done` won't backmatch; will need to check pattern for this])
+                    
+                  //  print("CM",currentMatches)
+                    
                 if !previousMatches.isEmpty { stack[stack.count-1].matches += previousMatches }
                 if !conjunctionMatches.isEmpty {
                     
@@ -433,6 +436,7 @@ public class Parser {
                     //print("Found \(operatorDefinitions.name); will look for conjunction:", conjunctions.map{$0.key})
                     self.blockMatchers.start(.conjunction(conjunctions))
                 } // TO DO: confirm this is appropriate
+                  //  print("ADDING MATCHERS:", currentMatches)
                 self.shift(adding: currentMatches)
                 }
             

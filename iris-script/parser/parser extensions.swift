@@ -81,7 +81,7 @@ extension Array where Element == Parser.StackItem {
     func dump(_ startIndex: Int = 0, _ stopIndex: Int? = nil) -> String { // startIndex..<stopIndex // DEBUG: list stack tokens + their associated partial/complete matchers
         let stopIndex = stopIndex ?? self.count
         return "Stack[\(startIndex)..<\(stopIndex)]:\n" + self[startIndex..<(stopIndex)].map{
-            "\t.\($0.form)\($0.matches.map{ "\n\t\t\t\t\($0)" }.joined(separator: ""))"
+            "\t.\($0.form) [\($0.matches.count)]\($0.matches.map{ "\n\t\t\t\t\($0)" }.joined(separator: ""))"
         }.joined(separator: "\n")
     }
     
@@ -162,12 +162,24 @@ extension Array where Element == Parser.StackItem {
         let matches: [PatternMatcher]
         if startIndex > 0 {
             //print(">", form)
-            // TO DO: what about matches already on self[startIndex] (most will be continuations of previous match, but some may be backmatches of subsequent operator [but won't those be on last frame of expression tokens? I think we're currently losing those])
-            matches = self[startIndex - 1].matches.flatMap{ $0.next() }.filter{ $0.match(form, allowingPartialMatch: true) }
+            
+            
+            // TO DO: when re-matching EXPR before conjunction (e.g. the test expr in `if…then…`), this should probably be done with allowingPartialMatch:false to ensure the full expr is matched; this'd also allow `.testValue(TESTFUNC)` pattern to distinguish between initial provisional “is it an expr?” match (which is the most that can be asked until that expr is fully reduced) and final “is it an expr that satisfies TESTFUNC?”
+            
+            
+            // retry in-progress matches from preceding token
+            let prevMatches = self[startIndex - 1].matches.flatMap{ $0.next() }.filter{ $0.match(form, allowingPartialMatch: true) }
+       //     print("reapplying preceding matches:")
+            let currMatches = self[startIndex].matches.filter{ !prevMatches.contains($0) && $0.match(form, allowingPartialMatch: true) }
+        //    print("reapplying current matches:")
+
+            matches = prevMatches + currMatches
         } else {
-            //print("#", form)
-            matches = self[startIndex].matches // kludge; TO DO: what should this be?
+            matches = self[startIndex].matches.filter{ $0.match(form, allowingPartialMatch: true) }
         }
+        
+        
+        
         let reduction: Parser.StackItem = (form, matches, self[startIndex].hasLeadingWhitespace)
         self.replaceSubrange(startIndex..<stopIndex, with: [reduction])
     }

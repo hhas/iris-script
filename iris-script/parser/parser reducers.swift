@@ -282,7 +282,7 @@ extension Parser {
         }
         self.reduceCommands(from: startIndex, to: &stopIndex) // on return, all commands have been reduced in-place and stopIndex is decremented by the number of tokens removed during that reduction
         let form = self.reductionForOperatorExpression(from: startIndex, to: stopIndex)
-     //   print("REDUCED OPERATOR"); self.stack.show(startIndex, stopIndex)
+  //      print("REDUCED OPERATOR"); self.stack.show(startIndex, stopIndex)
         self.stack.replace(from: startIndex, to: stopIndex, withReduction: form)
         //print("…EXPR FULLY REDUCED TO: .\(form)\n")
     }
@@ -296,10 +296,9 @@ extension Parser {
         } else {
             matchID = matchers.min{ $0.count < $1.count }!.matchID // confirm this logic; if there are multiple matchers in progress it should associate with the nearest/innermost, i.e. shortest = most recently started (e.g. consider nested `if…then…` expressions); it does smell though
         }
-        // TO DO: this will fail if no matchers found with given ID, e.g. `do…done` blocks currently fail here
         guard let i = self.stack.lastIndex(where: { $0.matches.contains{ $0.matchID == matchID } }) else {
-            print(matchers)
-            fatalError("BUG: Can't find start index for \(conjunction) (matchID: \(matchID)) in:\n \(self.stack.dump())")
+            // if this fails, it is [probably?] a bug, as it implies the matcher that requested this conjunction be matched has not itself been added to the stack (or it was added and somehow subsequently lost), e.g. an `if…then…` matcher will ask the parser to locate its `then` conjunction for it, but should itself already be matched to the `if` keyword and the start of the test EXPR and attached to those two tokens in the stack (once `then` is found, the parser will reduce the test EXPR and reapply the `if…then…` matcher to that followed by the `then` keyword to make sure it now matches)
+            fatalError("BUG: Can't find start index for \(conjunction) from \(matchers) in:\n \(self.stack.dump())")
         }
         let startIndex = i + 1
         let stopIndex = self.stack.count
