@@ -35,6 +35,10 @@ public struct Symbol: ComplexValue, KeyConvertible, Comparable, ExpressibleByStr
         self.key = name.lowercased()
     }
     
+    public init(_ name: Substring) { // convenience
+        self.init(String(name))
+    }
+    
     //
     
     public static func < (lhs: Symbol, rhs: Symbol) -> Bool {

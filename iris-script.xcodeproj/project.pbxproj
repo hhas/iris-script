@@ -35,6 +35,8 @@
 		4F27087622D9E584009F40B2 /* keyed list.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27087522D9E584009F40B2 /* keyed list.swift */; };
 		4F28323F2474712C004C9CE5 /* parser reducers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28323E2474712C004C9CE5 /* parser reducers.swift */; };
 		4F2876B42471A35A0012E692 /* literal patterns.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2876B32471A35A0012E692 /* literal patterns.swift */; };
+		4F28B59524ACDF44005583C7 /* misc tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28B59424ACDF44005583C7 /* misc tests.swift */; };
+		4F28B59724ACE1C2005583C7 /* tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28B59624ACE1C2005583C7 /* tests.swift */; };
 		4F28C40824731F750079301A /* reduce funcs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28C40724731F750079301A /* reduce funcs.swift */; };
 		4F28F28F24A5F88200DA62C4 /* parser extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28F28E24A5F88200DA62C4 /* parser extensions.swift */; };
 		4F29320022E2290B00BC0AD4 /* editable script.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2931FF22E2290B00BC0AD4 /* editable script.swift */; };
@@ -176,6 +178,8 @@
 		4F27087522D9E584009F40B2 /* keyed list.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "keyed list.swift"; sourceTree = "<group>"; };
 		4F28323E2474712C004C9CE5 /* parser reducers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "parser reducers.swift"; sourceTree = "<group>"; };
 		4F2876B32471A35A0012E692 /* literal patterns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "literal patterns.swift"; sourceTree = "<group>"; };
+		4F28B59424ACDF44005583C7 /* misc tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "misc tests.swift"; sourceTree = "<group>"; };
+		4F28B59624ACE1C2005583C7 /* tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tests.swift; sourceTree = "<group>"; };
 		4F28C40724731F750079301A /* reduce funcs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reduce funcs.swift"; sourceTree = "<group>"; };
 		4F28F28E24A5F88200DA62C4 /* parser extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "parser extensions.swift"; sourceTree = "<group>"; };
 		4F2931FF22E2290B00BC0AD4 /* editable script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "editable script.swift"; sourceTree = "<group>"; };
@@ -472,6 +476,8 @@
 			isa = PBXGroup;
 			children = (
 				4F84D00022ADA0F200C9FD23 /* main.swift */,
+				4F28B59624ACE1C2005583C7 /* tests.swift */,
+				4F28B59424ACDF44005583C7 /* misc tests.swift */,
 				4FFC6F2322D6816F00D636B9 /* parser */,
 				4F1EA48B22B4E71300FFA4D2 /* values */,
 				4F1EA48C22B4E72F00FFA4D2 /* coercions */,
@@ -718,6 +724,7 @@
 				4F84D01022AE7E2500C9FD23 /* command.swift in Sources */,
 				4F27087622D9E584009F40B2 /* keyed list.swift in Sources */,
 				4F26065622C0158C0036D904 /* value modifiers.swift in Sources */,
+				4F28B59524ACDF44005583C7 /* misc tests.swift in Sources */,
 				4F26065F22C016570036D904 /* primitive handler.swift in Sources */,
 				4F2B81BF22CCD63E00FD1EB8 /* record coercion.swift in Sources */,
 				4F84D00A22ADA13700C9FD23 /* coercion protocols.swift in Sources */,
@@ -730,6 +737,7 @@
 				4F84D00C22ADA1AF00C9FD23 /* environment.swift in Sources */,
 				4F5B24AF231405B8001C1941 /* swift literal.swift in Sources */,
 				4F84D01622AE819000C9FD23 /* errors.swift in Sources */,
+				4F28B59724ACE1C2005583C7 /* tests.swift in Sources */,
 				4F857703230D34AF002B47F2 /* std state.swift in Sources */,
 				4F25FB8A22B6AC82007EE7AE /* std general.swift in Sources */,
 				4F257CCC22BAD1FA00A51CF5 /* std math.swift in Sources */,

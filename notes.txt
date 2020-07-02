@@ -16,3 +16,33 @@
 // technically `app "TextEdit"` would be `@com.apple.TextEdit` (or however we mount 'application' resources in the superglobal namespace; we might need an extra suffix, e.g. '.file'/'.app'/'.web', or coercion, e.g. `@com.example.foo as file/app/webservice`, to specify the exact service; there's also the question of how to map different namespaces onto the same superglobal root, e.g. UTI vs FS vs WWW; though this is less of an issue if we crosscut resource location with content type negotiation)
 
 // Q. how should debug/inspection code be represented via annotations? (when monitoring behavior, want to write least amount of code needed; might want ability to define handlers solely for this purpose, which are scoped to monitoring code only; may want ability to add group IDs to inspection annotations so they can be turned on/off per group; editors should normally minimize/hide debug annotations during authoring, with caveat that main code changes which would affect disabled debug code should be applied to those too [contrast debug code which is commented out to disable it, and so gets out of sync with main code; or debug code which is macro enabled/disabled, which visibly clogs main body of code during authoring])
+
+
+
+// scalars (atomic values) encapsulate boolean, integer, real, string, date, URL (née file), symbol; Q. which of these should appear as a single datatype? (e.g. numbers are really just degenerate strings, as are dates and URLs; if they look right, they should just work; OTOH, bools are rather awkward and we may prefer to adopt Icon-style success/failure or even kiwi-style empty/non-empty, while symbols must be syntactically distinct from strings to indicate semantic difference); also nothing (null), and possibly specialized did_nothing (c.f. Icon 'fail') for use in composable flow control expressions (e.g. for `TEST_EXPR else EXPR` where TEST_EXPR = `if BOOL EXPR`, multiple-test conditionals can be composed as `TEST_1 else TEST_2 else EXPR`)
+
+// collections encapsulate ordered list (array), key-value list (dictionary), unique list (set)
+
+// Q. what about structures? we can support records (ordered property sets, aka optionally labeled tuples) and/or [script] objects (encapsulated environment scopes); records offer one way to pass unary-command arguments, particularly if optional labels can be inferred by consumer (structural typing, pattern matching; esp if some form of multimethods is provided as alternative to traditional object encapsulation of single-dispatch OO; also bear in mind pattern-matched dispatch on multiple arguments fits far better with AEOM)
+
+// complex values: commands, blocks (expression sequences); handlers (a composition of command-as-interface and expression [sequence], stored in an environment scope); what about identifiers/variables? or should we adopt entoli's everything-is-a-unary-command-that-takes-an-optional-argument instead, which may be conceptually cleaner and easier to explain as it describes everything as concrete behaviors rather than abstract name bindings? (we do need to consider single-assignment, non-maskable names, c.f. sylvia, as these are vital to predictable operator behavior given that operators are merely library-supplied syntactic sugar over library-defined commands)
+
+// homoiconic; while it may lack Lisp’s extreme everything-is-a-list parsimony, all code is data and can be manipulated accordingly; in particular, a Shortcuts-style workflow is trivially encoded as an expression sequence, using pipeline operator when output of one command should be passed as first argument to the next
+
+// handler interfaces must be fully introspectable; this includes parameter and result type constraints (Coercions) and errors throwable, user documentation, and metadata (keywords, categories, targets, etc); in additional to traditional text-based autosuggest, autocomplete, etc. interface introspection enables easy lightweight GUI form generation (auto-populating a window/panel with familiar GUI controls, labels, tooltips, etc into which an end-user can input arguments) and interactive voice input too: 3 UI modes for the price of 1
+
+// chunk exprs? (aka “operator-precedence-is-a-pig-when-everything-is-a-unary-command-by-default”)
+
+// possible block syntax[es]: comma-separated exprs, terminated by linebreak or period; `do…done`; `(…)`, `[…]`, `{…}`
+
+// multi-word names must use underscores, not camelcase or other conventions, as those are easiest to parse as visual/spoken phrases (a code editor can reduce opacity of underscore chars to improve code readability without losing semantic clarity); true whitespace-in-identifiers (c.f. kiwi, entoli) is not desirable due to the tradeoffs that requires [and AppleScript-style parser “magic” is right out]
+
+*/
+
+
+
+// re. API designs: reduction APIs that returned a reduced value should return any adjusted indexes, not modify in-place; reduction APIs that replace stack tokens with a reduced value should adjust any indexes in-place (i.e. via inout parameter, not by returning new values) [i.e. the former can make no changes to parser state; the latter can leave no changes incomplete]
+
+// note that we make one restriction w.r.t. operator extensibility in order to simplify resolving operator vs command precedence: overloaded operator definitions are forbidden being both higher AND lower precedence than commands, e.g. assuming every command binds its arguments with precedence 1000, and an overloaded operator ‘∆’ were to have an infix form of precedence 999 and a postfix form of precedence 1001, the parser will flag `foo 1 ∆` as a syntax error requiring the user to manually parenthesize either `foo {1 ∆}` or `(foo 1) ∆` (or `foo {1} ∆`, since a record literal following a command name will _always_ bind to that name). Since all commands have a single fixed precedence, this restriction shouldn’t be too onerous: while it's still possible that two external libraries could overload the same operator name with incompatible precedences, that overloading probably violates good practice (i.e. don't give recognizable symbols arbitrary/non-standard meanings) and can still be manually resolved by the user adding parens when the parser refuses to do so (a fair penalty for library authors’ overreach); see also TODO on Associativity.none
+
+// problem with using PatternMatcher to match commands is that command parsing is context-sensitive: if a command appears as argument to a low-punctuation command, the nested command cannot also be low-punctuation and any `NAME:VALUE` pairs that appear after it must be associated with the outer, not inner, command (a pattern matcher would associate it with the most recently encountered command name, i.e. the inner one)

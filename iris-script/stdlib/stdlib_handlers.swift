@@ -1016,6 +1016,41 @@ private func procedure_ifTest_condition_action(command: Command, commandEnv: Sco
     return type_ifTest_condition_action.result.box(value: result, in: handlerEnv)
 }
 
+
+
+// if {left, middle, right}
+private let type_ifTest_condition_action_alternativeAction = (
+    param_0: (Symbol("left"), asBool),
+    param_1: (Symbol("middle"), asIs),
+    param_2: (Symbol("right"), asIs),
+    result: AsOptional(AsValue())
+)
+private let interface_ifTest_condition_action_alternativeAction = HandlerInterface(
+    name: "if",
+    parameters: [
+        (type_ifTest_condition_action_alternativeAction.param_0.0, "condition", type_ifTest_condition_action_alternativeAction.param_0.1),
+        (type_ifTest_condition_action_alternativeAction.param_1.0, "action", type_ifTest_condition_action_alternativeAction.param_1.1),
+        (type_ifTest_condition_action_alternativeAction.param_2.0, "alternative_action", type_ifTest_condition_action_alternativeAction.param_2.1),
+    ],
+    result: type_ifTest_condition_action_alternativeAction.result
+)
+private func procedure_ifTest_condition_action_alternativeAction(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_ifTest_condition_action_alternativeAction.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_ifTest_condition_action_alternativeAction.param_1, in: commandEnv)
+    let arg_2 = try command.swiftValue(at: &index, for: type_ifTest_condition_action_alternativeAction.param_2, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try ifTest(
+        condition: arg_0,
+        action: arg_1,
+        alternativeAction: arg_2,
+        commandEnv: commandEnv
+    )
+    return type_ifTest_condition_action.result.box(value: result, in: handlerEnv)
+}
+
+
+
 // else {left, right}
 private let type_elseTest_left_right = (
     param_0: (Symbol("left"), asIs),

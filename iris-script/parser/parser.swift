@@ -56,43 +56,43 @@ import Foundation
 
 
 
-    /*
-case .colon: // push onto stack; what about pattern matching? what should `value:value` transform to?
-    //self.reduceExpression() // TO DO: is this appropriate? probably not: need to take care not to over-reduce LH (e.g. `foo bar:baz` should not reduce to `foo{bar}:baz`) i.e. is there any situation where LH is *not* a single token ([un]quotedName or symbol/string/number literal) - obvious problem here is that it won't handle string literals that haven't already been reduced to .value (which is something we defer when reading per-line)
-    let m: [PatternMatcher]
-    if case .value(_) = self.stack.last?.form {
-        m = []//patternMatchers(for: colonPair, remaining: [colonPair.pattern[2]])]
-    } else {
-        m = []
-    }
-    
-    // TO DO: is it worth passing new matchers to shift()? infix operator already adds matcher directly to stack's head (prior to shifting operator onto it); for prefix operator, might be as well to shift then add matcher to head; there is also question of where to instantiate pattern matchers for lists, records
-    
-    // TO DO: can LP commands be matched with a matcher? needs to know if command is nested (otherwise the inner command will 'steal' the outer command's remaining keyword arguments, which is not what we want; i.e. command matching is context-sensitive)
-    
-    self.shift(adding: m) // this needs to add colon-pair pattern if top of stack (LH) is EXPR (or anything other than `[`?) (unlike operators, which are library-defined, colon is hardcoded punctuation with special representation); should `[:]` be matched as pattern, or just hardcode into `case .endList`? one reason to prefer patterns is they generate better syntax error messages
-    
-    print("added", m, self.stack.count)
-    
-    // in keeping with `name:value` binding syntax, colon is used to bind handler interface to handler action:
-    
-    // (foo {x as bar} returning baz: do … done) as handler // creates a NativeHandler instance but doesn't bind it
-    
-    // (foo: do … done) as handler  // note the cast is necessary to prevent binding block's result to name (without the cast, the preceding example would fail)
-    
-    // (do … done) as handler  // and here is simplest form: an unnamed handler that takes no input and returns unspecified output
-    
-    // note: colon needs to bind tighter than `as` and `returning`, but looser than `to`:
-
-    // To foo x as bar returning baz: do … done.
-    
-    // one problem with colon for bindings: `a of b: c` is visually confusing and should probably be disallowed, or at least discouraged (use `set a of b to c`; Q. what about `b.a: c`?); also consider colon bindings to be essentially static, i.e. LH operand is fixed at parse time
-    
-    // still not sure if colon binding in blocks should map to `set`; we could argue that since all behaviors are library-supplied, binding is one of those behaviors
-
-
-    // when matching operator keywords such as `to`, `do`, `done`, should pattern specify leftDelimited/rightDelimited/leftDelimited? i.e. we want to 'encourage' `to` to appear at start of line, to minimize it being treated as an operand/argument in more ambiguous contexts (e.g. in `tell foo to bar`, we want to avoid parsing as `tell {foo {to bar}}`)
-    */
+/*
+ case .colon: // push onto stack; what about pattern matching? what should `value:value` transform to?
+ //self.reduceExpression() // TO DO: is this appropriate? probably not: need to take care not to over-reduce LH (e.g. `foo bar:baz` should not reduce to `foo{bar}:baz`) i.e. is there any situation where LH is *not* a single token ([un]quotedName or symbol/string/number literal) - obvious problem here is that it won't handle string literals that haven't already been reduced to .value (which is something we defer when reading per-line)
+ let m: [PatternMatcher]
+ if case .value(_) = self.stack.last?.form {
+ m = []//patternMatchers(for: colonPair, remaining: [colonPair.pattern[2]])]
+ } else {
+ m = []
+ }
+ 
+ // TO DO: is it worth passing new matchers to shift()? infix operator already adds matcher directly to stack's head (prior to shifting operator onto it); for prefix operator, might be as well to shift then add matcher to head; there is also question of where to instantiate pattern matchers for lists, records
+ 
+ // TO DO: can LP commands be matched with a matcher? needs to know if command is nested (otherwise the inner command will 'steal' the outer command's remaining keyword arguments, which is not what we want; i.e. command matching is context-sensitive)
+ 
+ self.shift(adding: m) // this needs to add colon-pair pattern if top of stack (LH) is EXPR (or anything other than `[`?) (unlike operators, which are library-defined, colon is hardcoded punctuation with special representation); should `[:]` be matched as pattern, or just hardcode into `case .endList`? one reason to prefer patterns is they generate better syntax error messages
+ 
+ print("added", m, self.stack.count)
+ 
+ // in keeping with `name:value` binding syntax, colon is used to bind handler interface to handler action:
+ 
+ // (foo {x as bar} returning baz: do … done) as handler // creates a NativeHandler instance but doesn't bind it
+ 
+ // (foo: do … done) as handler  // note the cast is necessary to prevent binding block's result to name (without the cast, the preceding example would fail)
+ 
+ // (do … done) as handler  // and here is simplest form: an unnamed handler that takes no input and returns unspecified output
+ 
+ // note: colon needs to bind tighter than `as` and `returning`, but looser than `to`:
+ 
+ // To foo x as bar returning baz: do … done.
+ 
+ // one problem with colon for bindings: `a of b: c` is visually confusing and should probably be disallowed, or at least discouraged (use `set a of b to c`; Q. what about `b.a: c`?); also consider colon bindings to be essentially static, i.e. LH operand is fixed at parse time
+ 
+ // still not sure if colon binding in blocks should map to `set`; we could argue that since all behaviors are library-supplied, binding is one of those behaviors
+ 
+ 
+ // when matching operator keywords such as `to`, `do`, `done`, should pattern specify leftDelimited/rightDelimited/leftDelimited? i.e. we want to 'encourage' `to` to appear at start of line, to minimize it being treated as an operand/argument in more ambiguous contexts (e.g. in `tell foo to bar`, we want to avoid parsing as `tell {foo {to bar}}`)
+ */
 
 // TO DO: debugger may want to insert hooks (e.g. step) at line-endings too; as before, to preserve LF-delimited list/record items, this needs to operate on preceding value without changing no. of values on stack; it should probably onalso ignore if LF was also preceded by punctuation
 
@@ -133,7 +133,7 @@ extension Array where Element == Parser.StackItem {
 
 
 public class Parser {
-
+    
     typealias Form = Token.Form
     
     enum Reduction { // TO DO: get rid of this and just have reducefuncs throw
@@ -150,21 +150,21 @@ public class Parser {
     }
     
     typealias ReduceFunc = (Stack, OperatorDefinition, Int, Int) throws -> Value // (token stack, operator definition, start, end)
-
+    
     
     // TO DO: also capture source code ranges? (how will these be described in per-line vs whole-script parsing? in per-line, each line needs a unique ID (incrementing UInt64) that is invalidated when that line is edited; that allows source code positions to be referenced with some additional indirection: the stack frame captures first and last line IDs plus character offset from start of line)
     typealias StackItem = (form: Form, matches: [PatternMatcher], hasLeadingWhitespace: Bool) // in-progress/completed matches
-
+    
     typealias Stack = [StackItem]
     
     typealias PunctuationHandler = (Value) -> Value // optionally insert debugger commands when parsing .comma, .period, .query, and/or .exclamation delimiters
-        
+    
     
     let operatorRegistry: OperatorRegistry // TO DO: we need to lock OR after we've read any include/exclude annotations at top of script and before we start reading code tokens; any subsequent attempts to add/remove opdefs mid-parse should be an error (we can transform the annotations to .error tokens easily enough)
     
     private(set) var current: BlockReader // current token
     //private var annotations = [Token]() // TO DO: parser needs to bind extracted annotations to AST nodes automatically (this may be easier once TokenInfo includes line numbers)
-                
+    
     var stack = Stack() // TO DO: should be private or private(set) (currently internal as reduction methods are in separate extension)
     
     enum BlockMatch {
@@ -219,14 +219,14 @@ public class Parser {
     
     //
     
-    // TO DO: `foo,bar,baz?` should probably apply `?` modifier to entire sentence
-    // TO DO: should lists and records only allow comma and/or LF as expr separators? (i.e. `EXPR?` and `EXPR!` could still be used if required, but they'd need explicitly parenthesized)
     
     private func handlePunctuation(using handler: PunctuationHandler?) {
+        // TO DO: given `A,B,C!`, should `!` modifier apply to `C` only, or to `(A,B,C)!`, or to `A!B!C!`?
         // don't insert debugger command if preceding tokens can't be reduced to Value (i.e. punctuation modifies run-time behavior of the preceding value only, e.g. `Delete my_files!`)
-        if self.stack.isEmpty { return } // this could happen if punctuation appears at start of line; parser should reject that case before it gets to here
-        if case .value(let value) = self.stack[self.stack.count-1].form { // assuming preceding token[s] have already reduced to a value (expr), get that value for passing to hook
-            if let fn = handler { self.stack[self.stack.count-1].form = .value(fn(value)) }
+        // TO DO: should lists and records only allow comma and/or LF as expr separators? (i.e. `EXPR?` and `EXPR!` could still be used if required, but they'd need explicitly parenthesized)
+        // stack will be empty if punctuation appears at start of code; parser should probably detect and correct/reject obviously misplaced punctuation before it gets to here, but ignore it if it does
+        if let fn = handler, case .value(let value) = self.stack.last?.form { // assuming preceding token[s] have already reduced to a value (expr), get that value and pass it to hook function to wrap in a run-time modifier (e.g. a `Breakpoint` value)
+            self.stack[self.stack.count-1].form = .value(fn(value))
         } // else if preceding tokens haven't [yet] been reduced, leave the punctuation token for later processing; TO DO: how to avoid double-handling when re-scanning stack (punctuation tokens are left on stack for pattern matching); simplest is to define DebugValue protocol and require callbacks to return that; current stack value can then be tested to see if it's already wrapped
     }
     
@@ -259,7 +259,7 @@ public class Parser {
                 }
             }
         }
-   //     print("PREV", previousMatches, "CURR", currentMatches)
+        //     print("PREV", previousMatches, "CURR", currentMatches)
         return (previousMatches, currentMatches, conjunctionMatchers)
     }
     
@@ -273,7 +273,7 @@ public class Parser {
     // anything else is left on the stack until an explicit reduceExpression() phase is triggered
     func shift(form: Token.Form? = nil, adding newMatchers: [PatternMatcher] = []) { // newMatchers have (presumably) already matched this token, but we match them again to be sure
         let form = form ?? self.current.token.form
-  //      print("\nCURRENT:", form)
+        //      print("\nCURRENT:", form)
         let matchers: [PatternMatcher]
         if let previousMatches = self.stack.last?.matches { // advance any in-progress matches
             //print("PREV:", previousMatches, "\nNEW:", newMatchers)
@@ -294,9 +294,9 @@ public class Parser {
         self.stack.append((form, continuingMatches, self.current.token.hasLeadingWhitespace))
         // TO DO: if >1 complete match, we can only reduce one of them (i.e. need to resolve any reduce conflicts *before* reducing, otherwise 2nd will get wrong stack items to operate on; alternative would be to fork multiple parsers and have each try a different strategy, which might be helpful during editing)
         // TO DO: what if there are still in-progress matches running? (can't start reducing ops till those are done as we want longest match and precedence needs resolved anyway, but ops shouldn't auto-reduce anyway [at least not unless they start AND end with keyword])
- //       if !completedMatches.isEmpty { print("SHIFT fully matched", completedMatches) }
-
-     //   print("SHIFT \(self.stack.count - 1): .\(form)")
+        //       if !completedMatches.isEmpty { print("SHIFT fully matched", completedMatches) }
+        
+        //   print("SHIFT \(self.stack.count - 1): .\(form)")
         
         // automatically reduce atomic operators and list/record/group/block literals (i.e. anything that starts and ends with a static token, not an expr, so is not subject to precedence or association rules)
         // TO DO: not sure if reasoning is correct here; if we limit auto-reduction to builtins (which we control) then it's safe to say there will be max 1 match, but do…done blocks should also auto-reduce and those are library-defined; leave it for now as it solves the immediate need (reducing literal values as soon as they're complete so operator patterns can match them as operands)
@@ -308,11 +308,35 @@ public class Parser {
                 print("discarding extra matches in", fullMatches.sorted{ $0.count < $1.count })
             }
         }
-  //      print("SHIFTED STACK:", self.stack.dump()); print()
+        //      print("SHIFTED STACK:", self.stack.dump()); print()
+    }
+    
+    // start and end block-type structures (lists, records, groups) // TO DO: what about keyword blocks, e.g. `do…done`? and what about operators containing conjunctions?
+    
+    func startBlock(_ form: Parser.BlockMatch, matching matchers: [PatternMatcher]) {
+        self.blockMatchers.start(form) // track nested blocks on a secondary stack
+        self.shift(adding: matchers) // shift the opening token onto stack, attaching one or more pattern matchers to it
+    }
+    
+    func endBlock(_ form: Parser.BlockMatch) throws {
+        try self.blockMatchers.stop(form) // TO DO: what to do with error? (for now, we propagate it, but we should probably try to encapsulate as .error/BadSyntaxValue)
+        self.fullyReduceExpression() // ensure last expr in block is reduced to single .value // TO DO: check this as it's possible for last token in block to be a delimiter (e.g. comma and/or linebreak[s])
+        self.shift() // shift the closing token onto stack; shift() will then autoreduce the block literal
+    }
+    
+    //
+    
+    func conjunctionMatchers(for name: Symbol) -> [PatternMatcher]? {
+        // print("check for", name, "in", self.blockMatchers.last!)
+        if case .conjunction(let conjunctions) = self.blockMatchers.last! {
+            return conjunctions[name]
+        } else {
+            return nil
+        }
     }
     
     
-    // TO DO: when reducing, how far back to go? e.g. in `tell EXPR1 to EXPR2`, EXPR should be bounded by `to` and should not attempt to consume it (e.g. `tell foo to bar` could parse RHS as `foo{to{bar}}`)
+    //
     
     func parseScript() throws -> ScriptAST {
         loop: while true {
@@ -330,35 +354,13 @@ public class Parser {
             case .startGroup:
                 self.blockMatchers.start(.group)
                 self.shift(adding: groupLiteral.patternMatchers() + parenthesizedBlockLiteral.patternMatchers())
-            case .endList:
-                try self.blockMatchers.stop(.list) // TO DO: what to do with error?
-                self.fullyReduceExpression() // ensure last item in list is reduced to single .value
-                self.shift() // shift the closing token onto stack; shift() will autoreduce list/record/group literal
-            case .endRecord:
-                try self.blockMatchers.stop(.record) // TO DO: what to do with error?
-                self.fullyReduceExpression() // ensure last item in record is reduced to single .value before reducing the record itself // TO DO: what about remembering index of each field’s left delimiter, avoiding need to scan for it each time?
-                self.shift() // shift the closing token onto stack; shift() will autoreduce list/record/group literal
-                // if top of stack is a full-punctuation command (i.e. `NAME RECORD`)then reduce it now
-                guard case .value(let v) = self.stack.last?.form, v is Record else {
-                    fatalError("This should never fail: expected fully reduced Record at top of parser stack but found: \(self.stack.last?.form as Any)")
-                }
-                if self.stack.count > 1 {
-                    // (note: while we could use a `NAME RECORD` PatternMatcher to auto-reduce FP commands, it’s simpler just to hardcode it here)
-                    // (note: name-only and low-punctuation commands require additional scanning to determine right-hand boundary to their argument list so will be dealt with later by fullyReduceExpression)
-                    switch self.stack[self.stack.count - 2].form {
-                    case .unquotedName(let name), .quotedName(let name):
-                        guard case .value(let v) = self.stack[self.stack.count - 1].form, let record = v as? Record else {
-                            fatalError("This should never fail")
-                        }
-                        let command = Command(name, record)
-                        self.stack.replace(from: self.stack.count - 2, to: self.stack.count, withReduction: .value(command))
-                    default: ()
-                    }
-                }
             case .endGroup:
-                try self.blockMatchers.stop(.group) // TO DO: what to do with error?
-                self.fullyReduceExpression() // ensure last item in group is reduced to single .value
-                self.shift() // shift the closing token onto stack; shift() will autoreduce list/record/group literal
+                try self.endBlock(.group)
+            case .endList:
+                try self.endBlock(.list)
+            case .endRecord:
+                try self.endBlock(.record)
+                self.reduceIfFullPunctuationCommand() // if top of stack is full-punctuation command (`NAME RECORD`), reduce it
             case .separator(let sep):
                 // TO DO: this should only reduce expr up to the preceeding expr delimiter, but currently goes all the way back to start of stack; how do we determine the correct boundary? (ditto for other fullyReduceExpression calls too); is it safe to set a Parser-wide var with last boundary token's index? answer: no (reductions will invalidate it)
                 self.fullyReduceExpression() // [attempt to] reduce the preceding value to single .value
@@ -381,44 +383,33 @@ public class Parser {
             case .unquotedName(let name), .quotedName(let name): // command name or record label
                 // if we assume `NAME COLON` is ALWAYS a label, we can reduce it here to intermediate .label(NAME), which hopefully simplifies LP command parsing
                 if case .colon = self.current.next().token.form {
-                    self.shift(form: .label(name)) //, adding: labeledValue.patternMatchers())
-                    self.advance() // since we reduced two tokens (`NAME COLON`) on the fly, we need an extra advance()
+                    self.reduceLabel(name)
                 } else {
                     self.shift()
                 }
                 
             case .operatorName(let operatorDefinitions):
-                // if we assume `NAME COLON` is ALWAYS a label, we can reduce it here to intermediate .label(NAME), which hopefully simplifies LP command parsing
                 if case .colon = self.current.next().token.form {
-                    self.shift(form: .label(Symbol(String(self.current.token.content)))) //,adding: labeledValue.patternMatchers())
-                    self.advance() // since we reduced two tokens (`NAME COLON`) on the fly, we need an extra advance()
-                } else {
-                
-                // first check if keyword is an expected conjunction (e.g. `then` in `if…then…`); if so, fully reduce the preceding EXPR (for this, we need to backsearch the shift stack for that matcher by matchID; once we find it, we know the range of tokens to reduce; e.g. given `if…then…` we want to reduce everything between the `if` and the `then` keywords to a single .value, but we don't want to risk reducing the `if EXPR` as well in the event that `if` is overloaded as a prefix operator as well; i.e. we can't make assumptions about library-defined operators)
-                if case .conjunction(let conjunctions) = self.blockMatchers.last! {
-                    if let found = conjunctions[operatorDefinitions.name] {
-                        self.reduceExpression(beforeConjunction: form, matchedBy: found)
-                        self.blockMatchers.removeLast()
-                    }
+                    // assuming `NAME COLON` is ALWAYS a label (i.e. is part of core syntax rules), we can reduce it here to intermediate .label(NAME), which hopefully simplifies LP command parsing
+                    self.reduceLabel(Symbol(self.current.token.content))
+                } else if let matchers = self.conjunctionMatchers(for: operatorDefinitions.name) {
+                        // first check if keyword is an expected conjunction (e.g. `then` in `if…then…`); if so, fully reduce the preceding EXPR (for this, we need to backsearch the shift stack for that matcher by matchID; once we find it, we know the range of tokens to reduce; e.g. given `if…then…` we want to reduce everything between the `if` and the `then` keywords to a single .value, but we don't want to risk reducing the `if EXPR` as well in the event that `if` is overloaded as a prefix operator as well; i.e. we can't make assumptions about library-defined operators)
+                        // TO DO: given an overloaded conjunction, e.g. `to` is both a conjunction after `tell` and a prefix operator in its own right, how to ensure it is always matched as conjunction and other interpretations are ignored? (currently, after matching `to` token as a conjunction, we proceed to standard operator matching which will want to start matching it as a `to` operator; there are also questions on how to deal with bad expr seqs such as `EXPR prefixOp EXPR`, and longest-match vs best-match rules)
+                        // one reason for keeping "unmatchable" matchers (i.e. where keyword is conjunction rather than prefix/infix operator) is that those matchers may be used to generate error messages when a stray conjunction is found, e.g. "found stray `then` keyword outside of `if…then…` expression"
+                        
+                        self.reduceExpressionBeforeConjunction(matchedBy: matchers)
                 }
                 
-                // TO DO: given an overloaded conjunction, e.g. `to` is both a conjunction after `tell` and a prefix operator in its own right, how to ensure it is always matched as conjunction and other interpretations are ignored? (currently, after matching `to` token as a conjunction, we proceed to standard operator matching which will want to start matching it as a `to` operator; there are also questions on how to deal with bad expr seqs such as `EXPR prefixOp EXPR`, and longest-match vs best-match rules)
-                
-                
-         //       for def in operatorDefinitions.definitions {
-          //          print(def.name, def.hasLeadingExpression, def.hasTrailingExpression)
-          //      }
-                
-                // one reason for keeping "unmatchable" matchers (i.e. where keyword is conjunction rather than prefix/infix operator) is that those matchers may be used to generate error messages when a stray conjunction is found, e.g. "found stray `then` keyword outside of `if…then…` expression"
+                //
                 
                 //   print("FOUND OP", definitions.name)
                 // previous matchers = infix operators; these will be re-matched to current operator token upon shift()
                 // current matchers = prefix operators
                 // conjunction matchers = matches already in progress (strictly speaking we only need their matchIDs)
                 let (previousMatches, currentMatches, conjunctionMatches) = self.match(patterns: operatorDefinitions.patternMatchers()) // TO DO: `do done` should probably be rejected as syntax error, but this would match it (twice; once starting at `do`, then backmatching from `done` [nope, shouldn't: as long as pattern requires at least one delimiter between the two keywords, the `done` won't backmatch; will need to check pattern for this])
-                    
-                  //  print("CM",currentMatches)
-                    
+                
+                //  print("CM",currentMatches)
+                
                 if !previousMatches.isEmpty { stack[stack.count-1].matches += previousMatches }
                 if !conjunctionMatches.isEmpty {
                     
@@ -436,21 +427,8 @@ public class Parser {
                     //print("Found \(operatorDefinitions.name); will look for conjunction:", conjunctions.map{$0.key})
                     self.blockMatchers.start(.conjunction(conjunctions))
                 } // TO DO: confirm this is appropriate
-                  //  print("ADDING MATCHERS:", currentMatches)
+                //  print("ADDING MATCHERS:", currentMatches)
                 self.shift(adding: currentMatches)
-                }
-            
-            // note: `NAME COLON` is automatically reduced in .[un]quotedName(…) and .operatorName(…) cases above (we do it there rather than here as it avoids unnecessary work initially processing e.g. `to:` as an operator)
-            //case .colon:
-                // TO DO: could we safely reduce `NAME COLON` to .label(NAME) here?
-                
-                //self.reduceExpression() // TO DO: not sure about this; in kv-lists key should already be .value(HASHABLEVALUE) else it's a syntax error; in records, we want to match unreduced [c]name/opname token; we've abandoned `(to|when)? INTERFACE:ACTION` as a handler syntax as it's too ambiguous; and `NAME:VALUE` as shorthand binding syntax may be dropped as well
-                //self.shift()
-                //let (previousMatches, currentMatches, _) = self.match(patterns: pairLiteral.patternMatchers()) // TO DO: currently ignores conjunctionMatchers as operator patterns currently don't mix colons and keywords; however, we'd need to rethink if `property NAME:EXPR` is adopted, otherwise decide final policy and implement (e.g. up-front pattern validation) once rest of parser is working
-                //print(definitions.name.label, backMatches, newMatches)
-                //if !previousMatches.isEmpty { stack[stack.count-1].matches += previousMatches }
-                //self.shift(adding: currentMatches)
-                //self.shift()
                 
             case .semicolon:
                 self.fullyReduceExpression() // TO DO: confirm this is correct (i.e. punctuation should always have lowest precedence so that operators on either side always bind first)
@@ -458,7 +436,7 @@ public class Parser {
                 //print(definitions.name.label, backMatches, newMatches)
                 if !previousMatches.isEmpty { stack[stack.count-1].matches += previousMatches }
                 self.shift(adding: currentMatches)
-
+                
             default:
                 self.shift()
             }
@@ -467,7 +445,7 @@ public class Parser {
         
         
         
-//        print("\nReductions:")
+        //        print("\nReductions:")
         // finish reducing delimited expression sequence at top-level of script to a single ScriptAST value
         var result = [Value]()
         // TO DO: how to represent unreduced tokens as syntax errors? (e.g. what about runs caused by unbalanced braces? e.g. `[1,2,3 LF foo bar` will treat 1,2,3 as top-level exprs, which isn't intent; otoh, matcher will treat `foo bar` as list item, which probably isn't intended either; can we make reasonable guess as to where missing `]` should appear and re-parse based on that, flagging the proposed reduced list for user attention [i.e. approve or amend] before script can run)
@@ -481,7 +459,7 @@ public class Parser {
             case .value(let value):
                 print(value); let _ = matches
                 //print(" `\(value)` \(matches.map{"\n  \($0)"}.joined(separator: ""))") // .filter{$0.isAFullMatch}
-//                print()
+                //                print()
                 if wasValue { print("Syntax error (adjacent values): `\(result.last!)` `\(value)`\n") }
                 result.append(value)
                 wasValue = true
@@ -501,7 +479,11 @@ public class Parser {
         }
         print()
         // TO DO: need error tally; in theory script should be [partially] runnable even with [some?] syntax errors, but problematic sections need marked and script should run in debug mode only with extra guards around anything IO (what about unmatched operators? can we infer where an opname is accidentally used where quoted name is needed [i.e. user needs to resolve naming conflict] vs an opname that has incorrect operands [user needs to fix operands]; how do we represent such unresolved syntax errors as Values [again, allowing other code to execute at least in debug mode])
-        guard case .script = self.blockMatchers.last else { throw BadSyntax.missingExpression } // TO DO: add .error to result
+        guard case .script = self.blockMatchers.last else {
+            print("Unremoved block matchers:", self.blockMatchers)
+            return ScriptAST([]) //result)
+            //throw BadSyntax.missingExpression
+        } // TO DO: add .error to result
         return ScriptAST([]) //result)
     }
 }

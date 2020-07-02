@@ -155,6 +155,12 @@ extension OperatorRegistry { // convenience methods for standard operator forms
         self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(conjunction), .expression],
                                     precedence: precedence, reducer: reducer ?? reducePrefixOperatorWithConjunction))
     }
+
+    func prefix(_ name: Keyword, conjunction: Keyword, alternate: Keyword, _ precedence: Precedence, reducer: Parser.ReduceFunc? = nil) {
+        self.add(OperatorDefinition(pattern:
+            [.keyword(name), .expression, .keyword(conjunction), .expression, .optional([.keyword(alternate), .expression])],
+                                    precedence: precedence, reducer: reducer ?? reducePrefixOperatorWithConjunctionAndAlternate))
+    }
     
     // `OPNAME DELIM (EXPR DELIM)* OPNAME`
     func prefix(_ name: Keyword, suffix: Keyword, reducer: @escaping Parser.ReduceFunc = reduceKeywordBlock) {

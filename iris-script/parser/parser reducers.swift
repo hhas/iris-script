@@ -9,10 +9,10 @@ import Foundation
 
 
 extension Array {
-    mutating func replaceFirst(with item: Element) {
+    mutating func replaceFirstItem(with item: Element) {
         self[0] = item
     }
-    mutating func replaceLast(with item: Element) {
+    mutating func replaceLastItem(with item: Element) {
         self[self.count - 1] = item
     }
 }
@@ -20,93 +20,16 @@ extension Array {
 
 extension Parser {
     
-    // re. API designs: reduction APIs that returned a reduced value should return any adjusted indexes, not modify in-place; reduction APIs that replace stack tokens with a reduced value should adjust any indexes in-place (i.e. via inout parameter, not by returning new values) [i.e. the former can make no changes to parser state; the latter can leave no changes incomplete]
-    
-    // note that we make one restriction w.r.t. operator extensibility in order to simplify resolving operator vs command precedence: overloaded operator definitions are forbidden being both higher AND lower precedence than commands, e.g. assuming every command binds its arguments with precedence 1000, and an overloaded operator ‘∆’ were to have an infix form of precedence 999 and a postfix form of precedence 1001, the parser will flag `foo 1 ∆` as a syntax error requiring the user to manually parenthesize either `foo {1 ∆}` or `(foo 1) ∆` (or `foo {1} ∆`, since a record literal following a command name will _always_ bind to that name). Since all commands have a single fixed precedence, this restriction shouldn’t be too onerous: while it's still possible that two external libraries could overload the same operator name with incompatible precedences, that overloading probably violates good practice (i.e. don't give recognizable symbols arbitrary/non-standard meanings) and can still be manually resolved by the user adding parens when the parser refuses to do so (a fair penalty for library authors’ overreach); see also TODO on Associativity.none
-    
-    // problem with using PatternMatcher to match commands is that command parsing is context-sensitive: if a command appears as argument to a low-punctuation command, the nested command cannot also be low-punctuation and any `NAME:VALUE` pairs that appear after it must be associated with the outer, not inner, command (a pattern matcher would associate it with the most recently encountered command name, i.e. the inner one)
-    
-    func reductionForOperatorExpression(from startIndex: Int, to stopIndex: Int) -> Token.Form { // start..<stop
-        // reduces an expression composed of one or more operations (this includes unreduced nested commands for which matchers have been added, but not LP commands which must be custom-reduced beforehand)
-        // important: any commands within the expression must already be reduced to .value(Command(…))
-        if startIndex == stopIndex - 1 {
-            switch self.stack[startIndex].form {
-            case .value(let v):
-                return .value(v)
-            case .error(let e):
-                return .value(BadSyntaxValue(error: e)) // TO DO: where should .error transform to error value?
-            default: ()
-            }
-        }
-        //print("reductionForOperatorExpression:"); self.stack.show(startIndex, stopIndex)
-        var matches = self.stack.findLongestMatches(from: startIndex, to: stopIndex)
-        //for m in matches { print("Longest ", m) }
-        if matches.isEmpty { // note: this is empty when e.g. `do` keyword is followed by delimiter (since `do` is not an atom but part of a larger `do…done` block that spans multiple expressions, it should not be reduced at this time); we still go through the find-longest step in case there are completed pattern matchers available
-            if startIndex == stopIndex - 1 { // TO DO: is there any situation where there’d be >1 token here that isn’t a syntax error?
-                return self.stack[startIndex].form
-            }
-            return .value(BadSyntaxValue(error: InternalError(description: "Can't fully reduce \(startIndex)..<\(stopIndex) as no full matches found: \(self.stack.dump(startIndex, stopIndex))"))) // TO DO: BadSyntaxValue should always take stack and start+stop indexes and store its own copy of that array slice (may be used in generating syntax error descriptions and, potentially, making corrections in place [this'd need BadSyntaxValue class to delegate all Value operations to a private `Value?` var])
-        }
-        if matches[0].start != startIndex {print("BUG: Missing first matcher[s] for \(startIndex)...\(matches[0].start)")}
-        if matches.last!.stop != stopIndex-1 {print("BUG: Missing last matcher[s] for \(matches.last!.stop)...\(stopIndex-1)")}
-        // starting from right end of specified stack range and comparing two adjacent operations at a time, scan left while both operators share a common operand and left operator has higher precedence than right; once found, reduce the higher-precedence operator; rinse and repeat until only one operator is left to reduce; note that this will also reduce nested commands as those had pattern matchers attached to them by reduceCommandExpressions (nested commands will reduce similar to atom or prefix operators, depending on what follows the command name: an infix/postfix operator, or a prefix operator/other expression)
-        var rightExpressionIndex = matches.count - 1
-        var leftExpressionIndex = rightExpressionIndex - 1
-        while matches.count > 1 {
-            //print("matches:", matches.map{ "\($0.start)-\($0.stop) `\($0.match.name.label)`" }.joined(separator: ", "))
-            var left = matches[leftExpressionIndex], right = matches[rightExpressionIndex]
-            var hasSharedOperand = left.stop >= right.start
-            while leftExpressionIndex > 0 && hasSharedOperand && reductionOrderFor(left.match, right.match) == .left {
-                leftExpressionIndex -= 1; rightExpressionIndex -= 1
-                left = matches[leftExpressionIndex]; right = matches[rightExpressionIndex]
-                hasSharedOperand = left.stop >= right.start
-            }
-            // left = matches[index+1], right = matches[index]
-            // print("LEFT:", left, "\nRIGHT:", right, "\n", rightExpressionIndex)
-            //print("hasSharedOperand:", hasSharedOperand, left.match.name, right.match.name)
-            if hasSharedOperand {
-                switch reductionOrderFor(left.match, right.match) {
-                case .left: // left expr is infix/postfix operation
-                    // print("REDUCE LEFT MATCH", left.match.name)
-                    matches.reduceMatch(at: leftExpressionIndex)
-                case .right: // right expr is prefix/infix operation
-                    // print("REDUCE RIGHT MATCH", right.match.name)
-                    matches.reduceMatch(at: rightExpressionIndex)
-                }
-            } else {
-                // TO DO: this also happens if a completed operator match is missing from matches array due to a bug in [e.g.] findLongestMatches()
-                // print("no shared operand:\n\n\tLEFT MATCH \(left.start)...\(left.stop):", left.match, "\n\t", left.tokens.map{".\($0.form)"}.joined(separator: "\n\t\t\t "), "\n\n\t RIGHT MATCH \(right.start)...\(right.stop)", right.match, "\n\t\t", right.tokens.map{".\($0.form)"}.joined(separator: "\n\t\t\t "), "\n")
-                // TO DO: need to fully reduce right expr[s], move result to stack, remove that matcher and reset indices, then resume
-                //   fatalError("TO DO: non-overlapping expressions, e.g. `1+2 3+4`, or missing [e.g. incomplete] match") // pretty sure `EXPR EXPR` is always a syntax error (with opportunities to suggest corrections, e.g. by inserting a delimiter)
-                
-                // TO DO: should we try to reduce as much as possible before returning partially reduced result in BadSyntaxValue, or should we return BadSyntaxValue straightaway containing the original range of unreduced tokens? (need to work out API for BadSyntaxValue; i.e. what should parser provide it with to enable it to generate meaningful error descriptions and [potentially] suggest corrections which may be applied and reduced in-place) (ability to define pattern matchers for detecting common syntax errors may of help here; e.g. `EXPR EXPR` may result from missing/wrong operator [e.g. user intended an infix operator but parser only found prefix/postfix/atom definitions], or from missing .delimiter)
-                
-                return .value(BadSyntaxValue(error: InternalError(description: "Found two adjacent expressions at \(leftExpressionIndex)...\(rightExpressionIndex): \(left.tokens.map{".\($0.form)"}) \(right.tokens.map{".\($0.form)"})")))
-            }
-            //matches.show() // DEBUG
-            if rightExpressionIndex == matches.count { // adjust indexes for shortened matches array as needed
-                leftExpressionIndex -= 1
-                rightExpressionIndex -= 1
-            }
-        }
-        // reduce the final operator expression and replace the parser stack’s original frames with the result
-        assert(matches.count == 1)
-        return matches[0].tokens.reductionFor(fullMatch: matches[0].match)
-    }
-    
-    
-    
-    
     func reductionForArgumentExpression(_ label: Symbol, from startIndex: Int, to stopIndex: Int) -> Value {
         //    print("reductionForArgumentExpression: \(label.isEmpty ? "direct" : label.label) argument at \(startIndex)..<\(stopIndex).")
         //    self.stack.show(startIndex, stopIndex)
+        // this logic is a mess: reductionForOperatorExpression returns nil if reduction can't be performed at this time (e.g. pattern is still being matched); with argument exprs, does that indicate there’s a syntax error?
         let value: Value
         let form = self.reductionForOperatorExpression(from: startIndex, to: stopIndex)
         switch form {
         case .value(let v): value = v
         default:
-            
-            value = BadSyntaxValue(error: InternalError(description: "\(label.isEmpty ? "direct" : label.label) argument did not fully reduce: .\(form)\n\(self.stack.dump(startIndex, stopIndex))\n"))
+            value = BadSyntaxValue(error: InternalError(description: "\(label.isEmpty ? "direct" : label.label) argument did not fully reduce: .\(form as Any)\n\(self.stack.dump(startIndex, stopIndex))\n"))
         }
         return value
     }
@@ -150,29 +73,18 @@ extension Parser {
             index += 1 // step over label to the argument expression
             argumentLabel = name
             //      print("No direct argument")
-        } else if case .operatorName(let d) = self.stack[index].form, d.hasInfixForms { // command name is immediately followed by an infix/postfix operator, which *may* terminate it
-            if d.hasPrefixForms { // analyze to determine if operator is prefix (argument) or infix/postfix (terminator)
-                //                print("TODO: determine if operator in `\(commandName) \(d.name) …` is prefix or infix/postfix")
-                // TO DO: what if operator has prefix and postfix forms and no infix forms? depends if there's an expr after it: if there is, it’s prefix (can't be postfix); if there isn't, it’s postfix (can't be prefix)
-                // TO DO: what if operator has prefix and infix/postfix forms? if there's an expr after it it can't be postfix (at which point we look at whitespace to determine if prefix, infix, or requires explicit parens); if there isn't, it must be postfix
-                // Q. if ambiguous operator is itself followed by another operator, should we stop guessing and just demand explicit parens?
-                /*
-                 let whitespaceBefore = self.stack.hasLeadingWhitespace(at: index)
-                 let whitespaceAfter = self.stack.hasTrailingWhitespace(at: index)
-                 if !whitespaceBefore && whitespaceAfter { // e.g. `foo- 1`
-                 // TO DO: we should probably forbid this combination as it's an easy typo to make (e.g. typing minus+spacebar instead of intended spacebar+minus: `foo -1`), but we'll need to modify calling code to allow that error to propagate back either by throwing or by returning .error(…) or .value(BadSyntaxValue(…)); for now we allow it to through as infix (and once PP is implemented that'll be auto-corrected to balanced whitespace before and after operator)
-                 print("Syntax warning: imbalanced whitespace around \(d.name) operator at:", index)
-                 //return (BadSyntaxValue(error: BadSyntax.malformedWhitespace), startIndex + 1)
-                 }
-                 let isPrefixForm = whitespaceBefore && !whitespaceAfter // e.g. `foo -1`
-                 if !isPrefixForm { return (Command(commandName), startIndex + 1) }
-                 */
-                // TO DO: this isn't ideal as we're not sure if malformed `A- B` is due to transposition of operator and space or to omission/addition of one space; however, it'll do for now and once we implement PP we can decide how to handle going forward (e.g. since Command is directly annotatable, one option might be to attach a SyntaxWarning to that to draw user's attention to our auto-correction)
-                if !self.stack.hasBalancedWhitespace(at: index) { return (Command(commandName), startIndex + 1) }
-            } else { // infix/postfix-only operator *must* terminate arg-less command
+        } else if case .operatorName(let d) = self.stack[index].form, d.hasInfixForms { // command name is immediately followed by an infix/postfix operator, which *may* terminate it// if the operator _also_ has a prefix form it could be meant as part of direct argument, so analyze its surrounding whitespace to determine if operator is prefix (argument) or infix/postfix (terminator); e.g. given `-` operator which has both prefix and infix forms:
+                // `foo - 1` and `foo-1` are parsed as infix, with `foo` and `1` as operands to `-`
+                // `foo -1` is parsed as prefix, with `-1` as argument to `foo`
+                // TO DO: `foo- 1` is for now also treated as prefix, but this isn't ideal as we can't be sure if malformed `A- B` is due to transposition of operator and space or to omission/addition of one space; however, it'll do for now and once we implement PP we can decide how to handle going forward (e.g. since Command is directly annotatable, one option might be to attach a SyntaxWarning to that to draw user's attention to our auto-correction)
+                //print("Determine if ambiguous `(d.name) operator in `\(commandName) \(d.name) …` is prefix or infix/postfix")
+                //print("…has balanced whitespace:", self.stack.hasBalancedWhitespace(at: index))
+            if !d.hasPrefixForms || self.stack.hasBalancedWhitespace(at: index) {
+                // an infix/postfix-only operator *must* terminate arg-less command
+                // an ambiguous operator that has balanced whitespace is treated as infix
                 return (Command(commandName), startIndex + 1)
-            }
-        } else {
+            } // else operator is part of direct argument
+        //} else {
             //      print("ARGUMENT: \(self.stack[index].form)")
         }
         var argumentExpressionStartIndex = index
@@ -205,52 +117,41 @@ extension Parser {
                     
                     if d.hasPrefixForms && index == argumentExpressionStartIndex {
                         if argumentLabel.isEmpty {
-                            //print("\(d.name) is immediately after command name, so is either prefix or infix operator", matches, hasLeadingWhitespace, "\n")
+                            //print("\(d.name) operator is immediately after command name, so determine if is prefix or infix/postfix", matches, hasLeadingWhitespace, "\n")
                             if self.stack.hasBalancedWhitespace(at: index) { // treat as infix
                                 // TO DO: at this point we need to decide which it is: if it's infix then it terminates arg-less command; if it's prefix it's start of direct argument expr
                                 commandStopIndex = index
                                 break argumentLoop
                             }
                             
-                        } else {
+                        //} else {
                             //print("\(d.name) must be prefix operator as it appears immediately after argument label: \(argumentLabel.label)")
                             // do nothing
                         }
                     } else { // it's infix/postfix only or it's not at start of argument expr so reductionForOperatorExpression can deal with it; all we have to do is decide if it terminates the command or is part of its current argument
-                        guard let isHigherPrecedence = d.isInfixPrecedenceGreaterThanCommand else {
+                        guard let isLowerPrecedence = d.isInfixPrecedenceLessThanCommand else {
                             fatalError("Cannot resolve precedence between commandand overloaded operator \(d.name) as the operators’ precedences are higher AND lower than command’s.")
                         } // TO DO: this currently throws exception if operator precedences are both higher and lower than command's; it should output .error demanding user add explicit parens to disambiguate
-                        if isHigherPrecedence {
-                            //     print("higher-precedence \(d.name) operator is part of argument expr")
-                        } else {
+                        if isLowerPrecedence {
                             // TO DO: temporary kludge to get around problem of `-` in `NAME … OP -1` being treated as infix operator and so terminating command, even when OP is higher-precedence prefix/infix operator (which forbids `-` being infix) and so should force `-` to be prefix operator (which cannot terminate command); being a kludge this will likely break under sufficient pressure
                             // TO DO: ideally we'd use an intermediate `LABEL EXPR` to `.pair(NAME,VALUE)` reduction, where LABEL acts as prefix operator of commandPrecedence, and thus is able to split and reduce left side of EXPR automatically, [hopefully] allowing LP commands to be handled via [slightly customized] pattern matching rather than this fiddly hardcoded logic; we can explore this route later
-                            if d.hasPrefixForms && d.hasInfixForms {
-                                // see also above TODO
-                                // print("Decide if lower precedence prefix+infix \(d.name) operator should terminate LP command.")
-                                /*
-                                 let whitespaceBefore = self.stack.hasLeadingWhitespace(at: index)
-                                 let whitespaceAfter = self.stack.hasTrailingWhitespace(at: index)
-                                 if !whitespaceBefore && whitespaceAfter { // e.g. `foo- bar`
-                                 print("Syntax warning: imbalanced whitespace around \(d.name) operator at:", index)
-                                 //return (BadSyntaxValue(error: BadSyntax.malformedWhitespace), startIndex + 1)
-                                 }
-                                 let isPrefixForm = whitespaceBefore && !whitespaceAfter // e.g. `foo -1`
-                                 if !isPrefixForm { return (Command(commandName), startIndex + 1) }
-                                 */
-                                if self.stack.hasBalancedWhitespace(at: index) {
-                                    return (Command(commandName), startIndex + 1)
-                                }
+                            //print("Decide if lower precedence prefix+infix \(d.name) operator should terminate LP command.")
+                            if d.hasPrefixForms && d.hasInfixForms && self.stack.hasBalancedWhitespace(at: index) {
+                                commandStopIndex = index
+                                break argumentLoop
                             }
-                            if d.hasPrefixForms, d.hasInfixForms, index > argumentExpressionStartIndex,
-                                case .operatorName(let pd) = self.stack[index - 1].form, pd.contains(where: { $0.hasTrailingExpression }) {
-                                () //print("Looks like prefix+infix \(d.name) operator is preceded by prefix/infix operator \(pd.name), so we'll treat it as prefix operator, i.e. as part of argument expr.")
+                            if d.hasPrefixForms, d.hasInfixForms,
+                                index > argumentExpressionStartIndex,
+                                case .operatorName(let pd) = self.stack[index - 1].form,
+                                pd.contains(where: { $0.hasTrailingExpression }) {
+                                //print("Looks like prefix+infix \(d.name) operator is preceded by prefix/infix operator \(pd.name), so we'll treat it as prefix operator, i.e. as part of argument expr.")
                             } else {
                                 //print("lower-precedence \(d.name) operator terminates command")
                                 commandStopIndex = index
                                 break argumentLoop
                             }
-                            
+                    //  } else {
+                    //       print("higher-precedence \(d.name) operator is part of argument expr")
                         }
                     }
                 }
@@ -270,7 +171,24 @@ extension Parser {
         return (Command(commandName, arguments), commandStopIndex)
     }
     
+    //
     
+    func reduceIfFullPunctuationCommand() { // called by parser’s main loop after reducing a record literal; if top two tokens in stack are `NAME RECORD`, reduce them to a Command (while we could use a `NAME RECORD` PatternMatcher to auto-reduce FP commands, it’s simpler just to hardcode it here; in addition, `NAME RECORD` should probably be part of the core syntax, which means it should always be available even if, say, the LP/argless command syntax is omitted [although for a JSON-like data-only DSL the FP command syntax may be undesirable too])
+        // TO DO: what if record is reduced to BadSyntaxValue? while syntax errors within individual field exprs should already be encapsulated as BadSyntaxValue so won't stop the record itself reducing, messed up labels/delimiters or bad block nesting will likely prevent reduction to a Record value; currently both tokens are left on stack but the presence of `{…}` makes clear that it is intended to be a valid record, so should we capture both tokens as a BadSyntaxValue and describe it as malformed command, rather than leave the command unreduced (which will likely result in a [probably unnecessary/unhelpful] second syntax error); ignore for now and sort out later as part of final error handling
+        let startIndex = self.stack.count - 2
+        if startIndex >= 0, case .value(let v) = self.stack.last!.form,
+            let record = v as? Record, let name = self.stack[startIndex].form.asCommandName() {
+            // (note: name-only and low-punctuation commands require additional scanning to determine right-hand boundary to their argument list so will be dealt with later by fullyReduceExpression)
+            self.stack.replace(from: startIndex, withReduction: .value(Command(name, record)))
+        }
+    }
+    
+    //
+    
+    func reduceLabel(_ name: Symbol) { // called by parser's main loop on encountering `NAME COLON` sequence (caution: caller should not shift NAME or COLON onto stack; instead NAME should be passed here as argument)
+        self.shift(form: .label(name))
+        self.advance() // perform a second advance() as this consumes 2 tokens (`NAME COLON`) instead of usual 1
+    }
     
     
     func reduceCommandExpressions(from startIndex: Int, to stopIndex: inout Int) {
@@ -285,7 +203,7 @@ extension Parser {
             start = commandStopIndex
             
         }
-        //        print("FOUND outer commands:", outerCommands)
+        //print("FOUND outer commands:", outerCommands)
         let oldStackSize = self.stack.count
         for (start, stop, command) in outerCommands.reversed() {
             self.stack.replace(from: start, to: stop, withReduction: .value(command))
@@ -295,19 +213,32 @@ extension Parser {
     }
     
     
-    func reduceExpression(beforeConjunction conjunction: Token.Form, matchedBy matchers: [PatternMatcher]) {
-        // note: matching a conjunction keyword forces reduction of the preceding expr; in the event that the operator is nested (e.g. `if test then if test then action`) the caller uses Parser.blockMatches stack to track [potentially nested] in-progress operator matches currently waiting for their conjunction to appear, pairing up the closest, i.e. innermost, pair of primary and conjunction keywords first (thus:  `if test then if test then action` -> `if test then (if test then action)` -> `(if test then (if test then action))`)
-        // the conjunction argument is the current token from the parser’s main stack; the matchers argument is from the head of the blockMatchers stack (used to track nesting)
-        // note: this method reduces from head of stack so its caller (the parser's main loop) must not shift the conjunction keyword onto the parser stack until _after_ this method returns
+    
+    
+    
+    func reduceExpressionBeforeConjunction(matchedBy matchers: [PatternMatcher]) {
         let parentMatch: PatternMatcher
         if matchers.count == 1 {
             parentMatch = matchers[0]
         } else {
             parentMatch = matchers.min{ $0.count < $1.count }! // confirm this logic; if there are multiple matchers in progress it should associate with the nearest/innermost, i.e. shortest = most recently started (e.g. consider nested `if…then…` expressions); it does smell though
         }
+        // print("REDUCE CONJ:")
+        // self.stack.show(self.stack.count - parentMatch.count)
+        
+        // TO DO: this is all rather kludgy; need to decide what to do in even of overloaded matches
+        
+        
+        // TO DO: what if this reduction fails?
+        
+        
+        // TO DO: merge reduceExpressionBeforeConjunction(…) funcs into one?
+        // note: matching a conjunction keyword forces reduction of the preceding expr; in the event that the operator is nested (e.g. `if test then if test then action`) the caller uses Parser.blockMatches stack to track [potentially nested] in-progress operator matches currently waiting for their conjunction to appear, pairing up the closest, i.e. innermost, pair of primary and conjunction keywords first (thus:  `if test then if test then action` -> `if test then (if test then action)` -> `(if test then (if test then action))`)
+        // the conjunction argument is the current token from the parser’s main stack; the matchers argument is from the head of the blockMatchers stack (used to track nesting)
+        // note: this method reduces from head of stack so its caller (the parser's main loop) must not shift the conjunction keyword onto the parser stack until _after_ this method returns
         let matchID = parentMatch.matchID // find nearest
         // find the partial match to which this conjunction keyword belongs (e.g. the partial `if EXPR…` match); this must be earlier in the same expression otherwise a syntax error will occur
-        // note that a stray conjunction (i.e. one which is not preceded by the operator’s primary keyword, e.g. `notif test then action`) will not trigger reduceExpression(beforeConjunction:…)
+        // note that a stray conjunction (i.e. one which is not preceded by the operator’s primary keyword, e.g. `notif test then action`) will not trigger reduceExpressionBeforeConjunction(:…)
         // TO DO: not quite sure why this back-search doesn't find the `if EXPR…` matcher to which this `then` belongs, despite it being in a different expression (i.e. it still has access to the entire parser stack, not just the subrange for the current EXPR)
         if let matchIndex = self.stack.lastIndex(where: { $0.matches.contains{ $0.matchID == matchID } }) {
             let startIndex = matchIndex + 1
@@ -319,7 +250,122 @@ extension Parser {
             let e = InternalError(description: "Syntax Error: Found `\(parentMatch.definition.name.label)` conjunction but the operator to which it belongs is not in the same expression.")
             self.stack.replace(from: self.stack.count - 1, to: self.stack.count, withReduction: .error(e))
         }
+        // print("…TO:", self.stack.dump(self.stack.count-1))
+        
+        
+        
+        
+        
+        let remainingConjunctions = self.stack.last!.matches.flatMap{$0.next()}.flatMap{$0.conjunctions} // get matchers for token after newly-shifted conjunction (if any) to see if there further conjunctions still to match (e.g. `if…then…else…` operator has two conjunctions to match, the second of which is optional)
+        // print("REMAINING: ", remainingConjunctions, parentMatch.next())
+        if remainingConjunctions.isEmpty {
+            
+            
+            // TO DO: we could probably use an API for wrangling keywords vs symbols
+            
+            // TO DO: sort out logic for removing .conjunction once the matcher that spawned it has reduced
+            
+            if case .conjunction(var c) = self.blockMatchers.last {
+                // print("REMOVED", self.blockMatchers.last ?? .record)
+                //      c.removeValue(forKey: T##Symbol) // TO DO: finish
+                self.blockMatchers.removeLast()
+            }
+        } else {
+            var conjunctions = [Symbol: [PatternMatcher]]()
+            for name in remainingConjunctions {
+                conjunctions[name] = [parentMatch]
+            }
+            // print("READDED", conjunctions)
+            self.blockMatchers.replaceLastItem(with: .conjunction(conjunctions))
+            
+            //   print()
+            //   print(self.stack.last!)
+            //   print(self.blockMatchers)
+            //   print()
+        }
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    func reductionForOperatorExpression(from startIndex: Int, to stopIndex: Int) -> Token.Form? { // start..<stop
+        // reduces an expression composed of one or more operations (this includes unreduced nested commands for which matchers have been added, but not LP commands which must be custom-reduced beforehand)
+        // important: any commands within the expression must already be reduced to .value(Command(…))
+        if startIndex == stopIndex - 1 {
+            switch self.stack[startIndex].form {
+            case .value(let v):
+                return .value(v)
+            case .error(let e):
+                return .value(BadSyntaxValue(error: e)) // TO DO: where should .error transform to error value?
+            default: ()
+            }
+        }
+        //print("reductionForOperatorExpression:"); self.stack.show(startIndex, stopIndex)
+        var matches = self.stack.findLongestFullMatches(from: startIndex, to: stopIndex)
+        //for m in matches { print("Longest ", m) }
+        if matches.isEmpty { // note: this is empty when e.g. `do` keyword is followed by delimiter (since `do` is not an atom but part of a larger `do…done` block that spans multiple expressions, it should not be reduced at this time); we still go through the find-longest step in case there are completed pattern matchers available
+           
+            return nil
+            
+            // if startIndex == stopIndex - 1 { // TO DO: is there any situation where there’d be >1 token here that isn’t a syntax error?
+          //      return self.stack[startIndex].form
+          //  }
+          //  return .value(BadSyntaxValue(error: InternalError(description: "Can't fully reduce \(startIndex)..<\(stopIndex) as no full matches found: \(self.stack.dump(startIndex, stopIndex))"))) // TO DO: BadSyntaxValue should always take stack and start+stop indexes and store its own copy of that array slice (may be used in generating syntax error descriptions and, potentially, making corrections in place [this'd need BadSyntaxValue class to delegate all Value operations to a private `Value?` var])
+        }
+        if matches[0].start != startIndex {
+            // TO DO: this may also be due to syntax error, e.g. "if 1 + 2 = 3, 4 then 6, 8, 9." -> Missing first matcher[s] for 0...1
+            print("BUG: Missing first matcher[s] for \(startIndex)...\(matches[0].start)")
+            print(matches[0])
+        }
+        if matches.last!.stop != stopIndex-1 {print("BUG: Missing last matcher[s] for \(matches.last!.stop)...\(stopIndex-1)")}
+        // starting from right end of specified stack range and comparing two adjacent operations at a time, scan left while both operators share a common operand and left operator has higher precedence than right; once found, reduce the higher-precedence operator; rinse and repeat until only one operator is left to reduce; note that this will also reduce nested commands as those had pattern matchers attached to them by reduceCommandExpressions (nested commands will reduce similar to atom or prefix operators, depending on what follows the command name: an infix/postfix operator, or a prefix operator/other expression)
+        var rightExpressionIndex = matches.count - 1
+        var leftExpressionIndex = rightExpressionIndex - 1
+        while matches.count > 1 {
+            //print("matches:", matches.map{ "\($0.start)-\($0.stop) `\($0.match.name.label)`" }.joined(separator: ", "))
+            var left = matches[leftExpressionIndex], right = matches[rightExpressionIndex]
+            var hasSharedOperand = left.stop >= right.start
+            while leftExpressionIndex > 0 && hasSharedOperand && reductionOrderFor(left.match, right.match) == .left {
+                leftExpressionIndex -= 1; rightExpressionIndex -= 1
+                left = matches[leftExpressionIndex]; right = matches[rightExpressionIndex]
+                hasSharedOperand = left.stop >= right.start
+            }
+            // left = matches[index+1], right = matches[index]
+            // print("LEFT:", left, "\nRIGHT:", right, "\n", rightExpressionIndex)
+            //print("hasSharedOperand:", hasSharedOperand, left.match.name, right.match.name)
+            if hasSharedOperand {
+                switch reductionOrderFor(left.match, right.match) {
+                case .left: // left expr is infix/postfix operation
+                    // print("REDUCE LEFT MATCH", left.match.name)
+                    matches.reduceMatch(at: leftExpressionIndex)
+                case .right: // right expr is prefix/infix operation
+                    // print("REDUCE RIGHT MATCH", right.match.name)
+                    matches.reduceMatch(at: rightExpressionIndex)
+                }
+            } else { // e.g. `… POSFIX_OP PREFIX_OP …`
+                // TO DO: this also happens if a completed operator match is missing from matches array due to a bug in [e.g.] findLongestMatches()
+                // print("no shared operand:\n\n\tLEFT MATCH \(left.start)...\(left.stop):", left.match, "\n\t", left.tokens.map{".\($0.form)"}.joined(separator: "\n\t\t\t "), "\n\n\t RIGHT MATCH \(right.start)...\(right.stop)", right.match, "\n\t\t", right.tokens.map{".\($0.form)"}.joined(separator: "\n\t\t\t "), "\n")
+                // TO DO: need to fully reduce right expr[s], move result to stack, remove that matcher and reset indices, then resume
+                //   fatalError("TO DO: non-overlapping expressions, e.g. `1+2 3+4`, or missing [e.g. incomplete] match") // pretty sure `EXPR EXPR` is always a syntax error (with opportunities to suggest corrections, e.g. by inserting a delimiter)
+                
+                // TO DO: should we try to reduce as much as possible before returning partially reduced result in BadSyntaxValue, or should we return BadSyntaxValue straightaway containing the original range of unreduced tokens? (need to work out API for BadSyntaxValue; i.e. what should parser provide it with to enable it to generate meaningful error descriptions and [potentially] suggest corrections which may be applied and reduced in-place) (ability to define pattern matchers for detecting common syntax errors may of help here; e.g. `EXPR EXPR` may result from missing/wrong operator [e.g. user intended an infix operator but parser only found prefix/postfix/atom definitions], or from missing .delimiter)
+                
+                return .value(BadSyntaxValue(error: InternalError(description: "Found two adjacent expressions at \(leftExpressionIndex)...\(rightExpressionIndex): \(left.tokens.map{".\($0.form)"}) \(right.tokens.map{".\($0.form)"})")))
+            }
+            //matches.show() // DEBUG
+            if rightExpressionIndex == matches.count { // adjust indexes for shortened matches array as needed
+                leftExpressionIndex -= 1
+                rightExpressionIndex -= 1
+            }
+        }
+        assert(matches.count == 1)
+        return matches[0].tokens.reductionFor(fullMatch: matches[0].match) // TO DO: reductionFor(fullMatch:) returns either .value or .error; can/should we change this to Value, in which case reductionForOperatorExpression(…) can return `Value?` rather than `Token.Form?`
+    }
+    
     
     
     func fullyReduceExpression(from _startIndex: Int = 0, to stopIndex: Int? = nil) { // starting point for reductions called by main loop
@@ -339,9 +385,32 @@ extension Parser {
         // (note that nested commands are not immediately reduced here but are instead tagged with matchers that will reduce them during reductionForOperatorExpression() as if they were atom/prefix operators of predetermined precedence; also note that full-punctuation commands, i.e. `NAME RECORD`, have already been reduced to .value(Command(…)) by the parser's main loop so are not touched again here)
         self.reduceCommandExpressions(from: startIndex, to: &stopIndex)
         // once all commands’ boundaries have been determined and the commands themselves reduced to .values, reduce all operators
-        let form = self.reductionForOperatorExpression(from: startIndex, to: stopIndex)
+        
+        // kludgy: upon reducing the expression, make sure any completed conjunction-based matches are removed from Parser.blockMatchers; frankly this is a mess: the logic for popping completed blocks off blockMatchers is all over the place
+     //   print(">>>",self.blockMatchers)
+        let fullyMatchedGroupIDs = self.stack[startIndex..<stopIndex].flatMap{$0.matches}.filter{$0.isAFullMatch}.map{$0.groupID}
+        //print("removing group ids", fullyMatchedGroupIDs)
+        if case .conjunction(let matchers) = self.blockMatchers.last {
+            var matchers = matchers
+            for (k, v) in matchers {
+                // print(k, v.map{$0.groupID})
+                let v = v.filter{!fullyMatchedGroupIDs.contains($0.groupID)}
+                if v.isEmpty {
+                    matchers.removeValue(forKey: k)
+                } else {
+                    matchers[k] = v
+                }
+            }
+            if matchers.isEmpty {
+             //   print("NUKED",self.blockMatchers.last!)
+                self.blockMatchers.removeLast()
+            }
+        }
+     //   print("<<<",self.blockMatchers)
+        if let form = self.reductionForOperatorExpression(from: startIndex, to: stopIndex) { // returns nil if no reduction was made (e.g. pattern is still being matched)
         //      print("REDUCED OPERATOR"); self.stack.show(startIndex, stopIndex)
-        self.stack.replace(from: startIndex, to: stopIndex, withReduction: form)
+            self.stack.replace(from: startIndex, to: stopIndex, withReduction: form)
+        }
         //print("…EXPR FULLY REDUCED TO: .\(form)\n")
     }
 }

@@ -29,22 +29,17 @@ import Foundation
 // caution: skip functions step over specific tokens if found; they do not check if tokens exist (pattern matchers are responsible for checking punctuation)
 
 func skipSeparator(_ stack: Parser.Stack, _ i: inout Int) {
-    if case .separator(_) = stack[i].form { i += 1 }
+    if i < stack.count, case .separator(_) = stack[i].form { i += 1 }
 }
 func skipLineBreaks(_ stack: Parser.Stack, _ i: inout Int) {
-    while case .lineBreak = stack[i].form { i += 1 }
+    while i < stack.count, case .lineBreak = stack[i].form { i += 1 }
 }
 
 extension Array where Element == Parser.StackItem {
 
     func value(at i: Int) -> Value {
-        if case .value(let expr) = self[i].form {
-            return expr
-    //    } else if let matcher = self[i].matches.first(where: { $0.isAFullMatch }) {// KLUDGE
-   //         if let reduction = try? matcher.definition.reduce(self, matcher.definition, i, i+1) {
-   //             return reduction
-    //        }
-        }
+     //   self.show()
+        if case .value(let expr) = self[i].form { return expr }
         fatalError("Bad reduction; expected token \(i) to be Value but found unreduced \(self[i]).")
     }
         
@@ -100,6 +95,14 @@ func reduceAtomOperator(stack: Parser.Stack, definition: OperatorDefinition, sta
 func reducePrefixOperatorWithConjunction(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
     assert(end == start + 4) // TO DO: check this
     return Command(definition, left: stack.value(at: start + 1), right: stack.value(at: end - 1)) // TO DO: this uses convenience initializer
+}
+
+// for now, we compromise on `if…then…else…`, defining it as one operator with two conjunctive clauses rather than two independent composable operators
+func reducePrefixOperatorWithConjunctionAndAlternate(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {
+    
+    assert(end == start + 4 || end == start + 6)
+    let alternate = end == start + 6 ? stack.value(at: start + 5) : nullValue
+    return Command(definition, left: stack.value(at: start + 1), middle: stack.value(at: start + 3), right: alternate)
 }
 
 func reduceKeywordBlock(stack: Parser.Stack, definition: OperatorDefinition, start: Int, end: Int) throws -> Value {

@@ -96,8 +96,8 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
         if allowingPartialMatch { // TO DO: always allow partial match?
             if self.isAtBeginningOfMatch {
                 isMatch = self.remainingPattern[0].match(form, extent: .end) // a new, unconsumed pattern sequence
-            } else if self.isAFullMatch {
-                assert(self.remainingPattern.count == 1)
+            } else if self.isAFullMatch && self.isLongestPossibleMatch {
+                assert(self.remainingPattern.count == 1, "A full match should be fully consumed to last (simple) pattern, but found \(self.remainingPattern.count): \(self.remainingPattern)")
                 isMatch = self.remainingPattern[0].match(form, extent: .start) // a fully consumed pattern sequence, where the final pattern (i.e. pattern[0]) has already been matched
             } else {
                 isMatch = self.remainingPattern[0].match(form)
@@ -131,9 +131,11 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
         if self.count > 2, case .keyword(_) = self.remainingPattern[0] { return true } else { return false }
     }
     
-    public var isAFullMatch: Bool { // if match() returns true and a longer match isn't possible, the tokens identified by this matcher can be passed to the operator defintion's reducefunc
+    public var isAFullMatch: Bool { // if match() returns true and a longer match isn't possible, the tokens identified by this matcher can be passed to the operator defintion's reducefunc // caution: isAFullMatch only indicates that this matcher represents a complete match of its pattern; to determine if a longer match is/isn’t possible, get isLongestPossibleMatch as well
         // kludge: pattern array can end with any number of .optional/.zeroOrMore patterns
-      ///  print(self.definition.precis,"full?", //[Pattern](self.pattern.dropFirst()).reify(), [Pattern](self.pattern.dropFirst()).reify().contains{$0.isEmpty})
+      
+     //   print(self.definition.precis,"full?", [Pattern](self.remainingPattern.dropFirst()).reify(), ![Pattern](self.remainingPattern.dropFirst()).reify().contains{!$0.isEmpty})
+        
         return [Pattern](self.remainingPattern.dropFirst()).reify().contains{ $0.isEmpty}
     } // if true, stack item is last Reduction in this match; caution: this does not mean a longer match cannot be made
     
@@ -172,7 +174,7 @@ struct PatternMatcher: CustomStringConvertible, Equatable {
     }
     
     var conjunctions: Conjunctions { // KLUDGE
-        if case .keyword(_) = self.remainingPattern[0] {} else { print("BUG: conjunction should be called immediately after matching first keyword") }
+        //if case .keyword(_) = self.remainingPattern[0] {} else { print("BUG: conjunction should be called immediately after matching first keyword") } // TO DO: in the case of `if…then…else…`, getting the matchers from the `else` token on stack causes this line to print a spurious error; we really need to figure out how to return accurate lists of conjunctions (e.g. given operator `foo…bar…baz…`, what happens if `bar…` is missing? the `foo…???` matcher will look for either `bar` OR `baz` - so what now happens/should happen in that case?)
         // TO DO: this returns *all* conjunctions (in the event pattern contains > 1 conjunction); is this appropriate? or do we just want to get the next conjunction[s] that appears? (although given the freedom allowed by patterns, it's possible to create all kinds of weird combinations)
         return Conjunctions(self.remainingPattern.dropFirst().flatMap{ $0.keywords.map{ $0.name } })
     }

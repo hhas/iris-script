@@ -20,8 +20,13 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     // TO DO: `optional`, `editable` prefix operators for constructing coercions (they're commonly used so will allow command operand to use LP syntax as long as their precedence is set lower than argument precedence, e.g. `foo as optional list of: string min: 1 max: 10` -> `as{foo{},optional{list{of:string{},min:1,max:10}}}`)
     
     // flow control
-    registry.prefix("if", conjunction: "then", 104)
-    registry.infix("else", 100, .right)
+    //registry.prefix("if", conjunction: "then", 104)
+    //registry.infix("else", 100, .right)
+    
+    registry.prefix("if", conjunction: "then", alternate: "else", 104)
+
+    
+    
     registry.prefix("while", conjunction: "repeat", 104)
     registry.prefix("repeat", conjunction: "while", 104)
     registry.prefix("tell", conjunction: "to", 104)

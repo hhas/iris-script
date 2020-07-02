@@ -11,13 +11,23 @@
 
 func ifTest(condition: Bool, action: Value, commandEnv: Scope) throws -> Value {
     let result = try condition ? action.eval(in: commandEnv, as: asAnything) : nullAction
-    print("`if` expr returned:", result, type(of: result))
+    //print("`if` expr returned:", result, type(of: result))
     return result
 }
+
+
+
+func ifTest(condition: Bool, action: Value, alternativeAction: Value, commandEnv: Scope) throws -> Value {
+    let result = try (condition ? action : alternativeAction).eval(in: commandEnv, as: asAnything)
+    //print("`if` expr returned:", result, type(of: result))
+    return result
+}
+
+
 func elseTest(left action: Value, right alternativeAction: Value, commandEnv: Scope) throws -> Value { // TO DO: see TODO on AsAnything re. limiting scope of `didNothing` result
-    print("`else` evaluating left action operand:", action)
+   // print("`else` evaluating left action operand:", action)
     let result = try action.eval(in: commandEnv, as: MayDoNothing(asValue)) // TO DO: coercion needs to allow nullAction result to pass thru // TO DO: as with other flow control handlers, we really need to pass the final return type coercion up to the location where evaluation is performed
-    print("action returned: \(result)")
+    //print("action returned: \(result)")
     return result is NullAction ? try alternativeAction.eval(in: commandEnv, as: asAnything) : result
 }
 

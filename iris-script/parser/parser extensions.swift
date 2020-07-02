@@ -10,7 +10,7 @@ import Foundation
 
 extension OperatorDefinitions {
         
-    var isInfixPrecedenceGreaterThanCommand: Bool? { // returns true if operator is infix/postfix with precedence[s] lower than command’s (i.e. a lower-precedence), false if operator has no infix/postfix forms or precedence is higher than command’s, or nil if overloaded operators’ precedence is both less AND greater than command’s (i.e. user MUST add explicit parentheses to disambiguate as parser cannot decide for itself); caution: only call this on operators known to have infix forms otherwise an exception is raised
+    var isInfixPrecedenceLessThanCommand: Bool? { // returns true if operator is infix/postfix with precedence[s] lower than command’s (i.e. a lower-precedence), false if operator has no infix/postfix forms or precedence is higher than command’s, or nil if overloaded operators’ precedence is both less AND greater than command’s (i.e. user MUST add explicit parentheses to disambiguate as parser cannot decide for itself); caution: only call this on operators known to have infix forms otherwise an exception is raised
         let infixDefinitions = self.definitions.filter{ $0.hasLeadingExpression }
         if infixDefinitions.isEmpty {
             fatalError("Operator \(self.name) has no infix definitions, so command precedence cannot be compared.") // this is an implementation error as the parser should not have called it without first confirming the operator has one or more infix forms
@@ -18,14 +18,16 @@ extension OperatorDefinitions {
         let (minPrecedence, maxPrecedence) = infixDefinitions.reduce(
             (Precedence.max, Precedence.min), { (Swift.min($0.0, $1.precedence), Swift.max($0.1, $1.precedence)) })
         if minPrecedence > commandPrecedence {
-            return true
-        } else if maxPrecedence < commandPrecedence {
             return false
+        } else if maxPrecedence < commandPrecedence {
+            return true
         } else { // overloaded infix/postfix operator has precedences higher AND lower than command
             return nil
         }
     }
     
+    // TO DO: would be better to define `mustHaveLeftOperand` (infix/postfix forms only), `mayHaveLeftOperand` (all forms), `mustNotHaveLeftOperand` (prefix form only)
+
     var hasPrefixForms: Bool {
         return self.contains{ !$0.hasLeadingExpression } 
     }
@@ -57,12 +59,12 @@ extension Array where Element == LongestMatch {
         let reduction: Parser.StackItem = (form, [], matchInfo.tokens[0].hasLeadingWhitespace)
         // if subsequent match takes left operand, copy the reduced value to that
         if index+1 < self.count && self[index+1].match.hasLeadingExpression {
-            self[index+1].tokens.replaceFirst(with: reduction)
+            self[index+1].tokens.replaceFirstItem(with: reduction)
             self[index+1].start = matchInfo.start // start...stop range absorbs the extra tokens
         }
         // if preceding match takes right operand, copy the reduced value to that
         if index > 0 && self[index-1].match.hasTrailingExpression {
-            self[index-1].tokens.replaceLast(with: reduction)
+            self[index-1].tokens.replaceLastItem(with: reduction)
             self[index-1].stop = matchInfo.stop // start...stop range absorbs the extra tokens
         }
         self.remove(at: index)
@@ -90,11 +92,12 @@ extension Array where Element == Parser.StackItem {
         return self[index].hasLeadingWhitespace
     }
     func hasTrailingWhitespace(at index: Int) -> Bool {
-        return index + 1 < self.count && self[index+1].hasLeadingWhitespace
+        return index+1 < self.count && self[index+1].hasLeadingWhitespace
     }
     
     func hasBalancedWhitespace(at index: Int) -> Bool {
-        return self.hasLeadingWhitespace(at: index) == self.hasTrailingWhitespace(at: index)
+        // if there is nothing after this token, whitespace is _always_ imbalanced (i.e. false)
+        return index+1 < self.count && self[index].hasLeadingWhitespace == self[index+1].hasLeadingWhitespace
     }
     
     // starting from end of a range of tokens, search backwards to find a left-hand expression delimiter
@@ -102,6 +105,7 @@ extension Array where Element == Parser.StackItem {
     
     func findStartIndex(from startIndex: Int, to stopIndex: Int) -> Int { // start..<stop
         // note that when finding the start of a record field, the resulting range includes the field's `.label(NAME)`; it's left to the caller to deal with that
+        // TO DO: when parsing exprs, what about remembering the index of each expr’s left-hand boundary, avoiding need to back-scan for it each time? (since exprs can be nested, this'd need another stack similar to blockMatchers) [this is low-priority as the current approach, while crude, does the job]
         for i in (startIndex..<stopIndex).reversed() {
             switch self[i].form { // can't use Token.isLeftDelimited as that's not yet implemented
             case .semicolon, .colon, .separator(_), .startList, .startRecord, .startGroup, .lineBreak: return i+1
@@ -115,7 +119,7 @@ extension Array where Element == Parser.StackItem {
     
     // find full operation matchers in the given range; reductionForOperatorExpression() uses the result in determining the order in which to reduce nested operators according to the operators’ arity, precedence, and/or associativity
     
-    func findLongestMatches(from startIndex: Int, to stopIndex: Int) -> [LongestMatch] { // startIndex..<stopIndex // given a range of shifted stack frames denoting a delimited simple/compound expression, returns the longest full matches grouped with their associated tokens // TO DO: decide if end index is inclusive or exclusive and standardize across all code
+    func findLongestFullMatches(from startIndex: Int, to stopIndex: Int) -> [LongestMatch] { // startIndex..<stopIndex // given a range of shifted stack frames denoting a delimited simple/compound expression, returns the longest full matches grouped with their associated tokens // TO DO: decide if end index is inclusive or exclusive and standardize across all code
         // TO DO: would it be easier to work with if findLongestMatches() returned a single array/doubly-linked list containing [mostly alternating] .operatorName()/.operand() enums and have reductionForOperatorExpression() traverse that?
         assert(startIndex >= 0)
         assert(stopIndex <= self.count) // non-inclusive
@@ -165,10 +169,10 @@ extension Array where Element == Parser.StackItem {
     }
     
     
-    mutating func replace(from startIndex: Int, to stopIndex: Int, withReduction form: Token.Form) { // startIndex..<stopIndex
+    mutating func replace(from startIndex: Int, to stopIndex: Int? = nil, withReduction form: Token.Form) { // startIndex..<stopIndex
         // reapply the preceding stack frame's matchers to newly reduced value
         // TO DO: make sure this correctly resumes in-progress matches
-        
+        let stopIndex = stopIndex ?? self.count
         assert(startIndex < stopIndex, "BUG: trying to reduce zero tokens at \(startIndex); fullyReduceExpression should have already checked if an expr exists between delimiters and returned immediately if none found (e.g. in empty list/record/group).")
         
         let matches: [PatternMatcher]
