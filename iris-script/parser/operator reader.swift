@@ -6,7 +6,7 @@
 import Foundation
 
 
-// TO DO: given undifferentiated .symbols token, decompose into one or more .symbols and/or .operator(OperatorDefinition) tokens and unpop back onto token stream
+// TO DO: given undifferentiated .symbols token, decompose into one or more .symbols and/or .operator(PatternDefinition) tokens and unpop back onto token stream
 
 
 // - word-based operators (e.g. `mod`) are whole-token match against .letters, caveat where word has contiguous `:` suffix indicating it's a record field/argument label
@@ -61,7 +61,7 @@ struct OperatorReader: LineReader {
             if let definition = self.operators.matchWord(token.content) {
                 token = token.extract(.operatorName(definition))
             }
-        // TO DO [cont.]: if so, should .symbols also have a reduced form? (simplest would be to use modified version of OperatorDefinition.Name enum in .unquotedName(_))
+        // TO DO [cont.]: if so, should .symbols also have a reduced form? (simplest would be to use modified version of PatternDefinition.Name enum in .unquotedName(_))
         case .symbols where reader.next().0.form != .colon:
             let matches = self.operators.matchSymbols(token.content)
             // TO DO: this'd be simpler if matchSymbols built and returned the new token stream (only issue is that matches are made first to last whereas unpopping tokens needs to be done from last match to first; i.e. use recursion rather than loop)

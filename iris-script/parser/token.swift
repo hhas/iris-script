@@ -65,6 +65,7 @@ struct Token: CustomStringConvertible {
         }
     }
     
+    
     enum Form: Equatable { // core punctuation, plus digits and non-digit text
         
         enum Separator: CustomDebugStringConvertible { // all act as expr separators and can be used interchangeably within blocks, lists, records; only difference is how they behave at runtime (essentially they act as debugger hooks, optionally inserting extra instructions at parse-time)
@@ -187,6 +188,27 @@ struct Token: CustomStringConvertible {
             }
         }
         
+        // does this token terminate the expression to its right/left side?
+        //
+        // caution: these methods only consider punctuation-described boundaries, sufficient for first-pass division of source code into [hopefully] reducible expressions; determining if a given .[un]quotedName, .operatorName, and/or .error form describes the beginning/end of an expr requires further examination of a token and its neighbors
+        
+        var isLeftExpressionDelimiter: Bool {
+            switch self {
+                // TO DO: what about start of script? (need a new form for that)
+            case .semicolon, .colon, .separator(_), .startList, .startRecord, .startGroup, .lineBreak: return true
+            default: return false
+            }
+        }
+        
+        var isRightExpressionDelimiter: Bool { // currently unused
+            switch self {
+            case .semicolon, .colon, .separator(_), .endList, .endRecord, .endGroup, .lineBreak, .endOfScript: return true
+            default: return false
+            }
+        }
+        
+        //
+        
         func asCommandName() -> Symbol? { // caution: this assumes line readers have already reduced contiguous .letters, .digits, .underscore, etc. to an .[un]quotedName(…)
             switch self {
             case .unquotedName(let n), .quotedName(let n): return n
@@ -304,37 +326,12 @@ struct Token: CustomStringConvertible {
     
     var isContiguous: Bool { return self.isLeftContiguous && self.isRightContiguous }
     
-    var isEndOfSequence: Bool { // TO DO: still needed? currently unused
-        switch self.form {
-        case .endList, .endRecord, .endGroup: return true
-        case .operatorName(let definitions): fatalError("Can't get Token.isEndOfSequence for \(definitions)") //return definitions.name == .word("done") // kludge
-        case .endOfScript: return true
-        default: return false
-        }
-    }
-    
-    var isName: Bool { // TO DO: still needed? currently unused
-        switch self.form {
-        case .letters, .symbols, .underscore, .quotedName(_), .unquotedName(_): return true
-        default: return false
-        }
-    }
     
     var isLeftDelimited: Bool {
         // TO DO: this needs to be set by tokenizer based on preceding token's form and/or isRightContiguous, otherwise name/number/etc readers won't detect start of contiguous letter+digit sequences correctly, e.g. `a0u12` should read as identifier, not as `a` + `0u12`
         return true
     }
-    
-    // i.e. if operator takes left operand (infix/postfix), it must terminate the preceding expression in order to consume it; OTOH, if operator is prefix/atom, it's up to preceding tokens/parsefunc to know what to do with it (e.g. in `write true`, `true` is an atom that will be consumed as `write` command's argument) // caution: this is only a partial fix, as until the operator expression is fully parsed, we cannot be sure of this when dealing with operators that have >1 definition, while operators that use custom parsefuncs will always be treated as having no left operand even when they do; TO DO: fix this properly once table-driven parser is implemented (unlike parsefuncs, whose matching behaviors are opaque, matching tables can be independently inspected to determine the exact number and positions of their operands)
-    var isExpressionTerminator: Bool {
-        switch self.form {
-        case .semicolon, .colon, .separator(_),
-             .endList, .endRecord, .endGroup, .lineBreak, .endOfScript:
-            return true
-        default:
-            return false
-        }
-    }
+
     
     var requiresLeftOperand: Bool { if let oc = self.definitions { fatalError("Can't get Token.requiresLeftOperand for \(oc)") } else { return false } /*return self.definitions?.requiresLeftOperand ?? false*/ }
     

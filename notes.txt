@@ -45,4 +45,147 @@
 
 // note that we make one restriction w.r.t. operator extensibility in order to simplify resolving operator vs command precedence: overloaded operator definitions are forbidden being both higher AND lower precedence than commands, e.g. assuming every command binds its arguments with precedence 1000, and an overloaded operator ‘∆’ were to have an infix form of precedence 999 and a postfix form of precedence 1001, the parser will flag `foo 1 ∆` as a syntax error requiring the user to manually parenthesize either `foo {1 ∆}` or `(foo 1) ∆` (or `foo {1} ∆`, since a record literal following a command name will _always_ bind to that name). Since all commands have a single fixed precedence, this restriction shouldn’t be too onerous: while it's still possible that two external libraries could overload the same operator name with incompatible precedences, that overloading probably violates good practice (i.e. don't give recognizable symbols arbitrary/non-standard meanings) and can still be manually resolved by the user adding parens when the parser refuses to do so (a fair penalty for library authors’ overreach); see also TODO on Associativity.none
 
-// problem with using PatternMatcher to match commands is that command parsing is context-sensitive: if a command appears as argument to a low-punctuation command, the nested command cannot also be low-punctuation and any `NAME:VALUE` pairs that appear after it must be associated with the outer, not inner, command (a pattern matcher would associate it with the most recently encountered command name, i.e. the inner one)
+// problem with using PatternMatch to match commands is that command parsing is context-sensitive: if a command appears as argument to a low-punctuation command, the nested command cannot also be low-punctuation and any `NAME:VALUE` pairs that appear after it must be associated with the outer, not inner, command (a pattern matcher would associate it with the most recently encountered command name, i.e. the inner one)
+
+
+
+
+
+
+
+
+ // caution: we have to be careful when reducing a range of tokens, as it's possible to have [pathological?] cases where an operator has an optional conjunction, e.g. `foo EXPR ( bar EXPR )?`: when parser encounters the `bar` conjunction, it will trigger a reduction of the preceding EXPR; however, that reduction must be limited to the EXPR only; the shorter `foo EXPR` match must be ignored in favor of completing the longer `foo…bar…` match (to maintain sanity, once a matcher matches a conjunction, it *must* complete otherwise it's a syntax error; while it's possible to backtrack and attempt other match combinations, it makes parsing behavior harder for humans to understand and predict; longest match first is dumb but it's understandable, and can always be overridden by adding parentheses)
+ 
+ // it is not enough just to look for complete matches; we must also look for longest completion for each match (e.g. in `A is_after B as C`, the `as` keyword is an optional conjunction to `is_after` operator, not `as` operator)
+ 
+ // another challenge: we can't immediately discard shorter/incomplete matches as not all matches have yet been run to exhaustion
+ 
+
+ 
+ // Q. when an operator's middle EXPR contains operators with lower precedence, this will not affect binding; however, should PP parenthesize middle EXPR for clarity? (note: this case is more complicated when outer operator has optional conjunction)
+ 
+ // important: all blocks (both punctuation and keyword delimited) must already be auto-reduced; any sub-expressions bounded by conjunctions should also be fully reduced by now (having been reduced prior to shifting the conjunction token); except for [LP?] commands there should not be any pending matches left within the specified range // if we ignore commands for now [TODO], we can extract the longest operator matches from the stack range and apply precedence rules to reduce those operators to .value(Command)s // TO DO: confirm `do…done` auto-reduces (it'll help us if all block structures auto-reduce themselves, as that minimizes unreduced token seqs and so maximizes matches; might even automatically trigger reduction when a fully matched pattern starts and ends with non-expr, avoiding need for explicit autoReduce flag)
+ 
+ // at this point, can we reduce commands, treating .operatorNames as delimiters?
+ 
+ // this is a bodge; there ought to be an easier way to discard non-longest completed matches during main parse loop (the way it works, for a given primary operator name, there can be at most 1 index difference between the matches it produces [prefix vs infix]; upon achieving longest match, if opdefs has >1 entry we could backtrack at that point to detect and discard shorter matches with same groupID; we might even discard _all_ previous matches with that groupID [i.e. non-longest completed matches and partial matches, which we no longer need either])
+ // however, there is still the precedence climbing question: given `OP1 EXPR OP2 …` where parser is positioned on EXPR and looking ahead to OP2, there will be cases where we don't know for sure if we should reduce `OP1 EXPR` or shift `OP2`: while we can compare precedence[s] for [incomplete] OP2 against precedence for [completable] OP1, if OP2 has multiple definitions with precedences on both sides of OP1's we need to finish OP2 before we can make a decision; this will be rare
+
+
+
+
+// TO REDUCE:
+// if matches[0].start != 0, ops haven't matched exactly
+
+// simple matching strategy, assuming range is 100% matched by single expression composed of 1 or more operations: start at first match in sorted array [of completed matches] (which should have start index 0) and get its end index, then advance until [longest] pattern whose start index == previous match's end index is found; repeat until end index == end of range (or no matches left, if not perfect match)
+
+// the problem remains: unreduced operands prevent all patterns initially matching; thus there will be gaps between completed matches (e.g. `1 - -2`) -- so just keep re-running scan, doing one reduction per-pass, until no more reductions can be made
+
+
+// note: even with this strategy we need to do precedence comparisons so that we know *which* match to reduce when (one or more) contentions are found; basically, when doing pass we need to extract operator indices and precedence, and have some way of chunking them when command names/arg labels are found
+
+
+
+
+// a command name preceded by an operator requires that operator be prefix/infix (i.e. has trailing EXPR) else it's a syntax error; thus encountering a name when scanning backwards mean reduction can be performed from that command name up to any right-hand infix/postfix operators that have lower precedence than argument binding
+
+// any operator to immediate right of an arg label must be prefix/atom else it's a syntax error
+
+
+// patterns to look for: `.operatorName .value .operatorName` -- needs precedence/association comparison to resolve
+
+
+// there is another problem with above: start and end indices of later matches will change as earlier matches are reduced
+
+// note: not all ops will be fully matched at this point as some operands (e.g. commands) are not yet reduced
+
+// a command is `NAME EXPR`
+// LP syntax allows `NAME [EXPR] [LABEL: EXPR …]`
+
+// `NAME NAME NAME …` is valid syntax, i.e. `NAME{NAME{NAME{…}}}`, although PP should insert braces to clarify
+
+// while we are scanning backwards, we treat any labels as belonging to outermost (LP) command
+// any reduced .value(_) preceded by NAME is a command; if the value is followed by infix/postfix OPNAME then precedence determines if value is argument and command is the operand or value is operand and operation is argument; most operators bind less tightly than argument (one notable exception is `of` and its associated reference forms) so, as a rule, `CMDNAME EXPR OPNAME` -> `OPNAME{CMDNAME{EXPR}}`
+
+// `NAME NAME NAME …` pattern can appear anywhere - at start of range (in which case it's command's name + direct argument) or after a label (in which case it's an argument to command); labels always associate with outermost command, however
+
+// commands are effectively prefix operators so precedence comparison is only needed for infix/postfix operators appearing *after* a command name/arg label; a prefix/infix operator name preceding command name will always reduce that particular command - the question is where that command's right-side terminates
+
+// there is an added wrinkle with precedence, e.g. `foo 1 + 2` -> `+{foo{1},2}` but `foo 1 + 2 bar: 3` is a syntax error
+
+// note that `foo 1 + a bar: 3` -> `+{foo{1},a{bar:3}}`; when scanning back from end, the labeled arg associates with `a`, not `foo`; the PP should probably transform this code to `(foo 1) + (a bar: 3)` or `foo {1} + a {bar:3}` to avoid any visual ambiguity
+
+// logic for disambiguating `cmd OP val` where OP is both prefix and infix operator (this should be hardcoded behavior in parser, not pattern): if OP has balanced whitespace then treat as infix operator whose LH operand is cmd; if OP has unbalanced whitespace (e.g. `foo -1`) then treat as prefix operator on val and pass that operation as argument
+
+
+
+// note that operators with conjunctions should have already-reduced middle EXPRs by the time fullyReduceExpression() is called to reduce an entire expression, so only their leading/trailing EXPRs remain to be resolved, which is where precedence and associativity come into play
+
+// unfortunately, textbook SR precedence parsing isn't an option as that assumes a fixed set of operators whose precedence can be reliably determined just by comparing two OperatorDefinitions, with no possibility that overloaded definitions could return conflicting answers (e.g. given operators `foo` and `bar`, ALL definitions of `foo` are guaranteed to come before ALL definitions of `bar`, or vice-versa, but NEVER a mix of both); however, since all our operators are library-defined using PEG-like grammars, the only way to know for sure which overloaded operator definition to use (and thus if it has leading and/or trailing operands and, if it does, what its precedence and associativity is) to match them all and see which one completes (at which point we've shifted a whole bunch of tokens, so can no longer just reduce from the head; we'd either have to roll back the head of the stack to the highest-precedence expression and reduce that, or else treat that section of the stack as a random-access array and perform reductions mid-stack instead of from the head only); a typical example is `+` and `-`, which have both prefix and infix definitions
+
+// another problem: reducing mid-stack makes tracking remaining tokens and matches their by stack indices a right pig as each reduction removes stack elements, invalidating all previously-stored stack indices after that point; currently we use match indices to determine where two operators share a common operand (i.e. the two matches overlap); it may be possible to come up with a robust implementation that doesn't rely on indices, but for now we avoid the problem by leaving the main stack alone and copying each range of matched tokens to its own “private” array which can be independently manipulated without affecting anything else; it smells, and probably wastes quite a few cycles, but it works well enough to do for now
+
+
+
+
+
+// TO DO: upon reducing .label, can we set up pattern matcher for `LABEL EXPR` where it matches as a prefix operator (of commandPrecedence and .invalid associativity when reading LP commands, or Precedence.min when reading record fields)?
+
+
+
+// simplest is to invoke list reduce func on `]` token, and let reduce func pop stack until it finds corresponding `[` (this isn't table-driven pattern-matching, which is what we ultimately want as tables provide introspectable information that can drive auto-suggest/-correct/-complete, and auto-generate user documentation for operator syntax)
+
+// for now, syntax errors are detected late (but this isn't necessarily a problem as we want to parse the entire script, reducing as much as possible, then prompt user to resolve any remaining issues)
+
+
+// note: if conjunction appears in block, keep parsing block but make note of its position in the event unbalanced-block syntax errors are found
+
+// TO DO: lexer seems to pick up an extra linebreak at end of single-line script
+
+
+// TO DO: initially implement as full-file parser, then convert to per-line (for incremental parsing) // Q. how to represent partial values? (in per-line parsing, lists, records, blocks can extend over multiple lines)
+
+
+// delimiter punctuation always triggers reduction of preceding tokens
+// TO DO: parser should reject punctuation that appears at (e.g.) start of line
+// TO DO: when reduction fails due to syntax error, append Placeholder to stack containing remaining pattern[s]; editor can use this to assist user in correcting/completing code
+// TO DO: check that numeric decimal/thousands separators (e.g. `1,000,000.23`) are reduced by numeric reader; we don't want those confused for expr separators; Q. can numeric reader reliably reduce `+`/`-` prefixes on numbers? (that's challenging as it requires numeric reader to know about balanced whitespace and left delimiters)
+
+
+// PatternDefinition should include pattern; this is probably easiest done as array of enum
+
+// partial matches are struct of PatternDefinition + index into pattern array
+
+// when a Value is pushed onto stack, pass it to each partial match which checks it against pattern and returns either new partial match (the match index is advanced and returned in a new partial match struct), completed match (don't reduce immediately as there may be a longer match to be made [i.e. SR conflict is resolved by preferring longest patch]), or no match (in which case that matcher isn't carried forward); that implies matches are part of .value case
+
+// TO DO: reductions need to annotate AST so that PP can reinsert original punctuation when rendering tidied code
+
+
+
+
+// note: resolving operator precedences, e.g. `1 + 2 * 3`, is a form of SR-conflict resolution; presumably we need to look at `2` to see if it is matched by >1 operator (then we need to check those operators are completely matched)
+
+// having encountered an operator-defined keyword, we get all operator definitions that use that keyword
+// TO DO: if the opdef has a leading expr before that keyword, check stack's head is an expr; append a new PatternMatch to head's matches then add the Reduction.token(.operatorName(…) with nextMatch)
+
+// TO DO: if stack's head is not an expr, reduceExpression?
+
+// TO DO: reconcile these patterns with any partially matched patterns at top(?) of stack; note that these patterns could also spawn new partial matches (e.g. `to…` vs `tell…to…`, `repeat…while…` vs `while…repeat…`)
+
+// new patterns need backwards-matched as needed (e.g. infix, postfix ops need to match current topmost stack item as LH operand, caveat if that is preceded by another operator requiring precedence/associativity resolution); note that while these patterns are completed upon reducing RH expression, we can't immediately reduce completed patterns as there may be another operator name after the expr; need to wait for delimiter (punctuation or linebreak) to trigger those reductions
+
+
+ 
+ // TO DO: is it worth passing new matchers to shift()? infix operator already adds matcher directly to stack's head (prior to shifting operator onto it); for prefix operator, might be as well to shift then add matcher to head; there is also question of where to instantiate pattern matchers for lists, records
+ 
+  
+ 
+ // when matching operator keywords such as `to`, `do`, `done`, should pattern specify leftDelimited/rightDelimited/leftDelimited? i.e. we want to 'encourage' `to` to appear at start of line, to minimize it being treated as an operand/argument in more ambiguous contexts (e.g. in `tell foo to bar`, we want to avoid parsing as `tell {foo {to bar}}`)
+ */
+
+// TO DO: debugger may want to insert hooks (e.g. step) at line-endings too; as before, to preserve LF-delimited list/record items, this needs to operate on preceding value without changing no. of values on stack; it should probably onalso ignore if LF was also preceded by punctuation
+
+
+
+
+

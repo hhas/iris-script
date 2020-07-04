@@ -72,7 +72,7 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
         }
     }
     
-    func add(_ definition: OperatorDefinition) {
+    func add(_ definition: PatternDefinition) {
         for keyword in definition.keywords {
             for name in keyword.allNames {
                 assert(!name.isEmpty)
@@ -129,56 +129,56 @@ extension OperatorRegistry { // convenience methods for standard operator forms
 
     // `OPNAME`
     func atom(_ name: Keyword, reducer: Parser.ReduceFunc? = nil) {
-        self.add(OperatorDefinition(pattern: [.keyword(name)], autoReduce: true, reducer: reducer ?? reduceAtomOperator))
+        self.add(PatternDefinition(pattern: [.keyword(name)], autoReduce: true, reducer: reducer ?? reductionForAtomOperator))
     }
     
     // `OPNAME EXPR`
     func prefix(_ name: Keyword, _ precedence: Precedence, reducer: Parser.ReduceFunc? = nil) {
-        self.add(OperatorDefinition(pattern: [.keyword(name), .expression],
-                                    precedence: precedence, reducer: reducer ?? reducePrefixOperator))
+        self.add(PatternDefinition(pattern: [.keyword(name), .expression],
+                                    precedence: precedence, reducer: reducer ?? reductionForPrefixOperator))
     }
     
     // `EXPR OPNAME EXPR`
-    func infix(_ name: Keyword, _ precedence: Precedence, _ associate: OperatorDefinition.Associativity = .left, reducer: Parser.ReduceFunc? = nil) {
-        self.add(OperatorDefinition(pattern: [.expression, .keyword(name), Pattern.expression],
-                                    precedence: precedence, associate: associate, reducer: reducer ?? reduceInfixOperator))
+    func infix(_ name: Keyword, _ precedence: Precedence, _ associate: PatternDefinition.Associativity = .left, reducer: Parser.ReduceFunc? = nil) {
+        self.add(PatternDefinition(pattern: [.expression, .keyword(name), Pattern.expression],
+                                    precedence: precedence, associate: associate, reducer: reducer ?? reductionForInfixOperator))
     }
     
     // `EXPR OPNAME`
     func postfix(_ name: Keyword, _ precedence: Precedence, reducer: Parser.ReduceFunc? = nil) {
-        self.add(OperatorDefinition(pattern: [.expression, .keyword(name)],
-                                    precedence: precedence, reducer: reducer ?? reducePostfixOperator))
+        self.add(PatternDefinition(pattern: [.expression, .keyword(name)],
+                                    precedence: precedence, reducer: reducer ?? reductionForPostfixOperator))
     }
     
     // `OPNAME EXPR OPNAME EXPR`
     func prefix(_ name: Keyword, conjunction: Keyword, _ precedence: Precedence, reducer: Parser.ReduceFunc? = nil) {
-        self.add(OperatorDefinition(pattern: [.keyword(name), .expression, .keyword(conjunction), .expression],
-                                    precedence: precedence, reducer: reducer ?? reducePrefixOperatorWithConjunction))
+        self.add(PatternDefinition(pattern: [.keyword(name), .expression, .keyword(conjunction), .expression],
+                                    precedence: precedence, reducer: reducer ?? reductionForPrefixOperatorWithConjunction))
     }
 
     func prefix(_ name: Keyword, conjunction: Keyword, alternate: Keyword, _ precedence: Precedence, reducer: Parser.ReduceFunc? = nil) {
-        self.add(OperatorDefinition(pattern:
+        self.add(PatternDefinition(pattern:
             [.keyword(name), .expression, .keyword(conjunction), .expression, .optional([.keyword(alternate), .expression])],
-                                    precedence: precedence, reducer: reducer ?? reducePrefixOperatorWithConjunctionAndAlternate))
+                                    precedence: precedence, reducer: reducer ?? reductionForPrefixOperatorWithConjunctionAndAlternate))
     }
     
     // `OPNAME DELIM (EXPR DELIM)* OPNAME`
-    func prefix(_ name: Keyword, suffix: Keyword, reducer: @escaping Parser.ReduceFunc = reduceKeywordBlock) {
-        self.add(OperatorDefinition(pattern:
-            [.keyword(name), DELIM, .zeroOrMore([.expression, DELIM]), .keyword(suffix)], // TO DO: LF*
+    func prefix(_ name: Keyword, suffix: Keyword, reducer: @escaping Parser.ReduceFunc = reductionForKeywordBlock) {
+        self.add(PatternDefinition(pattern:
+            [.keyword(name), M_DELIM, .zeroOrMore([.expression, M_DELIM]), .keyword(suffix)], 
                                     autoReduce: true, reducer: reducer))
     }
     
     // `EXPR OPNAME EXPR OPNAME EXPR`
     func infix(_ name: Keyword, conjunction: Keyword, _ precedence: Precedence, reducer: Parser.ReduceFunc? = nil) {
-        self.add(OperatorDefinition(pattern: [.expression, .keyword(name), .expression, .keyword(conjunction), .expression],
-                                    precedence: precedence, reducer: reducer ?? reduceInfixOperatorWithConjunction))
+        self.add(PatternDefinition(pattern: [.expression, .keyword(name), .expression, .keyword(conjunction), .expression],
+                                    precedence: precedence, reducer: reducer ?? reductionForInfixOperatorWithConjunction))
     }
     
     /*
     func add(_ pattern: [Pattern], _ precedence: Precedence = Precedence.min,
-             _ associate: OperatorDefinition.Associativity = .left,
+             _ associate: PatternDefinition.Associativity = .left,
              autoReduce: Bool = false, reducer: @escaping Parser.ReduceFunc) {
-        self.add(OperatorDefinition(pattern: pattern, precedence: precedence, associate: associate, autoReduce: autoReduce, reducer: reducer))
+        self.add(PatternDefinition(pattern: pattern, precedence: precedence, associate: associate, autoReduce: autoReduce, reducer: reducer))
     }*/
 }

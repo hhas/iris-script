@@ -9,12 +9,13 @@
 
 // caution: auto-reducing operator patterns must not have more than one end point as they reduce as soon as a full match is made (i.e. they do not look for a longer match before reducing), e.g. `A … B` is acceptable (always ends on B) but `A … B C?` is not (may end on B or C)
 
+// TO DO: rename PatternDefinition?
 
 import Foundation
 
 
 
-struct OperatorDefinition: CustomStringConvertible { 
+struct PatternDefinition: CustomStringConvertible { 
         
     var description: String { return self.pattern.description }
     
@@ -28,29 +29,33 @@ struct OperatorDefinition: CustomStringConvertible {
     
     // TO DO: var for getting primary keywords only? (these are the ones for which we want to spawn matchers - unless we plan on full bidirectional matching support, in which case matchers could legitimately spawn at any opname [i.e. it should be possible to transform a branching pattern so that branches radiate both forwards and backwards from a single keyword anywhere in pattern])
     
-    // TO DO: precedence, associativity (any cases where these aren't the same for all keywords in pattern?)
+    // TO DO: any use cases where left and right operands have different precedence and/or associativity? (what about composable `if…then…` and `…else…` operators? or is that an intractable problem?)
     
+    typealias ReduceFunc = (Parser.TokenStack, PatternMatch, Int, Int) throws -> Value // (token stack, the fully matched pattern, start, end)
+
     enum Associativity {
         case left
         case right
         // TO DO: `case none` (e.g. `1 thru 2 thru 3` should be a syntax error) [note that treating `a OP b OP c` as syntax error isn't absolute protection as parenthesizing one or other operation will allow it to parse, as will using underlying command syntax, at which point it's up to argument unpacking to reject the bad operand as being the wrong type]
     }
     
-    let _name: Symbol?
+    private static var _originID = 0
     
-    var name: Symbol { return self._name ?? self.keywords.first?.name ?? nullSymbol } // canonical name
+    private let customName: Symbol? // initializer can supply a custom name if the auto-generated name is suboptimal
+    
+    var name: Symbol { return self.customName ?? self.keywords.first?.name ?? nullSymbol } // canonical name
     //var conjunctions: ArraySlice<Symbol> { return self.keywords.dropFirst() }
         
     let pattern: [Pattern] // TO DO: initializer should ideally enforce a non-empty array containing one or more keywords (or punctuation), also we may want to ensure keywords and exprs are not adjacent [e.g. `if…then…` alternates the two, while in the case of `do…done` multiple exprs in the body should have delimiters between them or, if the block is empty, then `Kw LF Kw`]; that said, we want to minimize bootstrap overheads so may be best to perform these checks at glue generation time; note: a keyword may occasionally appear more than once, e.g. `YYYY-MM-DD`
     let precedence: Precedence
     let associate: Associativity // only relevant to infix operators, e.g. `^`, `else`
     
-    let reduce: Parser.ReduceFunc
+    let reduce: ReduceFunc
     let autoReduce: Bool
     
     init(name: Symbol? = nil, pattern: [Pattern], precedence: Precedence = 0,
-         associate: Associativity = .left, autoReduce: Bool = false, reducer: @escaping Parser.ReduceFunc) {
-        self._name = name
+         associate: Associativity = .left, autoReduce: Bool = false, reducer: @escaping ReduceFunc) {
+        self.customName = name
         self.pattern = pattern
         self.precedence = precedence
         self.associate = associate
@@ -58,8 +63,8 @@ struct OperatorDefinition: CustomStringConvertible {
         self.reduce = reducer
     }
     
-    var precis: String {
-        if let name = self._name { return name.label }
+    var precis: String { // auto-generate an operator name based on its pattern; this can be overridden in initializer as needed (e.g. complex patterns that branch may provide a suboptimal description)
+        if let name = self.customName { return name.label }
         return self.pattern.map{
             switch $0 {
             case .keyword(let kw): return kw.name.label
@@ -71,19 +76,33 @@ struct OperatorDefinition: CustomStringConvertible {
             case .token(.endGroup): return ")"
             case .token(.colon): return ":"
             case .expression, .label, .name: return "…"
-            default: return "…" // Q. what about .testToken?
+            default: return "…" // Q. what about .testToken? // TO DO: what about branching patterns (it would probably help if multiple contiguous `…` placeholders were condensed into one)
             }
         }.joined(separator: "")
     }
     
-    // caution: these query unmatched patterns, which may branch into forms whose start/end is expr in some cases and non-exprs in other cases, so can only tell you if a particular operator *can* have a leading/trailing expr (constructing such patterns is not recommended, but it's not disallowed; and in case of command pattern is unavoidable as a command’s right operand [argument] is _always_ optional); where possible, use PatternMatcher.has[Leading/Trailing]Expression to check which was *actually* matched
-    var hasLeadingExpression: Bool {
-   //     print("WARNING: OperatorDefinition.hasLeadingExpression should probably not be used")
-        return self.pattern.first!.hasLeadingExpression
+    // caution: hasLeft/RightOperand queries unmatched patterns, which may branch into forms whose start/end is expr in some cases and non-exprs in other cases, so will only tell you if a particular operator *may* have a leading/trailing expr (constructing such patterns is not recommended, but it's not disallowed; and in case of command pattern is unavoidable as a command’s right operand [argument] is _always_ optional); where possible, use PatternMatch.has[Leading/Trailing]Expression to check which was *actually* matched // TO DO: it should be possible for patterns to implement always/sometimes/neverHasLeft/RightOperand
+    
+    var hasLeftOperand: Bool {
+   //     print("WARNING: PatternDefinition.hasLeftOperand should probably not be used")
+        return self.pattern.first!.hasLeftOperand
     }
-    var hasTrailingExpression: Bool {
-  //      print("WARNING: OperatorDefinition.hasTrailingExpression should probably not be used")
-        return self.pattern.last!.hasTrailingExpression
+    var hasRightOperand: Bool {
+  //      print("WARNING: PatternDefinition.hasRightOperand should probably not be used")
+        return self.pattern.last!.hasRightOperand
+    }
+    
+    
+    static func newOriginID() -> Int {
+        self._originID += 1
+        return self._originID
+    }
+    
+    func newMatches(groupID: Int? = nil) -> [PatternMatch] { // returns one or more new pattern matchers for matching this operator
+        // (note that compound patterns such as .optional(…) and .anyOf(…) will spawn multiple PatternMatches, one for each possible branch)
+        let groupID = groupID ?? OperatorDefinitions.newGroupID()
+        let originID = PatternDefinition.newOriginID()
+        return self.pattern.reify().map{ PatternMatch(for: self, matching: $0, groupID: groupID, originID: originID) }
     }
 }
 

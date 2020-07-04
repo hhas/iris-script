@@ -15,7 +15,7 @@ struct Block: BoxedComplexValue { // caution: this does not capture lexical scop
     // TO DO: what about preserving user's punctuation?
         
     var description: String { // TO DO: hand off to pp; also need formatting hints from parser (e.g. whether to use linbreaks and/or punctuation between exprs)
-        if let d = self.operatorDefinition, case .keyword(let n1) = d.pattern.first, case .keyword(let n2) = d.pattern.last {
+        if let d = self.patternDefinition, case .keyword(let n1) = d.pattern.first, case .keyword(let n2) = d.pattern.last {
             return "\(n1.name.label)\(self.data.map{"\n\t\($0)"}.joined(separator: ""))\n\(n2.name.label)"
         } else {
             return "(\n\t\(self.data.map{$0.description}.joined(separator: ",\n\t"))\n)"
@@ -26,18 +26,18 @@ struct Block: BoxedComplexValue { // caution: this does not capture lexical scop
 
     static let nominalType: Coercion = asBlock
     
-    let operatorDefinition: OperatorDefinition?
+    let patternDefinition: PatternDefinition?
     
     // Q. would it be simpler just to encapsulate ExpressionSequence?
     
     let data: [Value]
     
-    init(_ data: [Value], operatorDefinition: OperatorDefinition?) {
+    init(_ data: [Value], patternDefinition: PatternDefinition?) {
         self.data = data
-        self.operatorDefinition = operatorDefinition
+        self.patternDefinition = patternDefinition
     }
     init(_ data: [Value]) {
-        self.init(data, operatorDefinition: nil)
+        self.init(data, patternDefinition: nil)
     }
     
     /*

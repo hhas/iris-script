@@ -42,8 +42,8 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
 
     
     registry.infix(Keyword("^", "to_the_power_of"), 600, .right) // TO DO: rename "pow"? (AS uses caret accent char, but that rather abuses our "honest symbols" rule [e.g. don't use `$` to denote anything except currency])
-    registry.prefix(Keyword("positive", "+", "＋"), 598, reducer: reducePositiveOperator) // TO DO: canonical name should be "+" and operator should determine which handler to bind by matching argument record label[s] (we need to implement some form of multimethods for this)
-    registry.prefix(Keyword("negative", "-", "－", "−", "﹣"), 598, reducer: reduceNegativeOperator) // TO DO: ditto
+    registry.prefix(Keyword("positive", "+", "＋"), 2598, reducer: reductionForPositiveOperator) // TO DO: canonical name should be "+" and operator should determine which handler to bind by matching argument record label[s] (we need to implement some form of multimethods for this) // needs to bind tighter than `of`, `thru`, etc. but command bind with intermediate precedence which parser won't like
+    registry.prefix(Keyword("negative", "-", "－", "−", "﹣"), 2598, reducer: reductionForNegativeOperator) // TO DO: ditto
     registry.infix(Keyword("*", "×", "multiplied_by"), 596)
     registry.infix(Keyword("/", "÷", "divided_by"), 596)
     registry.infix("div", 596)

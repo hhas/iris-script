@@ -3,25 +3,13 @@
 //  iris-script
 //
 
-//  composable Pattern enum describes how to match one or more tokens; used by PatternMatcher
+//  composable Pattern enum describes how to match one or more tokens; used by PatternMatch
 
 import Foundation
 
+// TO DO: expr patterns need to be (optionally?) annotated with the arg labels to use in the constructed Command (at minimum, it needs to provide a list of the arg labels to use, as those will be required to disambiguate overloaded operators with the same name but different operand count and/or position[s]); currently constructed commands use `left`/`middle`/`right` as labels, which are dreadful for anything beyond basic arithmetic and comparison ops (we also need a way to supply binding names [used in native commands, and in primitive commands’ documentation] but these can be stored separately and looked up by label); Q. is it worth matcher capturing separate array of `(labelName,bindingName,tokenOffset)`, and provide methods for iterating these bindings in reducefuncs?
 
-// it may help to think of parser's stack as not so much an SR stack but as an array of in-progress reductions; starting as an array of .token(_) and finishing as an array of .value(_); this may require multiple passes (particularly when parsing per-line, e.g. while editing where the code may contain multiple [transient] syntax errors)
-
-// A partial match succeeds in becoming a full match, or fails to match a Reduction before that
-
-// TO DO: also need a pattern for matching no adjacent whitespace, e.g. 'YYYY-MM-DD' (Q. is this safe for negation operator to use?); also, what about regexp-based matcher? (this may be preferable to `.value(Value.Type)` for matching literal values)
-
-// if pattern is sequence, this will be non-atomic (in practice, this is probably only used to match operators, e.g. when distinguishing `a -b` command from infix `a - b`/`a-b` operation, in which case it might be simpler to capture operator and perform match as atomic operation); alternative would be for parser to enforce balanced whitespace around all infix operators
-
-// TO DO: should .delimiter match one of `,.?!` followed by zero or more linebreaks? (i.e. are there any situations where trailing linebreaks *aren't* wanted?)
-
-// TO DO: assuming EXPR can match the start/end of a not-yet-reduced operand (which would greatly simplify pattern matching of incomplete code) as well as a completely reduced .value, exactly which token forms does this involve? (also be aware that handedness must be taken into account, e.g. a list to the left of the operator would appear as .endList but to its right as .startList); also consider that matchers' start indexes will be invalidated by reductions occurring mid-stack; caution: partial expr matches can only be performed when EXPR is at start/end of pattern, e.g. `tell EXPR to EXPR` requires a full match of first expr in order to locate `to` but can partially-match the start of the second expr (however, it cannot reduce the 2nd expr until that is reduced to a .value)
-
-
-// worth noting that patterns could/should be able to match AS's monolithic `if TEST then EXPR ( else if TEST then EXPR )* ( else EXPR )? end if` conditional statement; while we don't use that hairy mess of a block structure ourselves (instead we decompose conditional operations into two simple, composable operators, `if…then…` and `…else…`) it may serve as a useful test case [if/when we ever get around to writing unit tests] as it contains multiple conjunctions, adjacent keywords, and is generally horrible
+//  note: because EXPRs can only be fully matched once they are fully reduced to a single .value(…) token, provisional EXPR matches are performed when an EXPR’s unreduced first/last token is is at head of stack; note that if an operator has one or more interstitial EXPRs, that interstitial expression must be fully reduced before shifting the conjunction that follows it, e.g. `tell EXPR to EXPR` requires a full match of first expr in order to locate `to` but can partially-match the start of the second expr (however, it cannot reduce that 2nd expr until it is also reduced to a `.value(…)`; once that is done, the entire `tell…to…` operation can itself be reduced by that operator’s reducefunc)
 
 
 
@@ -41,13 +29,18 @@ extension Array where Element == Pattern {
 }
 
 
-// TO DO: need to annotate expression cases with [optional?] arg label for command (might help if it can take a binding name too, as that is used in auto-generated interface documentation)
+// PEG-like patterns for matching tokens; used in `PatternMatch` struct
+
+// - core syntax patterns are defined in `literal patterns.swift`
+// - the most commonly used patterns (prefix, infix, postfix, keyword block, etc) are predefined by convenience constructors in `OperatorRegistry` extension; any other patterns can be provided using `registry.add(PatternDefinition(…))` (once library glue syntax and implementation is finalized, much of these details will be hidden beneath that)
 
 
-indirect enum Pattern: Equatable, CustomDebugStringConvertible, ExpressibleByArrayLiteral {
+indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
     
     case keyword(Keyword)
-    case expression // any value // TO DO: case expression(label: Symbol); label is arg label in constructed Command (while we could supply a descriptive binding name here for documentation purposes, since operators are defined as part of handler definition the documentation generator can already obtain binding name from that; for now, operands are treated as positional only, which is fine for the common case where there operator has no optional clauses); TO DO: what about `do…done` blocks, where the body is an expression sequence? (these use a custom reducefunc which can simply ignore any labels, but it could be a problem for tooling that reads these patterns for other purposes)
+    case expression // any value
+    
+    // TO DO: case binding(Symbol, Pattern); allows e.g. arg labels to be attached to operator pattern for use in constructed Command (while we could supply a descriptive binding name here for documentation purposes, since operators are defined as part of handler definition the documentation generator can already obtain binding name from that; for now, operands are treated as positional only, which is fine for the common case where there operator has no optional clauses); TO DO: what about `do…done` blocks, where the body is an expression sequence? (these use a custom reducefunc which can simply ignore any labels, but it could be a problem for tooling that reads these patterns for other purposes)
     
     // PEG-style patterns
     case optional(Pattern)
@@ -76,7 +69,7 @@ indirect enum Pattern: Equatable, CustomDebugStringConvertible, ExpressibleByArr
     
     var debugDescription: String {
         switch self {
-        case .keyword(let k):       return "\"\(k.name.label)\""
+        case .keyword(let k):       return "‘\(k.name.label)’"
         case .optional(let p):      return "\(p)?"
         case .sequence(let p):      return "(\(p.map{String(describing:$0)}.joined(separator: " ")))"
         case .anyOf(let p):         return "(\(p.map{String(describing:$0)}.joined(separator: "|")))"
@@ -86,8 +79,8 @@ indirect enum Pattern: Equatable, CustomDebugStringConvertible, ExpressibleByArr
         case .label:                return "LABEL"
         case .expression:           return "EXPR"
         case .token(let t):         return ".\(t)"
-        case .testToken(_):         return "TESTTOKEN"
-        case .testValue(_):         return "TESTVALUE"
+        case .testToken(_):         return "«TOKEN»"
+        case .testValue(_):         return "«VALUE»"
         case .delimiter:            return "DELIM"
         case .lineBreak:            return "LF"
         }
@@ -138,6 +131,7 @@ indirect enum Pattern: Equatable, CustomDebugStringConvertible, ExpressibleByArr
         case end
     }
     
+    // TO DO: split into separate methods for provisional vs full matching?
     func match(_ form: Parser.Form, extent: Extent = .whole) -> Bool { // be VERY wary of .start/.end: matching the middle operand of conjunction-based operators as anything other than .whole will spawn malformed matches
         switch self {
         case .keyword(let k):
@@ -153,7 +147,7 @@ indirect enum Pattern: Equatable, CustomDebugStringConvertible, ExpressibleByArr
             case .quotedName(_), .unquotedName(_), .operatorName(_): return true // TO DO: ditto; `NAME COLON` should probably be reduced to `Form.label(NAME)` before matchers are applied
             default: return false
             }
-        case .expression: // TO DO: is it sufficient to match something that *could* be an expression, e.g. if .endList appears to left of a postfix operator, that implies the LH operand will eventually be a List value, even if it hasn't yet been reduced to one (i.e. the operator pattern can match it; it just can't reduce to an annotated Command yet)
+        case .expression:
             switch extent {
             case .whole:
                 if case .value(_) = form { return true } // TO DO: what about .error? should it always be immediately reduced to error value, or are there cases where it's preferable to put .error token on parser stack for later processing?
@@ -164,9 +158,9 @@ indirect enum Pattern: Equatable, CustomDebugStringConvertible, ExpressibleByArr
                 case .unquotedName(_), .quotedName(_): return true
                 //case .label(_): return false // TO DO: is this appropriate?
                 case .operatorName(let definitions):
-                    //print("Checking if .\(form) could be the start of an EXPR", definitions.map{ $0.hasLeadingExpression })
+                    //print("Checking if .\(form) could be the start of an EXPR", definitions.map{ $0.hasLeftOperand })
                     // TO DO: the problem remains operatorName(_) as we need to know if none/some/all of those defs has leading expr; also, what if mixed? (e.g. unary `-` can match as .start of expr, but we also have to consider binary `-`) // as long as we re-match the fully reduced operand, we should be okay returning true here, as long as at least one definition has trailing expr
-                    return definitions.contains{ !$0.hasLeadingExpression } // _could_ this be a prefix/atom operator? (we can't ask if it is definitely a prefix/atom operator, because that requires completing that match as well, and Pattern [intentionally] has no lookahead capability; however, “could be” should be good enough for now; a greater problem is hasLeadingExpression's inability to guarantee a correct result when custom .testValue(…) patterns are used as those can only match tokens that have already been fully reduced; for now, .testValue is only used to match keyed-list keys, which are atomic .values when whole-script parsing is used [per-line parsing remains TBD, given the challenges of parsing incomplete multi-line string literals, so we aren't even going to think about that right now])
+                    return definitions.contains{ !$0.hasLeftOperand } // _could_ this be a prefix/atom operator? (we can't ask if it is definitely a prefix/atom operator, because that requires completing that match as well, and Pattern [intentionally] has no lookahead capability; however, “could be” should be good enough for now; a greater problem is hasLeadingExpression's inability to guarantee a correct result when custom .testValue(…) patterns are used as those can only match tokens that have already been fully reduced; for now, .testValue is only used to match keyed-list keys, which are atomic .values when whole-script parsing is used [per-line parsing remains TBD, given the challenges of parsing incomplete multi-line string literals, so we aren't even going to think about that right now])
 
                 default: ()
                 }
@@ -176,20 +170,19 @@ indirect enum Pattern: Equatable, CustomDebugStringConvertible, ExpressibleByArr
                 case .endList, .endRecord, .endGroup: return true // ditto
                 case .unquotedName(_), .quotedName(_): return true
                 case .operatorName(let definitions):
-                    //print("Checking if .\(form) could be the end of an EXPR", definitions.map{ $0.hasTrailingExpression })
-                    return definitions.contains{ !$0.hasTrailingExpression }
+                    //print("Checking if .\(form) could be the end of an EXPR", definitions.map{ $0.hasRightOperand })
+                    return definitions.contains{ !$0.hasRightOperand }
                 default: ()
                 }
             }
         case .token(let t):
             return form == t // TO DO: why does Form.==() not compare exactly? (probably because we currently only use `==` when matching punctuation tokens; it is dicey though; we probably should define a custom method for this, or else implement exact comparison [the other problem with `==` is that it's no use for matching names and other parameterized cases unless we use dummy values, which makes code very confusing/potentially misleading - best to implement those tests as Form.isName:Bool, etc])
-        case .testToken(let f): // use this to match non-exprs only // TO DO: needed?
-            if case .value(_) = form { return false }
+        case .testToken(let f): // use this to match non-exprs only // TO DO: needed/desirable? see also .testValue(…)
+            if case .value(_) = form { return false } // ensure users can't accidentally use .testToken when testing for EXPR; this allows hasLeft/RightOperand tests to distinguish operands from non-operands
             return f(form)
         case .testValue(let f): // this matches an expr that's been reduced to a Value which satisfies the provided test, e.g. `{$0 is HashableValue}`
-            // TO DO: this is very problematic when expr being matched hasn't yet been reduced to .value (i.e. it's fine for single-token values, but it'll return bad result on values composed of multiple tokens when performing a partial expr match)
-            if case .value(let v) = form { return f(v) }
-        case .delimiter: // this matches separator punctuation OR linebreak; to match e.g. a list separator, where the comma can be followed by a linebreak, use `[.delimiter, .zeroOrMore(.lineBreak)]`
+            if case .value(let v) = form { return extent == .whole ? f(v) : true } // for provisional matches, only test if token is a .value; for full matches, confirm is satisfies condition func too; TO DO: need to check this doesn't cause any problems itself
+        case .delimiter: // this matches separator punctuation OR a single linebreak; to match e.g. a block separator (where the comma may be followed by any number of linebreaks), use `[.delimiter, .zeroOrMore(.lineBreak)]`
             switch form {
             case .separator(_): return true
             case .lineBreak:    return true
@@ -216,69 +209,28 @@ indirect enum Pattern: Equatable, CustomDebugStringConvertible, ExpressibleByArr
         }
     }
 
-    var hasLeadingExpression: Bool { // crude; assumes all branches are consistent
+    var hasLeftOperand: Bool { // crude; assumes all branches are consistent
         switch self {
         case .expression, .testValue(_): return true
-        case .optional(let p):           return p.hasLeadingExpression
-        case .sequence(let p):           return p.first!.hasLeadingExpression
-        case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasLeadingExpression }
-        case .zeroOrMore(let p):         return p.hasLeadingExpression
-        case .oneOrMore(let p):          return p.hasLeadingExpression
+        case .optional(let p):           return p.hasLeftOperand
+        case .sequence(let p):           return p.first!.hasLeftOperand
+        case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasLeftOperand }
+        case .zeroOrMore(let p):         return p.hasLeftOperand
+        case .oneOrMore(let p):          return p.hasLeftOperand
         default:                         return false // TO DO: how should .expression, etc. patterns treat .error(…) tokens? will .errors always be [malformed] exprs?
         }
     }
     
-    var hasTrailingExpression: Bool {
+    var hasRightOperand: Bool { // ditto
         switch self {
         case .expression, .testValue(_): return true
-        case .optional(let p):           return p.hasTrailingExpression
-        case .sequence(let p):           return p.last!.hasTrailingExpression
-        case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasTrailingExpression }
-        case .zeroOrMore(let p):         return p.hasTrailingExpression
-        case .oneOrMore(let p):          return p.hasTrailingExpression
+        case .optional(let p):           return p.hasRightOperand
+        case .sequence(let p):           return p.last!.hasRightOperand
+        case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasRightOperand }
+        case .zeroOrMore(let p):         return p.hasRightOperand
+        case .oneOrMore(let p):          return p.hasRightOperand
         default:                         return false
         }
     }
-    
-    static func == (lhs: Pattern, rhs: Pattern) -> Bool {
-        switch (lhs, rhs) {
-        case (.keyword(let k1), .keyword(let k2)):          return k1 == k2
-        case (.optional(let p1), .optional(let p2)):        return p1 == p2
-        case (.sequence(let p1), .sequence(let p2)):        return p1 == p2
-        case (.anyOf(let p1), .anyOf(let p2)):              return p1 == p2
-        case (.zeroOrMore(let p1), .zeroOrMore(let p2)):    return p1 == p2
-        case (.oneOrMore(let p1), .oneOrMore(let p2)):      return p1 == p2
-        case (.name, .name):                                return true
-        case (.label, .label):                              return true
-        case (.expression, .expression):                    return true
-        case (.token(let t1), .token(let t2)):              return t1 == t2
-        case (.testToken(_), .testToken(_)):
-            // TO DO: how to compare function ptrs?
-            print("WARNING: .testToken does not yet support Equatable so will always return true ")
-            return true
-        case (.testValue(_), .testValue(_)):
-            print("WARNING: .testValue does not yet support Equatable so will always return true ")
-            return true
-        case (.delimiter, .delimiter):                      return true
-        case (.lineBreak, .lineBreak):                      return true
-        default: return false
-        }
-
-    }
-    
-    
-    //var nextConjunction: Set<Symbol> {
-        
-    //}
-    /*
-    func nextConjunction(_ result: inout Set<Symbol>) {
-        switch self {
-        case .keyword(let keyword):
-            for name in keyword.allNames { result.insert(name) }
-        case .optional(let p):
-            p.nextConjunction(&result)
-        default: ()
-        }
-    }*/
 }
 
