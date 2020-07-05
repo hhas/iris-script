@@ -14,11 +14,14 @@ extension Parser {
         //    self.tokenStack.show(startIndex, stopIndex)
         // this logic is a mess: reductionForOperatorExpression returns nil if reduction can't be performed at this time (e.g. pattern is still being matched); with argument exprs, does that indicate there’s a syntax error?
         let value: Value
-        let form = self.reductionForOperatorExpression(from: startIndex, to: stopIndex)
-        switch form {
-        case .value(let v): value = v
-        default:
-            value = BadSyntaxValue(error: InternalError(description: "The \(commandName.label) command’s \(label.isEmpty ? "direct" : label.label) argument did not fully reduce: .\(form as Any)\n\(self.tokenStack.dump(startIndex, stopIndex))\n"))
+        if let (form, reducedMatchIDs) = self.reductionForOperatorExpression(from: startIndex, to: stopIndex) {
+            switch form {
+            case .value(let v): value = v
+            default:
+                value = BadSyntaxValue(error: InternalError(description: "The \(commandName.label) command’s \(label.isEmpty ? "direct" : label.label) argument did not fully reduce: .\(form as Any)\n\(self.tokenStack.dump(startIndex, stopIndex))\n"))
+            }
+        } else {
+            value = BadSyntaxValue(error: InternalError(description: "The \(commandName.label) command’s \(label.isEmpty ? "direct" : label.label) argument did not fully reduce:\n\(self.tokenStack.dump(startIndex, stopIndex))\n"))
         }
         return value
     }

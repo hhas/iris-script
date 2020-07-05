@@ -11,19 +11,20 @@ extension Parser {
     
     
     
-    func reductionForOperatorExpression(from startIndex: Int, to stopIndex: Int) -> Token.Form? { // start..<stop
+    func reductionForOperatorExpression(from startIndex: Int, to stopIndex: Int) -> (Token.Form, Set<Int>)? { // start..<stop
         // reduces an expression composed of one or more operations (this includes unreduced nested commands for which matchers have been added, but not LP commands which must be custom-reduced beforehand)
         // important: any commands within the expression must already be reduced to .value(Command(…))
+        var reducedMatchIDs = Set<Int>()
         if startIndex == stopIndex - 1 {
             switch self.tokenStack[startIndex].form {
             case .value(let v):
-                return .value(v)
+                return (.value(v), reducedMatchIDs)
             case .error(let e):
-                return .value(BadSyntaxValue(error: e)) // TO DO: where should .error transform to error value?
+                return (.value(BadSyntaxValue(error: e)), reducedMatchIDs) // TO DO: where should .error transform to error value?
             default: ()
             }
         }
-        //print("reductionForOperatorExpression:"); self.tokenStack.show(startIndex, stopIndex)
+     //   print("reductionForOperatorExpression:"); self.tokenStack.show(startIndex, stopIndex)
         var matches = self.tokenStack.findLongestFullMatches(from: startIndex, to: stopIndex)
         //for m in matches { print("Longest ", m) }
         if matches.isEmpty { // note: this is empty when e.g. `do` keyword is followed by delimiter (since `do` is not an atom but part of a larger `do…done` block that spans multiple expressions, it should not be reduced at this time); we still go through the find-longest step in case there are completed pattern matchers available
@@ -43,9 +44,6 @@ extension Parser {
             print("\nSyntax Error: Unmatched tokens at start of expression: \(startIndex)...\(matches[0].start)")
             print(matches[0])
         }
-        
-        
-        
         if matches.last!.stop != stopIndex-1 {
             print("nSyntax Error: Unmatched tokens at end of expression: \(matches.last!.stop)...\(stopIndex-1)")
         }
@@ -69,9 +67,11 @@ extension Parser {
                 case .left: // left expr is infix/postfix operation
                     // print("REDUCE LEFT MATCH", left.match.name)
                     matches.reduceMatch(at: leftExpressionIndex)
+                    reducedMatchIDs.insert(left.match.originID)
                 case .right: // right expr is prefix/infix operation
                     // print("REDUCE RIGHT MATCH", right.match.name)
                     matches.reduceMatch(at: rightExpressionIndex)
+                    reducedMatchIDs.insert(right.match.originID)
                 }
             } else { // e.g. `… POSFIX_OP PREFIX_OP …`
                 // TO DO: this also happens if a completed operator match is missing from matches array due to a bug in [e.g.] findLongestMatches()
@@ -81,7 +81,7 @@ extension Parser {
                 
                 // TO DO: should we try to reduce as much as possible before returning partially reduced result in BadSyntaxValue, or should we return BadSyntaxValue straightaway containing the original range of unreduced tokens? (need to work out API for BadSyntaxValue; i.e. what should parser provide it with to enable it to generate meaningful error descriptions and [potentially] suggest corrections which may be applied and reduced in-place) (ability to define pattern matchers for detecting common syntax errors may of help here; e.g. `EXPR EXPR` may result from missing/wrong operator [e.g. user intended an infix operator but parser only found prefix/postfix/atom definitions], or from missing .delimiter)
                 // TO DO: need to check if EXPRs are immediately adjacent or if there are unmatched tokens between them and adjust message accordingly; see also TODOs above re. unmatched tokens at start/end
-                return .value(BadSyntaxValue(error: InternalError(description: "Found two adjacent expressions at \(leftExpressionIndex)...\(rightExpressionIndex): \(left.tokens.map{".\($0.form)"}) \(right.tokens.map{".\($0.form)"})")))
+                return (.value(BadSyntaxValue(error: InternalError(description: "Found two adjacent expressions at \(leftExpressionIndex)...\(rightExpressionIndex): \(left.tokens.map{".\($0.form)"}) \(right.tokens.map{".\($0.form)"})"))), reducedMatchIDs)
             }
             //matches.show() // DEBUG
             if rightExpressionIndex == matches.count { // adjust indexes for shortened matches array as needed
@@ -90,17 +90,18 @@ extension Parser {
             }
         }
         assert(matches.count == 1)
-        return matches[0].tokens.reductionFor(fullMatch: matches[0].match) // TO DO: reductionFor(fullMatch:) returns either .value or .error; can/should we change this to Value, in which case reductionForOperatorExpression(…) can return `Value?` rather than `Token.Form?`
+        reducedMatchIDs.insert(matches[0].match.originID)
+        return (matches[0].tokens.reductionFor(fullMatch: matches[0].match), reducedMatchIDs) // TO DO: reductionFor(fullMatch:) returns either .value or .error; can/should we change this to Value, in which case reductionForOperatorExpression(…) can return `Value?` rather than `Token.Form?`
     }
     
     
     
     func fullyReduceExpression(from _startIndex: Int = 0, to stopIndex: Int? = nil) { // starting point for reductions called by main loop
         var stopIndex = stopIndex ?? self.tokenStack.count // caution: stopIndex is nearest head of stack, so will no longer be valid once a reduction is performed
-        //  print("fullyReduceExpression:"); self.tokenStack.show(_startIndex, stopIndex)
         // scan back from stopIndex until an expression delimiter is found or original startIndex is reached; that then becomes the startIndex for findLongestMatches // TO DO: is this still needed? currently when fullyReduceExpression is called, how is the _startIndex argument determined?
         var startIndex = self.tokenStack.findStartIndex(from: _startIndex, to: stopIndex)
         //  print("…found startIndex", startIndex)
+       // print("fullyReduceExpression:"); self.tokenStack.show(startIndex, stopIndex)
         
         if startIndex == stopIndex { return } // zero length, e.g. `[ ]`
         
@@ -114,38 +115,13 @@ extension Parser {
         self.reduceCommandExpressions(from: startIndex, to: &stopIndex)
         // once all commands’ boundaries have been determined and the commands themselves reduced to .values, reduce all operators
         
-        self.blockStack.endConjunctionMatches() // discard any pending conjunctions, e.g. given `if TEST then ACTION.`, this will discard the `else` clause upon encountering period delimiter
-        
-        // TO DO: confirm operators with multiple conjunctions are always re-added to blockStack, and comment where
-        /*
-        // kludgy: upon reducing the expression, make sure any completed conjunction-based matches are removed from Parser.blockStack; frankly this is a mess: the logic for popping completed blocks off blockStack is all over the place
-        //   print(">>>",self.blockStack)
-        let fullMatchIDs = self.tokenStack[startIndex..<stopIndex].flatMap{$0.matches}.filter{$0.isAFullMatch}.map{$0.groupID}
-        //print("removing group ids", fullMatchIDs)
-        if case .conjunction(let matchers) = self.blockStack.last {
-            var matchers = matchers
-            for (k, v) in matchers {
-                // print(k, v.map{$0.groupID})
-                let v = v.filter{!fullMatchIDs.contains($0.match.groupID)}
-                if v.isEmpty {
-                    matchers.removeValue(forKey: k)
-                } else {
-                    matchers[k] = v
-                }
-            }
-            if matchers.isEmpty {
-                //   print("NUKED",self.blockStack.last!)
-                self.blockStack.removeLast()
-            }
-        }
-        
-        */
+        self.blockStack.endConjunctionMatches() // discard any pending conjunctions, e.g. given `if TEST then ACTION.`, this will discard the `else` clause upon encountering period delimiter; note that if an operator has >1 conjunction, reduceExpressionBeforeConjunction() will add a new entry to blockStack after it’s shifted the first conjunction // TO DO: check this doesn't interfere with do…done (it’s overly aggressive in what it removes from stack; it should only remove conjunctions whose matchers started within the current EXPR)
         
         //   print("<<<",self.blockStack)
-        if let form = self.reductionForOperatorExpression(from: startIndex, to: stopIndex) { // returns nil if no reduction was made (e.g. pattern is still being matched)
-            //print("REDUCED OPERATOR:"); self.tokenStack.show(startIndex, stopIndex); print("…TO: .\(form)\n----")
-            self.tokenStack.replace(from: startIndex, to: stopIndex, withReduction: form)
-           // print("REDUCED OPERATOR:"); self.tokenStack.show(startIndex); print("…TO: .\(form)\n----")
+        if let (form, reducedMatchIDs) = self.reductionForOperatorExpression(from: startIndex, to: stopIndex) { // returns nil if no reduction was made (e.g. pattern is still being matched)
+          //  print("REDUCING OPERATOR:"); self.tokenStack.show(startIndex, stopIndex); print("…TO: .\(form)\n\n----\n\n")
+            self.tokenStack.replace(reducedMatchIDs: reducedMatchIDs, from: startIndex, to: stopIndex, withReduction: form)
+          // print("REDUCED OPERATOR:"); self.tokenStack.show(startIndex); print("…TO: .\(form)\n\n----\n\n")
         }
     }
     

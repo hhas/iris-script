@@ -7,13 +7,32 @@ import Foundation
 
 
 
+// TO DO: changing line readers to return .eof rather than .linebreak when exhausted appears to cause infinite loop somewhere prior to parser's main loop (should use .endOfCode as it's agnostic on full-script vs per-line parsing)
 
 
 func test() {
+    
+    //runScript(" if 1 then (5 + 6) else (-7 ÷ -8) ");
+    
+    runScript(" if 1 then do \n 5 + 6 \n done else -7 ÷ -8 ");
 
+    //runScript(" if 1 then 5 + 6 else -7 ÷ -8 "); // TO DO: this is very problematic: operator precedence wants to terminate `if…then…` after `5`, but user intention is for `then` clause to perform `5+6` and `else` clause to perform `-7 ÷ -8`; there are also questions over allowing/rejecting LFs around the two action exprs
+    
+    //runScript(" a;b;c;d "); return;
+    
   //   runScript(" if 1,2 then 3 "); return;
     
+   // runScript(" 2 * 2 ")
 
+    //    runScript("Foo, bar; baz to: bip; fub, bim.")
+    
+    return;
+    
+    runScript(" if -1 * 2 + -3 = -4 then 5 + 6 else -7 ÷ -8 ");
+    
+    runScript("tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}.")
+    
+    return;
     
 //    runScript(" -1 thru -2 "); return;
 
@@ -302,7 +321,7 @@ func test() {
 
     runScript("bim {foo: bar} ")
 
-    runScript(" -1 else - 2 + 3 ")
+    runScript(" -1 or - 2 + 3 ")
 
     runScript(" 1 + 2 * - 3 ") // note: `-` must match as unary operator; `*` match as binary operator even though its right operand is only partially matched as `-`, i.e. it *could* be the start of an EXPR [but isn't yet known for sure]
 

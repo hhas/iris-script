@@ -173,7 +173,8 @@ public class Parser {
             let form = self.current.token.form
             //print("PARSE .\(form)")
             switch form {
-            case .endOfScript: break loop // the only time we break out of this loop
+            case .endOfScript:
+                break loop // the only time we break out of this loop
             case .annotation(_): () // discard annotations for now
             case .startList:
                 self.startBlock(for: .list, adding: orderedListLiteral.newMatches() + keyValueListLiteral.newMatches())
@@ -236,7 +237,9 @@ public class Parser {
             }
             self.advance()
         }
-        return self.reductionForTopLevelExpressions()
+        //self.tokenStack.show()
+        self.fullyReduceExpression() // TO DO: do we need a final cleanup?
+        return self.reductionForTopLevelExpressions() // top-level is basically a block without delimiters
     }
     
     

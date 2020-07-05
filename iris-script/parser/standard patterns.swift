@@ -78,7 +78,7 @@ let pipeLiteralPrecedence: Precedence = 96 // TO DO: check that `;` doesn't need
 
 
 let pipeLiteral = PatternDefinition(name: "«PIPE»", pattern:
-[EXPR, .token(.semicolon), EXPR], // TO DO: allow LF after semicolon?
+    [EXPR, .token(.semicolon), SKIP_LF, EXPR], // TO DO: allow LF after semicolon?.testValue({$0 is Command})
                                   precedence: pipeLiteralPrecedence,
                                   reducer: reductionForPipeOperator)
 

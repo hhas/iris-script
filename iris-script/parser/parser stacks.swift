@@ -104,19 +104,27 @@ extension Array where Element == Parser.TokenInfo {
     }
     
     
-    mutating func replace(from startIndex: Int, to stopIndex: Int? = nil, withReduction form: Token.Form) { // start..<stop
+    mutating func replace(reducedMatchIDs: Set<Int>? = nil, from startIndex: Int, to stopIndex: Int? = nil, withReduction form: Token.Form) { // start..<stop
+        
+        // TO DO: reducedMatchIDs is a kludge to remove fully matched and reduced PatternMatchers from token stack so that they aren't re-applied (it’s be better to remove the PatternMatch at the same time as calling its reduce function, but that’s a bit awkward right now as some methods return the reduction rather than perform in place; which in turn is a kludge to perform multiple operator expression reductions on non-head tokens)
+        
         // reapply the preceding stack frame's matchers to newly reduced value
         // TO DO: make sure this correctly resumes in-progress matches
         let stopIndex = stopIndex ?? self.count
         assert(startIndex < stopIndex, "BUG: trying to reduce zero tokens at \(startIndex); fullyReduceExpression should have already checked if an expr exists between delimiters and returned immediately if none found (e.g. in empty list/record/group).")
-        var precedingMatches = [PatternMatch]()
+        var matches = [PatternMatch]()
         let currentMatches = self[startIndex].matches
         if startIndex > 0 { // advance any matches from preceding token that aren’t already on current token
             let currentIDs = currentMatches.map{ $0.originID }
-            precedingMatches += self[startIndex-1].matches.filter{ !currentIDs.contains($0.originID) }.flatMap{$0.next()}
+            matches += self[startIndex-1].matches.filter{ !currentIDs.contains($0.originID) }.flatMap{$0.next()}
         }
-        let updatedMatches = (precedingMatches + currentMatches).filter{ $0.fullyMatches(form: form) }
-        let reduction: Parser.TokenInfo = (form, updatedMatches, self[startIndex].hasLeadingWhitespace)
+        matches += currentMatches
+        if let matchIDs = reducedMatchIDs {
+          //  print("REMOVING COMPLETED MATCH:", matchIDs)
+            matches = matches.filter{ !matchIDs.contains($0.originID) }
+        }
+        let reduction: Parser.TokenInfo = (form, matches, self[startIndex].hasLeadingWhitespace)
+       // print("REPLACED WITH:", reduction)
         self.replaceSubrange(startIndex..<stopIndex, with: [reduction])
     }
     
@@ -126,7 +134,7 @@ extension Array where Element == Parser.TokenInfo {
         let stopIndex = self.count // non-inclusive
         let startIndex = stopIndex - fullMatch.count
         let form = self.reductionFor(fullMatch: fullMatch)
-        self.replace(from: startIndex, to: stopIndex, withReduction: form)
+        self.replace(reducedMatchIDs: [fullMatch.originID], from: startIndex, to: stopIndex, withReduction: form)
     }
     
     mutating func append(matches: [PatternMatch]) {
@@ -194,7 +202,7 @@ extension Array where Element == Parser.BlockInfo {
     }
     
     mutating func endConjunctionMatches() {
-        while case .conjunction(_) = self.last {
+        while case .conjunction(_) = self.last { // TO DO: this is too aggressive; it should only remove conjunctions started within the current EXPR
           //  print("Discarding unfinished conjunctions from block stack:", conjunctions)
             self.removeLast()
         }

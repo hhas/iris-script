@@ -6,6 +6,8 @@
 
 // TO DO: need to update glue generator and glue definition before regenerating this file
 
+// TO DO: try implementing a repeating pattern for `&` operator, e.g. `foo & bar & baz` should reduce to a single command that joins an N-ary list of operands in a single operation (aside from testing parser implementation, this should also simplify partial evaluation and allow cross-compilation to idiomatic Swift code as interpolated string literals)
+
 import Foundation
 
 func stdlib_loadOperators(into registry: OperatorRegistry) {

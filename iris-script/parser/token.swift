@@ -195,14 +195,14 @@ struct Token: CustomStringConvertible {
         var isLeftExpressionDelimiter: Bool {
             switch self {
                 // TO DO: what about start of script? (need a new form for that)
-            case .semicolon, .colon, .separator(_), .startList, .startRecord, .startGroup, .lineBreak: return true
+            case.colon, .separator(_), .startList, .startRecord, .startGroup, .lineBreak: return true
             default: return false
             }
         }
         
         var isRightExpressionDelimiter: Bool { // currently unused
             switch self {
-            case .semicolon, .colon, .separator(_), .endList, .endRecord, .endGroup, .lineBreak, .endOfScript: return true
+            case .colon, .separator(_), .endList, .endRecord, .endGroup, .lineBreak, .endOfScript: return true
             default: return false
             }
         }

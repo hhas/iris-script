@@ -40,6 +40,7 @@ extension Array where Element == Parser.TokenInfo {
     func value(at i: Int) -> Value {
      //   self.show()
         if case .value(let expr) = self[i].form { return expr }
+        self.show()
         fatalError("Bad reduction; expected token \(i) to be Value but found unreduced \(self[i]).")
     }
         
@@ -159,11 +160,18 @@ func reductionForCommandLiteral(stack: Parser.TokenStack, match: PatternMatch, s
     }
 }
 
-
 func reductionForPipeOperator(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value { // pipe (";") is a special case as it transforms its two operands (of which the right-hand operand must be a command) such that `A;B{C,D};E` -> `E{B{A,C,D}}`
-    //print("Reduce pipe")
-    // TO DO: if RH operand is LP command that already has direct arg (e.g. `foo; bar 1 baz: 2`) return syntax error
-    throw NotYetImplementedError()
+    print("Reduce pipe")
+    assert(end >= start + 3)
+    
+    guard case .value(let directArgument) = stack[start].form,
+        case .value(let v) = stack[end-1].form, let command = v as? Command else {
+            print("Expected command after semicolon but found: .\(stack[end-1].form)")
+        throw BadSyntax.missingExpression // TO DO: what error? (Q. should we reject non-commands in pattern matcher, or here?)
+    }
+    // TO DO: if RH operand is LP command that already has direct arg (e.g. `foo; bar 1 baz: 2`) return syntax error? (we'll presumably need PP annotation to determine that); alternative is to leave command with two unlabeled arguments and see if handler objects to that when mapping arguments to labeled parameters
+    // TO DO: annotate command so PP formats as `b;a`
+    return Command(command.name, [(nullSymbol, directArgument)] + command.arguments)
 }
 
 
@@ -251,3 +259,5 @@ func reductionForNegativeOperator(stack: Parser.TokenStack, match: PatternMatch,
     }
     return Command(match.definition, right: expr)
 }
+
+
