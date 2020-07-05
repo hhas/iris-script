@@ -8,11 +8,11 @@
 import Foundation
 
 
-struct QuoteReader: BlockReader { // reduces quoted text (string literal or annotation) to single token
+struct QuoteReader: DocumentReader { // reduces quoted text (string literal or annotation) to single token
     
     typealias Location = (lineIndex: Int, tokenIndex: Int) // note: these will not be contiguous
     
-    let nextReader: BlockReader
+    let nextReader: DocumentReader
     
     var code: String { return self.nextReader.code }
     
@@ -20,7 +20,7 @@ struct QuoteReader: BlockReader { // reduces quoted text (string literal or anno
     let location: Location
     
     
-    init(_ reader: BlockReader) { // TO DO: check this leaves cursor on correct token in all cases
+    init(_ reader: DocumentReader) { // TO DO: check this leaves cursor on correct token in all cases
         let startToken = reader.token
         self.location = reader.location // start position only (not sure how to tell editable script about reductions)
         var reader = reader.next()
@@ -68,7 +68,7 @@ struct QuoteReader: BlockReader { // reduces quoted text (string literal or anno
     }
     
     
-    func next() -> BlockReader {
+    func next() -> DocumentReader {
         return QuoteReader(self.nextReader)
     }
     

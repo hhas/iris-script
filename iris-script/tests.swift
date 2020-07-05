@@ -11,6 +11,9 @@ import Foundation
 
 func test() {
 
+  //   runScript(" if 1,2 then 3 "); return;
+    
+
     
 //    runScript(" -1 thru -2 "); return;
 
@@ -22,16 +25,16 @@ func test() {
 
     runScript(" if 1 then if 2 then 3 else 4 ") // TO DO: FIX: parser currently loses `if 1 then` portion with message “Missing first matcher[s] for 0...3” (it will also help if PP parenthesized `if 3…` operation to make clear which operation binds the `else 4` clause)
     
-    return;
-    /*
-    runScript(" 1 else 2 else 3 ")
+   //  runScript(" 1 else 2 else 3 ")
     
     runScript(" if 1 then 2 else 3 ")
     
     runScript(" if 1 then 2 else if 3 then 4 ")
     
     runScript(" if 1 then 2 else if 3 then 4 else 5 ") // ‘else’ {‘if’ {1, 2}, ‘else’ {‘if’ {3, 4}, 5}}
-    */
+
+  //  return;
+
     
   //  runScript(" if 1 then if 3 then 4 else 6 ") // dangling “else” is resolved by associating with outermost “if” (since `if` binds more tightly than `else`)
     

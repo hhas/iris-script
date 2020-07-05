@@ -288,4 +288,7 @@ class BadSyntaxValue: NativeError {
     init(error: NativeError) {
         self.error = error
     }
+    convenience init(_ message: String) {
+        self.init(error: InternalError(description: message))
+    }
 }

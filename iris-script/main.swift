@@ -22,12 +22,12 @@ let operatorReader = newOperatorReader(for: operatorRegistry)
 
 func runScript(_ script: String) {
 
-    print("PARSE: \(script.debugDescription)")
+    print("\nPARSE: \(script.debugDescription)")
 
     let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }
     
     /*
-    var ts: BlockReader = QuoteReader(doc.tokenStream)
+    var ts: DocumentReader = QuoteReader(doc.tokenStream)
     while ts.token.form != .endOfScript { print(ts.token); ts = ts.next() }
     print()
     */
@@ -35,7 +35,7 @@ func runScript(_ script: String) {
     let p = Parser(tokenStream: QuoteReader(doc.tokenStream), operatorRegistry: operatorRegistry)
     do {
         let ast = try p.parseScript()
-        //print("PARSED:", ast)
+        print("PARSED:", ast)
         //print("RESULT:", try ast.eval(in: env, as: asAnything))
         let _ = ast
     } catch {

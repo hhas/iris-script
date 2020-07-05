@@ -35,7 +35,7 @@ func skipLineBreaks(_ stack: Parser.TokenStack, _ i: inout Int) {
     while i < stack.count, case .lineBreak = stack[i].form { i += 1 }
 }
 
-extension Array where Element == Parser.StackItem {
+extension Array where Element == Parser.TokenInfo {
 
     func value(at i: Int) -> Value {
      //   self.show()
@@ -138,7 +138,7 @@ func reductionForParenthesizedBlockLiteral(stack: Parser.TokenStack, match: Patt
 
 func reductionForCommandLiteral(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value { // used to reduce nested commands (`NAME EXPR?`) which have optional direct argument only
     guard let name = stack[start].form.asCommandName() else {
-        if case .value(let v) = stack[start].form, v is Command { return v } // KLUDGE; TO DO: there is a problem with arg-less command that appears as left operand not being reduced prior to reducing the operation, e.g. `document` in `get document at 1`; there is a nasty hack in `[StackItem].value(at:)` to reduce it on the fly, but that causes further problems when reduceCommandLiteral is subsequently called on it; once commands are properly parsing we need to revisit the logic involved; see the reductionOrderFor switch in reductionForOperatorExpression(): there should be a .left reduction for the LH command
+        if case .value(let v) = stack[start].form, v is Command { return v } // KLUDGE; TO DO: there is a problem with arg-less command that appears as left operand not being reduced prior to reducing the operation, e.g. `document` in `get document at 1`; there is a nasty hack in `[TokenInfo].value(at:)` to reduce it on the fly, but that causes further problems when reduceCommandLiteral is subsequently called on it; once commands are properly parsing we need to revisit the logic involved; see the reductionOrderFor switch in reductionForOperatorExpression(): there should be a .left reduction for the LH command
         fatalError("Bad name") // should never happen
     }
     //print("reduceCommandLiteral:", name)

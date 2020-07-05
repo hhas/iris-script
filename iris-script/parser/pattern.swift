@@ -18,7 +18,10 @@ extension Array where Element == Pattern {
     var description: String {
         return "(\(self.map{String(describing:$0)}.joined(separator: " ")))"
     }
-    
+}
+
+extension RandomAccessCollection where Element == Pattern {
+        
     func reify() -> [[Pattern]] { // given a pattern sequence, ensures the first pattern is not a composite
         if let pattern = self.first {
             return pattern.reify([Pattern](self.dropFirst()))
@@ -125,14 +128,41 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         }
     }
     
-    enum Extent {
-        case whole
-        case start
-        case end
+    // match
+    
+    func provisionallyMatchBeginning(_ form: Parser.Form) -> Bool {
+        if self.isExpression {
+            switch form {
+            case .value(_): return true
+            case .startList, .startRecord, .startGroup: return true // fairly sure these will already be reduced
+            case .unquotedName(_), .quotedName(_): return true
+            //case .label(_): return false // TO DO: is this appropriate?
+            case .operatorName(let definitions):
+                //print("Checking if .\(form) could be the start of an EXPR", definitions.map{ $0.hasLeftOperand })
+                // TO DO: the problem remains operatorName(_) as we need to know if none/some/all of those defs has leading expr; also, what if mixed? (e.g. unary `-` can match as .start of expr, but we also have to consider binary `-`) // as long as we re-match the fully reduced operand, we should be okay returning true here, as long as at least one definition has trailing expr
+                return definitions.contains{ !$0.hasLeftOperand } // _could_ this be a prefix/atom operator? (we can't ask if it is definitely a prefix/atom operator, because that requires completing that match as well, and Pattern [intentionally] has no lookahead capability; however, “could be” should be good enough for now; a greater problem is hasLeadingExpression's inability to guarantee a correct result when custom .testValue(…) patterns are used as those can only match tokens that have already been fully reduced; for now, .testValue is only used to match keyed-list keys, which are atomic .values when whole-script parsing is used [per-line parsing remains TBD, given the challenges of parsing incomplete multi-line string literals, so we aren't even going to think about that right now])
+            default: () // fall-thru
+            }
+        }
+        return self.fullyMatch(form)
     }
     
-    // TO DO: split into separate methods for provisional vs full matching?
-    func match(_ form: Parser.Form, extent: Extent = .whole) -> Bool { // be VERY wary of .start/.end: matching the middle operand of conjunction-based operators as anything other than .whole will spawn malformed matches
+    func provisionallyMatchEnd(_ form: Parser.Form) -> Bool {
+        if self.isExpression {
+            switch form {
+            case .value(_):                        return true
+            case .endList, .endRecord, .endGroup:  return true // ditto
+            case .unquotedName(_), .quotedName(_): return true
+            case .operatorName(let definitions):
+                //print("Checking if .\(form) could be the end of an EXPR", definitions.map{ $0.hasRightOperand })
+                return definitions.contains{ !$0.hasRightOperand }
+            default: () // fall-thru
+            }
+        }
+        return self.fullyMatch(form)
+    }
+    
+    func fullyMatch(_ form: Parser.Form) -> Bool {
         switch self {
         case .keyword(let k):
             if case .operatorName(let d) = form, k.matches(d.name) { return true }
@@ -148,40 +178,14 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
             default: return false
             }
         case .expression:
-            switch extent {
-            case .whole:
-                if case .value(_) = form { return true } // TO DO: what about .error? should it always be immediately reduced to error value, or are there cases where it's preferable to put .error token on parser stack for later processing?
-            case .start: // *could* token be the first token in a multi-token expression?
-                switch form {
-                case .value(_): return true
-                case .startList, .startRecord, .startGroup: return true // fairly sure these will already be reduced
-                case .unquotedName(_), .quotedName(_): return true
-                //case .label(_): return false // TO DO: is this appropriate?
-                case .operatorName(let definitions):
-                    //print("Checking if .\(form) could be the start of an EXPR", definitions.map{ $0.hasLeftOperand })
-                    // TO DO: the problem remains operatorName(_) as we need to know if none/some/all of those defs has leading expr; also, what if mixed? (e.g. unary `-` can match as .start of expr, but we also have to consider binary `-`) // as long as we re-match the fully reduced operand, we should be okay returning true here, as long as at least one definition has trailing expr
-                    return definitions.contains{ !$0.hasLeftOperand } // _could_ this be a prefix/atom operator? (we can't ask if it is definitely a prefix/atom operator, because that requires completing that match as well, and Pattern [intentionally] has no lookahead capability; however, “could be” should be good enough for now; a greater problem is hasLeadingExpression's inability to guarantee a correct result when custom .testValue(…) patterns are used as those can only match tokens that have already been fully reduced; for now, .testValue is only used to match keyed-list keys, which are atomic .values when whole-script parsing is used [per-line parsing remains TBD, given the challenges of parsing incomplete multi-line string literals, so we aren't even going to think about that right now])
-
-                default: ()
-                }
-            case .end: // *could* token be the last token in a multi-token expression?
-                switch form {
-                case .value(_): return true
-                case .endList, .endRecord, .endGroup: return true // ditto
-                case .unquotedName(_), .quotedName(_): return true
-                case .operatorName(let definitions):
-                    //print("Checking if .\(form) could be the end of an EXPR", definitions.map{ $0.hasRightOperand })
-                    return definitions.contains{ !$0.hasRightOperand }
-                default: ()
-                }
-            }
+            if case .value(_) = form { return true } // TO DO: what about .error? should it always be immediately reduced to error value, or are there cases where it's preferable to put .error token on parser stack for later processing?
         case .token(let t):
             return form == t // TO DO: why does Form.==() not compare exactly? (probably because we currently only use `==` when matching punctuation tokens; it is dicey though; we probably should define a custom method for this, or else implement exact comparison [the other problem with `==` is that it's no use for matching names and other parameterized cases unless we use dummy values, which makes code very confusing/potentially misleading - best to implement those tests as Form.isName:Bool, etc])
         case .testToken(let f): // use this to match non-exprs only // TO DO: needed/desirable? see also .testValue(…)
-            if case .value(_) = form { return false } // ensure users can't accidentally use .testToken when testing for EXPR; this allows hasLeft/RightOperand tests to distinguish operands from non-operands
+            if case .value(_) = form { return false } // this also ensure users *can't* accidentally use .testToken when testing for EXPR; this allows hasLeft/RightOperand tests to distinguish operands from non-operands
             return f(form)
         case .testValue(let f): // this matches an expr that's been reduced to a Value which satisfies the provided test, e.g. `{$0 is HashableValue}`
-            if case .value(let v) = form { return extent == .whole ? f(v) : true } // for provisional matches, only test if token is a .value; for full matches, confirm is satisfies condition func too; TO DO: need to check this doesn't cause any problems itself
+            if case .value(let v) = form, f(v) { return true } // for provisional matches, only test if token is a .value; for full matches, confirm is satisfies condition func too; TO DO: need to check this doesn't cause any problems itself
         case .delimiter: // this matches separator punctuation OR a single linebreak; to match e.g. a block separator (where the comma may be followed by any number of linebreaks), use `[.delimiter, .zeroOrMore(.lineBreak)]`
             switch form {
             case .separator(_): return true
@@ -198,14 +202,16 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
         return false
     }
 
-    var isExpression: Bool {
+    var isExpression: Bool { // does this pattern match an EXPR? caution: this must ONLY be called on reified patterns (i.e. currently/previously matched, NEVER on remainingPatterns[1...])
         switch self {
-        case .expression, .testValue(_): return true
+        case .expression, .testValue(_):
+            return true
         case .optional(let p), .zeroOrMore(let p), .oneOrMore(let p):
             fatalError("Cannot get isExpression for non-reified pattern: \(p)")
         case .sequence(let p), .anyOf(let p):
             fatalError("Cannot get isExpression for non-reified pattern: \(p)")
-        default:                         return false // TO DO: how should .expression, etc. patterns treat .error(…) tokens? will .errors always be [malformed] exprs?
+        default:
+            return false
         }
     }
 

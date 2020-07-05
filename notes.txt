@@ -189,3 +189,16 @@
 
 
 
+
+
+// TO DO: given an overloaded conjunction, e.g. `to` is both a conjunction after `tell` and a prefix operator in its own right, how to ensure it is always matched as conjunction and other interpretations are ignored? (currently, after matching `to` token as a conjunction, we proceed to standard operator matching which will want to start matching it as a `to` operator; there are also questions on how to deal with bad expr seqs such as `EXPR prefixOp EXPR`, and longest-match vs best-match rules)
+
+
+//
+// note: any pattern which has explicit start and end delimiters can be safely auto-reduced (i.e. precedence only affects operators that begin and/or end with an EXPR); thus when shift completes an atom or block (true/false, list/record/group, do…done, etc), it is immediately reduced to a value; currently auto-reduction relies on PatternDefinition.autoReduce flag being explicitly set, but this can/should probably be made automatic using the matched pattern’s first and last tokens to triger it
+//
+// any pattern matcher that does not auto-reduce itself remains on the stack until the parser encounters a right-hand expression delimiter (separator punctuation, linebreak, end of list/record/group, conjunction keyword), triggering a call to fullyReduceExpression() (we must await an explicit end-of-expression delimiter as low-punctuation commands lack an explicit right-delimiter, and we have to reduce those commands before we can reduce its operators, which cannot begin until we can determine where each command’s right-boundary lies, and those boundaries are in turn are affected by the adjacent operators… yep, it’s a circular pain; hence the wait for an explicit right-boundary, from which we can finally work back)
+
+
+// `matchers` argument is from the head of the blockStack (used to track nesting)
+// e.g. given an in-progress match for `if EXPR1 then EXPR2` that has matched the `if` keyword and the start of EXPR1, when the `then` keyword is encountered, fully reduce the preceding EXPR1 (for this, we need to backsearch the shift stack for that matcher by uniqueID; once we find it, we know the range of tokens to reduce; e.g. given `if…then…` we want to reduce everything between the `if` and the `then` keywords to a single .value, but we don't want to risk reducing the `if EXPR` as well in the event that `if` is overloaded as a prefix operator as well; i.e. we can't make assumptions about library-defined operators)

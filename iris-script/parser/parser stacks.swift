@@ -1,8 +1,12 @@
 //
-//  parser stack.swift
+//  parser stacks.swift
 //  iris-script
 //
-//  extends the `[Parser.StackItem]` type (used in `Parser.stack` and `FullMatch.tokens`) with methods for searching and reducing shifted tokens
+//  extends the `Array<StackInfo>` type used in `Parser.tokenStack` (and `FullMatch.tokens`) with methods for searching and reducing shifted tokens
+//
+//  extends the `Array<BlockInfo>` type used in `Parser.blockStack`
+//
+//  extends the `Array<FullMatch>` type used in `Parser.reductionForOperatorExpression()`
 //
 
 import Foundation
@@ -18,7 +22,8 @@ extension Array {
 }
 
 
-extension Array where Element == Parser.StackItem {
+
+extension Array where Element == Parser.TokenInfo {
     
     // DEBUG: list stack tokens + their associated partial/complete matchers
 
@@ -29,7 +34,7 @@ extension Array where Element == Parser.StackItem {
     func dump(_ startIndex: Int = 0, _ stopIndex: Int? = nil) -> String { // startIndex..<stopIndex
         let stopIndex = stopIndex ?? self.count
         return "Stack[\(startIndex)..<\(stopIndex)]:\n" + self[startIndex..<(stopIndex)].map{
-            "\t.\($0.form) [\($0.matches.count)]\($0.matches.map{ "\n\t\t\t\t\($0)" }.joined(separator: ""))"
+            "\t.\($0.form) \($0.matches.map{ "\n\t\t\t\t\($0)" }.joined(separator: ""))"
         }.joined(separator: "\n")
     }
     
@@ -50,7 +55,7 @@ extension Array where Element == Parser.StackItem {
     
     func findStartIndex(from startIndex: Int, to stopIndex: Int) -> Int { // start..<stop
         // caution: when finding the start of a particular record field, the resulting range *includes* the field's `.label(NAME)`; e.g. when parsing `{foo: EXPR, EXPR, bar: EXPR}`, the indexes of the opening `{` and two `,` tokens are returned; leaving caller to wrangle labels in `foo: EXPR` and `bar: EXPR` itself
-        // TO DO: when parsing exprs, what about remembering the index of each expr’s left-hand boundary, avoiding need to back-scan for it each time? (since exprs can be nested, this'd need another stack similar to blockMatchers) [this is low-priority as the current approach, while crude, does the job]
+        // TO DO: when parsing exprs, what about remembering the index of each expr’s left-hand boundary, avoiding need to back-scan for it each time? (since exprs can be nested, this'd need another stack similar to blockStack) [this is low-priority as the current approach, while crude, does the job]
         if let i = self[startIndex..<stopIndex].lastIndex(where: { $0.form.isLeftExpressionDelimiter }) {
             return i + 1
         } else {
@@ -75,7 +80,7 @@ extension Array where Element == Parser.StackItem {
                 // of all matches that started on same .operatorName token (this may include both prefix and infix)
                 if (matchStart >= startIndex) && (matches[m.groupID] == nil || matches[m.groupID]!.match.count < m.count) {
                     matches[m.groupID] = (matchStart, rightExpressionIndex, m,
-                                          [Parser.StackItem](self[matchStart...rightExpressionIndex]))
+                                          [Parser.TokenInfo](self[matchStart...rightExpressionIndex]))
                 }
             }
         }
@@ -104,20 +109,14 @@ extension Array where Element == Parser.StackItem {
         // TO DO: make sure this correctly resumes in-progress matches
         let stopIndex = stopIndex ?? self.count
         assert(startIndex < stopIndex, "BUG: trying to reduce zero tokens at \(startIndex); fullyReduceExpression should have already checked if an expr exists between delimiters and returned immediately if none found (e.g. in empty list/record/group).")
-        let matches: [PatternMatch]
-        if startIndex > 0 {
-            //print(">", form)
-            // TO DO: when re-matching EXPR before conjunction (e.g. the test expr in `if…then…`), this should probably be done with allowingPartialMatch:false to ensure the full expr is matched; this'd also allow `.testValue(TESTFUNC)` pattern to distinguish between initial provisional “is it an expr?” match (which is the most that can be asked until that expr is fully reduced) and final “is it an expr that satisfies TESTFUNC?”
-            // retry in-progress matches from preceding token
-            let precedingMatches = self[startIndex - 1].matches.flatMap{ $0.next() }.filter{ $0.provisionallyMatches(form: form) }
-       //     print("reapplying preceding matches:")
-            let currentMatches = self[startIndex].matches.filter{ !precedingMatches.contains($0) && $0.provisionallyMatches(form: form) }
-        //    print("reapplying current matches:")
-            matches = precedingMatches + currentMatches
-        } else {
-            matches = self[startIndex].matches.filter{ $0.provisionallyMatches(form: form) }
+        var precedingMatches = [PatternMatch]()
+        let currentMatches = self[startIndex].matches
+        if startIndex > 0 { // advance any matches from preceding token that aren’t already on current token
+            let currentIDs = currentMatches.map{ $0.originID }
+            precedingMatches += self[startIndex-1].matches.filter{ !currentIDs.contains($0.originID) }.flatMap{$0.next()}
         }
-        let reduction: Parser.StackItem = (form, matches, self[startIndex].hasLeadingWhitespace)
+        let updatedMatches = (precedingMatches + currentMatches).filter{ $0.fullyMatches(form: form) }
+        let reduction: Parser.TokenInfo = (form, updatedMatches, self[startIndex].hasLeadingWhitespace)
         self.replaceSubrange(startIndex..<stopIndex, with: [reduction])
     }
     
@@ -134,39 +133,87 @@ extension Array where Element == Parser.StackItem {
         assert(!self.isEmpty, "Can't append following matches to head of parser stack as it is empty: \(matches)")
         self[self.count-1].matches += matches
     }
+    
+    mutating func append(match: PatternMatch) {
+        assert(!self.isEmpty, "Can't append following match to head of parser stack as it is empty: \(match)")
+        self[self.count-1].matches.append(match)
+    }
 }
 
 
+// block matching
 
-extension Array where Element == Parser.BlockMatch {
+extension Array where Element == Parser.BlockInfo {
+    
+    func show() {
+        print("Block Stack:")
+        for f in self {
+            print("\t\t.\(f)")
+        }
+    }
     
     // secondary stack used to track nested structures (lists, records, groups, keyword-based blocks)
     
-    mutating func start(_ form: Parser.BlockMatch) {
+    mutating func begin(_ form: Parser.BlockInfo) {
         self.append(form)
     }
     
-    mutating func stop(_ form: Parser.BlockMatch) throws {
-        if form.matches(self.last!) {
+    mutating func end(block form: Parser.BlockInfo) throws { // TO DO: this is impractical for removing conjunctions: for those we need keyword (and index?)
+        assert(!self.isEmpty, "Can't remove \(form) from parser’s block stack as it is already empty.")
+        switch (self.last!, form) {
+        case (.list, .list), (.record, .record), (.group, .group), (.script, .script):
             self.removeLast()
-        } else {
-            // TO DO: what do do with mismatched last item? leave/discard/speculatively rebalance?
+        case (_, .conjunction(_)):
+            fatalError("BUG: Use `BlockStack.end(conjunction: NAME)` to remove conjunctions.")
+        default:
+            // TO DO: what error(s) should this raise? what do do with the value currently at top of stack? leave/discard/speculatively rebalance? (for now we leave as-is, but would probably benefit from scanning rest of code to see how well [or not] that balances against the current stack and suggest fixes based on that)
+            print("Expected end of .\(self.last!) but found end of .\(form) instead.")
             switch self.last! {
             case .list:           throw BadSyntax.unterminatedList
             case .record:         throw BadSyntax.unterminatedRecord
             case .group:          throw BadSyntax.unterminatedGroup
-            case .script:         throw BadSyntax.missingExpression // TO DO: what error?
-            case .conjunction(_): throw BadSyntax.missingExpression // TO DO: what error?
+            case .script:         throw BadSyntax.missingExpression
+            case .conjunction(_): throw BadSyntax.missingExpression
             }
         }
     }
     
-    func conjunctionMatches(for name: Symbol) -> [PatternMatch]? {
-        // print("check for", name, "in", self.blockMatchers.last!)
-        if case .conjunction(let conjunctions) = self.last! {
+    func conjunctionMatches(for name: Symbol) -> ConjunctionMatches? {
+        if case .conjunction(let conjunctions) = self.last {
+            assert(!conjunctions.isEmpty, "BUG: conjunctionMatches(for: \(name)) should never return an empty array.")
             return conjunctions[name]
-        } else {
-            return nil
+        }
+        return nil
+    }
+    
+    mutating func end(conjunction name: Symbol) {
+        guard case .conjunction(let conjunctionMatches) = self.last, conjunctionMatches[name] != nil else {
+            fatalError("BUG: BlockStack.end(conjunction: \(name)) should never fail as it should only be called after conjunctionMatches(for: \(name)) has returned a non-nil result.")
+        }
+        self.removeLast()
+    }
+    
+    mutating func endConjunctionMatches() {
+        while case .conjunction(_) = self.last {
+          //  print("Discarding unfinished conjunctions from block stack:", conjunctions)
+            self.removeLast()
+        }
+    }
+}
+
+typealias ConjunctionMatches = [(match: PatternMatch, end: Int)]
+
+typealias Conjunctions = [Symbol: ConjunctionMatches] // TO DO: we should be able to capture end indexes for each PatternMatch (assuming we don’t try to use them after in-place reductions have been performed), which saves us having to backscan the stack for them
+
+extension Dictionary where Key == Conjunctions.Key, Value == Conjunctions.Value {
+
+    mutating func add(_ match: PatternMatch, endingAt stopIndex: Int) {
+        for name in match.conjunctions { // this adds a lookup for the conjunction's canonical name _and_ any aliases
+            if self[name] == nil {
+                self[name] = [(match, stopIndex)]
+            } else {
+                self[name]!.append((match, stopIndex))
+            }
         }
     }
 }
@@ -174,7 +221,7 @@ extension Array where Element == Parser.BlockMatch {
 
 // FullMatch describes a single fully matched pattern; findLongestFullMatches() returns an array of FullMatch tuples, which are used by `Parser.reductionForOperatorExpression(…)` to fully reduce one or more compound operator expressions (e.g. `1+2*-3=4`) to a single Value in order of operators’ precedence and associativity rules
 
-typealias FullMatch = (start: Int, stop: Int, match: PatternMatch, tokens: [Parser.StackItem]) // important: stop index is INclusive (start...stop); use `left.stop == right.start` to check for overlapping operations (caution: this assumes the shared operand has already been fully reduced to a single .value token)
+typealias FullMatch = (start: Int, stop: Int, match: PatternMatch, tokens: [Parser.TokenInfo]) // important: stop index is INclusive (start...stop); use `left.stop == right.start` to check for overlapping operations (caution: this assumes the shared operand has already been fully reduced to a single .value token)
 
 
 extension Array where Element == FullMatch {
@@ -193,7 +240,7 @@ extension Array where Element == FullMatch {
         let form = matchInfo.tokens.reductionFor(fullMatch: matchInfo.match)
        // print("…TO: \(form)")
         // e.g. `3 + - 1 * 2`
-        let reduction: Parser.StackItem = (form, [], matchInfo.tokens[0].hasLeadingWhitespace)
+        let reduction: Parser.TokenInfo = (form, [], matchInfo.tokens[0].hasLeadingWhitespace)
         // if subsequent match takes left operand, copy the reduced value to that
         if index+1 < self.count && self[index+1].match.hasLeftOperand {
             self[index+1].tokens.replaceFirstItem(with: reduction)

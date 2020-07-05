@@ -33,7 +33,7 @@ protocol LineReader { // common API by which [partial] lexers and parsers can be
 
 
 
-protocol BlockReader {
+protocol DocumentReader {
     
     typealias Location = (lineIndex: Int, tokenIndex: Int)
     
@@ -42,7 +42,7 @@ protocol BlockReader {
     var token: Token { get } // the current token
     var location: Location { get } // the current token's position
 
-    func next() -> BlockReader
+    func next() -> DocumentReader
 }
 
 
