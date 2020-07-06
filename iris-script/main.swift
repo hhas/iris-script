@@ -24,7 +24,7 @@ func runScript(_ script: String) {
 
     print("\nPARSE: \(script.debugDescription)")
 
-    let doc = EditableScript(script) { NumericReader(operatorReader(NameReader($0))) }
+    let doc = EditableScript(script) { NumericReader(operatorReader(NameModifierReader(NameReader($0)))) }
     
     /*
     var ts: DocumentReader = QuoteReader(doc.tokenStream)

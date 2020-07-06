@@ -34,7 +34,7 @@ func M_BLOCK(_ start: Token.Form, _ item: Pattern, _ end: Token.Form) -> [Patter
 // ordered list
 
 let orderedListLiteral = PatternDefinition(name: "[…]", pattern: M_BLOCK(.startList, EXPR, .endList),
-                                            autoReduce: true, reducer: reductionForOrderedListLiteral)
+                                           autoReduce: true, reducer: reductionForOrderedListLiteral)
 
 
 
@@ -51,18 +51,17 @@ let keyValueListLiteral = PatternDefinition(name: "[…:…]", pattern:
 
 // record
 
-let recordLiteral = PatternDefinition(name: "{…}", pattern: M_BLOCK(.startRecord, [.optional(.label), EXPR], .endRecord),
-                                       autoReduce: true, reducer: reductionForRecordLiteral)
+let recordLiteral = PatternDefinition(name: "{…}",
+                                      pattern: M_BLOCK(.startRecord, [.optional(.label), EXPR], .endRecord),
+                                      autoReduce: true, reducer: reductionForRecordLiteral)
 
 
 // group/parenthesized block
 
-let groupLiteral = PatternDefinition(name: "(…)", pattern:
-    [.token(.startGroup), SKIP_LF, EXPR, SKIP_LF, .token(.endGroup)], autoReduce: true, reducer: reductionForGroupLiteral)
+let groupLiteral = PatternDefinition(name: "(…)", pattern: M_BLOCK(.startGroup, EXPR, .endGroup),
+                                     autoReduce: true, reducer: reductionForGroupLiteral)
 
 
-let parenthesizedBlockLiteral = PatternDefinition(name: "(…,…)", pattern: M_BLOCK(.startGroup, EXPR, .endGroup),
-                                      autoReduce: true, reducer: reductionForParenthesizedBlockLiteral)
 
 
 // command
@@ -76,9 +75,7 @@ let nestedCommandLiteral = PatternDefinition(name: "«COMMAND»", pattern:
 
 let pipeLiteralPrecedence: Precedence = 96 // TO DO: check that `;` doesn't need precedence or associativity: it should always delimit exprs in the same way that other built-in punctuation (comma, period, etc) do (for now though we keep the values it had in the old recursive descent parser)
 
-
-let pipeLiteral = PatternDefinition(name: "«PIPE»", pattern:
-    [EXPR, .token(.semicolon), SKIP_LF, EXPR], // TO DO: allow LF after semicolon?.testValue({$0 is Command})
-                                  precedence: pipeLiteralPrecedence,
-                                  reducer: reductionForPipeOperator)
+// TO DO: should we allow LF after semicolon?
+let pipeLiteral = PatternDefinition(name: "«PIPE»", pattern: [EXPR, .token(.semicolon), SKIP_LF, EXPR],
+                                    precedence: pipeLiteralPrecedence, reducer: reductionForPipeOperator)
 

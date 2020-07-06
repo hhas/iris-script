@@ -63,7 +63,7 @@ extension Parser {
         assert(resumeIndex == matchIndex, "BUG in conjunction's resumeIndex: expected \(matchIndex) but got \(resumeIndex)")
         //print(">>>>>", resumeIndex, matchIndex)
         // remove the now-matched (though not yet shifted) conjunction from block stack
-        self.blockStack.end(conjunction: name) // TO DO: don’t _think_ the order of this relative to EXPR reduction is signifcant, but make sure
+        self.blockStack.end(name) // TO DO: don’t _think_ the order of this relative to EXPR reduction is signifcant, but make sure
         //print("Removed matched conjunction from block stack:", name)
         // reduce the preceding EXPR
         let startIndex = matchIndex + 1
@@ -90,11 +90,7 @@ extension Parser {
          //print("REMAINING CONJUNCTIONS: ", remainingConjunctions)
         if !remainingConjunctions.isEmpty {
             let stopIndex = self.tokenStack.count
-            var conjunctions = Conjunctions()
-            for match in remainingConjunctions {
-                conjunctions[name] = [(match, stopIndex)]
-            }
-            self.blockStack.begin(.conjunction(conjunctions))
+            self.blockStack.begin(remainingConjunctions, for: name, from: stopIndex)
         }
         // print(); print("<<<<"); self.blockStack.show(); print(); print("-------------")
     }

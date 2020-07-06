@@ -9,7 +9,7 @@
 
 
 
-// TO DO: how to handle +/- symbols? the numeric reader expects them to be categorized as .symbol, but the operator reader wants to recategorize them as operators (prefix/infix math operators)
+// TO DO: how to handle +/- prefixes? the numeric reader currently ignores them (though does have API hook to handle them) and leaves them to parser to match and reduce as prefix operators (optimizing where operand is numeric literal)
 
 
 // one advantage of componentizing lexer and parser is that we can create specialized parsers, e.g. a JSON-like pure-data format might use CoreLexer + NumericReader but omit OperatorReader, feeding into a much simplified document parser that treats all remaining words and symbols as syntax errors

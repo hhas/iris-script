@@ -14,6 +14,9 @@ extension Parser {
     func reductionForOperatorExpression(from startIndex: Int, to stopIndex: Int) -> (Token.Form, Set<Int>)? { // start..<stop
         // reduces an expression composed of one or more operations (this includes unreduced nested commands for which matchers have been added, but not LP commands which must be custom-reduced beforehand)
         // important: any commands within the expression must already be reduced to .value(Command(…))
+        
+        //print("reductionForOperatorExpression:"); self.tokenStack.show()
+        
         var reducedMatchIDs = Set<Int>()
         if startIndex == stopIndex - 1 {
             switch self.tokenStack[startIndex].form {
@@ -66,11 +69,15 @@ extension Parser {
                 switch reductionOrderFor(left.match, right.match) {
                 case .left: // left expr is infix/postfix operation
                     // print("REDUCE LEFT MATCH", left.match.name)
-                    matches.reduceMatch(at: leftExpressionIndex)
+                    if !matches.reduceMatch(at: leftExpressionIndex) {
+                        fatalError("TODO: unreduced match at \(leftExpressionIndex): \(left.match)")
+                    }
                     reducedMatchIDs.insert(left.match.originID)
                 case .right: // right expr is prefix/infix operation
                     // print("REDUCE RIGHT MATCH", right.match.name)
-                    matches.reduceMatch(at: rightExpressionIndex)
+                    if !matches.reduceMatch(at: rightExpressionIndex) {
+                        fatalError("TODO: unreduced match at \(rightExpressionIndex): \(right.match)")
+                    }
                     reducedMatchIDs.insert(right.match.originID)
                 }
             } else { // e.g. `… POSFIX_OP PREFIX_OP …`
@@ -90,8 +97,14 @@ extension Parser {
             }
         }
         assert(matches.count == 1)
-        reducedMatchIDs.insert(matches[0].match.originID)
-        return (matches[0].tokens.reductionFor(fullMatch: matches[0].match), reducedMatchIDs) // TO DO: reductionFor(fullMatch:) returns either .value or .error; can/should we change this to Value, in which case reductionForOperatorExpression(…) can return `Value?` rather than `Token.Form?`
+        // TO DO: can any of the reductions performed above fail due to incomplete trailing operand (e.g. `if test then do`), or is it only this one?
+        let matchInfo = matches[0]
+        if let result = matchInfo.match.reductionFor(stack: matchInfo.tokens) { // TO DO: reductionFor(…) returns either .value or .error; can/should we change this to Value, in which case reductionForOperatorExpression(…) can return `Value?` rather than `Token.Form?`
+            reducedMatchIDs.insert(matches[0].match.originID)
+            return (result, reducedMatchIDs)
+        } else {
+            return nil
+        }
     }
     
     
@@ -115,7 +128,10 @@ extension Parser {
         self.reduceCommandExpressions(from: startIndex, to: &stopIndex)
         // once all commands’ boundaries have been determined and the commands themselves reduced to .values, reduce all operators
         
-        self.blockStack.endConjunctionMatches() // discard any pending conjunctions, e.g. given `if TEST then ACTION.`, this will discard the `else` clause upon encountering period delimiter; note that if an operator has >1 conjunction, reduceExpressionBeforeConjunction() will add a new entry to blockStack after it’s shifted the first conjunction // TO DO: check this doesn't interfere with do…done (it’s overly aggressive in what it removes from stack; it should only remove conjunctions whose matchers started within the current EXPR)
+        
+        // TO DO: FIX: this interferes with e.g. do…done - it’s overly aggressive in what it removes from stack; it should only remove conjunctions whose matchers started within the current EXPR; that's not right either, e.g. given `if test then do, … done`, the comma should not terminate `do`; the problem is operators that have optional/trailing expr (i.e. no explicit terminator) need to be terminated by delimiters, but not blocks
+        
+        self.blockStack.endConjunctions() // discard any pending conjunctions, e.g. given `if TEST then ACTION.`, this will discard the `else` clause upon encountering period delimiter; note that if an operator has >1 conjunction, reduceExpressionBeforeConjunction() will add a new entry to blockStack after it’s shifted the first conjunction
         
         //   print("<<<",self.blockStack)
         if let (form, reducedMatchIDs) = self.reductionForOperatorExpression(from: startIndex, to: stopIndex) { // returns nil if no reduction was made (e.g. pattern is still being matched)

@@ -112,17 +112,10 @@ func reductionForRecordLiteral(stack: Parser.TokenStack, match: PatternMatch, st
     }
 }
 
-func reductionForGroupLiteral(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value { // `( LF* EXPR LF* )`
-    var i = start + 1
-    skipLineBreaks(stack, &i)
-    let expr = stack.value(at: i)
-    skipLineBreaks(stack, &i)
-    return expr // TO DO: how to annotate expr with elective parens/LFs
-}
 
-func reductionForParenthesizedBlockLiteral(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
+func reductionForGroupLiteral(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
     //show(stack, start, end)
-    //print(stack[start..<end].map{$0.form})
+    //print("reductionForGroupLiteral:\n\t", match, "\n\t",stack[start..<end].map{$0.form})
     var items = [Value]()
     var i = start + 1 // ignore `(`
     skipLineBreaks(stack, &i)
@@ -133,7 +126,11 @@ func reductionForParenthesizedBlockLiteral(stack: Parser.TokenStack, match: Patt
         skipSeparator(stack, &i)
         skipLineBreaks(stack, &i)
     }
-    return Block(items) // TO DO: how to annotate block with separators+LFs
+    if items.count == 1 {
+        return items[0] // TO DO: how to annotate expr with elective parens/LFs (PP should automatically parenthesize as precedence demands, but users may also parenthesize for readability or to flow expr onto another line); may be easiest to use Block to handle elective layout (and make Block, like Command, optionally annotatable with layout and other metadata)
+    } else {
+        return Block(items) // TO DO: how to annotate block with separators+LFs (i.e. user-defined layout)
+    }
 
 }
 
@@ -163,7 +160,7 @@ func reductionForCommandLiteral(stack: Parser.TokenStack, match: PatternMatch, s
 func reductionForPipeOperator(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value { // pipe (";") is a special case as it transforms its two operands (of which the right-hand operand must be a command) such that `A;B{C,D};E` -> `E{B{A,C,D}}`
     print("Reduce pipe")
     assert(end >= start + 3)
-    
+    // typecheck RH is a Command here rather than in pattern so we can provide a descriptive error
     guard case .value(let directArgument) = stack[start].form,
         case .value(let v) = stack[end-1].form, let command = v as? Command else {
             print("Expected command after semicolon but found: .\(stack[end-1].form)")

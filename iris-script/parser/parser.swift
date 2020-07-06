@@ -6,16 +6,14 @@
 import Foundation
 
 
-typealias ScriptAST = Block
-
-
 
 public class Parser {
     
     typealias Form = Token.Form
     
     enum BlockInfo {
-        case conjunction(Conjunctions) // may be conjunction (e.g. `then`) or terminator (e.g. `done`)
+        case conjunction(Conjunctions) // conjunctions with trailing expr (e.g. `then`)
+        case block(Conjunctions) // conjunctions with terminating keyword (e.g. `done`)
         case list
         case record
         case group
@@ -136,15 +134,27 @@ public class Parser {
                 }
             } // ignore any unsuccessful matches (e.g. a new infix operator matcher for which there was no left operand, or an .operatorName that’s a conjunction keyword for which there is no match already in progress)
         }
-        if !newConjunctionMatches.isEmpty { self.blockStack.begin(.conjunction(newConjunctionMatches)) }
+        if !newConjunctionMatches.isEmpty {
+            //print("newConjunctionMatches =", newConjunctionMatches)
+            for (name, matches) in newConjunctionMatches {
+                for (match, stopIndex) in matches {
+                    self.blockStack.begin([match], for: name, from: stopIndex)
+                }
+            }
+        }
         // push the current token and its matches (if any) onto stack
         self.tokenStack.append((form, currentMatches, self.current.token.hasLeadingWhitespace))
         // print("SHIFT matched", form, "to", currentMatches, "with completions", fullMatches)
         // automatically reduce fully matched atomic operators and list/record/group/block literals (i.e. anything that starts and ends with a static token, not an expr, so is not subject to precedence or association rules)
         if let longestMatch = fullMatches.max(by: { $0.count < $1.count }) {
-    //        print("\nAUTO-REDUCE", longestMatch.definition.name.label)
-            self.tokenStack.reduce(fullMatch: longestMatch)
-            if fullMatches.count > 1 { // TO DO: what if there are 2 completed matches of same length?
+           // print("\nAUTO-REDUCE:", longestMatch.definition.name.label)
+            //print(fullMatches)
+            if self.tokenStack.reduce(fullMatch: longestMatch) {
+                if case .operatorName(let d) = form, self.blockStack.blockMatches(for: d.name) != nil { // kludgy
+                    self.blockStack.end(d.name)
+                }
+            }
+            if fullMatches.count > 1 { // TO DO: what if there are 2 completed matches of same length? (there shouldn't be if patterns are well designed and don't conflict, but it's not enforced)
                 print("WARNING: discarding extra matches in", fullMatches.sorted{ $0.count < $1.count })
             }
         }
@@ -160,7 +170,7 @@ public class Parser {
     }
     
     func endBlock(for form: Parser.BlockInfo) throws {
-        try self.blockStack.end(block: form) // TO DO: what to do with error? (for now, we propagate it, but we should probably try to encapsulate as .error/BadSyntaxValue)
+        try self.blockStack.end(form) // TO DO: what to do with error? (for now, we propagate it, but we should probably try to encapsulate as .error/BadSyntaxValue)
         self.fullyReduceExpression() // ensure last expr in block is reduced to single .value // TO DO: check this as it's possible for last token in block to be a delimiter (e.g. comma and/or linebreak[s])
         self.shift() // shift the closing token onto stack; shift() will then autoreduce the block literal
     }
@@ -181,7 +191,7 @@ public class Parser {
             case .startRecord:
                 self.startBlock(for: .record, adding: recordLiteral.newMatches())
             case .startGroup:
-                self.startBlock(for: .group, adding: groupLiteral.newMatches() + parenthesizedBlockLiteral.newMatches())
+                self.startBlock(for: .group, adding: groupLiteral.newMatches())
             case .endGroup:
                 try self.endBlock(for: .group)
             case .endList:

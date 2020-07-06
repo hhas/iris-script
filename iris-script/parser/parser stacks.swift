@@ -73,8 +73,10 @@ extension Array where Element == Parser.TokenInfo {
         var matches = [Int: FullMatch]() // [groupID:(start...stop,match,tokens)] // note that first/last tokens in sub-array may represent incomplete matches, e.g. given `1 * - 2`, the `*` match's tokens will be [`1`,`*`,`-`]; it's up to the reducer to reduce [`-`,`2`] to value `-2` and substitute that in place of the `*` match's `-` token
         //print("findLongestMatches:")
         for rightExpressionIndex in (startIndex..<stopIndex).reversed() { // TO DO: confirm right-to-left vs left-to-right
-            for m in self[rightExpressionIndex].matches where m.isAFullMatch {
-                // if it's a full match and doesn't extend outside startIndex..<stopIndex then store it
+            for m in self[rightExpressionIndex].matches where m.isAFullMatch { // this may pick up >1 full match of same pattern (i.e. same origin ID) and/or same pattern group (same group ID, i.e. started on same .operatorName, which is superset of origin ID); the following code will filter out the non-longest matches
+                
+                // if it's a full match and doesn't extend outside startIndex..<stopIndex then store it (be aware that a leading/trailing operand may only be provisionally matched at this time, in which case the operation cannot yet be reduced; this will be checked downstream)
+                
                 // TO DO: make sure this respects optional conjunctions (e.g. `EXPR is_before EXPR ( as EXPR )?`; while `EXPR is_before EXPR` is a full match, if it's followed by `as` conjunction then the longer match should be used)
                 let matchStart = m.startIndex(from: rightExpressionIndex)
                 // of all matches that started on same .operatorName token (this may include both prefix and infix)
@@ -86,21 +88,6 @@ extension Array where Element == Parser.TokenInfo {
         }
         // return the longest matches for each operator, ordered from left to right
         return matches.values.sorted{ ($0.start, $0.stop) < ($1.start, $1.stop) }
-    }
-    
-    
-    func reductionFor(fullMatch: PatternMatch) -> Token.Form {
-        // reduce a single fully matched expression at head of stack to a single value
-        let endIndex = self.count // end index is non-inclusive
-        let startIndex = endIndex - fullMatch.count
-        let result: Token.Form
-        do {
-            result = .value(try fullMatch.definition.reduce(self, fullMatch, startIndex, endIndex))
-        } catch {
-            result = .error(error as? NativeError ?? InternalError(error))
-        }
-        //        print("REDUCED COMPLETED MATCH \(fullMatch) ➞ .\(result)")
-        return result
     }
     
     
@@ -129,12 +116,17 @@ extension Array where Element == Parser.TokenInfo {
     }
     
     
-    mutating func reduce(fullMatch: PatternMatch) { // called by Parser.shift() when auto-reducing; this performs a normal SR reduction at head of stack
+    mutating func reduce(fullMatch: PatternMatch) -> Bool { // called by Parser.shift() when auto-reducing; this performs a normal SR reduction at head of stack // TO DO: return Bool flag indicating if reduction was performed?
         //print("REDUCING", fullMatch)
-        let stopIndex = self.count // non-inclusive
-        let startIndex = stopIndex - fullMatch.count
-        let form = self.reductionFor(fullMatch: fullMatch)
-        self.replace(reducedMatchIDs: [fullMatch.originID], from: startIndex, to: stopIndex, withReduction: form)
+        if let form = fullMatch.reductionFor(stack: self) {
+            let stopIndex = self.count // non-inclusive
+            let startIndex = stopIndex - fullMatch.count
+            self.replace(reducedMatchIDs: [fullMatch.originID], from: startIndex, to: stopIndex, withReduction: form)
+            return true
+        } else {
+          //  print("Reduction not performed at this time:", fullMatch)
+            return false
+        }
     }
     
     mutating func append(matches: [PatternMatch]) {
@@ -166,7 +158,7 @@ extension Array where Element == Parser.BlockInfo {
         self.append(form)
     }
     
-    mutating func end(block form: Parser.BlockInfo) throws { // TO DO: this is impractical for removing conjunctions: for those we need keyword (and index?)
+    mutating func end(_ form: Parser.BlockInfo) throws { // TO DO: this is impractical for removing conjunctions: for those we need keyword (and index?)
         assert(!self.isEmpty, "Can't remove \(form) from parser’s block stack as it is already empty.")
         switch (self.last!, form) {
         case (.list, .list), (.record, .record), (.group, .group), (.script, .script):
@@ -182,27 +174,61 @@ extension Array where Element == Parser.BlockInfo {
             case .group:          throw BadSyntax.unterminatedGroup
             case .script:         throw BadSyntax.missingExpression
             case .conjunction(_): throw BadSyntax.missingExpression
+            case .block(_):       throw BadSyntax.missingExpression
             }
         }
     }
     
-    func conjunctionMatches(for name: Symbol) -> ConjunctionMatches? {
-        if case .conjunction(let conjunctions) = self.last {
-            assert(!conjunctions.isEmpty, "BUG: conjunctionMatches(for: \(name)) should never return an empty array.")
-            return conjunctions[name]
+    mutating func begin(_ matches: [PatternMatch], for name: Symbol, from stopIndex: Int) {
+        // name is the conjunction/block terminator keyword
+        var conjunctions = Conjunctions()
+        var blocks = Conjunctions()
+        for match in matches {
+            if !match.definition.hasRightOperand { // TO DO: this is kludgy: we need to know if keyword terminates a block or is conjunction before trailing operand; for now we assume anything without a right operand is an auto-reducing block with no intermediate conjunctions
+                blocks[name] = [(match, stopIndex)]
+            } else {
+                conjunctions[name] = [(match, stopIndex)]
+            }
+        }
+        if !conjunctions.isEmpty && !blocks.isEmpty {
+            print("WARNING: \(name) keyword is both a block terminator and conjunction.")
+        }
+        // operators cannot span multiple sub-exprs, so any unmatched conjunctions will be discarded when end of expr is reached
+        if !conjunctions.isEmpty { self.begin(.conjunction(conjunctions)) }
+        // blocks can span multiple sub-exprs; the closing keyword is part of the same expr as the opening keyword
+        if !blocks.isEmpty { self.begin(.block(blocks)) }
+    }
+    
+    func blockMatches(for name: Symbol) -> ConjunctionMatches? {
+        if case .block(let matches) = self.last {
+            assert(!matches.isEmpty, "BUG: blockMatches(for: \(name)) should never return an empty array.")
+            return matches[name]
         }
         return nil
     }
     
-    mutating func end(conjunction name: Symbol) {
-        guard case .conjunction(let conjunctionMatches) = self.last, conjunctionMatches[name] != nil else {
-            fatalError("BUG: BlockStack.end(conjunction: \(name)) should never fail as it should only be called after conjunctionMatches(for: \(name)) has returned a non-nil result.")
+    func conjunctionMatches(for name: Symbol) -> ConjunctionMatches? {
+        if case .conjunction(let matches) = self.last {
+            assert(!matches.isEmpty, "BUG: conjunctionMatches(for: \(name)) should never return an empty array.")
+            return matches[name]
         }
-        self.removeLast()
+        return nil
     }
     
-    mutating func endConjunctionMatches() {
-        while case .conjunction(_) = self.last { // TO DO: this is too aggressive; it should only remove conjunctions started within the current EXPR
+    mutating func end(_ name: Symbol) {
+        switch self.last {
+        case .block(let matches), .conjunction(let matches):
+            if matches[name] != nil {
+                self.removeLast()
+                return
+            }
+        default: ()
+        }
+        fatalError("BUG: BlockStack.end(\(name)) should never fail as it should only be called after blockMatches/conjunctionMatches(for: \(name)) has returned a non-nil result.")
+    }
+    
+    mutating func endConjunctions() {
+        while case .conjunction(_) = self.last {
           //  print("Discarding unfinished conjunctions from block stack:", conjunctions)
             self.removeLast()
         }
@@ -240,12 +266,12 @@ extension Array where Element == FullMatch {
         //print()
     }
     
-    mutating func reduceMatch(at index: Int) {
+    mutating func reduceMatch(at index: Int) -> Bool { // returns Bool flag indicating if reduction was performed
         // in order to reduce nested operations, reductionForOperatorExpression() first copies each operator and its associated operand[s] from the main stack to its own private array (`FullMatch.tokens`); it then calls `[FullMatch].tokens(at:)` to reduce each subarray to a single Value, comparing each operator’s precedence and/or associativity to its neighbors’ to determine which operation to reduce next (typically the operator with the highest precedence)
         // each time an operator expression is reduced, its neighbors’ right and/or left operands are replaced with that reduction, and the process repeated until only a single value remains
         // TO DO: Q. is there a less crude algorithm than this dice-and-slice approach? (for now, it's “good enough”)
         let matchInfo = self[index]
-        let form = matchInfo.tokens.reductionFor(fullMatch: matchInfo.match)
+        guard let form = matchInfo.match.reductionFor(stack: matchInfo.tokens) else { return false }
        // print("…TO: \(form)")
         // e.g. `3 + - 1 * 2`
         let reduction: Parser.TokenInfo = (form, [], matchInfo.tokens[0].hasLeadingWhitespace)
@@ -260,6 +286,7 @@ extension Array where Element == FullMatch {
             self[index-1].stop = matchInfo.stop // start...stop range absorbs the extra tokens
         }
         self.remove(at: index)
+        return true
     }
 }
 

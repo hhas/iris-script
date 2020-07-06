@@ -12,9 +12,27 @@ import Foundation
 
 func test() {
     
-    //runScript(" if 1 then (5 + 6) else (-7 ÷ -8) ");
     
-    runScript(" if 1 then do \n 5 + 6 \n done else -7 ÷ -8 ");
+   //  runScript(" f x - 1") // TO DO: FIX: exception on unreduced command
+    
+   // runScript(" if 1 then if 2 then 3 else 4 ") // TO DO: FIX: exception on unreduced `if` token 
+    
+   // runScript(" foo + --+- 2 ");
+    
+    //runScript("make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}.")
+
+    
+    runScript(" if 1 then (5 + 6) ");
+    
+    runScript(" if 1 then (5 + 6) else (-7 ÷ -8) ");
+    
+    runScript(" if 1 then do, 5 + 6, done else (-7 ÷ -8) ");
+    
+    runScript(" if 1 then 5 + 6 ");
+    
+    //runScript(" if 1 then 5 + 6 else -7 ÷ -8 "); // TO DO: BUGGY
+    
+    //runScript(" if 1 then do , 5 + 6 , done else -7 ÷ -8 ");
 
     //runScript(" if 1 then 5 + 6 else -7 ÷ -8 "); // TO DO: this is very problematic: operator precedence wants to terminate `if…then…` after `5`, but user intention is for `then` clause to perform `5+6` and `else` clause to perform `-7 ÷ -8`; there are also questions over allowing/rejecting LFs around the two action exprs
     
@@ -26,13 +44,13 @@ func test() {
 
     //    runScript("Foo, bar; baz to: bip; fub, bim.")
     
-    return;
+  //  return;
     
     runScript(" if -1 * 2 + -3 = -4 then 5 + 6 else -7 ÷ -8 ");
     
     runScript("tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}.")
     
-    return;
+  //  return;
     
 //    runScript(" -1 thru -2 "); return;
 
@@ -42,7 +60,7 @@ func test() {
     
     // runScript("set a to: 2") // TO DO: this fails with unhelpful/misleading output: `set…to…` is defined as an operator, so incomplete `set…` match is discarded (with warning about reduction failure) and produces `a{to:3}` (error handling system may want to check for common mistakes, two of which are putting colons after conjunctions, and not putting colons after argument names); parser also needs to insert .error/BadSyntaxValue to cover any missing match ranges (TBH it may be better to capture the entire EXPR rather than parts of it: a relatively coarse error may be less helpful, but is also less likely to yield incorrect interpretations of the remaining tokens or misleading explanations of problem)
 
-    runScript(" if 1 then if 2 then 3 else 4 ") // TO DO: FIX: parser currently loses `if 1 then` portion with message “Missing first matcher[s] for 0...3” (it will also help if PP parenthesized `if 3…` operation to make clear which operation binds the `else 4` clause)
+ //   runScript(" if 1 then if 2 then 3 else 4 ") // TO DO: FIX: parser currently loses `if 1 then` portion with message “Missing first matcher[s] for 0...3” (it will also help if PP parenthesized `if 3…` operation to make clear which operation binds the `else 4` clause)
     
    //  runScript(" 1 else 2 else 3 ")
     
@@ -203,8 +221,6 @@ func test() {
     runScript("tell app “com.apple.TextEdit” to get documents from 2 thru -1")
     
     
-        // TO DO: period/LF needs higher 'precedence' than `else`; might need to change how ExpressionSequence is constructed (e.g. split into ExpressionSeq vs BlockSeq, with the former limited to single sentences; maybe rename `Sentence` and `Paragraph`)
-
     runScript("""
         Set a to: 3, set b to: true. If 3 + a = 4 then "A" else if b then "B" else "C".
         """)
@@ -340,8 +356,12 @@ func test() {
     runScript(" foo 1 + a bar: 3 ")
 
     runScript(" (8,9) ")
+    
+    
+    
+    return;
 
-    runScript(" f x - 1") // this should parse as `-{f{x},1}`
+   // runScript(" f x - 1") // this should parse as `-{f{x},1}`
 
     runScript(" f a: b - 1") //
 

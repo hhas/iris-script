@@ -6,37 +6,34 @@
 import Foundation
 
 
-// TO DO: sentence blocks are intractable, so get rid of those: comma, period, query, exclamation marks should all act as expr delimiter and make no structural difference to code; only difference is when using them as runtime flags to control stepping/prompting/etc (e.g. proceed on `,` but hold on `.` [c.f. debugger breakpoint], introspect current state on `?`, request confirmation of unsafe operation on `!`); these flags can be set via annotations, e.g. `«period: wait 5sec»`, and the annotations themselves may contain commands to be evaled in isolated 'debugger' environment with managed access to runtime env
 
-
-
-struct Block: BoxedComplexValue { // caution: this does not capture lexical scope
+class Block: BoxedComplexValue { // caution: this does not capture lexical scope
     
     // TO DO: what about preserving user's punctuation?
         
     var description: String { // TO DO: hand off to pp; also need formatting hints from parser (e.g. whether to use linbreaks and/or punctuation between exprs)
-        if let d = self.patternDefinition, case .keyword(let n1) = d.pattern.first, case .keyword(let n2) = d.pattern.last {
-            return "\(n1.name.label)\(self.data.map{"\n\t\($0)"}.joined(separator: ""))\n\(n2.name.label)"
-        } else {
-            return "(\n\t\(self.data.map{$0.description}.joined(separator: ",\n\t"))\n)"
-        }
+        return "(\(self.data.map{$0.description}.joined(separator: ", ")))" // unsugared representation
+    // TO DO: move sugared representation to PP
+    //    if let d = self.patternDefinition, case .keyword(let n1) = d.pattern.first, case .keyword(let n2) = //d.pattern.last {
+    //        return "\(n1.name.label)\(self.data.map{"\n\t\($0)"}.joined(separator: ""))\n\(n2.name.label)"
+    //    } else {
+    //        return "(\n\t\(self.data.map{$0.description}.joined(separator: ",\n\t"))\n)" // TO DO: default block representation is a parenthesized sequence of (comma- and/or linebreak-delimited?) exprs
+    //    }
     }
     
     typealias ArrayLiteralElement = Value
 
     static let nominalType: Coercion = asBlock
     
-    let patternDefinition: PatternDefinition?
-    
-    // Q. would it be simpler just to encapsulate ExpressionSequence?
+    let patternDefinition: PatternDefinition? // TO DO: make this part of optional annotation metadata and standardize annotation API and types across Blocks and Commands (Q. what about lists and records?)
     
     let data: [Value]
     
-    init(_ data: [Value], patternDefinition: PatternDefinition?) {
+    required init(_ data: [Value], patternDefinition: PatternDefinition?) {
         self.data = data
         self.patternDefinition = patternDefinition
     }
-    init(_ data: [Value]) {
+    required convenience init(_ data: [Value]) {
         self.init(data, patternDefinition: nil)
     }
     
@@ -80,3 +77,15 @@ struct Block: BoxedComplexValue { // caution: this does not capture lexical scop
     }
     
 }
+
+typealias ScriptAST = Block
+
+/*
+class ScriptAST: Block {
+
+    override var description: String {
+        return self.data.map{$0.description}.joined(separator: ",\n")
+    }
+    
+}
+*/

@@ -32,6 +32,8 @@ struct PatternMatch: CustomStringConvertible, Equatable {
     let groupID: Int // identifies all matchers that originated at the same .operatorName(…) token (if an operator name is overloaded with multiple definitions, each in-progress match has a different originID but same groupID); be aware that whereas atom/prefix matchers start on .operatorName(…) token, infix/postfix backtrack to start on its preceding EXPR, thus two in-progress matches that share the same groupID should not be assumed to be the same length
         
     let definition: PatternDefinition
+    
+    // TO DO: provide a public API that returns the patterns for a full match? (e.g. reducefuncs might want to use this); if not, then we should consider capturing only as much of matched pattern as we need to satisfy PatternMatch’s own requirements (i.e. first pattern matched + no. of matches made), otherwise we're allocating lots of potentially large arrays unnecessarily
 
     // patterns that were matched by earlier instances of this matcher (not including the pattern currently being matched)
     private let matchedPattern: [Pattern]
@@ -124,7 +126,8 @@ struct PatternMatch: CustomStringConvertible, Equatable {
     
     var hasRightOperand: Bool {
         // caution: caller is responsible for calling fullyMatches() to confirm the current token matches prior to calling hasRightOperand // TO DO: the problem here is that it's possible for a pattern to branch, with one branch looking for terminating keyword and other looking for trailing EXPR, and we've no way to know which answer is relevant until the match has completed (even then, just checking if it's *a* full match is not really helpful as it may not be the longest full match available); need to give this more thought
-        if !self.isAFullMatch { fatalError("WARNING: called hasRightOperand on incomplete match: \(self)") }
+        // TO DO: we need this in order to distinguish self-terminating blocks (e.g. `do…done`) from non-self-terminating conjunctions (e.g. `if…then…(else…)?`); answer is to follow all branches to see if none/some/all end in EXPR and throw BadPattern exception if results are mixed (ideally these checks would be moved into glue generator and the generated glue annotated with metadata, avoiding need to analyze patterns at run-time)
+     //   if !self.isAFullMatch { print("WARNING: called hasRightOperand on incomplete match: \(self)") }
         return self.remainingPattern.first!.isExpression
     }
     
@@ -148,6 +151,35 @@ struct PatternMatch: CustomStringConvertible, Equatable {
     static func == (lhs: PatternMatch, rhs: PatternMatch) -> Bool {
         return lhs.uniqueID == rhs.uniqueID
     }
+    
+    //
+    
+    func reductionFor(stack: Parser.TokenStack) -> Token.Form? { // note: this reduces from end of stack (when reducing operators, the main stack is chopped into shorter sections, each corresponding to a single operation - clunky but it works for now)
+        
+        // reduce a single fully matched expression at head of stack to a single value
+        let endIndex = stack.count // end index is non-inclusive
+        let startIndex = endIndex - self.count
+        
+        if (self.hasLeftOperand && !self.matchedPattern[0].fullyMatch(stack[startIndex].form))
+            || (self.hasRightOperand && !self.remainingPattern[0].fullyMatch(stack[endIndex-1].form)) {
+            // check for unreduced left/right operand
+            print("Couldn't fully match:",
+                  (self.hasLeftOperand && !self.matchedPattern[0].fullyMatch(stack[startIndex].form)),
+                  (self.hasRightOperand && !self.remainingPattern[0].fullyMatch(stack[endIndex-1].form)))
+            stack.show()
+            return nil
+        }
+        
+        let result: Token.Form
+        do {
+            result = .value(try self.definition.reduce(stack, self, startIndex, endIndex))
+        } catch {
+            result = .error(error as? NativeError ?? InternalError(error))
+        }
+        //        print("REDUCED COMPLETED MATCH \(fullMatch) ➞ .\(result)")
+        return result
+    }
+
 }
 
 
