@@ -12,8 +12,14 @@ import Foundation
 
 func test() {
     
+  //  runScript(" 2 * foo +  5 / - 1 ")
     
-   //  runScript(" f x - 1") // TO DO: FIX: exception on unreduced command
+   runScript(" 2 * foo -1  / 4")
+    
+    
+    // runScript(" f x - (1+1)") // TO DO: FIX: exception on unreduced command
+    
+    return;
     
    // runScript(" if 1 then if 2 then 3 else 4 ") // TO DO: FIX: exception on unreduced `if` token 
     
@@ -58,7 +64,7 @@ func test() {
 
   //  runScript(" foo - 1  ")
     
-    // runScript("set a to: 2") // TO DO: this fails with unhelpful/misleading output: `set…to…` is defined as an operator, so incomplete `set…` match is discarded (with warning about reduction failure) and produces `a{to:3}` (error handling system may want to check for common mistakes, two of which are putting colons after conjunctions, and not putting colons after argument names); parser also needs to insert .error/BadSyntaxValue to cover any missing match ranges (TBH it may be better to capture the entire EXPR rather than parts of it: a relatively coarse error may be less helpful, but is also less likely to yield incorrect interpretations of the remaining tokens or misleading explanations of problem)
+    // runScript("set a to: 2") // TO DO: this fails with unhelpful/misleading output: `set…to…` is defined as an operator, so incomplete `set…` match is discarded (with warning about reduction failure) and produces `a{to:3}` (error handling system may want to check for common mistakes, two of which are putting colons after conjunctions, and not putting colons after argument names); parser also needs to insert .error/SyntaxErrorDescription to cover any missing match ranges (TBH it may be better to capture the entire EXPR rather than parts of it: a relatively coarse error may be less helpful, but is also less likely to yield incorrect interpretations of the remaining tokens or misleading explanations of problem)
 
  //   runScript(" if 1 then if 2 then 3 else 4 ") // TO DO: FIX: parser currently loses `if 1 then` portion with message “Missing first matcher[s] for 0...3” (it will also help if PP parenthesized `if 3…` operation to make clear which operation binds the `else 4` clause)
     

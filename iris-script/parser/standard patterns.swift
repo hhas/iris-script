@@ -2,7 +2,7 @@
 //  built-in patterns.swift
 //  iris-script
 //
-// special-purpose patterns hardcoded into the parser, used to match value literals and some commands; unlike library-defined operators (which are completely customizable), these patterns are part of the language’s core syntax and cannot be modified, overloaded, removed, or replaced
+// special-purpose patterns hardcoded into the parser, used to match value literals, nested commands, and pipe (.semicolon) operators; unlike library-defined operators (which are completely customizable), these patterns are part of the language’s core syntax and cannot be modified, overloaded, removed, or replaced
 
 
 import Foundation
@@ -14,6 +14,9 @@ import Foundation
 // caution: each time parser directly calls PatternDefinition.newMatches() on one of the definitions below, the returned matchers are assigned a new groupID; this means the hardcoded patterns in `literal patterns.swift` must not be overloaded, as the findLongestMatches() method relies on shared group IDs to prune multiple matches of the same tokens (this is does not apply to overloaded library-defined operators as those are stored in OperatorDefinitions instances, and OperatorDefinitions.newMatches() assigns a common group ID to all matchers)
 
 // TO DO: should kv-list and record patterns allow LF between colon and value? (the reducefunc does allow it so it’s a question of whether it aids or impairs legibility)
+
+// note: the challenge with pattern-matching commands is that 1. LP syntax is superset of standard `NAME EXPR` syntax, and 2. LP syntax should not nest (as that creates ambiguity over which command owns trailing labeled arguments, c.f. C’s “dangling else”); one more gotcha of LP syntax is when first arg is itself a record literal (i.e. that command must be written as `name {{…},…}` to distinguish the argument record of an FP command from a record literal to be passed as command’s direct argument. The requirement for this special-case syntax rule is an irritation; however, the advantages of LP syntax, particularly when using the language as a command shell (where typing commands many not incur too many additional keystrokes when compared to a traditional *nix CLI such as bash), are such that this compromise should be worth it, but it will have to be tested in real-world use to verify).
+
 
 
 let EXPR: Pattern = .expression
@@ -31,16 +34,10 @@ func M_BLOCK(_ start: Token.Form, _ item: Pattern, _ end: Token.Form) -> [Patter
             .token(end)]
 }
 
-// ordered list
+// lists
 
 let orderedListLiteral = PatternDefinition(name: "[…]", pattern: M_BLOCK(.startList, EXPR, .endList),
                                            autoReduce: true, reducer: reductionForOrderedListLiteral)
-
-
-
-// TO DO: might want to leave left side of colon pairs as .expression and have reduce funcs report error if it's not valid (this might allow reducing colon pairs down to Pair values)
-
-// keyed list
 
 let keyValueListLiteral = PatternDefinition(name: "[…:…]", pattern:
     [.token(.startList), .anyOf([
@@ -56,22 +53,19 @@ let recordLiteral = PatternDefinition(name: "{…}",
                                       autoReduce: true, reducer: reductionForRecordLiteral)
 
 
-// group/parenthesized block
+// group (parenthesized block)
 
 let groupLiteral = PatternDefinition(name: "(…)", pattern: M_BLOCK(.startGroup, EXPR, .endGroup),
                                      autoReduce: true, reducer: reductionForGroupLiteral)
 
 
-
-
 // command
 
-// note: the challenge with pattern-matching commands is that 1. LP syntax is superset of standard `NAME EXPR` syntax, and 2. LP syntax should not nest (as that creates ambiguity over which command owns trailing labeled arguments, c.f. C’s “dangling else”); one more gotcha of LP syntax is when first arg is itself a record literal (i.e. that command must be written as `name {{…},…}` to distinguish the argument record of an FP command from a record literal to be passed as command’s direct argument. The requirement for this special-case syntax rule is an irritation; however, the advantages of LP syntax, particularly when using the language as a command shell (where typing commands many not incur too many additional keystrokes when compared to a traditional *nix CLI such as bash), are such that this compromise should be worth it, but it will have to be tested in real-world use to verify).
-
-let nestedCommandLiteral = PatternDefinition(name: "«COMMAND»", pattern:
+let nestedCommandLiteral = PatternDefinition(name: "«NESTED_COMMAND»", pattern:
     [.name, .optional(.expression)], precedence: commandPrecedence, reducer: reductionForCommandLiteral)
 
 
+// pipe
 
 let pipeLiteralPrecedence: Precedence = 96 // TO DO: check that `;` doesn't need precedence or associativity: it should always delimit exprs in the same way that other built-in punctuation (comma, period, etc) do (for now though we keep the values it had in the old recursive descent parser)
 
@@ -79,3 +73,10 @@ let pipeLiteralPrecedence: Precedence = 96 // TO DO: check that `;` doesn't need
 let pipeLiteral = PatternDefinition(name: "«PIPE»", pattern: [EXPR, .token(.semicolon), SKIP_LF, EXPR],
                                     precedence: pipeLiteralPrecedence, reducer: reductionForPipeOperator)
 
+
+
+
+
+let nullPattern = PatternDefinition(name: "", pattern: [.keyword("")], reducer: { _,_,_,_ in fatalError() })
+
+let nullMatch = nullPattern.newMatches(groupID: -1)[0]

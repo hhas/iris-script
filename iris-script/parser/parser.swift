@@ -40,8 +40,7 @@ public class Parser {
     
     // TO DO: blockStack currently assumes that all quoted text has already been reduced to string/annotation atoms so does not track the starts and ends of string or annotation literals; this is true for whole-program parsing (which is what we're limited to for now) but not in the case of malformed programs or per-line parsing; eventually it should be able to track those too (with the additional caveats that string literal delimiters lack unambiguous handedness in addition to all blocks being able to span multiple lines, so per-line parsing requires at least two alternate parses: one that assumes start of line is outside quoted text and one that assumes it is inside, and keep tallies of % of code that is valid reductions vs no. of parse errors produced, as well as any string/annotation delimiters encountered which indicate a transition from one state to another [with a third caveat that annotation literals must also support nesting])
     var blockStack: BlockStack = [.script] // add/remove matchers for grouping punctuation and block operators as they’re encountered, along with conjunction matchers (the grouping matchers are added to mask the current conjunction matcher; e.g. given `tell (…to…) to …`, the `tell…to…` matcher should match the second `to`, not the first) // TO DO: should be private or private(set) (currently internal as reduction methods are in separate extension)
-    
-    
+        
     init(tokenStream: DocumentReader, operatorRegistry: OperatorRegistry) {
         self.current = tokenStream
         self.operatorRegistry = operatorRegistry
@@ -126,10 +125,10 @@ public class Parser {
                 // if the pattern contains one or more conjunctions (e.g. `then` and `else` keywords in `if…then…else…`) then push those onto blockStack so we can correctly balance nesting
                 if match.hasConjunction { newConjunctionMatches.add(match, endingAt: stopIndex) }
             } else if let previous = self.tokenStack.last, match.provisionallyMatches(form: previous.form) { // attempt to match the previous token (expr), followed by current token (opName); this allows new matchers to match infix/postfix operators (match starts on the token before .operatorName)
-                let matches = match.next().filter{ $0.fullyMatches(form: form) } // re-match the current token (operator); we have to do this to exclude conjunction keywords
+                let matches = match.next().filter{ $0.fullyMatches(form: form) } // re-match the current token (.operatorName); we have to do this to exclude conjunction keywords
                 if !matches.isEmpty {
-                    self.tokenStack.append(match: match) // infix/postfix operator starts on preceding (EXPR) token…
-                    currentMatches += matches // …matching keyword to current .operatorName token
+                    self.tokenStack[self.tokenStack.count - 1].matches.append(match) // preceding .expression
+                    currentMatches += matches // current .keyword
                     if match.hasConjunction { newConjunctionMatches.add(match, endingAt: stopIndex) }
                 }
             } // ignore any unsuccessful matches (e.g. a new infix operator matcher for which there was no left operand, or an .operatorName that’s a conjunction keyword for which there is no match already in progress)
@@ -149,10 +148,12 @@ public class Parser {
         if let longestMatch = fullMatches.max(by: { $0.count < $1.count }) {
            // print("\nAUTO-REDUCE:", longestMatch.definition.name.label)
             //print(fullMatches)
-            if self.tokenStack.reduce(fullMatch: longestMatch) {
+            if self.tokenStack.reduce(match: longestMatch) {
                 if case .operatorName(let d) = form, self.blockStack.blockMatches(for: d.name) != nil { // kludgy
                     self.blockStack.end(d.name)
                 }
+            } else {
+                print("WARNING: failed to auto-reduce at head of stack:", longestMatch) // not sure if part of normal behavior, syntax error, and/or bug
             }
             if fullMatches.count > 1 { // TO DO: what if there are 2 completed matches of same length? (there shouldn't be if patterns are well designed and don't conflict, but it's not enforced)
                 print("WARNING: discarding extra matches in", fullMatches.sorted{ $0.count < $1.count })
@@ -170,7 +171,7 @@ public class Parser {
     }
     
     func endBlock(for form: Parser.BlockInfo) throws {
-        try self.blockStack.end(form) // TO DO: what to do with error? (for now, we propagate it, but we should probably try to encapsulate as .error/BadSyntaxValue)
+        try self.blockStack.end(form) // TO DO: what to do with error? (for now, we propagate it, but we should probably try to encapsulate as .error/SyntaxErrorDescription)
         self.fullyReduceExpression() // ensure last expr in block is reduced to single .value // TO DO: check this as it's possible for last token in block to be a delimiter (e.g. comma and/or linebreak[s])
         self.shift() // shift the closing token onto stack; shift() will then autoreduce the block literal
     }
@@ -201,7 +202,7 @@ public class Parser {
                 self.reduceIfFullPunctuationCommand() // if top of stack is `NAME RECORD` then reduce it
             case .separator(let sep):
                 self.fullyReduceExpression() // reduce the preceding EXPR to a single .value
-                switch sep { // attach any caller-supplied debug hooks to the reduced value; TO DO: currently the above line may reduce to .value(BadSyntaxValue(…)), .error(…), or leave tokens unreduced; we should probably avoid attaching to anything except a successful .value(…) reduction (which will require fullyReduceExpression to return a success/failure flag)
+                switch sep { // attach any caller-supplied debug hooks to the reduced value; TO DO: currently the above line may reduce to .value(SyntaxErrorDescription(…)), .error(…), or leave tokens unreduced; we should probably avoid attaching to anything except a successful .value(…) reduction (which will require fullyReduceExpression to return a success/failure flag)
                 case .comma:
                     self.attachPunctuationHooks(using: self.handleComma)
                 case .period:
@@ -269,20 +270,20 @@ public class Parser {
             switch form {
             case .value(let value):
                 if wasValue {
-                    result.append(BadSyntaxValue("Found adjacent values (e.g. missing separator): `\(result.last!)` `\(value)`"))
+                    result.append(SyntaxErrorDescription("Found adjacent values (e.g. missing separator): `\(result.last!)` `\(value)`"))
                 }
                 result.append(value)
                 wasValue = true
             case .separator(let sep):
                 if !wasValue {
-                    result.append(BadSyntaxValue("Found adjacent punctuation (e.g. duplicate or misplaced): `\(sep)`"))
+                    result.append(SyntaxErrorDescription("Found adjacent punctuation (e.g. duplicate or misplaced): `\(sep)`"))
                 }
                 wasValue = false
                 skipLineBreaks(self.tokenStack, &i)
             case .lineBreak:
                 wasValue = false
             default:
-                result.append(BadSyntaxValue("Found unreduced token: .\(form)"))
+                result.append(SyntaxErrorDescription("Found unreduced token: .\(form)"))
                 wasValue = false
             }
             i += 1

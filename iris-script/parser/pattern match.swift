@@ -153,33 +153,29 @@ struct PatternMatch: CustomStringConvertible, Equatable {
     }
     
     //
-    
-    func reductionFor(stack: Parser.TokenStack) -> Token.Form? { // note: this reduces from end of stack (when reducing operators, the main stack is chopped into shorter sections, each corresponding to a single operation - clunky but it works for now)
-        
-        // reduce a single fully matched expression at head of stack to a single value
-        let endIndex = stack.count // end index is non-inclusive
-        let startIndex = endIndex - self.count
-        
-        if (self.hasLeftOperand && !self.matchedPattern[0].fullyMatch(stack[startIndex].form))
-            || (self.hasRightOperand && !self.remainingPattern[0].fullyMatch(stack[endIndex-1].form)) {
-            // check for unreduced left/right operand
-            print("Couldn't fully match:",
-                  (self.hasLeftOperand && !self.matchedPattern[0].fullyMatch(stack[startIndex].form)),
-                  (self.hasRightOperand && !self.remainingPattern[0].fullyMatch(stack[endIndex-1].form)))
-            stack.show()
+
+    func reductionFor(stack: Parser.TokenStack, startIndex: Int) -> Token.Form? { // calls operator definition's reduce func // called by reduce(match:…) funcs in `token stack.swift`
+     //   print("REDUCING", self)
+        let stopIndex = startIndex + self.count
+        // confirm operand[s] are reduced and match any special constraints specified by pattern
+        let isLeftFullyMatched = !self.hasLeftOperand || self.matchedPattern[0].fullyMatch(stack[startIndex].form)
+        let isRightFullyMatched = !self.hasRightOperand || self.remainingPattern[0].fullyMatch(stack[stopIndex-1].form)
+        if isLeftFullyMatched && isRightFullyMatched {
+            let result: Token.Form
+            do {
+                // TO DO: worth passing ArraySlice<TokenInfo> to ensure reducefuncs can't operate outside their scope?
+                result = .value(try self.definition.reduce(stack, self, startIndex, stopIndex))
+            } catch {
+                result = .error(error as? NativeError ?? InternalError(error))
+            }
+            //print("Full match for \(self.name) reduced to: .\(result)")
+            return result
+            
+        } else { // all operands should have been reduced prior to this function being called (if not, that’s a bug); however, we can’t check any .testValue(…) constraints until operator reductions are underway, so it’s still possible for a match to fail at this point due to a syntax error
+            print("Couldn't fully match operands for \(self.name):"); stack.show(startIndex, stopIndex); print()
             return nil
         }
-        
-        let result: Token.Form
-        do {
-            result = .value(try self.definition.reduce(stack, self, startIndex, endIndex))
-        } catch {
-            result = .error(error as? NativeError ?? InternalError(error))
-        }
-        //        print("REDUCED COMPLETED MATCH \(fullMatch) ➞ .\(result)")
-        return result
     }
-
 }
 
 

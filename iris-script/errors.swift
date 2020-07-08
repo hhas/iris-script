@@ -277,7 +277,7 @@ enum BadSyntax: NativeError { // while tokens containing invalid code are marked
 }
 
 
-class BadSyntaxValue: NativeError {
+class SyntaxErrorDescription: NativeError {
     
     var description: String {
         return "«Syntax Error: \(self.error)»"
