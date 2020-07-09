@@ -42,35 +42,31 @@ extension Array where Element == Parser.TokenInfo {
         return index+1 < self.count && self[index].hasLeadingWhitespace == self[index+1].hasLeadingWhitespace
     }
     
-    
-    // starting from end of a range of tokens, search backwards to find a left-hand expression delimiter; called by Parser.fullyReduceExpression()
-    // TO DO: when parsing exprs, what about remembering the index of each expr’s left-hand boundary, avoiding need to back-scan for it each time? (since exprs can be nested, this'd need another stack similar to blockStack) [this is low-priority as this implementation, while crude, does the job]
-    func findStartIndex(from startIndex: Int, to stopIndex: Int) -> Int { // start..<stop
-        // caution: when finding the start of a record field, the resulting range *includes* the field's `.label(NAME)`; e.g. when parsing `{foo: EXPR, EXPR, bar: EXPR}`, the indexes of the opening `{` and two `,` tokens are returned; leaving the caller to process `foo: EXPR` and `bar: EXPR`
-        if let i = self[startIndex..<stopIndex].lastIndex(where: { $0.form.isLeftExpressionDelimiter }) {
-            return i + 1 // `i` is the delimiter token; the current expression starts on the token after it
-        } else {
-            return startIndex
-        }
-    }
-    
     //
     
     
     fileprivate func longestFullMatch(at index: Int, stopIndex: Int, found: inout Set<Int>) -> (PatternMatch, Int)? {
         // first token should appear at index and last token before stopIndex
         // note: can't use isBeginningOfMatch as we've overwritten new matches with their full version, so keep set of already found IDs
-        assert(index<stopIndex)
+        print("longestFullMatch:", index, stopIndex)
+        assert(index < stopIndex)
+        
    //     if (self[index].matches.filter{ !found.contains($0.uniqueID) }.count > 1) {print("DEBUG: >1 match begins at \(index); will use longest.") //; self.show(index, index+1)}
         if let match = (self[index].matches.filter{ !found.contains($0.groupID) }.max{ $0.count < $1.count }) {
             found.insert(match.groupID)
-            //            print("Match:", index, match)
             let rightIndex = index + match.count - 1 // right index is INclusive
 //            print("longestFullMatch found \(match.name) match at \(index...rightIndex) (stop: \(stopIndex), stack: \(self.count)): \(match)");self.show();print()
-            if rightIndex > stopIndex { return nil }
+            if rightIndex > stopIndex {
+                print("longestFullMatch: end of match \(rightIndex) is outside range \(index..<stopIndex): \(match)")
+                return nil
+            }
             return (match, rightIndex)
-        } else { // end of EXPR (note: if returned index < stopIndex, assume syntax error)
-            //     print("No more matches at \(index)."); self.show(index, index+1)
+        } else { // end of EXPR
+            if index != stopIndex - 1 {
+                // TO DO: this smells
+                print("longestFullMatch: no matches at \(index). (stop: \(stopIndex), size: \(self.count))");
+                self.show(index, stopIndex)
+            }
             return nil
         }
         
@@ -156,6 +152,7 @@ extension Array where Element == Parser.TokenInfo {
                 self[startIndex].form = .value(SyntaxErrorDescription(error: e))
             default: ()
             }
+            return
         }
         // in a well-matched expression, the last token of one operation is also the first token of the next; thus to determine which full matches to reduce (longest first) and which to ignore (shorter matches overlapped by longer ones), we start from left edge of expression and jump from one boundary to the next until we reach the right edge, and the only thing we need to do along the way is compare adjoining operations’ precedence to determine which to reduce first
         // to prepare the expression’s tokens on the stack (which we treat as an array slice) for performing these reductions, and working from right to left, remove partial matches and move each full match from end to start of its range
@@ -192,13 +189,22 @@ extension Array where Element == Parser.TokenInfo {
             } else {
                 print("Missing last match in reduceOperatorExpression")
                 index = stopIndex // TO DO: this skips remaining matches in EXPR; should we increment index by 1 and keep looping?
-                result.append(.error(BadSyntax.missingExpression)) // TO DO: better error message
+   //             result.append(.error(BadSyntax.missingExpression)) // TO DO: better error message
             }
         }
         if result.count == 1 {
+            print()
+            print("Reducing operator EXPR \(startIndex..<stopIndex) to:", result)
+            self.show(startIndex, stopIndex)
+            print()
             self.replace(from: startIndex, to: stopIndex, withReduction: result[0])
         } else {
-            fatalError("TODO: return bad syntax value for: \(result)") // TO DO: reduce as SyntaxErrorDescription
+            print()
+            print("Couldn’t reduce \(startIndex..<stopIndex): \(result)") // TO DO: reduce as SyntaxErrorDescription
+            self.show(startIndex, stopIndex)
+            print()
+            print("WRONG!")
+            exit(5) // TO DO: FIX: `if 1 then do, 5 + 6, done else (-7 ÷ -8)` randomly fails
         }
         stopIndex = startIndex + 1
     }

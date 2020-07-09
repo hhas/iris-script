@@ -11,7 +11,9 @@ public class Parser {
     
     typealias Form = Token.Form
     
-    enum BlockInfo {
+    typealias BlockInfo = (start: Int, form: BlockType)
+    
+    enum BlockType {
         case conjunction(Conjunctions) // conjunctions with trailing expr (e.g. `then`)
         case block(Conjunctions) // conjunctions with terminating keyword (e.g. `done`)
         case list
@@ -39,7 +41,7 @@ public class Parser {
     var tokenStack = TokenStack() // TO DO: should be private or private(set) (currently internal as reduction methods are in separate extension)
     
     // TO DO: blockStack currently assumes that all quoted text has already been reduced to string/annotation atoms so does not track the starts and ends of string or annotation literals; this is true for whole-program parsing (which is what we're limited to for now) but not in the case of malformed programs or per-line parsing; eventually it should be able to track those too (with the additional caveats that string literal delimiters lack unambiguous handedness in addition to all blocks being able to span multiple lines, so per-line parsing requires at least two alternate parses: one that assumes start of line is outside quoted text and one that assumes it is inside, and keep tallies of % of code that is valid reductions vs no. of parse errors produced, as well as any string/annotation delimiters encountered which indicate a transition from one state to another [with a third caveat that annotation literals must also support nesting])
-    var blockStack: BlockStack = [.script] // add/remove matchers for grouping punctuation and block operators as they’re encountered, along with conjunction matchers (the grouping matchers are added to mask the current conjunction matcher; e.g. given `tell (…to…) to …`, the `tell…to…` matcher should match the second `to`, not the first) // TO DO: should be private or private(set) (currently internal as reduction methods are in separate extension)
+    var blockStack: BlockStack = [(-1, .script)] // add/remove matchers for grouping punctuation and block operators as they’re encountered, along with conjunction matchers (the grouping matchers are added to mask the current conjunction matcher; e.g. given `tell (…to…) to …`, the `tell…to…` matcher should match the second `to`, not the first) // TO DO: should be private or private(set) (currently internal as reduction methods are in separate extension)
         
     init(tokenStream: DocumentReader, operatorRegistry: OperatorRegistry) {
         self.current = tokenStream
@@ -123,13 +125,13 @@ public class Parser {
             if match.provisionallyMatches(form: form) { // attempt to match first pattern to the current token; this allows new matchers to match atom/prefix operators (the first pattern is a .keyword and the current token is an .operatorName of the same name)
                 currentMatches.append(match)
                 // if the pattern contains one or more conjunctions (e.g. `then` and `else` keywords in `if…then…else…`) then push those onto blockStack so we can correctly balance nesting
-                if match.hasConjunction { newConjunctionMatches.add(match, endingAt: stopIndex) }
+                if match.hasConjunction { newConjunctionMatches.addPartialMatch(match, currentlyEndingAt: stopIndex) }
             } else if let previous = self.tokenStack.last, match.provisionallyMatches(form: previous.form) { // attempt to match the previous token (expr), followed by current token (opName); this allows new matchers to match infix/postfix operators (match starts on the token before .operatorName)
                 let matches = match.next().filter{ $0.fullyMatches(form: form) } // re-match the current token (.operatorName); we have to do this to exclude conjunction keywords
                 if !matches.isEmpty {
                     self.tokenStack[self.tokenStack.count - 1].matches.append(match) // preceding .expression
                     currentMatches += matches // current .keyword
-                    if match.hasConjunction { newConjunctionMatches.add(match, endingAt: stopIndex) }
+                    if match.hasConjunction { newConjunctionMatches.addPartialMatch(match, currentlyEndingAt: stopIndex) }
                 }
             } // ignore any unsuccessful matches (e.g. a new infix operator matcher for which there was no left operand, or an .operatorName that’s a conjunction keyword for which there is no match already in progress)
         }
@@ -165,13 +167,15 @@ public class Parser {
     
     // start and end block-type structures (lists, records, groups) // TO DO: what about keyword blocks, e.g. `do…done`? and what about operators containing conjunctions?
     
-    func startBlock(for form: Parser.BlockInfo, adding matchers: [PatternMatch]) {
-        self.blockStack.begin(form) // track nested blocks on a secondary stack
+    var currentIndex: Int { return self.tokenStack.count - 1 }
+    
+    func startBlock(for form: Parser.BlockType, adding matchers: [PatternMatch]) {
+        self.blockStack.begin(form, at: self.currentIndex) // track nested blocks on a secondary stack
         self.shift(adding: matchers) // shift the opening token onto stack, attaching one or more pattern matchers to it
     }
     
-    func endBlock(for form: Parser.BlockInfo) throws {
-        try self.blockStack.end(form) // TO DO: what to do with error? (for now, we propagate it, but we should probably try to encapsulate as .error/SyntaxErrorDescription)
+    func endBlock(for form: Parser.BlockType) throws {
+        try self.blockStack.end(form, at: self.currentIndex) // TO DO: what to do with error? (for now, we propagate it, but we should probably try to encapsulate as .error/SyntaxErrorDescription)
         self.fullyReduceExpression() // ensure last expr in block is reduced to single .value // TO DO: check this as it's possible for last token in block to be a delimiter (e.g. comma and/or linebreak[s])
         self.shift() // shift the closing token onto stack; shift() will then autoreduce the block literal
     }
@@ -201,7 +205,7 @@ public class Parser {
                 try self.endBlock(for: .record)
                 self.reduceIfFullPunctuationCommand() // if top of stack is `NAME RECORD` then reduce it
             case .separator(let sep):
-                self.fullyReduceExpression() // reduce the preceding EXPR to a single .value
+                self.reduceIfPrecedingExpression() // reduce the preceding EXPR to a single .value
                 switch sep { // attach any caller-supplied debug hooks to the reduced value; TO DO: currently the above line may reduce to .value(SyntaxErrorDescription(…)), .error(…), or leave tokens unreduced; we should probably avoid attaching to anything except a successful .value(…) reduction (which will require fullyReduceExpression to return a success/failure flag)
                 case .comma:
                     self.attachPunctuationHooks(using: self.handleComma)
@@ -215,7 +219,7 @@ public class Parser {
                 self.shift() // shift the punctuation onto stack
                 
             case .lineBreak:
-                self.fullyReduceExpression() // reduce the preceding EXPR to a single .value
+                self.reduceIfPrecedingExpression() // reduce the preceding EXPR to a single .value
                 self.shift() // shift the linebreak onto stack
                 
             case .unquotedName(let name), .quotedName(let name): // command name or record label
@@ -249,7 +253,7 @@ public class Parser {
             self.advance()
         }
         //self.tokenStack.show()
-        self.fullyReduceExpression() // TO DO: do we need a final cleanup?
+        self.reduceIfPrecedingExpression() // TO DO: do we need a final cleanup?
         return self.reductionForTopLevelExpressions() // top-level is basically a block without delimiters
     }
     
@@ -289,7 +293,7 @@ public class Parser {
             i += 1
         }
         // TO DO: need error tally; in theory script should be [partially] runnable even with [some?] syntax errors, but problematic sections need marked and script should run in debug mode only with extra guards around anything IO (what about unmatched operators? can we infer where an opname is accidentally used where quoted name is needed [i.e. user needs to resolve naming conflict] vs an opname that has incorrect operands [user needs to fix operands]; how do we represent such unresolved syntax errors as Values [again, allowing other code to execute at least in debug mode])
-        guard case .script = self.blockStack.last else {
+        guard case .script = self.blockStack.last?.form else {
             print("Unremoved block matchers:", self.blockStack)
             return ScriptAST(result)
             //throw BadSyntax.missingExpression
