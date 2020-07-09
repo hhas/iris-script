@@ -118,30 +118,26 @@ public class Parser {
         }
         // match new prefix/infix operator definitions to current or previous+current tokens; this back-matches by up to 1 token in the event the operator pattern starts with an EXPR followed by the operator itself (note: this does not match conjunctions as those should be at least two tokens ahead of the primary operator name)
         // important: this only handles the first conjunction in a pattern; subsequent conjunctions in the same pattern will be handled by reduceExpressionBeforeConjunction()
-        var newConjunctionMatches = Conjunctions() // newly started matchers that are awaiting a conjunction keyword in order to complete their current EXPR match
+        var newConjunctionMatches = [PatternMatch]() // newly started matchers that are awaiting a conjunction keyword in order to complete their current EXPR match
         let stopIndex = self.tokenStack.count // after shifting, this is the index at which conjunction matches matched the operator name
         for match in newMatches {
             assert(match.isAtBeginningOfMatch)
             if match.provisionallyMatches(form: form) { // attempt to match first pattern to the current token; this allows new matchers to match atom/prefix operators (the first pattern is a .keyword and the current token is an .operatorName of the same name)
                 currentMatches.append(match)
                 // if the pattern contains one or more conjunctions (e.g. `then` and `else` keywords in `if…then…else…`) then push those onto blockStack so we can correctly balance nesting
-                if match.hasConjunction { newConjunctionMatches.addPartialMatch(match, currentlyEndingAt: stopIndex) }
+                if match.hasConjunction { newConjunctionMatches.append(match) }
             } else if let previous = self.tokenStack.last, match.provisionallyMatches(form: previous.form) { // attempt to match the previous token (expr), followed by current token (opName); this allows new matchers to match infix/postfix operators (match starts on the token before .operatorName)
                 let matches = match.next().filter{ $0.fullyMatches(form: form) } // re-match the current token (.operatorName); we have to do this to exclude conjunction keywords
                 if !matches.isEmpty {
                     self.tokenStack[self.tokenStack.count - 1].matches.append(match) // preceding .expression
                     currentMatches += matches // current .keyword
-                    if match.hasConjunction { newConjunctionMatches.addPartialMatch(match, currentlyEndingAt: stopIndex) }
+                    if match.hasConjunction { newConjunctionMatches.append(match) }
                 }
             } // ignore any unsuccessful matches (e.g. a new infix operator matcher for which there was no left operand, or an .operatorName that’s a conjunction keyword for which there is no match already in progress)
         }
         if !newConjunctionMatches.isEmpty {
             //print("newConjunctionMatches =", newConjunctionMatches)
-            for (name, matches) in newConjunctionMatches {
-                for (match, stopIndex) in matches {
-                    self.blockStack.begin([match], for: name, from: stopIndex)
-                }
-            }
+            self.blockStack.awaitConjunction(for: newConjunctionMatches, at: stopIndex)
         }
         // push the current token and its matches (if any) onto stack
         self.tokenStack.append((form, currentMatches, self.current.token.hasLeadingWhitespace))
@@ -233,6 +229,7 @@ public class Parser {
             case .operatorName(let definitions):
                 // called by parser's main loop when an .operatorName(…) token is encountered
                 let name = Symbol(self.current.token.content)
+              //  print(".OP", definitions.name); self.blockStack.show()
                 if case .colon = self.current.next().token.form { // `NAME COLON` is reduced to .label(NAME) same as above
                     self.shiftLabel(named: name)
                 } else if let matches = self.blockStack.conjunctionMatches(for: name) { // conjunction keywords are greedily matched, e.g. given the expression `tell foo to bar`, the `to` keyword is immediately claimed by the in-progress `tell…to…` matcher so a new prefix `to…` matcher is not created

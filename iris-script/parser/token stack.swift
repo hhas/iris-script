@@ -24,8 +24,8 @@ extension Array where Element == Parser.TokenInfo {
     
     func dump(_ startIndex: Int = 0, _ stopIndex: Int? = nil) -> String { // startIndex..<stopIndex
         let stopIndex = stopIndex ?? self.count
-        return "Stack[\(startIndex)..<\(stopIndex)]:\n" + self[startIndex..<(stopIndex)].map{
-            "\t.\($0.form) \($0.matches.map{ "\n\t\t\t\t\($0)" }.joined(separator: ""))"
+        return "Stack[\(startIndex)..<\(stopIndex)]:\n"
+            + self[startIndex..<(stopIndex)].enumerated().map{"\($0))\t.\($1.form) \($1.matches.map{ "\n\t\t\t\t\($0)"}.joined(separator: ""))"
         }.joined(separator: "\n")
     }
     
@@ -48,7 +48,7 @@ extension Array where Element == Parser.TokenInfo {
     fileprivate func longestFullMatch(at index: Int, stopIndex: Int, found: inout Set<Int>) -> (PatternMatch, Int)? {
         // first token should appear at index and last token before stopIndex
         // note: can't use isBeginningOfMatch as we've overwritten new matches with their full version, so keep set of already found IDs
-        print("longestFullMatch:", index, stopIndex)
+        //print("longestFullMatch:", index, stopIndex)
         assert(index < stopIndex)
         
    //     if (self[index].matches.filter{ !found.contains($0.uniqueID) }.count > 1) {print("DEBUG: >1 match begins at \(index); will use longest.") //; self.show(index, index+1)}
@@ -78,7 +78,7 @@ extension Array where Element == Parser.TokenInfo {
         assert(startIndex + match.count <= self.count)
         guard let form = match.reductionFor(stack: self, startIndex: startIndex) else {
             // TO DO: what should we do here? return success flag/throw on failure? caller could see if there are any other full matches it can use, or else give up and encapsulate the problem in a SyntaxErrorDescription; see also below reduce(match:) method, which returns a flag (though an error might be more appropriate, given the need to break out of the recursive `reduce(_:from:to:stopIndex:found:)` method below)
-            fatalError("Provisional `\(match.name)` match succeeded but exact match failed at \(startIndex): \n\(self[startIndex])\n\n")
+            fatalError("TODO: this needs to output a Syntax Error: Provisional `\(match.name)` match succeeded but exact match failed at \(startIndex): \n\(self[startIndex])\n\n")
         }
         let rightIndex = startIndex + match.count - 1
         self[startIndex].form = form
@@ -156,7 +156,6 @@ extension Array where Element == Parser.TokenInfo {
         }
         // in a well-matched expression, the last token of one operation is also the first token of the next; thus to determine which full matches to reduce (longest first) and which to ignore (shorter matches overlapped by longer ones), we start from left edge of expression and jump from one boundary to the next until we reach the right edge, and the only thing we need to do along the way is compare adjoining operations’ precedence to determine which to reduce first
         // to prepare the expression’s tokens on the stack (which we treat as an array slice) for performing these reductions, and working from right to left, remove partial matches and move each full match from end to start of its range
-        //self.show(startIndex, stopIndex); print()
         var previousMatches = [(count: Int, pattern: PatternMatch)]()
         var index = stopIndex - 1
         while index >= startIndex {
@@ -174,6 +173,9 @@ extension Array where Element == Parser.TokenInfo {
             }
             index -= 1
         }
+       // print("---------", startIndex..<stopIndex); self.show(); print()
+        //exit(1)
+        
         // now, working from left to right and jumping from expression boundary to expression boundary, recursively search for the highest precedence expression and reduce that first, followed by next highest, and so on
         // to avoid shortening the stack after every reduction (more expensive and liable to off-by-one bugs), we replace the first _and_ last tokens of each operation with its reduction; once all reductions have been applied, the entire range is replaced with the final .value and stopIndex updated to reflect the reduced token range’s new length (1)
         index = startIndex
@@ -193,18 +195,13 @@ extension Array where Element == Parser.TokenInfo {
             }
         }
         if result.count == 1 {
-            print()
-            print("Reducing operator EXPR \(startIndex..<stopIndex) to:", result)
-            self.show(startIndex, stopIndex)
-            print()
+          //  print("\nReducing operator EXPR \(startIndex..<stopIndex) to:", result); self.show(startIndex, stopIndex);print()
             self.replace(from: startIndex, to: stopIndex, withReduction: result[0])
         } else {
-            print()
             print("Couldn’t reduce \(startIndex..<stopIndex): \(result)") // TO DO: reduce as SyntaxErrorDescription
-            self.show(startIndex, stopIndex)
-            print()
-            print("WRONG!")
-            exit(5) // TO DO: FIX: `if 1 then do, 5 + 6, done else (-7 ÷ -8)` randomly fails
+            self.show(startIndex, stopIndex); print()
+            result.append(.error(InternalError(description: "reduceOperatorExpression: reduction error")))
+            exit(5) // DEBUG
         }
         stopIndex = startIndex + 1
     }

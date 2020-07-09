@@ -12,10 +12,10 @@ import Foundation
 
 func test() {
     
-    
+    // TO DO: minor(?) bug in pattern matching parensed group as it appears to have two full matches of which only one is correct: “WARNING: discarding extra matches in shift(): [«match `(…)` U66 O6 G5: (.startGroup EXPR) .endGroup ()✔︎ 0», «match `(…)` U69 O6 G5: (.startGroup LF) .endGroup ()✔︎ 0»]”
     runScript(" if 1 then do, 5 + 6, done else (-7 ÷ -8) ")
 
-    return;
+  //  return;
     
     runScript(" 2 * foo +  5 / - 1 ")
     
@@ -57,7 +57,7 @@ func test() {
     
   //  return;
     
-    runScript(" if -1 * 2 + -3 = -4 then 5 + 6 else -7 ÷ -8 ");
+   // runScript(" if -1 * 2 + -3 = -4 then 5 + 6 else -7 ÷ -8 "); // TO DO: this needs to generate a syntax error as `5+6` terminates the operator (since infix `+` is lower precedence than `if`); TO DO: need to decide which operators should bind tighter than flow control (e.g. user intent is pretty obvious here; it gets thorny when commands are also introduced, but we need to find a reasonable balance)
     
     runScript("tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}.")
     
@@ -262,7 +262,7 @@ func test() {
 
     runScript(" 1 + 2 * 3 = 4 ")
 
-    runScript(" if -1 * 2 + -3 = -4 then 5 + 6 else -7 ÷ -8 ")
+    //runScript(" if -1 * 2 + -3 = -4 then 5 + 6 else -7 ÷ -8 ")
     
         // full punctuation command syntax
 

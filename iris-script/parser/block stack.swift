@@ -6,12 +6,33 @@
 
 import Foundation
 
+/*
+ 
+ BAD:
+ 
+ Block Stack:
+ .(start: -1, form: iris_script.Parser.BlockType.script)
+ .(start: 0, form: iris_script.Parser.BlockType.conjunction([#‘then’: [(match: «match `if…then……` U1 O1 G1: () ‘if’ (EXPR ‘then’ EXPR (‘else’ EXPR)?) 104», end: 0)]]))
+ .(start: 0, form: iris_script.Parser.BlockType.conjunction([#‘else’: [(match: «match `if…then……` U1 O1 G1: () ‘if’ (EXPR ‘then’ EXPR (‘else’ EXPR)?) 104», end: 0)]]))
+
+ OK:
+ 
+ Block Stack:
+ .(start: -1, form: iris_script.Parser.BlockType.script)
+ .(start: 0, form: iris_script.Parser.BlockType.conjunction([#‘else’: [(match: «match `if…then……` U1 O1 G1: () ‘if’ (EXPR ‘then’ EXPR (‘else’ EXPR)?) 104», end: 0)]]))
+ .(start: 0, form: iris_script.Parser.BlockType.conjunction([#‘then’: [(match: «match `if…then……` U1 O1 G1: () ‘if’ (EXPR ‘then’ EXPR (‘else’ EXPR)?) 104», end: 0)]]))
+ 
+ 
+ */
+
 
 extension Parser {
     
-    typealias ConjunctionMatches = [(match: PatternMatch, end: Int)]
+    
+    
+    typealias ConjunctionMatches = [(match: PatternMatch, keywordIndex: Int)]
 
-    typealias Conjunctions = [Symbol: ConjunctionMatches]
+    typealias Conjunctions = [Symbol: ConjunctionMatches] // [the operator name (conjunction) to look for (if the pattern defines aliases for this operator name, the matches are stored under those names too): all in-progress matches that use this name as a conjunction]
 }
 
 
@@ -51,19 +72,24 @@ extension Parser.BlockStack {
         }
     }
     
-    mutating func begin(_ matches: [PatternMatch], for name: Symbol, from index: Int) {
-        // name is the conjunction/block terminator keyword; index is the index at which the conjunction keyword appears
+    mutating func awaitConjunction(for matches: [PatternMatch], at index: Int) {
+        // name is the conjunction/block terminator keyword; index is the index at which the previous keyword appears; once the conjunction keyword is found, everything between those keywords is reduced to a single expression, e.g. given `if TEST then EXPR1 else EXPR2`, upon encountering `if` at index 0, the parser's main loop calls awaitConjunction(…) passing it the `if… operator’s in-progress match; a .conjunction entry is added to block stack that awaits an `then` or `else` keyword; when the parser's main loop calls conjunctionMatches(…) with one of those names, the `if…` operator’s in-progress match[es] are removed from block stack and returned, triggering a reduction of the TEST expression, followed by the addition of a new .conjunction entry to await the [optional] `else` keyword
         var conjunctions = Parser.Conjunctions()
         var blocks = Parser.Conjunctions()
         for match in matches {
             if !match.definition.hasRightOperand { // TO DO: this is kludgy: we need to know if keyword terminates a block or is conjunction before trailing operand; for now we assume anything without a right operand is an auto-reducing block with no intermediate conjunctions
-                blocks[name] = [(match, index)]
+                for name in match.conjunctions {
+                    blocks[name] = [(match, index)]
+                }
             } else {
-                conjunctions[name] = [(match, index)]
+                for name in match.conjunctions {
+                    conjunctions[name] = [(match, index)]
+                }
             }
         }
         if !conjunctions.isEmpty && !blocks.isEmpty {
-            print("WARNING: \(name) keyword is both a block terminator and conjunction.")
+            // TO DO: what to do here? (need to figure out a test case first; once we understand the behavior, we can decide whether to fatalError here or, if not, which should take priority: conjunction or block?; either way, operator glue generator needs to check for conflicting patterns within a given library and deal with appropriately; Q. should each library include lookup tables that can be used at import-time to cross-check multiple unrelated libraries for any operator arity and keyword usage conflicts; a simple Set<Symbol> intersection should be sufficient to confirm no overloaded keywords - if a keyword is overloaded, additional checks can then be made, e.g. a linereader may be inserted to detect problem keywords in source code, flagging any found as .error)
+            print("WARNING: conflicting matches use a keyword as both a block terminator and a conjunction. \(matches)")
         }
         // operators cannot span multiple sub-exprs, so any unmatched conjunctions will be discarded when end of expr is reached
         if !conjunctions.isEmpty { self.begin(.conjunction(conjunctions), at: index) }
@@ -109,19 +135,5 @@ extension Parser.BlockStack {
     var leftDelimiterIndex: Int { return self.last?.start ?? -1 }
 }
 
-//
 
-
-extension Parser.Conjunctions {
-
-    mutating func addPartialMatch(_ match: PatternMatch, currentlyEndingAt index: Int) { // index = keyword preceding the expression that will be read once the conjunction keyword is found, e.g. given `if 1 = 2 then 3 else 4`, `index` is first 0 (identifying the `if` keyword, when searching for `then`) then 2 (the `then` keyword, when searching for `else`, once the `1 = 2` expression has been reduced to a single .value)
-        for name in match.conjunctions { // this adds a lookup for the conjunction's canonical name _and_ any aliases
-            if self[name] == nil {
-                self[name] = [(match, index)]
-            } else {
-                self[name]!.append((match, index))
-            }
-        }
-    }
-}
 

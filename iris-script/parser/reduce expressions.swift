@@ -42,7 +42,7 @@ extension Parser {
         // reduce the preceding EXPR
         let startIndex = precedingKeywordIndex + 1
         let stopIndex = self.tokenStack.count
-        print("Reducing EXPR before conjunction \(name) at \(startIndex)..<\(stopIndex)")
+       // print("Reducing EXPR before conjunction \(name) at \(startIndex)..<\(stopIndex)")
         self.fullyReduceExpression(from: startIndex, to: stopIndex) // start..<stop
         // TO DO: now the reduced EXPR is on stack, we ought to fully match it to be sure [but this applies to pattern-driven reductions in general]
         self.shift() // shift the conjunction onto stack (note: this does not add remaining conjunctions to blockStack; that is done below) // TO DO: should it? the logic should be similar for new and in-progress matches
@@ -50,7 +50,7 @@ extension Parser {
         let remainingConjunctions = self.tokenStack.last!.matches.filter{$0.originID == parentMatch.originID}.flatMap{$0.next()}.filter{!$0.conjunctions.isEmpty} // get matchers for token after newly-shifted conjunction (if any) to see if there further conjunctions still to match (e.g. `if…then…else…` operator has two conjunctions to match, the second of which is optional)
         if !remainingConjunctions.isEmpty {
             let stopIndex = self.tokenStack.count
-            self.blockStack.begin(remainingConjunctions, for: name, from: stopIndex)
+            self.blockStack.awaitConjunction(for: remainingConjunctions, at: stopIndex)
         }
     }
     
