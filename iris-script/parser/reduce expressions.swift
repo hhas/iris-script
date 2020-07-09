@@ -56,23 +56,26 @@ extension Parser {
     
     
     
-    func fullyReduceExpression(from _startIndex: Int = 0, to stopIndex: Int? = nil) { // starting point for reductions called by main loop
+    func fullyReduceExpression(from startIndex: Int = 0, to stopIndex: Int? = nil) { // starting point for reductions called by main loop
         var stopIndex = stopIndex ?? self.tokenStack.count // caution: stopIndex is nearest head of stack, so will no longer be valid once a reduction is performed // TO DO: return new stopIndex via inout?
         // scan back from stopIndex until an expression delimiter is found or original startIndex is reached; that then becomes the startIndex for findLongestMatches // TO DO: is this still needed? currently when fullyReduceExpression is called, how is the _startIndex argument determined?
-        var startIndex = self.tokenStack.findStartIndex(from: _startIndex, to: stopIndex)
+        var expressionStartIndex = self.tokenStack.findStartIndex(from: startIndex, to: stopIndex)
+        
+        // TO DO: FIX: `… do DELIM` sequence causes parser's main loop to call fullyReduceExpression on comma; however, the search needs to stop on `do` as left delimiter (currently it overshoots, causing the preceding expression to be [incorrectly] reduced before its right-hand `do…done` operand has been reduced, which [correctly] fails)
+        
         //  print("…found startIndex", startIndex)
        // print("fullyReduceExpression:"); self.tokenStack.show(startIndex, stopIndex)
         
-        if startIndex == stopIndex { return } // zero length, e.g. `[ ]`
+        if expressionStartIndex == stopIndex { return } // zero length, e.g. `[ ]`
         
         // if the token range starts with a label, stop over it and only reduce the expr after it; this is kludgy, but hopefully it addresses the issue well enough to proceed as `LABEL EXPR` should only [currently?] arise in two places: after an LP command name and in a record field, and in first case we want findStartIndex to skip over labels (which are always preceded by at least one token) while in the second the label, if present, is always the first token in found range (which is what the next line ignores), and the record literal’s reducefunc eventually takes care of it // TO DO: if we allow `LABEL EXPR` for name-value bindings in blocks, how will this affect parsing/matching
-        if startIndex < stopIndex, case .label(_) = self.tokenStack[startIndex].form {
-            startIndex += 1
+        if expressionStartIndex < stopIndex, case .label(_) = self.tokenStack[expressionStartIndex].form {
+            expressionStartIndex += 1
         }
         
         // reduce all commands within the specified range in-place, decrementing stopIndex on return by the number of tokens removed during this reduction
         // (note that nested commands are not immediately reduced here but are instead tagged with matchers that will reduce them during reductionForOperatorExpression() as if they were atom/prefix operators of predetermined precedence; also note that full-punctuation commands, i.e. `NAME RECORD`, have already been reduced to .value(Command(…)) by the parser's main loop so are not touched again here)
-        self.reduceCommandExpressions(from: startIndex, to: &stopIndex)
+        self.reduceCommandExpressions(from: expressionStartIndex, to: &stopIndex)
         // once all commands’ boundaries have been determined and the commands themselves reduced to .values, reduce all operators
         
         
@@ -81,7 +84,7 @@ extension Parser {
         self.blockStack.endConjunctions() // discard any pending conjunctions, e.g. given `if TEST then ACTION.`, this will discard the `else` clause upon encountering period delimiter; note that if an operator has >1 conjunction, reduceExpressionBeforeConjunction() will add a new entry to blockStack after it’s shifted the first conjunction
         
         //   print("<<<",self.blockStack)
-        self.tokenStack.reduceOperatorExpression(from: startIndex, to: &stopIndex)
+        self.tokenStack.reduceOperatorExpression(from: expressionStartIndex, to: &stopIndex)
           // print("REDUCED OPERATOR:"); self.tokenStack.show(startIndex); print("…TO: .\(form)\n\n----\n\n")
     }
     

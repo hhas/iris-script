@@ -156,7 +156,7 @@ public class Parser {
                 print("WARNING: failed to auto-reduce at head of stack:", longestMatch) // not sure if part of normal behavior, syntax error, and/or bug
             }
             if fullMatches.count > 1 { // TO DO: what if there are 2 completed matches of same length? (there shouldn't be if patterns are well designed and don't conflict, but it's not enforced)
-                print("WARNING: discarding extra matches in", fullMatches.sorted{ $0.count < $1.count })
+                print("WARNING: discarding extra matches in shift():", fullMatches.sorted{ $0.count < $1.count })
             }
         }
    //     print("…SHIFTED. new head:", self.tokenStack.last!)

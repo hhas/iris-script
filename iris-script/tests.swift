@@ -12,14 +12,19 @@ import Foundation
 
 func test() {
     
-  //  runScript(" 2 * foo +  5 / - 1 ")
+    
+    runScript(" if 1 then do, 5 + 6, done else (-7 ÷ -8) ")
+
+    return;
+    
+    runScript(" 2 * foo +  5 / - 1 ")
     
    runScript(" 2 * foo -1  / 4")
     
     
-    // runScript(" f x - (1+1)") // TO DO: FIX: exception on unreduced command
+     runScript(" f x - (1+1)") // TO DO: FIX: exception on unreduced command
     
-    return;
+    //return;
     
    // runScript(" if 1 then if 2 then 3 else 4 ") // TO DO: FIX: exception on unreduced `if` token 
     

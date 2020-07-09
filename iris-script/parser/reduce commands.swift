@@ -50,11 +50,11 @@ extension Parser {
         // (note that because LP commands are self-delimiting on left side but not right, we must read commands left-to-right in order to determine what is an outer command vs nested command; additionally, we have to identify the start and end of each LP command and its arity before we can start to reduce operators by precedence; hence the departure from the usual right-to-left matching and reduction of a shift-reduce parser, which always operates from the head of the stack)
         //      print("Found command name:", commandName, "at:", startIndex)
         // note: where the command name is followed by a record literal, the command *always* binds the record as FP argument syntax; if that record is followed by a label that should be treated as a syntax error (i.e. if the direct argument to a command is itself a record literal, either use FP syntax or wrap the record in parens to disambiguate; while there isn't a way around this limitation, in practical use a post-parse linter should be  able to look up or guess most commands’ handlers and compare argument labels and types to detect many (though not all) likely syntax errors of this type and suggest corrections)
-        print("READ COMMAND", commandName)
+       // print("READ COMMAND", commandName)
         var index = startIndex + 1 // start index is initially the command name, so step over that and look for a direct argument, e.g. `foo 1 …`
         if index == stopIndex {
             self.tokenStack[startIndex].form = .value(Command(commandName))
-            print("…No arguments.")
+            //print("…No arguments.")
             return
         } // command *cannot* have any arguments, so return now
         var arguments = [Command.Argument]()
@@ -62,38 +62,38 @@ extension Parser {
         if case .label(let name) = self.tokenStack[index].form { // command has no direct argument, e.g. `foo bar: expr …`
             index += 1 // step over label to the argument expression
             argumentLabel = name
-                  print("…No direct argument")
+            //print("…No direct argument")
         } else if case .operatorName(let d) = self.tokenStack[index].form, d.hasInfixForms { // command name is immediately followed by an infix/postfix operator, which *may* terminate it// if the operator _also_ has a prefix form it could be meant as part of direct argument, so analyze its surrounding whitespace to determine if operator is prefix (argument) or infix/postfix (terminator); e.g. given `-` operator which has both prefix and infix forms:
                 // `foo - 1` and `foo-1` are parsed as infix, with `foo` and `1` as operands to `-`
                 // `foo -1` is parsed as prefix, with `-1` as argument to `foo`
                 // TO DO: `foo- 1` is for now also treated as prefix, but this isn't ideal as we can't be sure if malformed `A- B` is due to transposition of operator and space or to omission/addition of one space; however, it'll do for now and once we implement PP we can decide how to handle going forward (e.g. since Command is directly annotatable, one option might be to attach a SyntaxWarning to that to draw user's attention to our auto-correction)
-            print("Determine if ambiguous `(d.name) operator in `\(commandName) \(d.name) …` is prefix or infix/postfix")
-            print("…has balanced whitespace:", self.tokenStack.hasBalancedWhitespace(at: index))
+          //  print("Determine if ambiguous `(d.name) operator in `\(commandName) \(d.name) …` is prefix or infix/postfix")
+          //  print("…has balanced whitespace:", self.tokenStack.hasBalancedWhitespace(at: index))
             if !d.hasPrefixForms || self.tokenStack.hasBalancedWhitespace(at: index) {
                 // an infix/postfix-only operator *must* terminate arg-less command
                 // an ambiguous operator that has balanced whitespace is treated as infix
                 self.tokenStack[startIndex].form = .value(Command(commandName))
                 stopIndex = startIndex + 1
-                print("…no argument.")
+              //  print("…no argument.")
                 return
             } // else operator is part of direct argument
             else {
-                print("…has direct argument…")
+             //   print("…has direct argument…")
             }
         } else {
-            print("ARGUMENT: \(self.tokenStack[index].form)")
+           // print("ARGUMENT: \(self.tokenStack[index].form)")
         }
         var argumentExpressionStartIndex = index
-        print("Begin reading argument[s] at", index, stopIndex)
+      //  print("Begin reading argument[s] at", index, stopIndex)
         // now find start and end of each argument expression, which may be delimited by lower-precedence operators, next argument label, or the main expression’s stopIndex (e.g. linebreaks, closing parens, conjunctions)
         argumentLoop: while index < stopIndex {
             let form = self.tokenStack[index].form
-            print("Reading argument token at \(index):", form)
+        //    print("Reading argument token at \(index):", form)
             switch form {
             case .unquotedName(_), .quotedName(_): // nested commands will be treated as atom/prefix operator patterns when argument expression is reduced (i.e. precedence should be handled automatically)
                 //         print("…found nested command: \(form.asCommandName()!)")
                 
-                print("…FOUND NESTED COMMAND at \(index): .\(form)")
+             //   print("…FOUND NESTED COMMAND at \(index): .\(form)")
                 
                 self.matchNestedCommand(from: index, to: stopIndex)
             case .label(let name): // a label always terminates the previous LP argument/nested command, so reduce the preceding argument expression…
@@ -152,24 +152,22 @@ extension Parser {
             }
             index += 1 // advance to next token
         }
-        print("Ended reading argument[s] at", index, stopIndex, argumentExpressionStartIndex)
+      //  print("Ended reading argument[s] at", index, stopIndex, argumentExpressionStartIndex)
         //   print("command \(commandName) ended at", commandStopIndex, self.tokenStack[commandStopIndex-1].form)
         // reduce the preceding argument expression (i.e. last argument of LP/nested command)
         if argumentExpressionStartIndex < stopIndex { // startIndex = name/label index + 1; stopIndex is non-inclusive // TO DO: what should this test be?
-            //       print("\\ Reducing \(argumentLabel.isEmpty ? "direct" : argumentLabel.label) argument expr at \(argumentExpressionStartIndex)..<\(commandStopIndex))…")
-            
+           // print("\\ Reducing \(argumentLabel.isEmpty ? "direct" : argumentLabel.label) argument expr at \(argumentExpressionStartIndex)..<\(stopIndex))…", self.tokenStack.count)
             self.tokenStack.reduceOperatorExpression(from: argumentExpressionStartIndex, to: &stopIndex)
-            
             assert(stopIndex > argumentExpressionStartIndex)
-            
+            //print("…reduced:", stopIndex, self.tokenStack.count)
             let value = self.argument(argumentLabel, of: commandName, at: argumentExpressionStartIndex)
             //       print("\\ …to:", value)
             arguments.append((argumentLabel, value))
         }
         let command = Command(commandName, arguments)
         self.tokenStack.replace(from: startIndex, to: stopIndex, withReduction: .value(command))
+       // print("LPC REPLACED", startIndex..<stopIndex, "WITH:", command)
         stopIndex = startIndex + 1
-        print("REPLACED", startIndex..<stopIndex, "WITH:", command)
     }
     
     //
