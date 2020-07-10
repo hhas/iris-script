@@ -152,7 +152,7 @@ public class Parser {
         }
         if !newConjunctionMatches.isEmpty {
             //print("newConjunctionMatches =", newConjunctionMatches)
-            self.blockStack.awaitConjunction(for: newConjunctionMatches, at: stopIndex)
+            self.blockStack.beginConjunction(for: newConjunctionMatches, at: stopIndex)
         }
         // push the current token and its matches (if any) onto stack
         self.tokenStack.append((form, currentMatches, self.current.token.hasLeadingWhitespace))
@@ -173,7 +173,6 @@ public class Parser {
                 print("WARNING: discarding extra matches in shift():", fullMatches.sorted{ $0.count < $1.count })
             }
         }
-        
 //        print("…SHIFTED. new head:", self.tokenStack.last!)
  //       self.tokenStack.show()
     }
@@ -189,8 +188,8 @@ public class Parser {
     }
     
     func endBlock(for form: Parser.BlockType) throws {
+        self.foundRightExpressionDelimiter() // ensure last expr in block is reduced to single .value // TO DO: check this as it's possible for last token in block to be a delimiter (e.g. comma and/or linebreak[s])
         try self.blockStack.end(form, at: self.currentIndex) // TO DO: what to do with error? (for now, we propagate it, but we should probably try to encapsulate as .error/SyntaxErrorDescription)
-        self.reduceExpression() // ensure last expr in block is reduced to single .value // TO DO: check this as it's possible for last token in block to be a delimiter (e.g. comma and/or linebreak[s])
         self.shift() // shift the closing token onto stack; shift() will then autoreduce the block literal
     }
     
@@ -198,13 +197,13 @@ public class Parser {
     // main loop
     
     func parseScript() throws -> ScriptAST {
-        loop: while true {
+        loop: while true { // loop exits below on .endOfScript
             let form = self.current.token.form
             //print("PARSE .\(form)")
             switch form {
-            case .endOfScript:
-                break loop // the only time we break out of this loop
+            case .endOfScript: break loop
             case .annotation(_): () // discard annotations for now
+                
             case .startList:
                 self.startBlock(for: .list, adding: orderedListLiteral.newMatches() + keyValueListLiteral.newMatches())
             case .startRecord:
@@ -218,23 +217,6 @@ public class Parser {
             case .endRecord:
                 try self.endBlock(for: .record)
                 self.reduceIfFullPunctuationCommand() // if top of stack is `NAME RECORD` then reduce it
-            case .separator(let sep):
-                self.reduceIfPrecedingExpression() // reduce the preceding EXPR to a single .value
-                switch sep { // attach any caller-supplied debug hooks to the reduced value; TO DO: currently the above line may reduce to .value(SyntaxErrorDescription(…)), .error(…), or leave tokens unreduced; we should probably avoid attaching to anything except a successful .value(…) reduction (which will require reduceExpression to return a success/failure flag)
-                case .comma:
-                    self.attachPunctuationHooks(using: self.handleComma)
-                case .period:
-                    self.attachPunctuationHooks(using: self.handlePeriod)
-                case .query:
-                    self.attachPunctuationHooks(using: self.handleQuery)
-                case .exclamation:
-                    self.attachPunctuationHooks(using: self.handleExclamation)
-                }
-                self.shift() // shift the punctuation onto stack
-                
-            case .lineBreak:
-                self.reduceIfPrecedingExpression() // reduce the preceding EXPR to a single .value
-                self.shift() // shift the linebreak onto stack
                 
             case .unquotedName(let name), .quotedName(let name): // command name or record label
                 // `NAME COLON` is ALWAYS a label (i.e. is part of core syntax rules), so we can reduce it here to intermediate .label(NAME), which simplifies LP command parsing
@@ -243,8 +225,8 @@ public class Parser {
                 } else {
                     self.shift() // shift the name onto stack
                 }
-                
             case .operatorName(let definitions):
+                //print("READOP", definitions.name);  print(self.blockStack)
                 // called by parser's main loop when an .operatorName(…) token is encountered
                 let name = Symbol(self.current.token.content)
               //  print(".OP", definitions.name); self.blockStack.show()
@@ -258,17 +240,36 @@ public class Parser {
                 }
                 //guard case .operatorName(let n) = form else { fatalError() }; print("\nMatched operator `\(n.name.label)` @ \(self.tokenStack.count-1):\n\(self.tokenStack.dump())\n")
                 
-            case .semicolon:
+            case .semicolon: // pipe operator
                 self.reduceExpression() // reduce the EXPR before the semicolon
                 self.shift(adding: pipeLiteral.newMatches())
+                
+            case .separator(let sep): // expression terminator
+                self.foundRightExpressionDelimiter() // reduce the preceding EXPR to a single .value
+                switch sep { // attach any caller-supplied debug hooks to the reduced value; TO DO: currently the above line may reduce to .value(SyntaxErrorDescription(…)), .error(…), or leave tokens unreduced; we should probably avoid attaching to anything except a successful .value(…) reduction (which will require reduceExpression to return a success/failure flag)
+                case .comma:
+                    self.attachPunctuationHooks(using: self.handleComma)
+                case .period:
+                    self.attachPunctuationHooks(using: self.handlePeriod)
+                case .query:
+                    self.attachPunctuationHooks(using: self.handleQuery)
+                case .exclamation:
+                    self.attachPunctuationHooks(using: self.handleExclamation)
+                }
+                self.shift() // shift the punctuation onto stack
+            case .lineBreak: // expression terminator
+               // print("LF REDUCE, stack size =", self.tokenStack.count)
+                self.foundRightExpressionDelimiter() // reduce the preceding EXPR to a single .value
+               // print("LF SHIFT")
+                self.shift() // shift the linebreak onto stack
                 
             default:
                 self.shift()
             }
             self.advance()
         }
-        //self.tokenStack.show()
-        self.reduceIfPrecedingExpression() // TO DO: do we need a final cleanup?
+       // self.tokenStack.show()
+        self.foundRightExpressionDelimiter()
         return self.reductionForTopLevelExpressions() // top-level is basically a block without delimiters
     }
     

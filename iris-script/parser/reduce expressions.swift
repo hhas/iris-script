@@ -11,7 +11,7 @@ extension Parser {
     
     // starting from end of a range of tokens, search backwards to find a left-hand expression delimiter; called by Parser.reduceExpression()
     // TO DO: when parsing exprs, what about remembering the index of each expr’s left-hand boundary, avoiding need to back-scan for it each time? (since exprs can be nested, this'd need another stack similar to blockStack) [this is low-priority as this implementation, while crude, does the job]
-    fileprivate func findStartIndex(from startIndex: Int, to stopIndex: Int) -> Int { // start..<stop
+    fileprivate func findStartIndexForExpression(from startIndex: Int, to stopIndex: Int) -> Int { // start..<stop
         // caution: when finding the start of a record field, the resulting range *includes* the field's `.label(NAME)`; e.g. when parsing `{foo: EXPR, EXPR, bar: EXPR}`, the indexes of the opening `{` and two `,` tokens are returned; leaving the caller to process `foo: EXPR` and `bar: EXPR`
         
         let index: Int
@@ -20,9 +20,12 @@ extension Parser {
         } else {
             index = startIndex
         }
-       // print("findStartIndex:", startIndex..<stopIndex, "expr start", index, "block delim:", self.blockStack.leftDelimiterIndex + 1)
+       // print("findStartIndexForExpression:", startIndex..<stopIndex, "expr start", index, "block delim:", self.blockStack.leftDelimiterIndex + 1)
+        //self.tokenStack.show();print()
        // return index
-        return Swift.max(index, self.blockStack.leftDelimiterIndex + 1)
+        let startIndex = Swift.max(index, self.blockStack.leftDelimiterIndex + 1)
+       // print("…startIndex:", startIndex)
+        return startIndex
     }
     
     
@@ -49,20 +52,10 @@ extension Parser {
         // check if this pattern still conjunctions to match (i.e. the previous matchers should have been matched to the EXPR on the stack and are now waiting to match the conjunction)
         let remainingConjunctions = self.tokenStack.last!.matches.filter{$0.originID == parentMatch.originID}.flatMap{$0.next()}.filter{!$0.conjunctions.isEmpty} // get matchers for token after newly-shifted conjunction (if any) to see if there further conjunctions still to match (e.g. `if…then…else…` operator has two conjunctions to match, the second of which is optional)
         if !remainingConjunctions.isEmpty {
-            let stopIndex = self.tokenStack.count
-            self.blockStack.awaitConjunction(for: remainingConjunctions, at: stopIndex)
+            let conjunctionIndex = self.tokenStack.count - 1
+            self.blockStack.beginConjunction(for: remainingConjunctions, at: conjunctionIndex)
         }
-    }
-    
-    
-    func reduceIfPrecedingExpression() { // called before shifting punctuation/linefeed delimiter token
-        
-        //print("reduceIfPrecedingExpression:", self.blockStack.leftDelimiterIndex, self.tokenStack.count)
-        
-        if self.blockStack.leftDelimiterIndex == self.tokenStack.count - 1 {
-            return
-        }
-        self.reduceExpression()
+       // print("reduced before conjunction", self.tokenStack[startIndex], startIndex..<stopIndex)
     }
     
     
@@ -70,7 +63,7 @@ extension Parser {
         var stopIndex = stopIndex ?? self.tokenStack.count // caution: stopIndex is nearest head of stack, so will no longer be valid once a reduction is performed // TO DO: return new stopIndex via inout?
         // scan back from stopIndex until a left-hand expression delimiter is found or original startIndex is reached
         // TO DO: track expression start indexes on (block?) stack, avoiding need to iterate backwards here
-        var expressionStartIndex = self.findStartIndex(from: startIndex, to: stopIndex)
+        var expressionStartIndex = self.findStartIndexForExpression(from: startIndex, to: stopIndex)
         if expressionStartIndex == stopIndex { // kludgy (extra .linebreak at end of script [see line reader TODOs] causes unnecessary 'reduce expr before delim', which ends up cutting off here; there may be other cases where reduceExpression is called unnecessarily/inappropriately)
            // print("reduceExpression: ignoring zero-length EXPR at \(expressionStartIndex) in \(startIndex..<stopIndex)")
             //self.tokenStack.show()
@@ -80,16 +73,16 @@ extension Parser {
         if expressionStartIndex < stopIndex, case .label(_) = self.tokenStack[expressionStartIndex].form {
             expressionStartIndex += 1
         }
-        
+        //print("reduceExpression:", expressionStartIndex..<stopIndex); self.tokenStack.show(); print()
         // reduce all commands within the specified range in-place, decrementing stopIndex on return by the number of tokens removed during this reduction
         // (note that nested commands are not immediately reduced here but are instead tagged with matchers that will reduce them during reductionForOperatorExpression() as if they were atom/prefix operators of predetermined precedence; also note that full-punctuation commands, i.e. `NAME RECORD`, have already been reduced to .value(Command(…)) by the parser's main loop so are not touched again here)
         self.reduceCommandExpressions(from: expressionStartIndex, to: &stopIndex)
         // once all commands’ boundaries have been determined and the commands themselves reduced to .values, reduce all operators
         
         
-        // TO DO: FIX: this interferes with e.g. do…done - it’s overly aggressive in what it removes from stack; it should only remove conjunctions whose matchers started within the current EXPR; that's not right either, e.g. given `if test then do, … done`, the comma should not terminate `do`; the problem is operators that have optional/trailing expr (i.e. no explicit terminator) need to be terminated by delimiters, but not blocks
+        // TO DO: this is wrong
+    //    self.blockStack.endConjunctions() // discard any pending conjunctions, e.g. given `if TEST then ACTION.`, this will discard the `else` clause upon encountering period delimiter; note that if an operator has >1 conjunction, reduceExpressionBeforeConjunction() will add a new entry to blockStack after it’s shifted the first conjunction
         
-        self.blockStack.endConjunctions() // discard any pending conjunctions, e.g. given `if TEST then ACTION.`, this will discard the `else` clause upon encountering period delimiter; note that if an operator has >1 conjunction, reduceExpressionBeforeConjunction() will add a new entry to blockStack after it’s shifted the first conjunction
         
         //   print("<<<",self.blockStack)
         //self.tokenStack.show(expressionStartIndex, stopIndex)
@@ -98,4 +91,21 @@ extension Parser {
         //self.tokenStack.show(expressionStartIndex, stopIndex)
     }
     
+    
+    func foundRightExpressionDelimiter() { // called before shifting punctuation/linefeed delimiter token
+       // print("foundRightExpressionDelimiter:", self.blockStack.leftDelimiterIndex, self.tokenStack.count, self.tokenStack[self.blockStack.leftDelimiterIndex].form, self.tokenStack.last!.form)
+        // TO DO: review this (we want to avoid reducing `do` in `…do,…`)
+        
+        self.blockStack.endConjunctions() // discard any pending conjunctions, e.g. given `if TEST then ACTION.`, this will discard the `else` clause upon encountering period delimiter; note that if an operator has >1 conjunction, reduceExpressionBeforeConjunction() will add a new entry to blockStack after it’s shifted the first conjunction
+        
+        if self.blockStack.leftDelimiterIndex < self.tokenStack.count - 1 {
+            self.reduceExpression()
+            // check if reducing the expression has completed any more in-progress matches; if so, reduce those too
+            while self.tokenStack.last!.matches.contains(where: { $0.isAFullMatch }) {
+               // print("rereduce", self.tokenStack.count - 1, self.tokenStack.last!)
+                self.reduceExpression()
+            }
+        }
+
+    }
 }

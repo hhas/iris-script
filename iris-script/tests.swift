@@ -12,6 +12,26 @@ import Foundation
 
 func test() {
     
+    runScript(" foo bar baz" )
+    runScript("  if (a) + b = c then get documents at 2 thru -1   ")
+    
+    
+    runScript("  if a + (b)  then 3 ")
+     runScript(" if 1 then 2 else 3  ")
+    
+   runScript(" foo 1 bar: baz fub 4 mod: 3 ")
+//return;
+    
+   // runScript(" if 1 then 2  ")
+  //  runScript(" if 1 then 2 else 3  ")
+    
+ //   runScript(" file at 1 ")
+ //   runScript(" file at 1 of home ")
+ //   runScript(" get file at 1 ")
+ //   runScript(" get name of file at 1 ")
+ //   runScript(" get name of file at 1 of home ")
+    
+   // return;
     /*
     runScript(" ( 1 ) ")
     runScript(" ( \n 1 ) ")
@@ -206,9 +226,9 @@ func test() {
 
     runScript("tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}.")
 
-    runScript("to foo: write “ok”, bar. baz, gub, guf.")
+    runScript("to foo run write “ok”, bar. baz, gub, guf.")
 
-    runScript("To say_hello to: name: write “Hello, ” & name & “!”. Say_hello to: “World”.")
+    runScript("To say_hello to: name run write “Hello, ” & name & “!”. Say_hello to: “World”.")
 
     runScript("write 2 + 2")
 
@@ -218,9 +238,9 @@ func test() {
 
     runScript("if 1 + 2 = 5 then write “ok”.")
 
-    runScript("set Bob to: “Tim”. if 1 + 2 = 3 then write 6, write bob, write 9 ÷ 2.") // TO DO: couple issues with this: 1. comma after `write 6` should probably be autocorrected to period to make clear that `if` expr ends there; 2. `write 9 ÷ 2` is most likely intended by user to print result of 9÷2, but `÷` is lower precedence than `write` so parses as `(write 9) ÷ 2`; how best to identify potental ambiguities between user’s intent and machine’s interpretation, and how best to clarify automatically/flag for user attention/prompt for user to make her intent explicit?
+    runScript("set Bob to “Tim”. if 1 + 2 = 3 then write 6, write bob, write 9 ÷ 2.") // TO DO: couple issues with this: 1. comma after `write 6` should probably be autocorrected to period to make clear that `if` expr ends there; 2. `write 9 ÷ 2` is most likely intended by user to print result of 9÷2, but `÷` is lower precedence than `write` so parses as `(write 9) ÷ 2`; how best to identify potental ambiguities between user’s intent and machine’s interpretation, and how best to clarify automatically/flag for user attention/prompt for user to make her intent explicit?
 
-    runScript("Set name to: “Bob”. If 1 + 2 = 3 then write true, write name, write [9 ÷ 2].")
+    runScript("Set name to “Bob”. If 1 + 2 = 3 then write true, write name, write [9 ÷ 2].")
 
     runScript("if 1 + 1 = 5 then “BOO!”")
 
@@ -257,7 +277,7 @@ func test() {
     
     
     runScript("""
-        Set a to: 3, set b to: true. If 3 + a = 4 then "A" else if b then "B" else "C".
+        Set a to 3, set b to true. If 3 + a = 4 then "A" else if b then "B" else "C".
         """)
 
     runScript(" if a then (b, c, d) else (e, f). ") // TO DO: sentence blocks (multiple comma-separated exprs) in `then clause` are problematic as punctuation has lower precedence than operators; would need to special-case parsing of block operands
@@ -408,7 +428,7 @@ func test() {
     
         // TO DO: name arg is currently limited to AsLiteralName, but also needs to accept a reference
 
-    runScript("set a of b to: 3")
+    runScript("set a of b to 3")
 
     runScript("set n to app “com.apple.TextEdit”, tell n to get document 1") // TO DO: parser prematurely exits after the 1st `n`; how to match `to` as stop word here? might pass closure thru parser that performs all stop-word/boundary checks; alternatively, leave it for now and address in table-driven parser
 
@@ -417,7 +437,7 @@ func test() {
     
         // TO DO: need decision on whether or not to overload `set` command to perform local assignment; within a `tell app…` block it current sends an AE (or tries to); one option is to define `me`/`my` atom for use in references, e.g.:
         //
-        //  tell app “com.apple.TextEdit” to set my foo to: get document 1"
+        //  tell app “com.apple.TextEdit” to set my foo to get document 1"
         //
         // we could describe the problem in terms of dispatch-on-first-argument-type, e.g. when first operand is a reference to a target object (e.g. `set end of documents to…` invokes application-defined `set` handler), vs a reference to a local slot (`set end of bars to…` invokes stdlib-defined `set` handler); however, we should also consider that `get`/`set` remote application state is clean simple unambiguous behavior, whereas overloading `set` but not `get` is inconsistent while overloading `get` is redundant (assuming local refs, unlike remote queries, self-resolve on eval)
         //
@@ -425,7 +445,7 @@ func test() {
         //
         // Q. if local queries require explicit `get` to resolve, e.g. `get B of A`, then how should dot-form/superglobals behave, e.g. `@A.B`/`A.B`/`B of @A`?
 
-    runScript("Set Bob to: “Tim”. Write Bob.")
+    runScript("Set Bob to “Tim”. Write Bob.")
 
     runScript("foo 1 as (editable integer)") // TO DO: possible to treat `editable integer` as non-nested command, given it appears as an operand to `as` operator?
 

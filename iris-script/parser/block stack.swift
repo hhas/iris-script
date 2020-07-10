@@ -72,7 +72,8 @@ extension Parser.BlockStack {
         }
     }
     
-    mutating func awaitConjunction(for matches: [PatternMatch], at index: Int) {
+    mutating func beginConjunction(for matches: [PatternMatch], at index: Int) {
+        //print("awaitConjunction:", index)
         // name is the conjunction/block terminator keyword; index is the index at which the previous keyword appears; once the conjunction keyword is found, everything between those keywords is reduced to a single expression, e.g. given `if TEST then EXPR1 else EXPR2`, upon encountering `if` at index 0, the parser's main loop calls awaitConjunction(…) passing it the `if… operator’s in-progress match; a .conjunction entry is added to block stack that awaits an `then` or `else` keyword; when the parser's main loop calls conjunctionMatches(…) with one of those names, the `if…` operator’s in-progress match[es] are removed from block stack and returned, triggering a reduction of the TEST expression, followed by the addition of a new .conjunction entry to await the [optional] `else` keyword
         var conjunctions = Parser.Conjunctions()
         var blocks = Parser.Conjunctions()
@@ -106,6 +107,7 @@ extension Parser.BlockStack {
     }
     
     func conjunctionMatches(for name: Symbol) -> Parser.ConjunctionMatches? {
+        //print("conjunctionMatches:", name, self)
         if case .conjunction(let matches) = self.last?.form {
             assert(!matches.isEmpty, "BUG: conjunctionMatches(for: \(name)) should never return an empty array.")
             return matches[name]
@@ -126,6 +128,7 @@ extension Parser.BlockStack {
     }
     
     mutating func endConjunctions() {
+        //print("endConjunctions")
         while case .conjunction(_) = self.last?.form {
           //  print("Discarding unfinished conjunctions from block stack:", conjunctions)
             self.removeLast()
