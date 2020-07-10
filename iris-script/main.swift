@@ -22,7 +22,7 @@ let operatorReader = newOperatorReader(for: operatorRegistry)
 
 func runScript(_ script: String) {
 
-    print("\nPARSE: \(script.debugDescription)")
+    print("\nPARSE:\n\(script)\n")
 
     let doc = EditableScript(script) { NumericReader(operatorReader(NameModifierReader(NameReader($0)))) }
     
@@ -36,7 +36,7 @@ func runScript(_ script: String) {
     do {
         let ast = try p.parseScript()
         print("PARSED:", ast)
-        //print("RESULT:", try ast.eval(in: env, as: asAnything))
+        print("\nRESULT:", try ast.eval(in: env, as: asAnything))
         let _ = ast
     } catch {
         print("ERROR:", error)

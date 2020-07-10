@@ -12,6 +12,17 @@ import Foundation
 
 func test() {
     
+    
+    runScript("""
+    tell app “com.apple.TextEdit” to do
+        make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}
+        get text of documents
+    done
+    """)
+    
+    return;
+    
+    
     runScript(" foo bar baz" )
     runScript("  if (a) + b = c then get documents at 2 thru -1   ")
     

@@ -44,6 +44,9 @@ struct QuoteReader: DocumentReader { // reduces quoted text (string literal or a
         case .stringDelimiter:
             var s = String(startToken.whitespaceAfter ?? "")
             while true {
+                
+                // TO DO: FIX: a stray (unbalanced) double quote causes this to loop endlessly
+                
                 if reader.token.form == .stringDelimiter { //
                     if reader.token.isRightContiguous && reader.next().token.form == .stringDelimiter { // double-quote chars are self-escaping, e.g. "Bob says ""Hello"" to Jane."
                         

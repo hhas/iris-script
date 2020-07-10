@@ -1186,7 +1186,9 @@ private func procedure_ofClause_attribute_target(command: Command, commandEnv: S
     )
     return type_ofClause_attribute_target.result.box(value: result, in: handlerEnv)
 }
-/*
+
+
+
 // app {bundle_identifier}
 private let type_AEApplication_bundleID = (
     param_0: (Symbol("bundle_identifier"), AsString()),
@@ -1587,7 +1589,7 @@ private func procedure_insertAtEnd_(command: Command, commandEnv: Scope, handler
     )
     return type_insertAtEnd_.result.box(value: result, in: handlerEnv)
 }
-*/
+
 
 
 public func stdlib_loadHandlers(into env: Environment) {
@@ -1636,7 +1638,7 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_repeatWhile_action_condition, procedure_repeatWhile_action_condition)
     env.define(interface_tell_target_action, procedure_tell_target_action)
     env.define(interface_ofClause_attribute_target, procedure_ofClause_attribute_target)
-    /*
+    
     env.define(interface_AEApplication_bundleID, procedure_AEApplication_bundleID)
     env.define(interface_atSelector_elementType_selectorData, procedure_atSelector_elementType_selectorData)
     env.define(interface_nameSelector_elementType_selectorData, procedure_nameSelector_elementType_selectorData)
@@ -1654,5 +1656,5 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_insertAfter_right, procedure_insertAfter_right)
     env.define(interface_insertAtBeginning_, procedure_insertAtBeginning_)
     env.define(interface_insertAtEnd_, procedure_insertAtEnd_)
- */
+
 }
