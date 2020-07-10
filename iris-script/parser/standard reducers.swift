@@ -37,11 +37,17 @@ func skipLineBreaks(_ stack: Parser.TokenStack, _ i: inout Int) {
 
 extension Array where Element == Parser.TokenInfo {
 
+    func label(at i: Int) -> Symbol {
+        if case .label(let name) = self[i].form { return name }
+        self.show()
+        fatalError("Bad reduction; expected token \(i) to be .label but found: \(self[i])")
+    }
+
     func value(at i: Int) -> Value {
      //   self.show()
         if case .value(let expr) = self[i].form { return expr }
         self.show()
-        fatalError("Bad reduction; expected token \(i) to be Value but found unreduced \(self[i]).")
+        fatalError("Bad reduction; expected token \(i) to be .value but found unreduced: \(self[i])")
     }
         
 }
@@ -152,8 +158,17 @@ func reductionForCommandLiteral(stack: Parser.TokenStack, match: PatternMatch, s
         } else {
             return Command(name, [(nullSymbol, expr)]) // direct param only
         }
-    default: // this should never happen
-        fatalError("reduceCommandLiteral() does not support LP command syntax")
+    default: // LP syntax
+        var arguments = [Command.Argument]()
+        var index = start + 1
+        if case .value(let v) = stack[index].form {
+            arguments.append((nullSymbol, v))
+            index += 1
+        }
+        for i in Swift.stride(from: index, to: end, by: 2) {
+            arguments.append((stack.label(at: i), stack.value(at: i + 1)))
+        }
+        return Command(name, arguments)
     }
 }
 

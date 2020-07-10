@@ -54,26 +54,24 @@ struct PatternMatch: CustomStringConvertible, Equatable {
     }
     
     public func fullyMatches(form: Token.Form) -> Bool {
+        //print("fully matching .\(form) to", self, "=", self.remainingPattern[0].fullyMatch(form))
         return self.remainingPattern[0].fullyMatch(form)
     }
     
     public func provisionallyMatches(form: Token.Form) -> Bool {
         // currently, partial matching is almost always used as we need to match yet-to-be-reduced operands in order to determine operator precedence, which we need to know before we can decide which operands to reduce first (i.e. provisionally match then reduce in order of priority, confirming those matches still hold; it's not ideal and it's a bit brittle (e.g. using .testValue patterns to match anything except atomic literals will break), plus there's a fair amount of duct-tape currently holding it together too, but at least it gets something working which allows further development to proceed)
-       // print("matching .\(form) to", self, "…")
-        guard let pattern = self.remainingPattern.first else { fatalError("No pattern left to match: \(self)") }
+        guard let pattern = self.remainingPattern.first else { fatalError("BUG: No patterns left: \(self)") }
         let isMatch: Bool
-        
-        // TO DO: this is not right
         if pattern.isExpression {
             if self.isAtBeginningOfMatch { // if we are backmatching left operand, match end of EXPR only
                 isMatch = pattern.provisionallyMatchEnd(form)
             } else { // otherwise we’re matching the start of an EXPR at the head of token stack
                 isMatch = pattern.provisionallyMatchBeginning(form)
             }
-        } else {
+        } else { // punctuation and keywords are always single tokens
             isMatch = pattern.fullyMatch(form)
         }
-       // print("…", isMatch)
+        //print("provisionally matching .\(form) to", self, "=", isMatch)
         return isMatch
     }
 
@@ -109,7 +107,7 @@ struct PatternMatch: CustomStringConvertible, Equatable {
     }
     
     public var isLongestFullMatch: Bool {
-        // caution: if the pattern ends with .zeroOrMore(…) or .oneOrMore(…) then a longer match is *always* possible, in which case this will *always* return false (in practice repeating sections should be bounded, e.g. `do…done`, but this isn’t enforced); TO DO: check that such matches will always eventually reduce, based on longest completed match, once fullyReduceExpression() is called
+        // caution: if the pattern ends with .zeroOrMore(…) or .oneOrMore(…) then a longer match is *always* possible, in which case this will *always* return false (in practice repeating sections should be bounded, e.g. `do…done`, but this isn’t enforced); TO DO: check that such matches will always eventually reduce, based on longest completed match, once reduceExpression() is called
         return self.next().isEmpty
     }
     
@@ -154,7 +152,7 @@ struct PatternMatch: CustomStringConvertible, Equatable {
     
     //
 
-    func reductionFor(stack: Parser.TokenStack, startIndex: Int) -> Token.Form? { // calls operator definition's reduce func // called by reduce(match:…) funcs in `token stack.swift`
+    func reductionFor(stack: Parser.TokenStack, startIndex: Int) throws -> Token.Form { // calls operator definition's reduce func // called by reduce(match:…) funcs in `token stack.swift`
      //   print("REDUCING", self)
         let stopIndex = startIndex + self.count
         // confirm operand[s] are reduced and match any special constraints specified by pattern
@@ -172,8 +170,9 @@ struct PatternMatch: CustomStringConvertible, Equatable {
             return result
             
         } else { // all operands should have been reduced prior to this function being called (if not, that’s a bug); however, we can’t check any .testValue(…) constraints until operator reductions are underway, so it’s still possible for a match to fail at this point due to a syntax error
-            print("Couldn't fully match operands for \(self.name):"); stack.show(startIndex, stopIndex); print()
-            return nil
+            let fixity = ((isLeftFullyMatched ? [] : ["left"]) + (isRightFullyMatched ? [] : ["right"]))
+            print("Couldn't fully match \(fixity.joined(separator: " and ")) operand\(fixity.count == 1 ? "" : "s") for \(self.name):"); stack.show(startIndex, stopIndex); print()
+            throw NotYetImplementedError()
         }
     }
 }

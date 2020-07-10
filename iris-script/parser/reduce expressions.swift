@@ -9,7 +9,7 @@ import Foundation
 extension Parser {
     
     
-    // starting from end of a range of tokens, search backwards to find a left-hand expression delimiter; called by Parser.fullyReduceExpression()
+    // starting from end of a range of tokens, search backwards to find a left-hand expression delimiter; called by Parser.reduceExpression()
     // TO DO: when parsing exprs, what about remembering the index of each expr’s left-hand boundary, avoiding need to back-scan for it each time? (since exprs can be nested, this'd need another stack similar to blockStack) [this is low-priority as this implementation, while crude, does the job]
     fileprivate func findStartIndex(from startIndex: Int, to stopIndex: Int) -> Int { // start..<stop
         // caution: when finding the start of a record field, the resulting range *includes* the field's `.label(NAME)`; e.g. when parsing `{foo: EXPR, EXPR, bar: EXPR}`, the indexes of the opening `{` and two `,` tokens are returned; leaving the caller to process `foo: EXPR` and `bar: EXPR`
@@ -43,7 +43,7 @@ extension Parser {
         let startIndex = precedingKeywordIndex + 1
         let stopIndex = self.tokenStack.count
        // print("Reducing EXPR before conjunction \(name) at \(startIndex)..<\(stopIndex)")
-        self.fullyReduceExpression(from: startIndex, to: stopIndex) // start..<stop
+        self.reduceExpression(from: startIndex, to: stopIndex) // start..<stop
         // TO DO: now the reduced EXPR is on stack, we ought to fully match it to be sure [but this applies to pattern-driven reductions in general]
         self.shift() // shift the conjunction onto stack (note: this does not add remaining conjunctions to blockStack; that is done below) // TO DO: should it? the logic should be similar for new and in-progress matches
         // check if this pattern still conjunctions to match (i.e. the previous matchers should have been matched to the EXPR on the stack and are now waiting to match the conjunction)
@@ -62,28 +62,21 @@ extension Parser {
         if self.blockStack.leftDelimiterIndex == self.tokenStack.count - 1 {
             return
         }
-        self.fullyReduceExpression()
+        self.reduceExpression()
     }
     
     
-    func fullyReduceExpression(from startIndex: Int = 0, to stopIndex: Int? = nil) { // starting point for reductions called by main loop
+    func reduceExpression(from startIndex: Int = 0, to stopIndex: Int? = nil) { // starting point for reductions called by main loop
         var stopIndex = stopIndex ?? self.tokenStack.count // caution: stopIndex is nearest head of stack, so will no longer be valid once a reduction is performed // TO DO: return new stopIndex via inout?
-        // scan back from stopIndex until an expression delimiter is found or original startIndex is reached; that then becomes the startIndex for findLongestMatches // TO DO: is this still needed? currently when fullyReduceExpression is called, how is the _startIndex argument determined?
+        // scan back from stopIndex until a left-hand expression delimiter is found or original startIndex is reached
+        // TO DO: track expression start indexes on (block?) stack, avoiding need to iterate backwards here
         var expressionStartIndex = self.findStartIndex(from: startIndex, to: stopIndex)
-        
-        // TO DO: FIX: `… do DELIM` sequence causes parser's main loop to call fullyReduceExpression on comma; however, the search needs to stop on `do` as left delimiter (currently it overshoots, causing the preceding expression to be [incorrectly] reduced before its right-hand `do…done` operand has been reduced, which [correctly] fails)
-        
-        //  print("…found startIndex", startIndex)
-       // print("fullyReduceExpression:"); self.tokenStack.show(startIndex, stopIndex)
-        
-        // kludgy (extra .linebreak at end of script [see line reader TODOs] causes unnecessary 'reduce expr before delim', which ends up cutting off here; there may be other cases where fullyReduceExpression is called unnecessarily/inappropriately)
-        if expressionStartIndex == stopIndex {
-           // print("fullyReduceExpression: ignoring zero-length EXPR at \(expressionStartIndex) in \(startIndex..<stopIndex)")
+        if expressionStartIndex == stopIndex { // kludgy (extra .linebreak at end of script [see line reader TODOs] causes unnecessary 'reduce expr before delim', which ends up cutting off here; there may be other cases where reduceExpression is called unnecessarily/inappropriately)
+           // print("reduceExpression: ignoring zero-length EXPR at \(expressionStartIndex) in \(startIndex..<stopIndex)")
             //self.tokenStack.show()
             return
         } // zero length, e.g. `[ ]`
-        
-        // if the token range starts with a label, stop over it and only reduce the expr after it; this is kludgy, but hopefully it addresses the issue well enough to proceed as `LABEL EXPR` should only [currently?] arise in two places: after an LP command name and in a record field, and in first case we want findStartIndex to skip over labels (which are always preceded by at least one token) while in the second the label, if present, is always the first token in found range (which is what the next line ignores), and the record literal’s reducefunc eventually takes care of it // TO DO: if we allow `LABEL EXPR` for name-value bindings in blocks, how will this affect parsing/matching
+        // if the token range starts with a label, step over it and only reduce the expr after it; this is kludgy, but should do for now as `LABEL EXPR` currently only appears in two places: after an LP command name (which reduceLowPunctuationCommand deals with separately) and in a record field where the label, if present, is always the first token in found range (which is what the next line steps over, leaving the reducefunc to deal with) // TO DO: if we also allow `LABEL EXPR` for name-value bindings in blocks, how will this affect parsing/matching? (we might consider limiting other usage to AS-style `property NAME:EXPR` declarations, though as an expression it may be tricky limiting its appearance to certain [non-handler] scopes)
         if expressionStartIndex < stopIndex, case .label(_) = self.tokenStack[expressionStartIndex].form {
             expressionStartIndex += 1
         }
@@ -99,8 +92,10 @@ extension Parser {
         self.blockStack.endConjunctions() // discard any pending conjunctions, e.g. given `if TEST then ACTION.`, this will discard the `else` clause upon encountering period delimiter; note that if an operator has >1 conjunction, reduceExpressionBeforeConjunction() will add a new entry to blockStack after it’s shifted the first conjunction
         
         //   print("<<<",self.blockStack)
+        //self.tokenStack.show(expressionStartIndex, stopIndex)
         self.tokenStack.reduceOperatorExpression(from: expressionStartIndex, to: &stopIndex)
-          // print("REDUCED OPERATOR:"); self.tokenStack.show(startIndex); print("…TO: .\(form)\n\n----\n\n")
+        //print("REDUCED EXPRESSION:", self.tokenStack[expressionStartIndex].form)
+        //self.tokenStack.show(expressionStartIndex, stopIndex)
     }
     
 }

@@ -12,6 +12,30 @@ import Foundation
 
 func test() {
     
+    /*
+    runScript(" ( 1 ) ")
+    runScript(" ( \n 1 ) ")
+    runScript(" ( 1 \n ) ")
+    runScript(" ( \n 1 \n ) ")
+    runScript(" ( \n\n 1 \n\n\n ) ")
+    */
+    
+    //runScript(" ( \n + - + 2 \n ) ")
+    
+    runScript(" ( - 1 ) + 2 * three -4")
+    runScript(" ( - 1 ) + 2 * three - 4")
+    runScript(" 1 + 2 * 3 - 4")
+    
+    //return;
+    //
+    // end of documents -- fails on full match of left operand [but there seems to be general problem with arg expr not reducing nested command]
+    runScript("tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}.")
+
+   // runScript(" end of 1 ")
+    
+    //runScript("make a: x b: 2")
+
+    
     // TO DO: minor(?) bug in pattern matching parensed group as it appears to have two full matches of which only one is correct: “WARNING: discarding extra matches in shift(): [«match `(…)` U66 O6 G5: (.startGroup EXPR) .endGroup ()✔︎ 0», «match `(…)` U69 O6 G5: (.startGroup LF) .endGroup ()✔︎ 0»]”
     runScript(" if 1 then do, 5 + 6, done else (-7 ÷ -8) ")
 

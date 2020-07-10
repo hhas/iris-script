@@ -94,15 +94,25 @@ public class Parser {
     
     
     func shift(form: Token.Form? = nil, adding newMatches: [PatternMatch] = []) {
-    //    print("SHIFTING. current head:", self.tokenStack.last?.form ?? .endOfScript)
+//        print("SHIFTING .\(self.current.token.form) onto stack; current head:", self.tokenStack.last?.form ?? .endOfScript)
      //   print("…", self.tokenStack.last?.matches ?? [])
         // normally the token being shifted is the current token in the parser’s token stream; however, in some special cases parser’s main loop performs an immediate reduction without first shifting, in which case the reduced token form is passed here
         // to initiate one or more new pattern matches on a given token, the parser’s main loop should instantiate those pattern matchers and pass them here
         let form = form ?? self.current.token.form
         var currentMatches = [PatternMatch]()   // new and in-progress matchers that match the current token; these will be pushed onto stack along with token
         var fullMatches = [PatternMatch]() // collects any current matches that complete on this token (these matches may or may not have longer matches available)
+       // print("\n\nSHIFTING…")
+       // self.tokenStack.show()
+       // print()
+        
         // advance any in-progress matches and match to this token
         if let previousMatches = self.tokenStack.last?.matches {
+//            if form == .endGroup {
+//                print("advancing previousMatches from token \(self.tokenStack.count-1):")
+//                for m in previousMatches {print("- ", m)}
+//                self.tokenStack.show()
+//                print()
+//            }
             for previousMatch in previousMatches {
                 for match in previousMatch.next() {
                     if match.provisionallyMatches(form: form) {
@@ -120,6 +130,7 @@ public class Parser {
         // important: this only handles the first conjunction in a pattern; subsequent conjunctions in the same pattern will be handled by reduceExpressionBeforeConjunction()
         var newConjunctionMatches = [PatternMatch]() // newly started matchers that are awaiting a conjunction keyword in order to complete their current EXPR match
         let stopIndex = self.tokenStack.count // after shifting, this is the index at which conjunction matches matched the operator name
+        
         for match in newMatches {
             assert(match.isAtBeginningOfMatch)
             if match.provisionallyMatches(form: form) { // attempt to match first pattern to the current token; this allows new matchers to match atom/prefix operators (the first pattern is a .keyword and the current token is an .operatorName of the same name)
@@ -134,6 +145,10 @@ public class Parser {
                     if match.hasConjunction { newConjunctionMatches.append(match) }
                 }
             } // ignore any unsuccessful matches (e.g. a new infix operator matcher for which there was no left operand, or an .operatorName that’s a conjunction keyword for which there is no match already in progress)
+            // allow atomic operators to auto-reduce
+            if match.isAFullMatch {
+                fullMatches.append(match)
+            }
         }
         if !newConjunctionMatches.isEmpty {
             //print("newConjunctionMatches =", newConjunctionMatches)
@@ -141,11 +156,12 @@ public class Parser {
         }
         // push the current token and its matches (if any) onto stack
         self.tokenStack.append((form, currentMatches, self.current.token.hasLeadingWhitespace))
-        // print("SHIFT matched", form, "to", currentMatches, "with completions", fullMatches)
-        // automatically reduce fully matched atomic operators and list/record/group/block literals (i.e. anything that starts and ends with a static token, not an expr, so is not subject to precedence or association rules)
+        //print("SHIFT matched", form, "to", currentMatches, "with completions", fullMatches)
+                
+       // automatically reduce fully matched atomic operators and list/record/group/block literals (i.e. anything that starts and ends with a static token, not an expr, so is not subject to precedence or association rules)
         if let longestMatch = fullMatches.max(by: { $0.count < $1.count }) {
-           // print("\nAUTO-REDUCE:", longestMatch.definition.name.label)
-            //print(fullMatches)
+  //          print("\nAUTO-REDUCE:", longestMatch.definition.name.label)
+ //           print(fullMatches)
             if self.tokenStack.reduce(match: longestMatch) {
                 if case .operatorName(let d) = form, self.blockStack.blockMatches(for: d.name) != nil { // kludgy
                     self.blockStack.end(d.name)
@@ -157,7 +173,9 @@ public class Parser {
                 print("WARNING: discarding extra matches in shift():", fullMatches.sorted{ $0.count < $1.count })
             }
         }
-   //     print("…SHIFTED. new head:", self.tokenStack.last!)
+        
+//        print("…SHIFTED. new head:", self.tokenStack.last!)
+ //       self.tokenStack.show()
     }
     
     
@@ -172,7 +190,7 @@ public class Parser {
     
     func endBlock(for form: Parser.BlockType) throws {
         try self.blockStack.end(form, at: self.currentIndex) // TO DO: what to do with error? (for now, we propagate it, but we should probably try to encapsulate as .error/SyntaxErrorDescription)
-        self.fullyReduceExpression() // ensure last expr in block is reduced to single .value // TO DO: check this as it's possible for last token in block to be a delimiter (e.g. comma and/or linebreak[s])
+        self.reduceExpression() // ensure last expr in block is reduced to single .value // TO DO: check this as it's possible for last token in block to be a delimiter (e.g. comma and/or linebreak[s])
         self.shift() // shift the closing token onto stack; shift() will then autoreduce the block literal
     }
     
@@ -202,7 +220,7 @@ public class Parser {
                 self.reduceIfFullPunctuationCommand() // if top of stack is `NAME RECORD` then reduce it
             case .separator(let sep):
                 self.reduceIfPrecedingExpression() // reduce the preceding EXPR to a single .value
-                switch sep { // attach any caller-supplied debug hooks to the reduced value; TO DO: currently the above line may reduce to .value(SyntaxErrorDescription(…)), .error(…), or leave tokens unreduced; we should probably avoid attaching to anything except a successful .value(…) reduction (which will require fullyReduceExpression to return a success/failure flag)
+                switch sep { // attach any caller-supplied debug hooks to the reduced value; TO DO: currently the above line may reduce to .value(SyntaxErrorDescription(…)), .error(…), or leave tokens unreduced; we should probably avoid attaching to anything except a successful .value(…) reduction (which will require reduceExpression to return a success/failure flag)
                 case .comma:
                     self.attachPunctuationHooks(using: self.handleComma)
                 case .period:
@@ -241,7 +259,7 @@ public class Parser {
                 //guard case .operatorName(let n) = form else { fatalError() }; print("\nMatched operator `\(n.name.label)` @ \(self.tokenStack.count-1):\n\(self.tokenStack.dump())\n")
                 
             case .semicolon:
-                self.fullyReduceExpression() // reduce the EXPR before the semicolon
+                self.reduceExpression() // reduce the EXPR before the semicolon
                 self.shift(adding: pipeLiteral.newMatches())
                 
             default:
