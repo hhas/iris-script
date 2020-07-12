@@ -12,13 +12,15 @@ import Foundation
 // define_handler (name, parameters, return_type, action, is_event_handler)
 let type_defineHandlerGlue_handler_commandEnv = (
     // TO DO: reduce `name+parameters+result` to single parameter of type asHandlerInterface?
-    param_0: (label: rightOperand, coercion: asHandler),
+    param_0: (label: leftOperand, coercion: asHandlerInterface),
+    param_1: (label: rightOperand, coercion: asIs), // TO DO: Record
     result: asNothing
 )
 let interface_defineHandlerGlue_handler_commandEnv = HandlerInterface(
     name: "to",
     parameters: [
         (type_defineHandlerGlue_handler_commandEnv.param_0.label, nullSymbol, type_defineHandlerGlue_handler_commandEnv.param_0.coercion),
+        (type_defineHandlerGlue_handler_commandEnv.param_1.label, nullSymbol, type_defineHandlerGlue_handler_commandEnv.param_1.coercion),
         ],
     result: type_defineHandlerGlue_handler_commandEnv.result
 )
@@ -26,9 +28,11 @@ func procedure_defineHandlerGlue_handler_commandEnv(command: Command, commandEnv
     var index = 0
     let arguments = command.arguments
     let arg_0 = try command.swiftValue(at: &index, for: type_defineHandlerGlue_handler_commandEnv.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_defineHandlerGlue_handler_commandEnv.param_1, in: commandEnv)
     if arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     try defineHandlerGlue(
-        handler: arg_0,
+        interface: arg_0,
+        attributes: arg_1,
         commandEnv: commandEnv
     )
     return nullValue
@@ -67,7 +71,7 @@ func gluelib_loadHandlers(into env: Environment) {
     
     env.define(interface_defineHandlerGlue_handler_commandEnv, procedure_defineHandlerGlue_handler_commandEnv)
     
-    try! env.set("expression", to: asIs) // caution: AsIs outputs the input Value exactly as-is, without evaluating it or capturing its lexical scope; this coercion is suitable for use only within primitive handlers that eval the parameter themselves using commandEnv // TO DO: stdlib needs to implement a native `expression` Coercion which thunks the input value before returning it
+    try! env.set("expression", to: asIs) // caution: AsIs outputs the input Value exactly as-is, without evaluating it or capturing its lexical scope; this coercion is suitable for use only within primitive handlers that eval the parameter themselves using commandEnv // TO DO: stdlib needs to implement a native `expression` Coercion which thunks the input value before returning it // TO DO: rename `raw`/`raw_expression`/`unbound_expression`?
     
     env.define(coercion: asScope)
     env.define(coercion: asLiteralName)

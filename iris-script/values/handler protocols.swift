@@ -40,7 +40,7 @@ protocol Handler: ComplexValue {
 
 extension Handler {
     
-    var description: String { return "\(self.interface):do…done" }
+    var description: String { return "\(self.interface)" }
 
     static var nominalType: Coercion { return asHandler }
     

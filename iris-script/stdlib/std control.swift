@@ -9,12 +9,6 @@
 
 // TO DO: where a handler function evals a value, the handler signature's returnType should propagate up to action.nativeEval(); alternatively, function might encapsulate action in a Value which is returned to the wrapper to force
 
-func ifTest(condition: Bool, action: Value, commandEnv: Scope) throws -> Value {
-    let result = try condition ? action.eval(in: commandEnv, as: asAnything) : nullAction
-    //print("`if` expr returned:", result, type(of: result))
-    return result
-}
-
 
 
 func ifTest(condition: Bool, action: Value, alternativeAction: Value, commandEnv: Scope) throws -> Value {
@@ -23,6 +17,13 @@ func ifTest(condition: Bool, action: Value, alternativeAction: Value, commandEnv
     return result
 }
 
+/*
+
+func ifTest(condition: Bool, action: Value, commandEnv: Scope) throws -> Value {
+    let result = try condition ? action.eval(in: commandEnv, as: asAnything) : nullAction
+    //print("`if` expr returned:", result, type(of: result))
+    return result
+}
 
 func elseTest(left action: Value, right alternativeAction: Value, commandEnv: Scope) throws -> Value { // TO DO: see TODO on AsAnything re. limiting scope of `didNothing` result
    // print("`else` evaluating left action operand:", action)
@@ -30,6 +31,8 @@ func elseTest(left action: Value, right alternativeAction: Value, commandEnv: Sc
     //print("action returned: \(result)")
     return result is NullAction ? try alternativeAction.eval(in: commandEnv, as: asAnything) : result
 }
+ */
+
 
 func repeatTimes(count: Int, action: Value, commandEnv: Scope) throws -> Value {
     var count = count

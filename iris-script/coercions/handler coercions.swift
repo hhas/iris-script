@@ -70,14 +70,14 @@ func unpackParameters(_ parameters: [Record.Field], in env: Scope) throws -> [Ha
     return result
 }
 
-func unpackCoercion(_ value: Value, in env: Environment) throws -> Coercion {
+func unpackCoercion(_ value: Value, in env: Scope) throws -> Coercion {
     // value may be Coercion, Command, or Record
     return try value.swiftEval(in: env, as: asCoercion)
 }
 
 
 
-func unpackHandlerInterface(_ signature: Value, in env: Environment, isEventHandler: Bool = false) throws -> HandlerInterface {
+func unpackHandlerInterface(_ signature: Value, in env: Scope, isEventHandler: Bool = false) throws -> HandlerInterface {
     let name: Symbol, parameters: [HandlerInterface.Parameter], returnType: Coercion
     switch signature {
     case let command as Command:
@@ -105,12 +105,34 @@ func unpackHandlerInterface(_ signature: Value, in env: Environment, isEventHand
 
 
 
-let asHandlerInterface = AsComplex<HandlerInterface>(name: "handler_interface") // TO DO: handler interface can be coerced to/from Record (problem: records may also describe argument list in minimal handler sig; if coercion matches {name:,input:,output:} as handler interface, user will need to include a handler name or `returning` clause if they want it treated as arg list; alternative is we always treat records as arg lists, and use a command or other constructor to build a signature from a record)
+let asHandlerInterface = AsHandlerInterface() // TO DO: handler interface can be coerced to/from Record (problem: records may also describe argument list in minimal handler sig; if coercion matches {name:,input:,output:} as handler interface, user will need to include a handler name or `returning` clause if they want it treated as arg list; alternative is we always treat records as arg lists, and use a command or other constructor to build a signature from a record)
 
 
 
 let nullHandlerInterface = HandlerInterface(name: nullSymbol, parameters: [], result: asAnything)
 
+
+
+struct AsHandlerInterface: SwiftCoercion {
+    
+    let name: Symbol = "handler_interface"
+    
+    typealias SwiftType = HandlerInterface
+    
+    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+        //print("AsHandlerInterface.unbox:", value)
+        return try unpackHandlerInterface(value, in: scope)
+    }
+
+    
+    func coerce(value: Value, in scope: Scope) throws -> Value {
+        return try self.unbox(value: value, in: scope)
+    }
+    
+    func box(value: SwiftType, in scope: Scope) -> Value {
+        return value
+    }
+}
 
 
 struct AsHandler: SwiftCoercion {
@@ -124,12 +146,15 @@ struct AsHandler: SwiftCoercion {
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         let env = scope as! Environment // TO DO: fix (NativeHandler currently takes Environment argument [effectively an activation record]; why?)
         // TO DO: return strongrefd handler?
+        
+        // TO DO: update this
+        
         switch value {
         case let handler as Handler: return handler
-        case let pair as Pair:
+//        case let pair as Pair:
             //let interface = try pair.key.swiftEval(in: env, as: asHandlerInterface)
-            let interface = try unpackHandlerInterface(pair.key, in: env)
-            return NativeHandler(interface: interface, action: pair.value, in: env)
+//            let interface = try unpackHandlerInterface(pair.key, in: env)
+//            return NativeHandler(interface: interface, action: pair.value, in: env)
         case let block as Block:
             return NativeHandler(interface: nullHandlerInterface, action: block, in: env)
         default:

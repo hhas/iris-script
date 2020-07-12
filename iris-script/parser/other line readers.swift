@@ -52,7 +52,7 @@ struct NameModifierReader: LineReader { // read hashtag, mentions, dot-notation 
     var code: String { return reader.code }
     
     let reader: LineReader
-        
+    
     init(_ reader: LineReader) {
         self.reader = reader
     }
@@ -63,8 +63,7 @@ struct NameModifierReader: LineReader { // read hashtag, mentions, dot-notation 
         case .hashtag, .mentions:
             let (endToken, endReader) = reader.next()
             switch endToken.form {
-            case .quotedName(_), .unquotedName(_), .operatorName(_):
-                let name = Symbol(endToken.content)
+            case .quotedName(let name), .unquotedName(let name):
                 let code = self.code[token.content.startIndex..<endToken.content.endIndex]
                 switch token.form {
                 case .hashtag:

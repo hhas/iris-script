@@ -64,7 +64,7 @@ func testSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, h
     fatalError("Not yet implemented.")
 }
 
-func firstElement(right elementType: Symbol, commandEnv: Scope) -> Value {
+func firstElement(right elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
     //return AEQuery(name: "first \(elementType) of \(commandEnv)") // TO DO: this needs target (if we treat all selectors as methods [closures over] AEQuery, the handlerEnv will be parent AEQuery)
     //fatalError("Not yet implemented.")
@@ -86,11 +86,11 @@ func allElements(right elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func beforeElement(left elementType: Symbol,right expression: Value) -> Value {
+func beforeElement(left elementType: Symbol, right expression: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func afterElement(left elementType: Symbol,right expression: Value) -> Value {
+func afterElement(left elementType: Symbol, right expression: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 

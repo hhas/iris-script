@@ -540,14 +540,14 @@ private func procedure_isNotAfter_left_right(command: Command, commandEnv: Scope
     return type_isNotAfter_left_right.result.box(value: result, in: handlerEnv)
 }
 
-// is {left, right}
+// is_same_as {left, right}
 private let type_isSameAs_left_right = (
     param_0: (Symbol("left"), AsString()),
     param_1: (Symbol("right"), AsString()),
     result: asBool
 )
 private let interface_isSameAs_left_right = HandlerInterface(
-    name: "is",
+    name: "is_same_as",
     parameters: [
         (type_isSameAs_left_right.param_0.0, "left", type_isSameAs_left_right.param_0.1),
         (type_isSameAs_left_right.param_1.0, "right", type_isSameAs_left_right.param_1.1),
@@ -566,14 +566,14 @@ private func procedure_isSameAs_left_right(command: Command, commandEnv: Scope, 
     return type_isSameAs_left_right.result.box(value: result, in: handlerEnv)
 }
 
-// is_not {left, right}
+// is_not_same_as {left, right}
 private let type_isNotSameAs_left_right = (
     param_0: (Symbol("left"), AsString()),
     param_1: (Symbol("right"), AsString()),
     result: asBool
 )
 private let interface_isNotSameAs_left_right = HandlerInterface(
-    name: "is_not",
+    name: "is_not_same_as",
     parameters: [
         (type_isNotSameAs_left_right.param_0.0, "left", type_isNotSameAs_left_right.param_0.1),
         (type_isNotSameAs_left_right.param_1.0, "right", type_isNotSameAs_left_right.param_1.1),
@@ -856,7 +856,7 @@ private func procedure_write_value(command: Command, commandEnv: Scope, handler:
     var index = 0
     let arg_0 = try command.swiftValue(at: &index, for: type_write_value.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
-    write(
+     write(
         value: arg_0
     )
     return nullValue
@@ -989,35 +989,6 @@ private func procedure_set_name_to(command: Command, commandEnv: Scope, handler:
     return type_set_name_to.result.box(value: result, in: handlerEnv)
 }
 
-// if {left, right}
-private let type_ifTest_condition_action = (
-    param_0: (Symbol("left"), asBool),
-    param_1: (Symbol("right"), asIs),
-    result: AsOptional(AsValue())
-)
-private let interface_ifTest_condition_action = HandlerInterface(
-    name: "if",
-    parameters: [
-        (type_ifTest_condition_action.param_0.0, "condition", type_ifTest_condition_action.param_0.1),
-        (type_ifTest_condition_action.param_1.0, "action", type_ifTest_condition_action.param_1.1),
-    ],
-    result: type_ifTest_condition_action.result
-)
-private func procedure_ifTest_condition_action(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
-    var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_ifTest_condition_action.param_0, in: commandEnv)
-    let arg_1 = try command.swiftValue(at: &index, for: type_ifTest_condition_action.param_1, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
-    let result = try ifTest(
-        condition: arg_0,
-        action: arg_1,
-        commandEnv: commandEnv
-    )
-    return type_ifTest_condition_action.result.box(value: result, in: handlerEnv)
-}
-
-
-
 // if {left, middle, right}
 private let type_ifTest_condition_action_alternativeAction = (
     param_0: (Symbol("left"), asBool),
@@ -1046,36 +1017,7 @@ private func procedure_ifTest_condition_action_alternativeAction(command: Comman
         alternativeAction: arg_2,
         commandEnv: commandEnv
     )
-    return type_ifTest_condition_action.result.box(value: result, in: handlerEnv)
-}
-
-
-
-// else {left, right}
-private let type_elseTest_left_right = (
-    param_0: (Symbol("left"), asIs),
-    param_1: (Symbol("right"), asIs),
-    result: AsOptional(AsValue())
-)
-private let interface_elseTest_left_right = HandlerInterface(
-    name: "else",
-    parameters: [
-        (type_elseTest_left_right.param_0.0, "left", type_elseTest_left_right.param_0.1),
-        (type_elseTest_left_right.param_1.0, "right", type_elseTest_left_right.param_1.1),
-    ],
-    result: type_elseTest_left_right.result
-)
-private func procedure_elseTest_left_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
-    var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_elseTest_left_right.param_0, in: commandEnv)
-    let arg_1 = try command.swiftValue(at: &index, for: type_elseTest_left_right.param_1, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
-    let result = try elseTest(
-        left: arg_0,
-        right: arg_1,
-        commandEnv: commandEnv
-    )
-    return type_elseTest_left_right.result.box(value: result, in: handlerEnv)
+    return type_ifTest_condition_action_alternativeAction.result.box(value: result, in: handlerEnv)
 }
 
 // while {left, right}
@@ -1187,28 +1129,26 @@ private func procedure_ofClause_attribute_target(command: Command, commandEnv: S
     return type_ofClause_attribute_target.result.box(value: result, in: handlerEnv)
 }
 
-
-
 // app {bundle_identifier}
-private let type_AEApplication_bundleID = (
+private let type_Application_bundleIdentifier = (
     param_0: (Symbol("bundle_identifier"), AsString()),
     result: AsValue()
 )
-private let interface_AEApplication_bundleID = HandlerInterface(
+private let interface_Application_bundleIdentifier = HandlerInterface(
     name: "app",
     parameters: [
-        (type_AEApplication_bundleID.param_0.0, "bundle_identifier", type_AEApplication_bundleID.param_0.1),
+        (type_Application_bundleIdentifier.param_0.0, "bundle_identifier", type_Application_bundleIdentifier.param_0.1),
     ],
-    result: type_AEApplication_bundleID.result
+    result: type_Application_bundleIdentifier.result
 )
-private func procedure_AEApplication_bundleID(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_Application_bundleIdentifier(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_AEApplication_bundleID.param_0, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_Application_bundleIdentifier.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try Application(
         bundleIdentifier: arg_0
     )
-    return type_AEApplication_bundleID.result.box(value: result, in: handlerEnv)
+    return type_Application_bundleIdentifier.result.box(value: result, in: handlerEnv)
 }
 
 // at {left, right}
@@ -1293,24 +1233,52 @@ private func procedure_idSelector_elementType_selectorData(command: Command, com
     return type_idSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
 }
 
-// where {left, right}
-private let type_whereSelector_elementType_selectorData = (
+// from {left, right}
+private let type_rangeSelector_elementType_selectorData = (
     param_0: (Symbol("left"), AsLiteralName()),
     param_1: (Symbol("right"), asIs),
     result: asIs
 )
-private let interface_whereSelector_elementType_selectorData = HandlerInterface(
-    name: "where",
+private let interface_rangeSelector_elementType_selectorData = HandlerInterface(
+    name: "from",
     parameters: [
-        (type_whereSelector_elementType_selectorData.param_0.0, "element_type", type_whereSelector_elementType_selectorData.param_0.1),
-        (type_whereSelector_elementType_selectorData.param_1.0, "selector_data", type_whereSelector_elementType_selectorData.param_1.1),
+        (type_rangeSelector_elementType_selectorData.param_0.0, "element_type", type_rangeSelector_elementType_selectorData.param_0.1),
+        (type_rangeSelector_elementType_selectorData.param_1.0, "selector_data", type_rangeSelector_elementType_selectorData.param_1.1),
     ],
-    result: type_whereSelector_elementType_selectorData.result
+    result: type_rangeSelector_elementType_selectorData.result
 )
-private func procedure_whereSelector_elementType_selectorData(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_rangeSelector_elementType_selectorData(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_whereSelector_elementType_selectorData.param_0, in: commandEnv)
-    let arg_1 = try command.swiftValue(at: &index, for: type_whereSelector_elementType_selectorData.param_1, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_rangeSelector_elementType_selectorData.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_rangeSelector_elementType_selectorData.param_1, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    let result = try rangeSelector(
+        elementType: arg_0,
+        selectorData: arg_1,
+        commandEnv: commandEnv,
+        handlerEnv: handlerEnv
+    )
+    return type_rangeSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
+}
+
+// whose {left, right}
+private let type_testSelector_elementType_selectorData = (
+    param_0: (Symbol("left"), AsLiteralName()),
+    param_1: (Symbol("right"), asIs),
+    result: asIs
+)
+private let interface_testSelector_elementType_selectorData = HandlerInterface(
+    name: "whose",
+    parameters: [
+        (type_testSelector_elementType_selectorData.param_0.0, "element_type", type_testSelector_elementType_selectorData.param_0.1),
+        (type_testSelector_elementType_selectorData.param_1.0, "selector_data", type_testSelector_elementType_selectorData.param_1.1),
+    ],
+    result: type_testSelector_elementType_selectorData.result
+)
+private func procedure_testSelector_elementType_selectorData(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.swiftValue(at: &index, for: type_testSelector_elementType_selectorData.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_testSelector_elementType_selectorData.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try testSelector(
         elementType: arg_0,
@@ -1318,7 +1286,7 @@ private func procedure_whereSelector_elementType_selectorData(command: Command, 
         commandEnv: commandEnv,
         handlerEnv: handlerEnv
     )
-    return type_whereSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
+    return type_testSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
 }
 
 // thru {left, right}
@@ -1364,8 +1332,7 @@ private func procedure_firstElement_right(command: Command, commandEnv: Scope, h
     let arg_0 = try command.swiftValue(at: &index, for: type_firstElement_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = firstElement(
-        right: arg_0,
-        commandEnv: commandEnv
+        right: arg_0
     )
     return type_firstElement_right.result.box(value: result, in: handlerEnv)
 }
@@ -1632,18 +1599,17 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_defineCommandHandler_right, procedure_defineCommandHandler_right)
     env.define(interface_defineEventHandler_right, procedure_defineEventHandler_right)
     env.define(interface_set_name_to, procedure_set_name_to)
-    env.define(interface_ifTest_condition_action, procedure_ifTest_condition_action)
-    env.define(interface_elseTest_left_right, procedure_elseTest_left_right)
+    env.define(interface_ifTest_condition_action_alternativeAction, procedure_ifTest_condition_action_alternativeAction)
     env.define(interface_whileRepeat_condition_action, procedure_whileRepeat_condition_action)
     env.define(interface_repeatWhile_action_condition, procedure_repeatWhile_action_condition)
     env.define(interface_tell_target_action, procedure_tell_target_action)
     env.define(interface_ofClause_attribute_target, procedure_ofClause_attribute_target)
-    
-    env.define(interface_AEApplication_bundleID, procedure_AEApplication_bundleID)
+    env.define(interface_Application_bundleIdentifier, procedure_Application_bundleIdentifier)
     env.define(interface_atSelector_elementType_selectorData, procedure_atSelector_elementType_selectorData)
     env.define(interface_nameSelector_elementType_selectorData, procedure_nameSelector_elementType_selectorData)
     env.define(interface_idSelector_elementType_selectorData, procedure_idSelector_elementType_selectorData)
-    env.define(interface_whereSelector_elementType_selectorData, procedure_whereSelector_elementType_selectorData)
+    env.define(interface_rangeSelector_elementType_selectorData, procedure_rangeSelector_elementType_selectorData)
+    env.define(interface_testSelector_elementType_selectorData, procedure_testSelector_elementType_selectorData)
     env.define(interface_ElementRange_from_to, procedure_ElementRange_from_to)
     env.define(interface_firstElement_right, procedure_firstElement_right)
     env.define(interface_middleElement_right, procedure_middleElement_right)
@@ -1656,5 +1622,5 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_insertAfter_right, procedure_insertAfter_right)
     env.define(interface_insertAtBeginning_, procedure_insertAtBeginning_)
     env.define(interface_insertAtEnd_, procedure_insertAtEnd_)
-
 }
+

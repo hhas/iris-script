@@ -23,7 +23,7 @@ import Foundation
 func ««functionName»»(««+functionParameters»»\
 ««label»»««binding»»: ««type»» ««~functionParameters»», \
 ««-functionParameters»») ««+canThrow»» throws ««-canThrow»» ««+hasReturnType»» -> ««returnType»» ««-hasReturnType»» {
-    fatalError("Not yet implemented.")
+    fatalError("««functionName»» of ««libraryName»» is not yet implemented.")
 }
 ««-defineHandler»»
 """
@@ -33,6 +33,7 @@ let handlerStubsTemplate = TextTemplate(templateSource) { (tpl: Node, args: (lib
     tpl.libraryName.set(args.libraryName)
     tpl.defineHandler.map(args.handlerGlues) { (node: Node, glue: HandlerGlue) -> Void in
         node.functionName.set(glue.swiftName)
+        node.libraryName.set(args.libraryName)
         let scopes = glue.useScopes.map{(Symbol($0), Symbol($0), asScope) as HandlerInterface.Parameter}
         node.functionParameters.map(glue.swiftParameters) { (node: Node, item: (label: String, binding: String?, type: String)) -> Void in
             node.label.set(item.label)

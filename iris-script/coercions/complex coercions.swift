@@ -60,7 +60,7 @@ let asSymbol = AsSymbol()
 
 let asBlock = AsComplex<Block>(name: "block")
 
-let asPair = AsComplex<Pair>(name: "pair")
+//let asPair = AsComplex<Pair>(name: "pair")
 
 
 

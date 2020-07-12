@@ -47,7 +47,7 @@ extension Parser.BlockStack {
     
     // secondary stack used to track nested structures (lists, records, groups, keyword-based blocks)
     
-    mutating func begin(_ form: Parser.BlockType, at index: Int) {
+    mutating func begin(_ form: Parser.BlockType, at index: Int) { // index is first token of block (or conjunction keyword)
         self.append((index, form))
     }
     

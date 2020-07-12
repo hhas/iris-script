@@ -36,7 +36,7 @@ struct PatternDefinition: CustomStringConvertible {
     enum Associativity {
         case left
         case right
-        // TO DO: `case none` (e.g. `1 thru 2 thru 3` should be a syntax error) [note that treating `a OP b OP c` as syntax error isn't absolute protection as parenthesizing one or other operation will allow it to parse, as will using underlying command syntax, at which point it's up to argument unpacking to reject the bad operand as being the wrong type]
+        // TO DO: `case none` (e.g. `1 thru 2 thru 3` should be a syntax error; ditto for `at`, `named`, etc) [note that treating `a OP b OP c` as syntax error isn't absolute protection as parenthesizing one or other operation will allow it to parse, as will using underlying command syntax, at which point it's up to argument unpacking to reject the bad operand as being the wrong type]
     }
     
     private static var _originID = 0

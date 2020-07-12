@@ -78,32 +78,32 @@ extension Parser {
         // (note that nested commands are not immediately reduced here but are instead tagged with matchers that will reduce them during reductionForOperatorExpression() as if they were atom/prefix operators of predetermined precedence; also note that full-punctuation commands, i.e. `NAME RECORD`, have already been reduced to .value(Command(…)) by the parser's main loop so are not touched again here)
         self.reduceCommandExpressions(from: expressionStartIndex, to: &stopIndex)
         // once all commands’ boundaries have been determined and the commands themselves reduced to .values, reduce all operators
-        
-        
-        // TO DO: this is wrong
-    //    self.blockStack.endConjunctions() // discard any pending conjunctions, e.g. given `if TEST then ACTION.`, this will discard the `else` clause upon encountering period delimiter; note that if an operator has >1 conjunction, reduceExpressionBeforeConjunction() will add a new entry to blockStack after it’s shifted the first conjunction
-        
-        
+        //print("REDUCING EXPRESSION:", expressionStartIndex..<stopIndex)
         //   print("<<<",self.blockStack)
         //self.tokenStack.show(expressionStartIndex, stopIndex)
         self.tokenStack.reduceOperatorExpression(from: expressionStartIndex, to: &stopIndex)
-        //print("REDUCED EXPRESSION:", self.tokenStack[expressionStartIndex].form)
+        //print("REDUCED EXPRESSION:", expressionStartIndex, self.tokenStack[expressionStartIndex].form)
         //self.tokenStack.show(expressionStartIndex, stopIndex)
     }
     
     
-    func foundRightExpressionDelimiter() { // called before shifting punctuation/linefeed delimiter token
+    func foundRightExpressionDelimiter() { // called by parser’s main loop before shifting separator punctuation/linefeed/end-of-block/end-of-script token
        // print("foundRightExpressionDelimiter:", self.blockStack.leftDelimiterIndex, self.tokenStack.count, self.tokenStack[self.blockStack.leftDelimiterIndex].form, self.tokenStack.last!.form)
         // TO DO: review this (we want to avoid reducing `do` in `…do,…`)
         
         self.blockStack.endConjunctions() // discard any pending conjunctions, e.g. given `if TEST then ACTION.`, this will discard the `else` clause upon encountering period delimiter; note that if an operator has >1 conjunction, reduceExpressionBeforeConjunction() will add a new entry to blockStack after it’s shifted the first conjunction
-        
+        // if there’s at least 1 token between left and right expression delimiters then reduce
         if self.blockStack.leftDelimiterIndex < self.tokenStack.count - 1 {
             self.reduceExpression()
             // check if reducing the expression has completed any more in-progress matches; if so, reduce those too
+            var size = self.tokenStack.count, count = 0 // DEBUG
             while self.tokenStack.last!.matches.contains(where: { $0.isAFullMatch }) {
-               // print("rereduce", self.tokenStack.count - 1, self.tokenStack.last!)
                 self.reduceExpression()
+                if self.tokenStack.count == size { count += 1 } else { size = self.tokenStack.count }
+                if count > 5 {
+                    print("BUG: Stuck loop in foundRightExpressionDelimiter: token stack isn’t reducing in size.", self.blockStack.leftDelimiterIndex..<self.tokenStack.count, self.current.token); self.tokenStack.show(); self.blockStack.show()
+                    break
+                }
             }
         }
 

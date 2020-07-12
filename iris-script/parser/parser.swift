@@ -183,7 +183,7 @@ public class Parser {
     var currentIndex: Int { return self.tokenStack.count - 1 }
     
     func startBlock(for form: Parser.BlockType, adding matchers: [PatternMatch]) {
-        self.blockStack.begin(form, at: self.currentIndex) // track nested blocks on a secondary stack
+        self.blockStack.begin(form, at: self.currentIndex + 1) // track nested blocks on a secondary stack
         self.shift(adding: matchers) // shift the opening token onto stack, attaching one or more pattern matchers to it
     }
     

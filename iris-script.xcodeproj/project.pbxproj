@@ -123,6 +123,21 @@
 		4F8C404424B8C93100735273 /* result descriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F731D2E23254869008700C6 /* result descriptor.swift */; };
 		4F8C404524B8C93100735273 /* keyword converter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F46A41B232259FB008E0265 /* keyword converter.swift */; };
 		4F8C404B24B8C9B000735273 /* AppleEvents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F08503923229BC600F0BEAB /* AppleEvents.framework */; };
+		4F8C404C24BA492700735273 /* errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D01522AE819000C9FD23 /* errors.swift */; };
+		4F8C404D24BA496200735273 /* keyword.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE7845E246AB298006AC859 /* keyword.swift */; };
+		4F8C404E24BA496200735273 /* pattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE78455246AB15E006AC859 /* pattern.swift */; };
+		4F8C404F24BA496200735273 /* pattern match.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB53941246FF69B0040B520 /* pattern match.swift */; };
+		4F8C405024BA496200735273 /* pattern definition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE7845C246AB1CC006AC859 /* pattern definition.swift */; };
+		4F8C405124BA496200735273 /* standard patterns.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2876B32471A35A0012E692 /* standard patterns.swift */; };
+		4F8C405224BA496200735273 /* standard reducers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28C40724731F750079301A /* standard reducers.swift */; };
+		4F8C405324BA496200735273 /* operator definitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB53943246FF6DF0040B520 /* operator definitions.swift */; };
+		4F8C405424BA496200735273 /* operator registry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25553A22E5053E002FAE5E /* operator registry.swift */; };
+		4F8C405524BA496200735273 /* token stack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28F28E24A5F88200DA62C4 /* token stack.swift */; };
+		4F8C405624BA496200735273 /* block stack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2BAC3824B6017800107A87 /* block stack.swift */; };
+		4F8C405724BA496300735273 /* reduce commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28323E2474712C004C9CE5 /* reduce commands.swift */; };
+		4F8C405824BA496300735273 /* reduce expressions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F282D5524AEFF470027D6DE /* reduce expressions.swift */; };
+		4F8C405924BA496300735273 /* parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2D2ADE245AFDCE005F3709 /* parser.swift */; };
+		4F8C405A24BA496300735273 /* editable script.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2931FF22E2290B00BC0AD4 /* editable script.swift */; };
 		4F96F85924B8C5B0003D8857 /* SwiftAutomation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F28389824B8C4D80054C70E /* SwiftAutomation.framework */; };
 		4FB53942246FF69B0040B520 /* pattern match.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB53941246FF69B0040B520 /* pattern match.swift */; };
 		4FB53944246FF6DF0040B520 /* operator definitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB53943246FF6DF0040B520 /* operator definitions.swift */; };
@@ -601,8 +616,8 @@
 			isa = PBXGroup;
 			children = (
 				4FC5C81C23129BCC007D694C /* handler glue.swift */,
-				4FC5C81B23129BCC007D694C /* handler glue template.swift */,
 				4F409195231904C900045E85 /* handler stub template.swift */,
+				4FC5C81B23129BCC007D694C /* handler glue template.swift */,
 				4F5B24B123150C52001C1941 /* operator glue template.swift */,
 				4FC5C8242312B8FA007D694C /* support */,
 				4FC5C7FA23109824007D694C /* gluelib_handlers.swift */,
@@ -772,6 +787,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F8C404D24BA496200735273 /* keyword.swift in Sources */,
+				4F8C404E24BA496200735273 /* pattern.swift in Sources */,
+				4F8C404F24BA496200735273 /* pattern match.swift in Sources */,
+				4F8C405024BA496200735273 /* pattern definition.swift in Sources */,
+				4F8C405124BA496200735273 /* standard patterns.swift in Sources */,
+				4F8C405224BA496200735273 /* standard reducers.swift in Sources */,
+				4F8C405324BA496200735273 /* operator definitions.swift in Sources */,
+				4F8C405424BA496200735273 /* operator registry.swift in Sources */,
+				4F8C405524BA496200735273 /* token stack.swift in Sources */,
+				4F8C405624BA496200735273 /* block stack.swift in Sources */,
+				4F8C405724BA496300735273 /* reduce commands.swift in Sources */,
+				4F8C405824BA496300735273 /* reduce expressions.swift in Sources */,
+				4F8C405924BA496300735273 /* parser.swift in Sources */,
+				4F8C405A24BA496300735273 /* editable script.swift in Sources */,
+				4F5B24D823171E55001C1941 /* main.swift in Sources */,
 				4F5B24DC23171EB9001C1941 /* parser protocols.swift in Sources */,
 				4F5B24DD23171EB9001C1941 /* characters.swift in Sources */,
 				4F5B24DE23171EB9001C1941 /* token.swift in Sources */,
@@ -823,7 +853,7 @@
 				4F5B251423171EB9001C1941 /* text template.swift in Sources */,
 				4F5B251523171EB9001C1941 /* gluelib_handlers.swift in Sources */,
 				4F5B251623171EB9001C1941 /* gluelib_operators.swift in Sources */,
-				4F5B24D823171E55001C1941 /* main.swift in Sources */,
+				4F8C404C24BA492700735273 /* errors.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
