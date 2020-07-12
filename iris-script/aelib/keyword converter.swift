@@ -42,7 +42,7 @@ public let reservedSpecifierMethods: Set<String> = [ // TO DO: revise
     "at",
     "named",
     "for_id",
-    "where",
+    "whose",
     "beginning",
     "end",
     "before",

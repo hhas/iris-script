@@ -38,30 +38,28 @@ import Foundation
  */
 
 
-// TO DO: should element selection handlers be available at global level, or solely as 'methods' on collection-like values? e.g. `document at 1` at top level is a valid query, regardless of whether evaluating it succeeds or fails
+// TO DO: should element selection handlers be available at global level, or solely as 'methods' on collection-like values? e.g. `document at 1` at top level is a valid query, regardless of whether evaluating it succeeds or fails; probably best as methods on queryable values, with the below acting as catch-alls when the top-level script does not explicitly delegate these calls to a queryable value
 
+// TO DO: what scope(s) do these functions need
 
 func atSelector(elementType: Value, selectorData: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value {
-    //fatalError("Not yet implemented.")
-//    print("atSelector:", (elementType, selectorData))
-    fatalError("Not yet implemented.")
-//    return AEQuery(name: "«\(elementType) at \(selectorData)» of \(commandEnv)") // TO DO: this needs target
+    throw InternalError(description: "Can’t create a reference to `\(elementType) at \(selectorData)` of \(commandEnv) as it is not selectable.")
 }
 
 func nameSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope) throws -> Value {
-    fatalError("Not yet implemented.")
+    throw InternalError(description: "Can’t create a reference to `\(elementType) named \(selectorData)` of \(commandEnv) as it is not selectable.")
 }
 
 func idSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope) throws -> Value {
-    fatalError("Not yet implemented.")
+    throw InternalError(description: "Can’t create a reference to `\(elementType) id \(selectorData)` of \(commandEnv) as it is not selectable.")
 }
 
 func rangeSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value {
-    fatalError("Not yet implemented.")
+    throw InternalError(description: "Can’t create a reference to `\(elementType) from \(selectorData)` of \(commandEnv) as it is not selectable.")
 }
 
 func testSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value {
-    fatalError("Not yet implemented.")
+    throw InternalError(description: "Can’t create a reference to `\(elementType) whose \(selectorData)` of \(commandEnv) as it is not selectable.")
 }
 
 func firstElement(right elementType: Symbol) -> Value {

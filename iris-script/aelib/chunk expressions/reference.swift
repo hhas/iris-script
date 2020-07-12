@@ -128,7 +128,7 @@ extension ReferenceProtocol {
             return ByIDSelector(appData: self.appData, parentDesc: self.desc)
         case "from":
             return ByRangeSelector(appData: self.appData, parentDesc: self.desc)
-        case "where":
+        case "whose":
             return ByTestSelector(appData: self.appData, parentDesc: self.desc)
         case "before", "after": // TO DO: 2 versions of this: `element_type before element of…` (relative), `before element of…` (insertion); dispatch on presence/absence of left operand (it is 2 different operators; just not sure if it should be 2 different commands, which operators could map to)
             return ByRelativeSelector(form: ByRelativeSelector.Selector(rawValue: name)!, appData: self.appData, parentDesc: self.desc as! ObjectSpecifierDescriptor) // returns either Reference or Insertion, depending on 2 args or one

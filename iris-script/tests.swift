@@ -12,11 +12,16 @@ import Foundation
 
 func test() {
     
+    // get document at 1
+    // (‘get’ {‘at’ {‘documents’, 1}})
+    
+    // get documents whose (name is_same_as "Test")
+    // (‘get’ {‘whose’ {‘documents’, ‘is_same_as’ {‘name’, "Test"}}})
     
     runScript("""
     tell app “com.apple.TextEdit” to do
-        make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}
-        get text of documents
+        make new: #document at: end of documents with_properties: {name: “Test”, text: “Hello again!”}
+        get text of every document
     done
     """)
     

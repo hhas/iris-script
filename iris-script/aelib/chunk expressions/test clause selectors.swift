@@ -20,8 +20,8 @@ struct ComparisonSelector: TestSelector {
         switch self.form {
         case .lt: names = ("<", "is_before")
         case .le: names = ("≤", "is_not_after")
-        case .eq: names = ("=", "is")
-        case .ne: names = ("≠", "is_not")
+        case .eq: names = ("=", "is_same_as")
+        case .ne: names = ("≠", "is_not_same_as")
         case .gt: names = (">", "is_after")
         case .ge: names = ("≥", "is_not_before")
         case .beginsWith: names = ("begins_with", "begins_with")

@@ -294,6 +294,7 @@
 		4F84D01522AE819000C9FD23 /* errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = errors.swift; sourceTree = "<group>"; };
 		4F857700230C9247002B47F2 /* stdlib_constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = stdlib_constants.swift; sourceTree = "<group>"; };
 		4F857702230D34AE002B47F2 /* std state.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "std state.swift"; sourceTree = "<group>"; };
+		4F8C405B24BB9C1400735273 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		4FAF5F44231E817A0082FB6F /* reference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = reference.swift; sourceTree = "<group>"; };
 		4FB53941246FF69B0040B520 /* pattern match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "pattern match.swift"; sourceTree = "<group>"; };
 		4FB53943246FF6DF0040B520 /* operator definitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator definitions.swift"; sourceTree = "<group>"; };
@@ -566,6 +567,7 @@
 		4F84CFF422ADA0F100C9FD23 = {
 			isa = PBXGroup;
 			children = (
+				4F8C405B24BB9C1400735273 /* README.md */,
 				4FC5C8232312A06C007D694C /* notes.txt */,
 				4F28388D24B8C4D80054C70E /* SwiftAutomation.xcodeproj */,
 				4F84CFFF22ADA0F200C9FD23 /* iris-script */,

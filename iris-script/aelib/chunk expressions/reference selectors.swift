@@ -231,7 +231,7 @@ struct ByTestSelector: QuerySelector { // ‘whose’ {element_type, test}
     let parentDesc: SpecifierDescriptor
     
     var interface: HandlerInterface {
-        return HandlerInterface(name: "where",
+        return HandlerInterface(name: "whose",
                                 parameters: [("left", "element_type", asLiteralName), ("right", "selector_data", asTestClause)], // TO DO: left may also be [deferred] selector command
                                 result: asReference)
     }
