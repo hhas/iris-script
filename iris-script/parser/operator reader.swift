@@ -37,21 +37,21 @@ import Foundation
 // TO DO: need to rethink reader chaining as unwrapping/rewrapping of readers within next() is a giant PITA to get right; (from outside, we want something like monadic bind that pipelines output of one reader as input to next without the composing code having to worry about connection details)
 
 
-struct OperatorReader: LineReader {
+public struct OperatorReader: LineReader {
     
     let reader: LineReader
     let operators: OperatorRegistry
     
-    var code: String { return self.reader.code }
+    public var code: String { return self.reader.code }
     
-    init(_ reader: LineReader, for operators: OperatorRegistry) {
+    public init(_ reader: LineReader, for operators: OperatorRegistry) {
         self.reader = reader
         self.operators = operators
     }
     
     // TO DO: what about .unquotedName? (NameReader needs to apply first to concatenate underscore-separated .letters; however, trailing digits are also concatenated with or without underscores, e.g. `ISO_8601` but also `int64`, so we need a policy on if/where OperatorReader should be allowed to split unquotedName into .operatorName and .digits; note that this gets a lot hairier if NameReader also gets to concat symbols with digits, so we probably want to forbid that; only NumericReader should be concating .symbols when reading currencies/quantities, e.g. `32°C`, `$21.40`, `5€`)
     
-    func next() -> (Token, LineReader) {
+    public func next() -> (Token, LineReader) {
         var (token, reader) = self.reader.next()
         reader = OperatorReader(reader, for: self.operators)
         switch token.form {
@@ -91,6 +91,6 @@ struct OperatorReader: LineReader {
 
 
 
-func newOperatorReader(for operators: OperatorRegistry) -> EditableScript.LineReaderAdapter {
+public func newOperatorReader(for operators: OperatorRegistry) -> EditableScript.LineReaderAdapter {
     return { (reader: LineReader) -> LineReader in return OperatorReader(reader, for: operators) }
 }

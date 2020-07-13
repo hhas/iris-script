@@ -31,7 +31,7 @@ import Foundation
 
 // TO DO: should Values adopt Accessor rather than Mutator?
 
-protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // TO DO: Codable (Q. use Codable for AE bridging?)
+public protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // TO DO: Codable (Q. use Codable for AE bridging?)
         
     var description: String { get }
     
@@ -70,31 +70,31 @@ protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // T
 
 extension Value { // default implementations
 
-    var swiftLiteralDescription: String { fatalError("\(type(of: self)).swiftLiteralDescription is not supported.") } // TO DO: any use-cases where it should be?
+    public var swiftLiteralDescription: String { fatalError("\(type(of: self)).swiftLiteralDescription is not supported.") } // TO DO: any use-cases where it should be?
     
-    var nominalType: Coercion { return type(of: self).nominalType }
+    public var nominalType: Coercion { return type(of: self).nominalType }
     
-    var isMemoizable: Bool { return false }
+    public var isMemoizable: Bool { return false }
     
-    var immutableValue: Value { return self } // default implementation as most Value types are inherently immutable; caution: mutable values MUST override this; TO DO: move this to ScalarValue, forcing collection and complex values to provide their own implementation?
+    public var immutableValue: Value { return self } // default implementation as most Value types are inherently immutable; caution: mutable values MUST override this; TO DO: move this to ScalarValue, forcing collection and complex values to provide their own implementation?
     
     // TO DO: rethrow errors as EvaluationError (in particular, null coercion errors must not propagate)
     
-    func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
+    public func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
         return try coercion.coerce(value: self, in: scope)
     }
-    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    public func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         //print("Value.swiftEval()", self, coercion, T.self)
         return try coercion.unbox(value: self, in: scope)
     }
     
     // accessors
     
-    func get(_ name: Symbol) -> Value? {
+    public func get(_ name: Symbol) -> Value? {
         return name == nullSymbol ? self : nil
     }
 
-    func set(_ name: Symbol, to value: Value) throws {
+    public func set(_ name: Symbol, to value: Value) throws {
         throw ImmutableValueError(name: name, in: self) // TO DO: check if/where name can be nullSymbol (e.g. when setting an environment slot, ideally we want the error message to give the slot name)
     }
     
@@ -103,43 +103,43 @@ extension Value { // default implementations
     
     //
     
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // evaluate value as its preferred type; important: concrete types that require evaluation override this as necessary // TO DO: having this as default behavior easily masks implementation bugs, move this to ScalarValue and other literal types that always return self, ensuring other types (lists, commands, etc) provide their own implementations [enforced by swiftc type checker]
+    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // evaluate value as its preferred type; important: concrete types that require evaluation override this as necessary // TO DO: having this as default behavior easily masks implementation bugs, move this to ScalarValue and other literal types that always return self, ensuring other types (lists, commands, etc) provide their own implementations [enforced by swiftc type checker]
         return self
     }
     
     // TO DO: should default implementations of toTYPE forward to one or more [@inlinable?] generic implementations? if we want to eliminate Value.eval/swiftEval then this will be easiest way to do it, as types that currently override eval can override the generic method[s] instead of every single one of the following
     
-    func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
+    public func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
         throw UnsupportedCoercionError(value: self, coercion: coercion)
     }
     
-    func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue {
+    public func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue {
         return try self.toTYPE(in: scope, as: coercion)
     }
-    func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
+    public func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
         return try self.toTYPE(in: scope, as: coercion)
     }
     
-    func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool { // TBC
+    public func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool { // TBC
         return try self.toTYPE(in: scope, as: coercion)
     }
-    func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
+    public func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
         return try self.toTYPE(in: scope, as: coercion)
     }
-    func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
+    public func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
         return try self.toTYPE(in: scope, as: coercion)
     }
-    func toString(in scope: Scope, as coercion: Coercion) throws -> String {
+    public func toString(in scope: Scope, as coercion: Coercion) throws -> String {
         return try self.toTYPE(in: scope, as: coercion)
     }
     
     // Q. implement toArray in terms of iterator (or possibly even `toIterator`?); A. best not to, as cached/memoized values can be returned as-is
     
     // note that these should be overridden in OrderedList, and possibly in KeyedList+UniqueList too; anywhere else?
-    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList {
+    public func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList {
         return OrderedList([try self.eval(in: scope, as: coercion.item)])
     }
-    func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
+    public func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
         return try [self.swiftEval(in: scope, as: coercion.swiftItem)]
     }
     
@@ -148,14 +148,14 @@ extension Value { // default implementations
     //}
     
     // TO DO: is this appropriate? (probably, c.f. Value->OrderedList(Value), but need to check corner cases for command args/handler sigs - may need to distinguish record literals, as `foo`, `foo {}`, `foo nothing`, and `foo {nothing}` have different meanings) // as with toList/toArray, this implementation isn't suitable for commands/blocks; Q. what about pair?
-    func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
+    public func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
         return try Record([(nullSymbol, self.eval(in: scope, as: asAnything))]) // TO DO: need to eval self; TO DO: this is also wrong for commands (move to ScalarValue extension?)
     }
 }
 
 // TO DO: can/should all scalars be BoxedValues? what functionality can be defined on BoxedValue extension?
 
-protocol BoxedSwiftValue: Value {
+public protocol BoxedSwiftValue: Value {
     
     associatedtype SwiftType
     
@@ -167,9 +167,9 @@ protocol BoxedSwiftValue: Value {
 
 extension BoxedSwiftValue {
     
-    var swiftLiteralDescription: String { return "\(type(of: self))(\(formatSwiftLiteral(self.data)))" }
+    public var swiftLiteralDescription: String { return "\(type(of: self))(\(formatSwiftLiteral(self.data)))" }
     
-    var description: String { return String(describing: self.data) }
+    public var description: String { return String(describing: self.data) }
 }
 
 
@@ -178,42 +178,42 @@ extension BoxedSwiftValue {
 
 // to cast or check if a Value can be used as a hash key, use `value as? HashableValue` or `value is HashableValue`, not KeyConvertible (which is a generic protocol)
 
-protocol HashableValue: Value {
+public protocol HashableValue: Value {
     var dictionaryKey: KeyedList.Key { get }
 }
 
-protocol KeyConvertible: HashableValue, Hashable { } // Values that can be used as hash keys (Int, Double, Text, Symbol, etc) must implement Hashable+Equatable and adopt KeyConvertible
+public protocol KeyConvertible: HashableValue, Hashable { } // Values that can be used as hash keys (Int, Double, Text, Symbol, etc) must implement Hashable+Equatable and adopt KeyConvertible
 
 extension KeyConvertible {
     
-    var dictionaryKey: KeyedList.Key { return KeyedList.Key(self) } // TO DO: how/where do we perform normalizations (e.g. case-sensitivity) defined by Record's key Coercion
+    public var dictionaryKey: KeyedList.Key { return KeyedList.Key(self) } // TO DO: how/where do we perform normalizations (e.g. case-sensitivity) defined by Record's key Coercion
 }
 
 
 
-protocol ScalarValue: Value {
+public protocol ScalarValue: Value {
 }
 
 
 
 extension ScalarValue {
     
-    var isMemoizable: Bool { return true }
-    
+    public var isMemoizable: Bool { return true }
+    public   
     func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue { // TO DO: toScalar? (as long as Text can represent all scalars, we should be OK; this does mean that boolean and symbol are not scalars though)
         return self
     }
 }
 
 
-typealias BoxedScalarValue = ScalarValue & BoxedSwiftValue
+public typealias BoxedScalarValue = ScalarValue & BoxedSwiftValue
 
 
 
 // TO DO: what about quantities (length, weight, currency, etc)? these will always hold `(number,unit)` (how do we define units in a way that's extensible?); Q: should multiplying two lengths return area? (yes, behaviors should fit end-user expectations; OTOH multiplying two weights is always an error, while dividing two weights returns number); could do with making this stuff data-driven
 
 
-protocol CollectionValue: Value, Sequence {
+public protocol CollectionValue: Value, Sequence {
     
     // itemType: Coercion; repeat expansions can be avoided if return type is subset of itemType
     
@@ -228,11 +228,11 @@ extension CollectionValue {
 */
 }
 
-typealias BoxedCollectionValue = CollectionValue & BoxedSwiftValue
+public typealias BoxedCollectionValue = CollectionValue & BoxedSwiftValue
 
 
 
-protocol ComplexValue: Value { // e.g. command, handler; presumably swiftEval doesn't reduce down to raw Swift values
+public protocol ComplexValue: Value { // e.g. command, handler; presumably swiftEval doesn't reduce down to raw Swift values
     
 }
 
@@ -241,6 +241,6 @@ extension ComplexValue {
 }
 
 
-typealias BoxedComplexValue = ComplexValue & BoxedSwiftValue
+public typealias BoxedComplexValue = ComplexValue & BoxedSwiftValue
 
 

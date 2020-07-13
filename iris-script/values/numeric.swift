@@ -19,57 +19,57 @@ import Darwin
 // TO DO: .nonStandard(…) case for numbers written with atypical formatting, e.g. leading zeroes (000123); alternatively, format-preserving might be handled independently by an appropriate line line reader (typically such `numbers` are found in 24-hr times, barcode numbers, etc, so using line readers to convert them to custom string-based Values that support coercion to Number (either by converting the string each time or by capturing both original string and Int/Double/Number representations) provides a general solution that covers all use cases there, and avoids the need to implement special one-off cases here)
 
 
-protocol NumericValue: ScalarValue, HashableValue {}
+public protocol NumericValue: ScalarValue, HashableValue {}
 
 
 extension Int: NumericValue, KeyConvertible {
     
-    var swiftLiteralDescription: String { return String(self) }
+    public var swiftLiteralDescription: String { return String(self) }
     
-    static let nominalType: Coercion = asInt
+    public static let nominalType: Coercion = asInt
     
-    func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
+    public func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
         return self
     }
-    func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
+    public func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
         return Double(self)
     }
-    func toString(in scope: Scope, as coercion: Coercion) throws -> String { // TO DO: coercion param's type?
+    public func toString(in scope: Scope, as coercion: Coercion) throws -> String { // TO DO: coercion param's type?
         return String(self)
     }
     
-    func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
+    public func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
         return Number(self)
     }
 }
 
 extension Double: NumericValue, KeyConvertible {
     
-    var swiftLiteralDescription: String { return String(self) }
+    public var swiftLiteralDescription: String { return String(self) }
     
-    static let nominalType: Coercion = asDouble
+    public static let nominalType: Coercion = asDouble
     
-    func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
+    public func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
         guard let result = Int(exactly: self) else { throw ConstraintError(value: self, coercion: coercion) }
         return result
     }
-    func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
+    public func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
         return self
     }
-    func toString(in scope: Scope, as coercion: Coercion) throws -> String { // TO DO: coercion param's type?
+    public func toString(in scope: Scope, as coercion: Coercion) throws -> String { // TO DO: coercion param's type?
         return String(self)
     }
     
-    func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
+    public func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
         return Number(self)
     }
 }
 
 
 
-enum Number: NumericValue, KeyConvertible { // what about fractions? (this may require `indirect` to allow nested composition; alternatively, might be best to implement as PrecisionNumber struct/class, possibly in optional library)
+public enum Number: NumericValue, KeyConvertible { // what about fractions? (this may require `indirect` to allow nested composition; alternatively, might be best to implement as PrecisionNumber struct/class, possibly in optional library)
     
-    var swiftLiteralDescription: String {
+    public var swiftLiteralDescription: String {
         switch self {
         case .integer(let n, radix: let r): return "Number(\(n)\(r == 10 ? "" : ", radix: \(r)"))"
         case .floatingPoint(let n): return "Number(\(n))"
@@ -77,7 +77,7 @@ enum Number: NumericValue, KeyConvertible { // what about fractions? (this may r
         }
     }
     
-    static func ==(lhs: Number, rhs: Number) -> Bool {
+    public static func ==(lhs: Number, rhs: Number) -> Bool {
         do {
             return try scalarComparisonOperation(lhs, rhs, intOperator: ==, doubleOperator: ==)
         } catch {
@@ -85,7 +85,7 @@ enum Number: NumericValue, KeyConvertible { // what about fractions? (this may r
         }
     }
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         switch self {
         case .integer(let n, radix: _): return n.hash(into: &hasher)
         case .floatingPoint(let n):     return n.hash(into: &hasher)
@@ -94,9 +94,9 @@ enum Number: NumericValue, KeyConvertible { // what about fractions? (this may r
         }
     }
     
-    var description: String { return self.literalRepresentation() }
+    public var description: String { return self.literalRepresentation() }
     
-    static let nominalType: Coercion = asNumber 
+    public static let nominalType: Coercion = asNumber
     
     // represents a whole or fractional number (as Swift Int or Double); numbers that are valid but too large to represent using standard Swift types are held as strings
     
@@ -110,13 +110,13 @@ enum Number: NumericValue, KeyConvertible { // what about fractions? (this may r
     case overflow(String, Any.Type)
     case notANumber(String)
     
-    init(_ n: Int, radix: Int = 10) {
+    public init(_ n: Int, radix: Int = 10) {
         self = .integer(n, radix: radix)
     }
-    init(_ n: Double) {
+    public init(_ n: Double) {
         self = (n == Double.infinity) ? .overflow(String(n), Double.self) : .floatingPoint(n)
     }
-    init(_ code: String) throws {
+    public init(_ code: String) throws {
         // temporary (we really want to parse and format numbers ourselves, potentially with localization support [although we'll need access to an environment for that, as it'll be script-specific, relying on top-level syntax imports])
         guard let d = Double(code) else { throw UnsupportedCoercionError(value: Text(code), coercion: asNumber) }
         if Int(exactly: d) != nil, let n = Int(code) {
@@ -144,21 +144,21 @@ enum Number: NumericValue, KeyConvertible { // what about fractions? (this may r
     
     
     
-    func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
+    public func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
         return try self.toInt()
     }
-    func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
+    public func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
         return try self.toDouble()
     }
-    func toString(in scope: Scope, as coercion: Coercion) throws -> String { // TO DO: coercion param's type?
+    public func toString(in scope: Scope, as coercion: Coercion) throws -> String { // TO DO: coercion param's type?
         return self.literalRepresentation()
     }
     
-    func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
+    public func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
         return self
     }
     
-    func toInt() throws -> Int {
+    public func toInt() throws -> Int {
         switch self {
         case .integer(let n, _): return n
         case .floatingPoint(let n) where n.truncatingRemainder(dividingBy: 1) == 0:
@@ -168,7 +168,7 @@ enum Number: NumericValue, KeyConvertible { // what about fractions? (this may r
         throw ConstraintError(value: self, coercion: asInt)
     }
     
-    func toDouble() throws -> Double {
+    public func toDouble() throws -> Double {
         switch self {
         case .integer(let n, _): return Double(n)
         case .floatingPoint(let n): return n
@@ -248,7 +248,7 @@ enum Number: NumericValue, KeyConvertible { // what about fractions? (this may r
 
 // TO DO: think all these operators need to be non-throwing, instead capturing deferred .failed(Error) and have that throw when next evaled
 
-extension Number {
+public extension Number {
     
     static prefix func -(lhs: Number) throws -> Number {
         return try scalarArithmeticOperation(Number(0), lhs, intOperator: {(l:Int,r:Int) in l.subtractingReportingOverflow(r)}, doubleOperator: -) // TO DO

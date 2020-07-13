@@ -23,36 +23,36 @@ import Foundation
 // TO DO: beware cases where an [e.g.] immutable List could contain EditableValue items; might want to enforce item [im]mutability solely at the scope slot level; thus `set x to 3 as editable value, set y to [] as editable list, set end of y to x` would automatically de-box the 3 upon inserting it into the list
 
 
-class EditableValue: Handler, Mutator {
+public class EditableValue: Handler, Mutator {
     
-    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.data.swiftLiteralDescription), as: \(self.coercion.swiftLiteralDescription))" }
+    public var swiftLiteralDescription: String { return "\(type(of: self))(\(self.data.swiftLiteralDescription), as: \(self.coercion.swiftLiteralDescription))" }
     
     // get() and call() behaviors are pass-thrus to the underlying Value; set() replaces the current Value with a new Value
     
-    static let nominalType: Coercion = asEditable
+    public static let nominalType: Coercion = asEditable
     
-    var description: String { return "editable \(self.data)" }
+    public var description: String { return "editable \(self.data)" }
     
     private(set) var data: Value
-    private let coercion: Coercion // the type of the underlying value
+    public let coercion: Coercion // the type of the underlying value
     
-    init(_ data: Value, as coercion: Coercion) { // called by AsEditable
+    public init(_ data: Value, as coercion: Coercion) { // called by AsEditable
         self.data = data
         self.coercion = coercion
     }
     
     //
     
-    var immutableValue: Value { return self.data } // this is kinda tricky: if self.data is, say, a OrderedList of editable values, those values also need to be made immutable (ideally, collections should never contain EditableValue items; only the topmost value should be boxed, but we need to give more thought to that)
+    public var immutableValue: Value { return self.data } // this is kinda tricky: if self.data is, say, a OrderedList of editable values, those values also need to be made immutable (ideally, collections should never contain EditableValue items; only the topmost value should be boxed, but we need to give more thought to that)
     
     
-    func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
+    public func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
         let result = try self.data.eval(in: scope, as: coercion) // TO DO: this needs to intersect the given coercion with self.coercion and pass the resulting coercion to self.data.eval(…); Q. how should intersecting [e.g.] AsScalar with AsList work out?
         //        self.data = result // this is wrong; only mutator operations should modify editable box's content [in the case of editable parameters to a command, the handler should eval and update the box's content when binding it to the handler's scope] // Q. what if coercion is AsEditable? we don't want to create a second box
         return result
     }
     
-    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    public func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         let result = try self.eval(in: scope, as: coercion)
         return try coercion.unbox(value: result, in: scope)
     }
@@ -61,7 +61,7 @@ class EditableValue: Handler, Mutator {
     //      return self
     //  }
     
-    func call(with command: Command, in commandScope: Scope, as coercion: Coercion) throws -> Value {
+    public func call(with command: Command, in commandScope: Scope, as coercion: Coercion) throws -> Value {
         // iris follows entoli's 'everything is a command' UX philosophy, but doesn't implement separate Identifier and Command classes underneath (although it maybe should for efficiency/clarity/robustness);
 
         // if not a handler, it's stored value; we already looked it up by name, so check
@@ -74,12 +74,12 @@ class EditableValue: Handler, Mutator {
         }
     }
     
-    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    public func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         fatalError()
     }
     
     
-    func set(_ name: Symbol, to value: Value) throws { // TO DO: is there ever any situation where name can be anything other than nullSymbol? (Q. should the slot name always be passed here, c.f. call() which always passes the full Command even though the receiving handler ignores the command's name?)
+    public func set(_ name: Symbol, to value: Value) throws { // TO DO: is there ever any situation where name can be anything other than nullSymbol? (Q. should the slot name always be passed here, c.f. call() which always passes the full Command even though the receiving handler ignores the command's name?)
         if name == nullSymbol {
             self.data = value // TO DO: this needs to apply self.coercion, throwing if the given value does not fit box's original type and constraints
         } else {
@@ -87,27 +87,31 @@ class EditableValue: Handler, Mutator {
         }
     }
     
-    func get(_ name: Symbol) -> Value? {
+    public func get(_ name: Symbol) -> Value? {
         return self.data.get(name)
+    }
+    
+    public func set(to value: Value) {
+        try! self.set(nullSymbol, to: value)
     }
 }
 
 
 
 
-struct ScopeLockedValue: Handler, Mutator { // experimental
+public struct ScopeLockedValue: Handler, Mutator { // experimental
     
     // Handler and Accessor behaviors are pass-thrus to the underlying Value
     
-    static let nominalType: Coercion = asValue
-    let nominalType: Coercion
+    public static let nominalType: Coercion = asValue
+    public let nominalType: Coercion
     
-    var description: String { return "editable \(self.data)" }
+    public var description: String { return "editable \(self.data)" }
     
     private let data: Value
     private let scope: Scope
     
-    init(_ data: Value, in scope: Scope) {
+    public init(_ data: Value, in scope: Scope) {
         self.data = data
         self.scope = scope
         self.nominalType = data.nominalType
@@ -115,11 +119,11 @@ struct ScopeLockedValue: Handler, Mutator { // experimental
     
     //
     
-    func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
+    public func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
         return try self.data.eval(in: scope, as: coercion)
     }
     
-    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    public func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         return try self.data.swiftEval(in: scope, as: coercion)
     }
     
@@ -127,7 +131,7 @@ struct ScopeLockedValue: Handler, Mutator { // experimental
     //      return self
     //  }
     
-    func call(with command: Command, in commandScope: Scope, as coercion: Coercion) throws -> Value {
+    public func call(with command: Command, in commandScope: Scope, as coercion: Coercion) throws -> Value {
         if let handler = self.data as? Handler { // handler; Q. what are correct semantics when slot contains a replaceable handler? calling the handler won't update the slot's value; only way to change behavior is to replace the handler with another value; Q. what if handler is replaced with non-handler? should we forbid that? (or limit box to AsOptional(asHandler)?)
             return try handler.call(with: command, in: commandScope, as: coercion)
         } else if command.arguments.count == 0 { // stored value
@@ -137,16 +141,16 @@ struct ScopeLockedValue: Handler, Mutator { // experimental
         }
     }
     
-    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+    public func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         fatalError()
     }
     
     
-    func set(_ name: Symbol, to value: Value) throws {
+    public func set(_ name: Symbol, to value: Value) throws {
         throw ImmutableScopeError(name: name, in: self.scope)
     }
     
-    func get(_ name: Symbol) -> Value? {
+    public func get(_ name: Symbol) -> Value? {
         return self.data.get(name)
     }
 }

@@ -22,7 +22,7 @@ import Foundation
 // TO DO: Handler protocol needs public API for getting its Scope for reporting purposes (this is slightly complicated as primitive vs native handlers capture their host environment in different ways)
 
 
-protocol Handler: ComplexValue {
+public protocol Handler: ComplexValue {
     
     var interface: HandlerInterface { get }
     
@@ -38,7 +38,7 @@ protocol Handler: ComplexValue {
 
 
 
-extension Handler {
+public extension Handler {
     
     var description: String { return "«handler: \(self.interface)»" }
 

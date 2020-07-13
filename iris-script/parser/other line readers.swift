@@ -14,50 +14,50 @@ import Foundation
 // TO DO: if we use UTI line readers for namespace access, users should be able to write `tell @com.apple.TextEdit to …` rather than `tell app “…” to …`; the same syntax can work for libraries too, with the obvious caveat that if a library has the same UTI-based name as an app's bundle ID, we'll need some way to disambiguate
 
 
-struct NullReader: LineReader { // returned once line reader is exhausted; always outputs .lineBreak token
+public struct NullReader: LineReader { // returned once line reader is exhausted; always outputs .lineBreak token
     
-    let code = ""
+    public let code = ""
     
-    func next() -> (Token, LineReader) {
+    public func next() -> (Token, LineReader) {
         return (nullToken, self)
     }
 }
 
-let nullReader = NullReader()
+public let nullReader = NullReader()
 
 
 
 
-struct UnpopToken: LineReader { // analogous to pushing an existing/modified token back onto the head of the token stream
+public struct UnpopToken: LineReader { // analogous to pushing an existing/modified token back onto the head of the token stream
     
-    var code: String { return reader.code }
+    public var code: String { return reader.code }
     
-    let token: Token
-    let reader: LineReader
+    private let token: Token
+    private let reader: LineReader
     
-    init(_ token: Token, _ reader: LineReader) {
+    public init(_ token: Token, _ reader: LineReader) {
         self.token = token
         self.reader = reader
     }
     
-    func next() -> (Token, LineReader) {
+    public func next() -> (Token, LineReader) {
         return (self.token, self.reader)
     }
 }
 
 
 
-struct NameModifierReader: LineReader { // read hashtag, mentions, dot-notation // TO DO: currently only `#NAME` is implemented (Q. should dot notation be limited to `@NAME.NAME…`, or might it also be used outside of `@…`?)
+public struct NameModifierReader: LineReader { // read hashtag, mentions, dot-notation // TO DO: currently only `#NAME` is implemented (Q. should dot notation be limited to `@NAME.NAME…`, or might it also be used outside of `@…`?)
     
-    var code: String { return reader.code }
+    public var code: String { return reader.code }
     
-    let reader: LineReader
+    private let reader: LineReader
     
-    init(_ reader: LineReader) {
+    public init(_ reader: LineReader) {
         self.reader = reader
     }
     
-    func next() -> (Token, LineReader) {
+    public func next() -> (Token, LineReader) {
         var (token, reader) = self.reader.next()
         switch token.form {
         case .hashtag, .mentions:

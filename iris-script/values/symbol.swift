@@ -11,7 +11,7 @@ import Foundation
 
 public struct Symbol: ComplexValue, KeyConvertible, Comparable, ExpressibleByStringLiteral { // TO DO: Identifiable
     
-    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.label.debugDescription))" } 
+    public var swiftLiteralDescription: String { return "\(type(of: self))(\(self.label.debugDescription))" } 
     
     public var description: String { return "#‘\(self.label)’" } // note: pp should only quote label if it's an operator name
     
@@ -19,7 +19,7 @@ public struct Symbol: ComplexValue, KeyConvertible, Comparable, ExpressibleByStr
     
     public typealias StringLiteralType = String
     
-    static let nominalType: Coercion = asSymbol
+    public static let nominalType: Coercion = asSymbol
     
     public let label: String
     internal let key: String // interning symbols would enable more efficient key representation, but for now it's sufficient to use case-normalized string

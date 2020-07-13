@@ -69,30 +69,30 @@ import Foundation
 
 // TO DO: check for nullSymbol as name, duplicate argument labels?
 
-class Command: ComplexValue {
+public class Command: ComplexValue {
     
-    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.name.swiftLiteralDescription)\(self.arguments.isEmpty ? "" : ", [\(self.arguments.map{"(\($0.label.swiftLiteralDescription), \($0.value.swiftLiteralDescription))"}.joined(separator: ", "))]"))" }
+    public var swiftLiteralDescription: String { return "\(type(of: self))(\(self.name.swiftLiteralDescription)\(self.arguments.isEmpty ? "" : ", [\(self.arguments.map{"(\($0.label.swiftLiteralDescription), \($0.value.swiftLiteralDescription))"}.joined(separator: ", "))]"))" }
     
-    typealias Argument = Record.Field
+    public typealias Argument = Record.Field
     
-    var description: String {
+    public var description: String {
         // TO DO: PP needs to apply operator syntax/quote name if command's name matches an existing operator (Q. how should operator definitions be scoped? per originating library, or per main script? [if we annotate command in parser, it'll presumably capture originating library's operator syntax])
         return "‘\(self.name.label)’" + (self.arguments.count == 0 ? "" : " {\(self.arguments.map{ "\(["", leftOperand, middleOperand, rightOperand].contains($0) ? "" : "\($0.label): ")\($1)" }.joined(separator: ", "))}")
     }
     
-    static let nominalType: Coercion = asCommand
+    public static let nominalType: Coercion = asCommand
     
     // TO DO: what about a slot for storing optional operator definition? (or general 'annotations' slot?) we also need to indicate when pp should wrap a command in elective parens (as opposed to required parens, which pp should add automatically as operator precedence dictates)
     
-    let name: Symbol
-    let arguments: [Argument] // TO DO: single, optional argument which is coerced to record and pattern-matched against HandlerInterface.Parameter
+    public let name: Symbol
+    public let arguments: [Argument] // TO DO: single, optional argument which is coerced to record and pattern-matched against HandlerInterface.Parameter
     
-    init(_ name: Symbol, _ arguments: [Argument] = []) {
+    public init(_ name: Symbol, _ arguments: [Argument] = []) {
         self.name = name
         self.arguments = arguments
     }
     
-    convenience init(_ name: Symbol, _ record: Record) {
+    public convenience init(_ name: Symbol, _ record: Record) {
         self.init(name, record.fields)
     }
     
@@ -122,11 +122,11 @@ class Command: ComplexValue {
     }
     */
     
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
         return try self.toTYPE(in: scope, as: coercion)
     }
     
-    func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
+    public func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
         //print("Command.toTYPE", self, "as", T.self, type(of:coercion))
         if T.self is Value {
             return try self._handler.call(with: self, in: scope, as: coercion) as! T
@@ -149,7 +149,7 @@ class Command: ComplexValue {
         return nullValue
     }
         
-    func value(at index: inout Int, for param: (label: Symbol, coercion: Coercion), in commandEnv: Scope) throws -> Value {
+    internal func value(at index: inout Int, for param: (label: Symbol, coercion: Coercion), in commandEnv: Scope) throws -> Value {
         let i = index
         do {
             return try self.value(at: &index, named: param.label).eval(in: commandEnv, as: param.coercion)
@@ -159,7 +159,7 @@ class Command: ComplexValue {
     }
     
     // TO DO: really need to attach handler (or at least its interface)
-    func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
+    internal func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
         let i = index
         do {
             //print("Command.swiftValue() for:", param, "from", self.arguments)

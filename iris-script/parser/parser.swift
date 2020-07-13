@@ -11,7 +11,7 @@ import Foundation
 
 public class Parser {
     
-    typealias Form = Token.Form
+    public typealias Form = Token.Form
     
     typealias BlockInfo = (start: Int, form: BlockType)
     
@@ -26,12 +26,12 @@ public class Parser {
     
     typealias BlockStack = [BlockInfo]
 
-    typealias ReduceFunc = PatternDefinition.ReduceFunc // (token stack, fully matched pattern, start, end)
+    public typealias ReduceFunc = PatternDefinition.ReduceFunc // (token stack, fully matched pattern, start, end)
     
     // TO DO: also capture source code ranges? (how will these be described in per-line vs whole-script parsing? in per-line, each line needs a unique ID (incrementing UInt64) that is invalidated when that line is edited; that allows source code positions to be referenced with some additional indirection: the stack frame captures first and last line IDs plus character offset from start of line)
     
-    typealias TokenInfo = (form: Form, matches: [PatternMatch], hasLeadingWhitespace: Bool) // in-progress/completed matches
-    typealias TokenStack = [TokenInfo]
+    public typealias TokenInfo = (form: Form, matches: [PatternMatch], hasLeadingWhitespace: Bool) // in-progress/completed matches
+    public typealias TokenStack = [TokenInfo]
     
     // parser state
     
@@ -45,7 +45,7 @@ public class Parser {
     // TO DO: blockStack currently assumes that all quoted text has already been reduced to string/annotation atoms so does not track the starts and ends of string or annotation literals; this is true for whole-program parsing (which is what we're limited to for now) but not in the case of malformed programs or per-line parsing; eventually it should be able to track those too (with the additional caveats that string literal delimiters lack unambiguous handedness in addition to all blocks being able to span multiple lines, so per-line parsing requires at least two alternate parses: one that assumes start of line is outside quoted text and one that assumes it is inside, and keep tallies of % of code that is valid reductions vs no. of parse errors produced, as well as any string/annotation delimiters encountered which indicate a transition from one state to another [with a third caveat that annotation literals must also support nesting])
     var blockStack: BlockStack = [(-1, .script)] // add/remove matchers for grouping punctuation and block operators as they’re encountered, along with conjunction matchers (the grouping matchers are added to mask the current conjunction matcher; e.g. given `tell (…to…) to …`, the `tell…to…` matcher should match the second `to`, not the first) // TO DO: should be private or private(set) (currently internal as reduction methods are in separate extension)
         
-    init(tokenStream: DocumentReader, operatorRegistry: OperatorRegistry) {
+    public init(tokenStream: DocumentReader, operatorRegistry: OperatorRegistry) {
         self.current = tokenStream
         self.operatorRegistry = operatorRegistry
     }
@@ -198,7 +198,7 @@ public class Parser {
     
     // main loop
     
-    func parseScript() throws -> ScriptAST {
+    public func parseScript() throws -> ScriptAST {
         loop: while true { // loop exits below on .endOfScript
             let form = self.current.token.form
             //print("PARSE .\(form)")

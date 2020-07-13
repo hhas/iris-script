@@ -7,11 +7,11 @@ import Foundation
 
 
 
-class Block: BoxedComplexValue { // caution: this does not capture lexical scope
+public class Block: BoxedComplexValue { // caution: this does not capture lexical scope
     
     // TO DO: what about preserving user's punctuation?
         
-    var description: String { // TO DO: hand off to pp; also need formatting hints from parser (e.g. whether to use linbreaks and/or punctuation between exprs)
+    public var description: String { // TO DO: hand off to pp; also need formatting hints from parser (e.g. whether to use linbreaks and/or punctuation between exprs)
         return "(\(self.data.map{$0.description}.joined(separator: ", ")))" // unsugared representation
     // TO DO: move sugared representation to PP
     //    if let d = self.patternDefinition, case .keyword(let n1) = d.pattern.first, case .keyword(let n2) = //d.pattern.last {
@@ -21,19 +21,18 @@ class Block: BoxedComplexValue { // caution: this does not capture lexical scope
     //    }
     }
     
-    typealias ArrayLiteralElement = Value
-
-    static let nominalType: Coercion = asBlock
+    public typealias ArrayLiteralElement = Value
+    public static let nominalType: Coercion = asBlock
     
     let patternDefinition: PatternDefinition? // TO DO: make this part of optional annotation metadata and standardize annotation API and types across Blocks and Commands (Q. what about lists and records?)
     
-    let data: [Value]
+    public let data: [Value]
     
-    required init(_ data: [Value], patternDefinition: PatternDefinition?) {
+    public required init(_ data: [Value], patternDefinition: PatternDefinition?) {
         self.data = data
         self.patternDefinition = patternDefinition
     }
-    required convenience init(_ data: [Value]) {
+    public required convenience init(_ data: [Value]) {
         self.init(data, patternDefinition: nil)
     }
     
@@ -55,11 +54,11 @@ class Block: BoxedComplexValue { // caution: this does not capture lexical scope
     */
     
     
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
         return try self.toTYPE(in: scope, as: coercion)
     }
     
-    func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
+    public func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
         //print("Block.toTYPE", self, "as", T.self, type(of:coercion))
         var result: Value = nullValue
         for value in self.data {
@@ -78,7 +77,7 @@ class Block: BoxedComplexValue { // caution: this does not capture lexical scope
     
 }
 
-typealias ScriptAST = Block
+public typealias ScriptAST = Block
 
 /*
 class ScriptAST: Block {

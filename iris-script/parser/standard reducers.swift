@@ -223,7 +223,7 @@ func reductionForPrefixOperatorWithConjunctionAndAlternate(stack: Parser.TokenSt
     return Command(match.definition, left: stack.value(at: start + 1), middle: stack.value(at: start + 3), right: alternate)
 }
 
-func reductionForKeywordBlock(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
+public func reductionForKeywordBlock(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
     // TO DO: this is default reducer for OperatorRegistry.prefix(_:suffix:) used to parse a keyword-based block of form `START_KEYWORD DELIMITER (EXPR DELIMITER*) STOP_KEYWORD` (e.g. `do…done`)
     assert(end >= start + 2)
     var items = [Value]()

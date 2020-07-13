@@ -19,7 +19,7 @@ import Foundation
 
 
 
-protocol LineReader { // common API by which [partial] lexers and parsers can be chained together, in order to generate and consume tokens (and not solely in that order), and so incrementally convert the initial [and, in interactive code editing mode, mutable] source code to a complete AST [or again ,in editing mode, a mixture of completed sub-trees and unresolved tokens]
+public protocol LineReader { // common API by which [partial] lexers and parsers can be chained together, in order to generate and consume tokens (and not solely in that order), and so incrementally convert the initial [and, in interactive code editing mode, mutable] source code to a complete AST [or again ,in editing mode, a mixture of completed sub-trees and unresolved tokens]
     
     // think we need a var to get at original code from which token's substrings is being obtained; i.e. if we want to 'concatenate' multiple substrings, not sure if slicing a substring with out-of-bounds indexes gets us back to original code or crash
     
@@ -33,7 +33,7 @@ protocol LineReader { // common API by which [partial] lexers and parsers can be
 
 
 
-protocol DocumentReader {
+public protocol DocumentReader {
     
     typealias Location = (lineIndex: Int, tokenIndex: Int)
     

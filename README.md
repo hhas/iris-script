@@ -11,6 +11,19 @@ An experiment in modern end-user language design, hybridizing [hopefully] the be
 
     ➞ [“Hello again!”]
     
+
+## Build
+
+Dependencies:
+
+* [SwiftAutomation](https://github.com/hhas/SwiftAutomation)
+* [AppleEvents](https://github.com/hhas/AppleEvents)
+
+Ad-hoc tests are currently run under the `iris-script` target.
+
+A rudimentary interactive shell is available under target `iris-shell`. Bad error reporting, poor help, no multi-line entry or readline support, and prone to falling over when run in Xcode’s console, but should allow simple expressions to be entered and evaluated.
+
+
 ## Features
 
 Homoiconic, minimalist core language, with only two foundational concepts: values and commands. “Everything is a Command.”

@@ -32,14 +32,14 @@ struct EOFReader: DocumentReader {
 
 
 
-struct TokenStream: DocumentReader {
+public struct TokenStream: DocumentReader {
     
     private let script: ImmutableScript
     
-    var code: String { return script.code }
+    public var code: String { return script.code }
     
-    let token: Token // the current token
-    let location: Location // the current token's position
+    public let token: Token // the current token
+    public let location: Location // the current token's position
     
     private init(script: ImmutableScript, lineIndex: Int, tokenIndex: Int) {
         self.script = script
@@ -52,7 +52,7 @@ struct TokenStream: DocumentReader {
         self.init(script: script, lineIndex: i, tokenIndex: 0)
     }
     
-    func next() -> DocumentReader { // returns a new TokenStream identifying the next token
+    public func next() -> DocumentReader { // returns a new TokenStream identifying the next token
         if self.location.lineIndex < self.script.lines.count {
             let i = self.location.tokenIndex + 1
             if i < self.script.lines[self.location.lineIndex].tokens.count {
@@ -68,7 +68,7 @@ struct TokenStream: DocumentReader {
 
 extension EditableScript {
     
-    var tokenStream: TokenStream { return TokenStream(ImmutableScript(lines: self.lines, code: self.code)) }
+    public var tokenStream: TokenStream { return TokenStream(ImmutableScript(lines: self.lines, code: self.code)) }
     
 }
 

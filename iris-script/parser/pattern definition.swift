@@ -15,9 +15,9 @@ import Foundation
 
 
 
-struct PatternDefinition: CustomStringConvertible { 
+public struct PatternDefinition: CustomStringConvertible {
         
-    var description: String { return self.pattern.description }
+    public var description: String { return self.pattern.description }
     
     // Q. should spoken aliases be distinguished from written aliases?
     
@@ -31,9 +31,9 @@ struct PatternDefinition: CustomStringConvertible {
     
     // TO DO: any use cases where left and right operands have different precedence and/or associativity? (what about composable `if…then…` and `…else…` operators? or is that an intractable problem?)
     
-    typealias ReduceFunc = (Parser.TokenStack, PatternMatch, Int, Int) throws -> Value // (token stack, the fully matched pattern, start, end)
+    public typealias ReduceFunc = (Parser.TokenStack, PatternMatch, Int, Int) throws -> Value // (token stack, the fully matched pattern, start, end)
 
-    enum Associativity {
+    public enum Associativity {
         case left
         case right
         // TO DO: `case none` (e.g. `1 thru 2 thru 3` should be a syntax error; ditto for `at`, `named`, etc) [note that treating `a OP b OP c` as syntax error isn't absolute protection as parenthesizing one or other operation will allow it to parse, as will using underlying command syntax, at which point it's up to argument unpacking to reject the bad operand as being the wrong type]

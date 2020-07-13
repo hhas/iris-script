@@ -18,9 +18,9 @@ import Foundation
 // TO DO: code editor should map Shift-SPACEBAR to underscore for easier entry; Q. to what extent should editor infer underscores when multi-word names are entered with spaces (e.g. via dictation), e.g. auto-“correcting” `foo bar` to `foo_bar` if `foo_bar` is already known to be defined and `foo` and `bar` are not
 
 
-typealias Annotation = String
+public typealias Annotation = String
 
-typealias Precedence = Int16
+public typealias Precedence = Int16
 
 
 let commandPrecedence: Precedence = 999 // used when parsing low-punctuation commands to determine if a right-hand infix/postfix operator should be part of command’s argument or if command should be operator's left operand, e.g. `foo 1 + 1` vs `foo bar of baz`; note that PP should automatically parenthesize where clarity is needed, e.g. `(foo 1) + 1` // TO DO: what should argument precedence be? e.g. given `foo 1 + 2`, should it parse as `foo {1 + 2}` or `foo {1} + 2`; currently math operators are ~600; `else` is 90
@@ -29,11 +29,11 @@ let commandPrecedence: Precedence = 999 // used when parsing low-punctuation com
 
 
 
-struct Token: CustomStringConvertible {
+public struct Token: CustomStringConvertible {
     
     // initial tokenization by CoreLexer is minimal, recognizing only core punctuation, contiguous digits, whitespace (as delimiter), and symbols and words (everything else); determining which tokens actually appear inside string literals and annotations [meaning they're not real tokens after all], assembling complete number literals from multiple tokens, distinguishing operator names from command names, etc is left to downstream consumers
     
-    var description: String { // underscore before/after quoted token text indicates adjoining whitespace
+    public var description: String { // underscore before/after quoted token text indicates adjoining whitespace
         let form: String
         switch self.form {
         case .operatorName(_):  form = "operatorName"
@@ -46,7 +46,7 @@ struct Token: CustomStringConvertible {
     
     // Q. what about non-Latin scripts? e.g. Arabic comma is `،` (don't suppose NFKC remaps it to `,`?); probably best to rely on top-level «language:…» annotation to switch/extend lexer's character sets [we can worry about implementing that later]
     
-    enum Position {
+    public enum Position {
         case first
         case middle
         case last
@@ -66,15 +66,15 @@ struct Token: CustomStringConvertible {
     }
     
     
-    enum Form: Equatable { // core punctuation, plus digits and non-digit text
+    public enum Form: Equatable { // core punctuation, plus digits and non-digit text
         
-        enum Separator: CustomDebugStringConvertible { // all act as expr separators and can be used interchangeably within blocks, lists, records; only difference is how they behave at runtime (essentially they act as debugger hooks, optionally inserting extra instructions at parse-time)
+        public enum Separator: CustomDebugStringConvertible { // all act as expr separators and can be used interchangeably within blocks, lists, records; only difference is how they behave at runtime (essentially they act as debugger hooks, optionally inserting extra instructions at parse-time)
             case comma              // ,
             case period             // .
             case query              // ?
             case exclamation        // !
 
-            var debugDescription: String {
+            public var debugDescription: String {
                 switch self {
                 case .comma:        return "\",\""
                 case .period:       return "\".\""
@@ -155,7 +155,7 @@ struct Token: CustomStringConvertible {
         
         // TO DO: associated values on enums significantly increase complexity (e.g. no automatic Equatable); would it be better to move the details to a separate Content enum? // Q. should we also consolidate expr separators and grouping delimiters into two Form cases (.separator + .grouping), with SeparatorForms and GroupingForms enums under Content?
         
-        static func ==(lhs: Form, rhs: Form) -> Bool { // caution: this only indicates if two tokens have the same form; it does not compare content
+        public static func ==(lhs: Form, rhs: Form) -> Bool { // caution: this only indicates if two tokens have the same form; it does not compare content
             switch (lhs, rhs) {
             case (.startAnnotation, .startAnnotation): return true
             case (.endAnnotation, .endAnnotation): return true

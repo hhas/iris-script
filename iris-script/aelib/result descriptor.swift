@@ -18,25 +18,25 @@ func unpackDescriptor(_ desc: Descriptor, in scope: Scope = nullScope, as coerci
     return try coercion.coerce(value: NativeResultDescriptor(desc, appData: appData), in: scope)
 }
 
-struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
+public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
     
     // AppData.sendAppleEvent(…) calls this, passing result as descriptor
-    static func SwiftAutomation_unpackSelf(_ desc: Descriptor, appData: AppData) throws -> NativeResultDescriptor {
+    public static func SwiftAutomation_unpackSelf(_ desc: Descriptor, appData: AppData) throws -> NativeResultDescriptor {
         return NativeResultDescriptor(desc, appData: appData as! NativeAppData) // TO DO: where could appData be non-native? need to convert to native (alternatively, how much functionality does NativeAppData really add? might it be better to use AppData directly, with any native-specific methods provided as extensions on that?)
     }
     
-    static func SwiftAutomation_noValue() throws -> NativeResultDescriptor {
+    public static func SwiftAutomation_noValue() throws -> NativeResultDescriptor {
         return NativeResultDescriptor(nullDescriptor, appData: nullAppData)
     }
     
-    func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
+    public func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
         return self.desc
     }
     
     
-    var description: String { return "«\(self.desc)»" }
+    public var description: String { return "«\(self.desc)»" }
     
-    static var nominalType: Coercion { return asAnything } // TO DO: what type?
+    public static var nominalType: Coercion { return asAnything } // TO DO: what type?
     
     private let desc: Descriptor
     private let appData: NativeAppData
@@ -72,13 +72,13 @@ struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
     
     // unpack atomic types
     
-    func toBool(in env: Scope, as coercion: Coercion) throws -> Bool {
+    public func toBool(in env: Scope, as coercion: Coercion) throws -> Bool {
         // TO DO: rework this (should it follow AE coercion rules or native? e.g. 0 = true or false?)
         guard let result = try? unpackAsBool(self.desc) else { throw UnsupportedCoercionError(value: self, coercion: asBool) }
         return result
     }
         
-    func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue {
+    public func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue {
         switch self.desc.type {
         // common AE types
         case typeSInt32, typeSInt16, typeUInt16, typeSInt64, typeUInt64, typeUInt32:
@@ -104,7 +104,7 @@ struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
     
     // unpack collections
     
-    func toList(in env: Scope, as coercion: AsList) throws -> OrderedList {
+    public func toList(in env: Scope, as coercion: AsList) throws -> OrderedList {
         do {
             if let desc = self.desc as? ListDescriptor {
                 var result = [Value]()
@@ -125,21 +125,21 @@ struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
         }
     }
     
-    func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
+    public func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
         do {
             if let desc = self.desc as? ListDescriptor {
                 var result = [T.ElementCoercion.SwiftType]()
                 for itemDesc in desc {
                     let item = NativeResultDescriptor(itemDesc, appData: self.appData)
                     do {
-                        result.append(try coercion.swiftItem.unbox(value: item, in: env))
+                        result.append(try coercion.swiftItem.unbox(value: item, in: scope))
                     } catch { // NullCoercionErrors thrown by list items must be rethrown as permanent errors
                         throw UnsupportedCoercionError(value: item, coercion: coercion.item).from(error)
                     }
                 }
                 return result
             } else {
-                return [try coercion.swiftItem.unbox(value: self, in: env)]
+                return [try coercion.swiftItem.unbox(value: self, in: scope)]
             }
         } catch {
             throw UnsupportedCoercionError(value: self, coercion: coercion).from(error)
@@ -148,7 +148,7 @@ struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
     
     private let classKey = Symbol("class")
     
-    func toRawRecord(env: Scope, coercion: AsRecord) throws -> Record {
+    public func toRawRecord(env: Scope, coercion: AsRecord) throws -> Record {
         guard let recordDesc = self.desc as? RecordDescriptor else { // TO DO: need to implement ScalarDescriptor.toRecord() and call that here; for now, record descs with descriptorType other than typeAERecord will not unpack correctly
             return try Record([(nullSymbol, self)])
         }
@@ -168,18 +168,18 @@ struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
     
     // unpack as anything
     
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // quick-n-dirty implementation
+    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // quick-n-dirty implementation
         switch self.desc.type {
         case typeBoolean, typeTrue, typeFalse:
-            return try self.toBool(in: env, as: coercion)
+            return try self.toBool(in: scope, as: coercion)
         case typeSInt32, typeSInt16, typeIEEE64BitFloatingPoint, typeIEEE32BitFloatingPoint, type128BitFloatingPoint,
              typeSInt64, typeUInt64, typeUInt32, typeUInt16,
              typeChar, typeIntlText, typeUTF8Text, typeUTF16ExternalRepresentation, typeStyledText, typeUnicodeText, typeVersion:
-            return try self.toScalar(in: env, as: coercion)
+            return try self.toScalar(in: scope, as: coercion)
         case typeAEList:
-            return try self.toList(in: env, as: asList)
+            return try self.toList(in: scope, as: asList)
         case typeAERecord:
-            return try self.toRawRecord(in: env, as: asRecord)
+            return try self.toRawRecord(in: scope, as: asRecord)
         case typeType where (try? unpackAsType(self.desc)) == 0x6D736E67: // cMissingValue
             return nullValue
         case typeType, typeProperty, typeKeyword, typeEnumerated:
@@ -200,7 +200,7 @@ struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
 
 extension Number: SelfPacking {
     
-    func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
+    public func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor {
         switch self {
         case .integer(let n, radix: _): return packAsInt(n)
         case .floatingPoint(let n): return packAsDouble(n)

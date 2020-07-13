@@ -14,29 +14,29 @@ import Foundation
 
 
 
-struct Record: Value, Accessor {
+public struct Record: Value, Accessor {
 
-    var swiftLiteralDescription: String { return "(try! Record([\(self.fields.map{ "(\($0.swiftLiteralDescription), \($1.swiftLiteralDescription))" }.joined(separator: ", "))])" }
+    public var swiftLiteralDescription: String { return "(try! Record([\(self.fields.map{ "(\($0.swiftLiteralDescription), \($1.swiftLiteralDescription))" }.joined(separator: ", "))])" }
     
     // TO DO: `description` should return Swift representation (we need a separate visitor-style API for pretty-printing native values, as formatting needs to be customizable [e.g. when reformatting script's code, where line-wrapping and reindentation is automatic, command arguments can omit record punctuation for low-noise AS-like appearance, and commands can be formatted with or without using custom operator syntax; plus, of course, literate formatting where visual emphasis is assigned to high-level structures rather than low-level token types]; TBH generating Swift representations should probably also be done using same PP API, e.g. for use by cross-compiler when generating [human-readable] Swift code, with `description` invoking that with default formatting options when displaying values for debugging/troubleshooting)
     
-    var description: String { return "{\(self.fields.map{ $0 == nullSymbol ? "\($1)" : "\($0.label): \($1)"}.joined(separator: ", "))}" }
+    public var description: String { return "{\(self.fields.map{ $0 == nullSymbol ? "\($1)" : "\($0.label): \($1)"}.joined(separator: ", "))}" }
     
-    typealias Field = (label: Symbol, value: Value) // nullSymbol = unnamed field
-    typealias Fields = [Field]
+    public typealias Field = (label: Symbol, value: Value) // nullSymbol = unnamed field
+    public typealias Fields = [Field]
 
-    static let nominalType: Coercion = asRecord
+    public static let nominalType: Coercion = asRecord
     
-    let isMemoizable: Bool // true if all field names are given and all values are memoizable
+    public let isMemoizable: Bool // true if all field names are given and all values are memoizable
 
-    let constrainedType: RecordCoercion
+    public let constrainedType: RecordCoercion
     
-    let fields: Fields // TO DO: why is this not named data as per BoxedSwiftValue?
+    public let fields: Fields // TO DO: why is this not named data as per BoxedSwiftValue?
     private var namedFields = [Symbol: Value]() // Q. any performance benefit over `first(where:…)`? (bearing in mind a typical record would have <20 slots) if not, get rid of this
     
     // TO DO: would it be better to collapse duplicate keys (i.e. discard all but first/last) rather than throw error? (depends on what, if any, commands we provide for joining/splicing records)
     
-    init(_ fields: Fields) throws { // field names may be omitted, but must be unique
+    public init(_ fields: Fields) throws { // field names may be omitted, but must be unique
         var isMemoizable = true
         var nominalFields = [AsRecord.Field]()
         self.fields = fields
@@ -56,7 +56,7 @@ struct Record: Value, Accessor {
         self.constrainedType = isMemoizable ? AsRecord(nominalFields) : asRecord
     }
     
-    init() {
+    public init() {
         self.init([], as: asRecord)
     }
     
@@ -66,16 +66,16 @@ struct Record: Value, Accessor {
         self.isMemoizable = true // TO DO: check this (e.g. what if field values are thunked?)
     }
     
-    func get(_ name: Symbol) -> Value? { // TO DO: what about getting by index? or should we provide pattern-matching/eval only?
+    public func get(_ name: Symbol) -> Value? { // TO DO: what about getting by index? or should we provide pattern-matching/eval only?
         return self.namedFields[name]
     }
     
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
         return self.isMemoizable ? self : Record(try self.fields.map{($0, try asAnything.coerce(value: $1, in: scope))},
                                                  as: self.constrainedType)
     }
     
-    func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
+    public func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
         return self
     }
     

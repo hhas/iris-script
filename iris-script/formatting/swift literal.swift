@@ -6,18 +6,18 @@
 import Foundation
 
 
-protocol SwiftLiteralConvertible {
+public protocol SwiftLiteralConvertible {
     var swiftLiteralDescription: String { get }
 }
 
 extension Array: SwiftLiteralConvertible {
-    var swiftLiteralDescription: String { return "[\(self.map(formatSwiftLiteral).joined(separator: ", "))]" }
+    public var swiftLiteralDescription: String { return "[\(self.map(formatSwiftLiteral).joined(separator: ", "))]" }
 }
 extension Dictionary: SwiftLiteralConvertible {
-    var swiftLiteralDescription: String { return "[\(self.map{"\(formatSwiftLiteral($0)): \(formatSwiftLiteral($1))"}.joined(separator: ", "))]" }
+    public var swiftLiteralDescription: String { return "[\(self.map{"\(formatSwiftLiteral($0)): \(formatSwiftLiteral($1))"}.joined(separator: ", "))]" }
 }
 extension Set: SwiftLiteralConvertible {
-    var swiftLiteralDescription: String { return "Set<\(type(of: Element.self))>([\(self.map(formatSwiftLiteral).joined(separator: ", "))])" }
+    public var swiftLiteralDescription: String { return "Set<\(type(of: Element.self))>([\(self.map(formatSwiftLiteral).joined(separator: ", "))])" }
 }
 
 

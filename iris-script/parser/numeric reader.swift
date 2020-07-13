@@ -34,13 +34,13 @@ import Foundation
 // note: if OperatorReader precedes NumericReader, then numeric reader will need to check for .operatorName as well as .symbols when detecting +/- (particularly in exponent); also, while the below implementation allows for a leading +/-, we may want to move that to a separate reader (or at least enforce certain restrictions such as symbol and number being right-contiguous, and symbol being left-delimited by whitespace or punctuation to avoid capturing infix +/- operators; alternatively, ignoring trailing +/- symbols means that main parser can make its own decisions on whether to treat them as infix operators or as prefix operators which it can constant-fold into a literal number operand; `as integer/real/number` coercions can then use the same folding function directly with NumericReader when coercion numeric strings to numbers)
 
 
-struct NumericReader: LineReader {
+public struct NumericReader: LineReader {
     
-    let reader: LineReader
+    private let reader: LineReader
     
-    var code: String { return self.reader.code }
+    public var code: String { return self.reader.code }
     
-    init(_ reader: LineReader) {
+    public init(_ reader: LineReader) {
         self.reader = reader
     }
     
@@ -65,7 +65,7 @@ struct NumericReader: LineReader {
     
     // note: this does not consume leading +/- signs; those need to be disambiguated from infix +/- operators (defined by standard operator tables, except when those tables are explicitly excluded); the `sign` parameter is purely for use when matching exponent (see sylvia’s implementation, which is more complete)
     
-    func readNumber(_ token1: Token, _ reader1: LineReader, sign: Token? = nil) -> (Token, LineReader)? {
+    private func readNumber(_ token1: Token, _ reader1: LineReader, sign: Token? = nil) -> (Token, LineReader)? {
         if case .digits = token1.form {
             let startToken = sign ?? token1 // TO DO: fix this; if sign token contains more than a single +/- at end, trim all +/- chars from end, keeping tally of whether or not number is negative (caution: watch out for, e.g. `foo+-1`, which is a legal if ambiguous expr [it could mean `(foo) + (-1)` or `foo {+-1}`, though in practice we rely on contiguous whitespace and any operator definitions to figure it out]; might be safer just to take the last char to determine number literal's sign, and throw the rest back onto the token stream); any chars left after end trim needs to go back on token stream (i.e. nextReader needs to be wrapped in UnpopToken before returning it)
             var (endToken, nextReader) = (token1, reader1)
@@ -93,7 +93,7 @@ struct NumericReader: LineReader {
     // `foo1. 2` vs `foo 1.2` vs `foo 1. 2`
     
     
-    func next() -> (Token, LineReader) {
+    public func next() -> (Token, LineReader) {
         
         // one possible solution: ignore the preceding token entirely, match .digits only, and read as unsigned number when found; that leaves parser to reduce unary +/- .sign followed by .number token to .number, negating its value as appropriate [i.e. the parser is constant-folding the unary `+`/`-` operator and the unsigned number, the only catch being that the parser shouldn't have any knowledge of operators that isn't provided by a library]
         

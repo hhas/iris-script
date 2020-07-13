@@ -11,21 +11,21 @@ import Foundation
 
 
 
-struct KeyedList: BoxedCollectionValue { // TO DO: implement ExpressibleByDictionaryLiteral? // TO DO: what should be value's native name? (currently it's referred to 'key-value list', but that's awkward to write as underscored name; however, 'dictionary' is already used to refer to application dictionaries in ae_lib and might also be used as the term for library documentation)
+public struct KeyedList: BoxedCollectionValue { // TO DO: implement ExpressibleByDictionaryLiteral? // TO DO: what should be value's native name? (currently it's referred to 'key-value list', but that's awkward to write as underscored name; however, 'dictionary' is already used to refer to application dictionaries in ae_lib and might also be used as the term for library documentation)
     
-    var swiftLiteralDescription: String { return self.data.isEmpty ? "[:]" : "[\(self.data.map{"\($0.key): \($0.value)"}.joined(separator: ", "))]" } // TO DO: will type be inferred, or should it be explicit?
+    public var swiftLiteralDescription: String { return self.data.isEmpty ? "[:]" : "[\(self.data.map{"\($0.key): \($0.value)"}.joined(separator: ", "))]" } // TO DO: will type be inferred, or should it be explicit?
     
-    typealias SwiftType = [Key: Value]
+    public typealias SwiftType = [Key: Value]
     
-    struct Key: Hashable, CustomStringConvertible { // type-safe wrapper around AnyHashable that ensures non-Value types can't get into Record's internal storage by accident, while still allowing mixed-type keys (the alternative would be to use an enum, but that isn't extensible; TO DO: how can this decoupling facilitate records custom-normalizing hash keys, e.g. for case-sensitive vs case-insensitive storage])
+    public struct Key: Hashable, CustomStringConvertible { // type-safe wrapper around AnyHashable that ensures non-Value types can't get into Record's internal storage by accident, while still allowing mixed-type keys (the alternative would be to use an enum, but that isn't extensible; TO DO: how can this decoupling facilitate records custom-normalizing hash keys, e.g. for case-sensitive vs case-insensitive storage])
 
-        var description: String { return "\(self.value)" }
+        public var description: String { return "\(self.value)" }
         
         var value: Value { return self.key.base as! Value }
         
         private let key: AnyHashable
         
-        typealias KeyConvertibleValue = Value & KeyConvertible
+        public typealias KeyConvertibleValue = Value & KeyConvertible
         
         public init<T: KeyConvertibleValue>(_ value: T) {
             self.key = AnyHashable(value)
@@ -37,32 +37,32 @@ struct KeyedList: BoxedCollectionValue { // TO DO: implement ExpressibleByDictio
     
     //
     
-    var description: String { return "\(self.data)" }
+    public var description: String { return "\(self.data)" }
     
-    static let nominalType: Coercion = asList
+    public static let nominalType: Coercion = asList
     
     // TO DO: rename `constrainedType` to `structuralType`/`reifiedType`? make it public on Value?
     
     private var constrainedType: Coercion = asList // TO DO: how/when is best to specialize this (bear in mind that list may contain commands and other exprs that are not guaranteed to eval to same type/value every time)
     
-    var isMemoizable: Bool { return false } // TO DO: lists are memoizable only if all elements are; how/when should we determine this? (we want to avoid iterating long lists more than is necessary); should we also take opportunity to determine minimally constrained type? (e.g. if all items are numbers, constrained type could be inferred as AsArray(asNumber), although whether we want to enforce this when editing list is another question)
+    public var isMemoizable: Bool { return false } // TO DO: lists are memoizable only if all elements are; how/when should we determine this? (we want to avoid iterating long lists more than is necessary); should we also take opportunity to determine minimally constrained type? (e.g. if all items are numbers, constrained type could be inferred as AsArray(asNumber), although whether we want to enforce this when editing list is another question)
     
-    let data: SwiftType // TO DO: what about Array<Element>? boxing an array of Swift primitives and boxing each item upon use might have performance advantage in some situations (if so, we probably want to implement that as a GenericList<Element> struct which is natively polymorphic with OrderedList; however, that will mean chunk expressions and library commands can't operate directly on OrderedList.data all access to list contents must go via methods on CollectionValue/OrderedList, which adds an extra level of indirection to an already Swift-stack-heavy AST-walking interpreter)
+    public let data: SwiftType // TO DO: what about Array<Element>? boxing an array of Swift primitives and boxing each item upon use might have performance advantage in some situations (if so, we probably want to implement that as a GenericList<Element> struct which is natively polymorphic with OrderedList; however, that will mean chunk expressions and library commands can't operate directly on OrderedList.data all access to list contents must go via methods on CollectionValue/OrderedList, which adds an extra level of indirection to an already Swift-stack-heavy AST-walking interpreter)
     
-    init(_ data: SwiftType = [:]) {
+    public init(_ data: SwiftType = [:]) {
         self.data = data
     }
     
-    __consuming func makeIterator() -> SwiftType.Iterator {
+    public __consuming func makeIterator() -> SwiftType.Iterator {
         return self.data.makeIterator()
     }
     
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // TO DO: is coercion argument appropriate here?
+    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // TO DO: is coercion argument appropriate here?
         //return try self.toList(in: scope, as: asList)
         return try self.toKeyedList(in: scope, as: asList)
     }
     
-    func toKeyedList(in scope: Scope, as coercion: CollectionCoercion) throws -> KeyedList {
+    public func toKeyedList(in scope: Scope, as coercion: CollectionCoercion) throws -> KeyedList {
         return try KeyedList([Key:Value](uniqueKeysWithValues: self.data.map{ ($0, try $1.eval(in: scope, as: coercion.item)) }))
     }
     

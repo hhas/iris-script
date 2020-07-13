@@ -10,7 +10,7 @@ import SwiftAutomation
 
 
 extension Text: SelfFormatting { // TO DO: any way to put SelfFormatting onto all Values, short of redeclaring it?
-    func SwiftAutomation_formatSelf(_ formatter: SpecifierFormatter) -> String {
+    public func SwiftAutomation_formatSelf(_ formatter: SpecifierFormatter) -> String {
         return self.description
     }
 }

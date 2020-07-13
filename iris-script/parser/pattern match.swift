@@ -12,18 +12,18 @@ typealias Symbols = Set<Symbol>
 
 // might want to return .yes/.maybe/.no for EXPR match
 
-struct PatternMatch: CustomStringConvertible, Equatable {
+public struct PatternMatch: CustomStringConvertible, Equatable {
     // a single pattern; this should advance when a .value is pushed onto stack (assuming no unreduced tokens between it and the previous .value which holds the previous match)
         
     private static var _matchID = 0
     
-    var description: String {
+    public var description: String {
         return "«match `\(self.definition.precis)` U\(self.uniqueID) O\(self.originID) G\(self.groupID): \([Pattern](self.matchedPattern).description) \(self.remainingPattern[0]) \([Pattern](self.remainingPattern.dropFirst()).description)\(self.isAFullMatch ? (self.isLongestFullMatch ? "✔︎" : "✓") : "") \(self.definition.precedence)»"
     }
     
-    var count: Int { return self.matchedPattern.count + 1 }
+    public var count: Int { return self.matchedPattern.count + 1 }
     
-    var name: Symbol { return self.definition.name }
+    public var name: Symbol { return self.definition.name }
     
     // matcher IDs are used to reconcile conjunctions and to discard non-longest full matches
     
@@ -31,7 +31,7 @@ struct PatternMatch: CustomStringConvertible, Equatable {
     let originID: Int // identifies all matchers that originated from the same pattern definition at the same .operatorName(…) token (if the pattern branches, all descendants retain the same originID)
     let groupID: Int // identifies all matchers that originated at the same .operatorName(…) token (if an operator name is overloaded with multiple definitions, each in-progress match has a different originID but same groupID); be aware that whereas atom/prefix matchers start on .operatorName(…) token, infix/postfix backtrack to start on its preceding EXPR, thus two in-progress matches that share the same groupID should not be assumed to be the same length
         
-    let definition: PatternDefinition
+    public let definition: PatternDefinition
     
     // TO DO: provide a public API that returns the patterns for a full match? (e.g. reducefuncs might want to use this); if not, then we should consider capturing only as much of matched pattern as we need to satisfy PatternMatch’s own requirements (i.e. first pattern matched + no. of matches made), otherwise we're allocating lots of potentially large arrays unnecessarily
 
@@ -42,7 +42,7 @@ struct PatternMatch: CustomStringConvertible, Equatable {
     private let remainingPattern: [Pattern] // any patterns to match to next Reduction[s] in parser stack (caution: do not assume these patterns are the same as definition.patterns[OFFSET..<END_INDEX])
         
     // called by PatternDefinition.newMatches
-    init(for definition: PatternDefinition, matching remainingPattern: [Pattern], matched matchedPattern: [Pattern] = [], groupID: Int, originID: Int) {
+    internal init(for definition: PatternDefinition, matching remainingPattern: [Pattern], matched matchedPattern: [Pattern] = [], groupID: Int, originID: Int) {
         assert(!remainingPattern.isEmpty, "Invalid PatternMatch (remainingPattern is empty): \(definition.precis)")
         self.definition = definition
         self.remainingPattern = remainingPattern
@@ -146,7 +146,7 @@ struct PatternMatch: CustomStringConvertible, Equatable {
         return lastTokenIndex - self.count + 1
     }
         
-    static func == (lhs: PatternMatch, rhs: PatternMatch) -> Bool {
+    public static func == (lhs: PatternMatch, rhs: PatternMatch) -> Bool {
         return lhs.uniqueID == rhs.uniqueID
     }
     

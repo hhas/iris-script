@@ -8,17 +8,17 @@ import Foundation
 // TO DO: if an 0u sequence appears where a literal name is expected, convert to Symbol rather than Text? or should we limit it to strings, in which case some sort of cast is required (we can't put 0u sequences in single-quotes, as that would be inconsistent with double-quoted text's behavior; while a dedicated annotation type could work, that'd be inconsistent with unquoted 0u sequences)
 
 
-struct UnicodeReader: LineReader { // needs applied before NumericReader
+public struct UnicodeReader: LineReader { // needs applied before NumericReader
     
-    let reader: LineReader
+    private let reader: LineReader
     
-    var code: String { return self.reader.code }
+    public var code: String { return self.reader.code }
     
-    init(_ reader: LineReader) {
+    public init(_ reader: LineReader) {
         self.reader = reader
     }
     
-    func readCodepoint(_ reader: LineReader) -> (Character, Token, LineReader)? {
+    private func readCodepoint(_ reader: LineReader) -> (Character, Token, LineReader)? {
         let (token, reader) = reader.next()
         if case .letters = token.form, token.isRightContiguous, token.content.lowercased().hasPrefix("u") {
             var codepoint = token.content.dropFirst()
@@ -38,7 +38,7 @@ struct UnicodeReader: LineReader { // needs applied before NumericReader
         return nil
     }
     
-    func next() -> (Token, LineReader) {
+    public func next() -> (Token, LineReader) {
         var (token, reader) = self.reader.next()
         let startToken = token
         var result = ""

@@ -8,7 +8,7 @@ import Foundation
 
 // implement iterator over defined fields; Record.toRawRecord should use this to eval its fields (in the case of AsAnyRecord, the iterator always returns wildcard)
 
-protocol RecordCoercion: Coercion {
+public protocol RecordCoercion: Coercion {
     
     typealias Field = (name: Symbol, coercion: Coercion)
     
@@ -17,21 +17,21 @@ protocol RecordCoercion: Coercion {
 
 
 
-struct AsRecord: RecordCoercion {
+public struct AsRecord: RecordCoercion {
     
-    let name: Symbol = "record"
+    public let name: Symbol = "record"
     
-    var description: String { return "record" } // TO DO
+    public var description: String { return "record" } // TO DO
     
-    typealias SwiftType = Record
+    public typealias SwiftType = Record
     
-    let fields: [RecordCoercion.Field]
+    public let fields: [RecordCoercion.Field]
     
-    init(_ fields: [RecordCoercion.Field]) { // TO DO: what if fields is empty? also guard against nullSymbol name?
+    public init(_ fields: [RecordCoercion.Field]) { // TO DO: what if fields is empty? also guard against nullSymbol name?
         self.fields = fields
     }
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         let record = try value.toRawRecord(in: scope, as: self)
         if record.isMemoizable, record.constrainedType.isa(self) { return record } // TO DO: how to test if coercion is equal or superset of record's constrained type?
         var result = [Record.Field]()
@@ -63,4 +63,4 @@ struct AsRecord: RecordCoercion {
 }
 
 
-let asRecord = AsRecord([])
+public let asRecord = AsRecord([])

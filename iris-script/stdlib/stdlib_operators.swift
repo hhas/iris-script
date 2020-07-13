@@ -13,7 +13,7 @@
 
 import Foundation
 
-func stdlib_loadOperators(into registry: OperatorRegistry) {
+public func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.infix("^", 1300, .right)
     registry.prefix("+", 1298, reducer: reductionForPositiveOperator)
     registry.prefix("-", 1298, reducer: reductionForNegativeOperator)

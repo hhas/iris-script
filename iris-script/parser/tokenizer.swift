@@ -77,12 +77,12 @@ import Foundation
 // TO DO: should next reader be bound to Token? (this'd make token structs a bit fatter, but has the benefit that interactive autosuggest/autocorrect can easily look at a line's unresolved tokens and try different solutions, to see which provides the best outcome; note: given that CoreLexer is scanning the original string, this might require some jiggery to step over the original, unwanted token[s], using UnpopToken to 'reinsert' our attempted 'fix' tokens, then get the whole thing re-reading as before - which means the unpop needs to be wrapped in the line reader's adapters as well, which means passing it thru EditableScript.reader())
 
 
-struct Tokenizer: LineReader { // don't think lexer should care if it's at start of line or start of script; that's the parser's problem when reading multiline exprs (e.g. lists/records wrapped over multiple lines); note that trailing `.` after digits at EOL is expr separator; the numeric parser (which is strictly single-line) will detect the incomplete match for [e.g.] `123.` and split off the `.` to yield `.value(123)` and `.periodSeparator` tokens, leaving next [block] parser to deal with trailing period (comma and period separators describe blocks, e.g. `To foo{} do_this, do_that, do_the_other. 123.` should parse as `(to foo{} (do_this, do_that, do_the_other)) (123)`. Longer blocks may be delimited using `do…done` for readability, giving us 3 different syntaxes to write a block.)
+public struct Tokenizer: LineReader { // don't think lexer should care if it's at start of line or start of script; that's the parser's problem when reading multiline exprs (e.g. lists/records wrapped over multiple lines); note that trailing `.` after digits at EOL is expr separator; the numeric parser (which is strictly single-line) will detect the incomplete match for [e.g.] `123.` and split off the `.` to yield `.value(123)` and `.periodSeparator` tokens, leaving next [block] parser to deal with trailing period (comma and period separators describe blocks, e.g. `To foo{} do_this, do_that, do_the_other. 123.` should parse as `(to foo{} (do_this, do_that, do_the_other)) (123)`. Longer blocks may be delimited using `do…done` for readability, giving us 3 different syntaxes to write a block.)
 
-    let code: String // the entire script // TO DO: should probably be pre-split into single lines; that way, each single-line Lexer instance isn't affected when changes are made to other lines (only the modified lines need new lexers)
-    let leadingWhitespace: Substring?
-    let offset: String.Index
-    let isFirst: Bool
+    public let code: String // the entire script // TO DO: should probably be pre-split into single lines; that way, each single-line Lexer instance isn't affected when changes are made to other lines (only the modified lines need new lexers)
+    private let leadingWhitespace: Substring?
+    private let offset: String.Index
+    private let isFirst: Bool
     
     // TO DO: should code also be Substring? (e.g. script.split() returns Array<Substring>); challenge is dealing with editing: every time a line of code is changed, it's probably better to put a new String into script array
     
@@ -93,7 +93,7 @@ struct Tokenizer: LineReader { // don't think lexer should care if it's at start
         self.isFirst = isFirst
     }
     
-    init?(_ code: String) { //
+    public init?(_ code: String) { //
         assert(code.firstIndex(where: linebreakCharacters.contains) == nil) // LineLexers process single lines only, so should never receive a string containing linebreak chars
         guard let offset = code.firstIndex(where: nonWhitespaceCharacters.contains) else { return nil } // scan over the line's leading whitespace, returning nil if string is empty/entirely whitespace (i.e. no tokens to read, in which case it's not worth constructing a lexer for it)
         self.init(code: code, at: offset, after: offset == code.startIndex ? nil : code[code.startIndex..<offset], isFirst: true)
@@ -109,7 +109,7 @@ struct Tokenizer: LineReader { // don't think lexer should care if it's at start
         return (self.code[self.offset..<end], end)
     }
     
-    func advanceOver(_ characters: CharacterSet) -> String.Index { // returns index of first character not in given character set
+    internal func advanceOver(_ characters: CharacterSet) -> String.Index { // returns index of first character not in given character set
         if let endOffset = self.code.suffix(from: self.offset).firstIndex(where: { !characters.contains($0) }) {
             assert(endOffset != self.offset) // bug: tokens cannot be zero-length
             return endOffset
@@ -118,11 +118,11 @@ struct Tokenizer: LineReader { // don't think lexer should care if it's at start
         }
     }
     
-    func advanceByOne() -> String.Index {
+    internal func advanceByOne() -> String.Index {
         return self.code.index(after: self.offset)
     }
     
-    func next() -> (Token, LineReader) {
+    public func next() -> (Token, LineReader) {
         if self.offset == self.code.endIndex { return (nullToken, nullReader) } // always return .lineBreak once line reader is exhausted // caution: the EOL token is purely a marker; unlike other tokens it does not capture the line's trailing whitespace or endIndex // note: while we could eliminate .endOfScript by returning `(Token,LineReader)?`, the current arrangement arguably makes binding the result simpler (less `if let tmp =…` shuffling), and .lineBreak tokens may well be needed anyway when recombining the output of multiple single-line lexers [with partial parsing of numerics and operators] in order to perform the final multi-line parse by which a complete AST (or completed partial sub-trees plus rebalancing 'bad syntax' tokens when the script's syntax is not 100% correct) is assembled
         // read one token (self.offset = first character of new token)
         let form: Token.Form

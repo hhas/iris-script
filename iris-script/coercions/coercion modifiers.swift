@@ -15,13 +15,13 @@ import Foundation
 // important: when catching NullCoercionError in 'optional' modifiers, always return `nullValue`, not the value that originally threw the error (in principle, the catch block could return `error.value`, but the whole point of the special `did_nothing` value throwing NullCoercionError is to ensure it degenerates to a normal `nothing` if not immediately caught by an enclosing `else` clause, in which case it triggers evaluation of the `else` operator’s alternate action [right-hand expression])
 
 
-struct AsNothing: Coercion { // used in HandlerInterface.result to return `nothing`
+public struct AsNothing: Coercion { // used in HandlerInterface.result to return `nothing`
     
-    let name: Symbol = "nothing"
+    public let name: Symbol = "nothing"
     
-    var swiftTypeDescription: String { return "" }
+    public var swiftTypeDescription: String { return "" }
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         let _ = try asAnything.coerce(value: value, in: scope) // this still needs to evaluate value asAnything, discarding result (if value is scalar, it can be discarded immediately) // Q. how necessary is this? (i.e. we want to make sure last expr in handler evaluates, which could get funky when intersecting AsNothing with other coercions)
         return nullValue
     }
@@ -30,25 +30,25 @@ struct AsNothing: Coercion { // used in HandlerInterface.result to return `nothi
 //
 
 
-struct MayDoNothing: SwiftCoercion {
+public struct MayDoNothing: SwiftCoercion {
     
     // TO DO: what should these vars return?
     
-    var swiftLiteralDescription: String { return self.coercion.swiftLiteralDescription }
+    public var swiftLiteralDescription: String { return self.coercion.swiftLiteralDescription }
     
-    var name: Symbol { return self.coercion.name }
+    public var name: Symbol { return self.coercion.name }
     
-    var description: String { return self.coercion.description }
+    public var description: String { return self.coercion.description }
     
-    typealias SwiftType = Value
+    public typealias SwiftType = Value
     
-    let coercion: Coercion
+    public let coercion: Coercion
     
-    init(_ coercion: Coercion) {
+    public init(_ coercion: Coercion) {
         self.coercion = coercion
     }
     
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+    public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         do {
             //print("MayDoNothing evaling:", value)
             let result = try self.coercion.coerce(value: value, in: scope)
@@ -64,23 +64,23 @@ struct MayDoNothing: SwiftCoercion {
 
 
 
-struct AsOptional: SwiftCoercion { // this returns native Value; for Optional<Value> use MayBeNil
+public struct AsOptional: SwiftCoercion { // this returns native Value; for Optional<Value> use MayBeNil
     
-    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.coercion.swiftLiteralDescription))" }
+    public var swiftLiteralDescription: String { return "\(type(of: self))(\(self.coercion.swiftLiteralDescription))" }
     
-    let name: Symbol = "optional"
+    public let name: Symbol = "optional"
     
-    var description: String { return self.coercion.name == "value" ? "anything" : "optional \(self.coercion)" } // kludge
+    public var description: String { return self.coercion.name == "value" ? "anything" : "optional \(self.coercion)" } // kludge
     
-    typealias SwiftType = Value
+    public typealias SwiftType = Value
     
-    let coercion: Coercion
+    public let coercion: Coercion
     
-    init(_ coercion: Coercion) {
+    public init(_ coercion: Coercion) {
         self.coercion = coercion
     }
     
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+    public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         do {
             return try self.coercion.coerce(value: value, in: scope)
         } catch is NullCoercionError {
@@ -89,23 +89,23 @@ struct AsOptional: SwiftCoercion { // this returns native Value; for Optional<Va
     }
 }
 
-struct AsSwiftOptional<T: SwiftCoercion>: SwiftCoercion {
+public struct AsSwiftOptional<T: SwiftCoercion>: SwiftCoercion {
     
-    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.coercion.swiftLiteralDescription))" }
+    public var swiftLiteralDescription: String { return "\(type(of: self))(\(self.coercion.swiftLiteralDescription))" }
 
-    let name: Symbol = "optional"
+    public let name: Symbol = "optional"
     
-    var description: String { return "\(self.coercion) or nothing" }
+    public var description: String { return "\(self.coercion) or nothing" }
     
-    typealias SwiftType = T.SwiftType?
+    public typealias SwiftType = T.SwiftType?
     
-    let coercion: T
+    private let coercion: T
     
-    init(_ coercion: T) {
+    public init(_ coercion: T) {
         self.coercion = coercion
     }
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         do {
             return try self.coercion.coerce(value: value, in: scope)
         } catch is NullCoercionError {
@@ -113,14 +113,14 @@ struct AsSwiftOptional<T: SwiftCoercion>: SwiftCoercion {
         }
     }
     
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+    public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         do {
             return try self.coercion.unbox(value: value, in: scope)
         } catch is NullCoercionError {
             return nil
         }
     }
-    func box(value: SwiftType, in scope: Scope) -> Value {
+    public func box(value: SwiftType, in scope: Scope) -> Value {
         guard let value = value else { return nullValue }
         return self.coercion.box(value: value, in: scope)
     }
@@ -128,25 +128,25 @@ struct AsSwiftOptional<T: SwiftCoercion>: SwiftCoercion {
 
 //
 
-struct AsDefault: Coercion {
+public struct AsDefault: Coercion {
     
-    var swiftLiteralDescription: String {
+    public var swiftLiteralDescription: String {
         return "\(type(of: self))(\(self.coercion.swiftLiteralDescription), defaultValue: \(self.defaultValue.swiftLiteralDescription))"
     }
     
-    let name: Symbol = "default"
+    public let name: Symbol = "default"
     
-    var description: String { return "\(self.coercion) or \(self.defaultValue)" }
+    public var description: String { return "\(self.coercion) or \(self.defaultValue)" }
     
-    let coercion: Coercion
-    let defaultValue: Value
-    
-    init(_ coercion: Coercion = asValue, defaultValue: Value) { // TO DO: should coercion be defaultValue.nominalType/constrainedType?
+    public let coercion: Coercion
+    private let defaultValue: Value
+
+    public init(_ coercion: Coercion = asValue, defaultValue: Value) { // TO DO: should coercion be defaultValue.nominalType/constrainedType?
         self.coercion = coercion
         self.defaultValue = defaultValue // TO DO: this should be member of coercion; how/where to check this? also need to consider how collections/exprs might be used here
     }
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         do {
             return try self.coercion.coerce(value: value, in: scope)
         } catch is NullCoercionError {
@@ -158,27 +158,27 @@ struct AsDefault: Coercion {
 }
 
 
-struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
+public struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
     
-    var swiftLiteralDescription: String {
+    public var swiftLiteralDescription: String {
         return "\(type(of: self))(\(self.coercion.swiftLiteralDescription), defaultValue: \(formatSwiftLiteral(self.defaultValue)))"
     }
 
-    let name: Symbol = "default"
+    public let name: Symbol = "default"
     
-    var description: String { return "\(self.coercion) default: \(self.defaultValue)" }
+    public var description: String { return "\(self.coercion) default: \(self.defaultValue)" }
     
-    typealias SwiftType = T.SwiftType
+    public typealias SwiftType = T.SwiftType
     
-    let coercion: T
-    let defaultValue: SwiftType
+    private let coercion: T
+    private let defaultValue: SwiftType
     
-    init(_ coercion: T, defaultValue: SwiftType) {
+    public init(_ coercion: T, defaultValue: SwiftType) {
         self.coercion = coercion
         self.defaultValue = defaultValue // TO DO: this should be member of coercion; how/where to check this? also need to consider how collections/exprs might be used here
     }
 
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         do {
             return try self.coercion.coerce(value: value, in: scope)
         } catch is NullCoercionError {
@@ -189,7 +189,7 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
         }
     }
     
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+    public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         do {
             return try self.coercion.unbox(value: value, in: scope)
         } catch is NullCoercionError {
@@ -199,7 +199,7 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
             throw error
         }
     }
-    func box(value: SwiftType, in scope: Scope) -> Value {
+    public func box(value: SwiftType, in scope: Scope) -> Value {
         //guard let value = value else { return nullValue }
         return self.coercion.box(value: value, in: scope)
     }
@@ -207,28 +207,28 @@ struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
 
 
 
-let asNothing = AsNothing()
+public let asNothing = AsNothing()
 
-let asAnything = AsOptional(asValue) // TO DO: also define native constant as Precis(AsOptional(asValue), "anything")
-
-
+public let asAnything = AsOptional(asValue) // TO DO: also define native constant as Precis(AsOptional(asValue), "anything")
 
 
-struct AsEditable: SwiftCoercion {
+
+
+public struct AsEditable: SwiftCoercion {
     
-    var swiftLiteralDescription: String { return "\(type(of: self))(\(self.coercion.swiftLiteralDescription))" }
+    public var swiftLiteralDescription: String { return "\(type(of: self))(\(self.coercion.swiftLiteralDescription))" }
 
     // experimental; in effect, environment binds a box containing the actual value, giving behavior similar to Swift's pass-by-reference semantics using structs
     
-    let name: Symbol = "editable"
+    public let name: Symbol = "editable"
     
-    var description: String { return "editable \(self.coercion)" }
+    public var description: String { return "editable \(self.coercion)" }
     
-    typealias SwiftType = EditableValue
+    public typealias SwiftType = EditableValue
     
-    let coercion: Coercion // the type to which the EditableValue instance's content should be coerced when setting it
+    public let coercion: Coercion // the type to which the EditableValue instance's content should be coerced when setting it
     
-    init(_ coercion: Coercion = asAnything) {
+    public init(_ coercion: Coercion = asAnything) {
         self.coercion = coercion
     }
     
@@ -236,7 +236,7 @@ struct AsEditable: SwiftCoercion {
     
     // really need to think this through: AsEditable boxes the value; the resulting box is then bound in environment; getting the stored box retrieves it, evaling the boxed value updates the box's content to the resulting value and returns it (this is something to be aware of when passing the box between scopes)
     
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+    public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         print("AsEditable<\(self.coercion)>.unbox() received \(type(of: value)) value: \(value)")
         let result = try self.coercion.coerce(value: value, in: scope)
         // if value is already editable then update in-place
@@ -251,26 +251,26 @@ struct AsEditable: SwiftCoercion {
 }
 
 
-let asEditable = AsEditable()
+public let asEditable = AsEditable()
 
 
 
 
 // nominal type checks
 
-struct AsLiteral<T: Value>: SwiftCoercion { // caution: this only works for values that have native syntax (number, string, list, command, etc), not for values that require a constructor command (e.g. range/thru) // TO DO: also define AsLiteralCommand that allows command name and operands to be matched? (while this will be limited due to lack of vararg support in generics, in practice we really only need unary and binary matching as its main use will be matching operator exprs, most of which take one or two operands; alternatively, we could take AsRecord as argument, although that wouldn't support unboxing)
+public struct AsLiteral<T: Value>: SwiftCoercion { // caution: this only works for values that have native syntax (number, string, list, command, etc), not for values that require a constructor command (e.g. range/thru) // TO DO: also define AsLiteralCommand that allows command name and operands to be matched? (while this will be limited due to lack of vararg support in generics, in practice we really only need unary and binary matching as its main use will be matching operator exprs, most of which take one or two operands; alternatively, we could take AsRecord as argument, although that wouldn't support unboxing)
     
-    var swiftLiteralDescription: String { return "\(type(of: self))()" }
+    public var swiftLiteralDescription: String { return "\(type(of: self))()" }
 
-    var name: Symbol { return T.nominalType.name } // TO DO: what should this be?
+    public var name: Symbol { return T.nominalType.name } // TO DO: what should this be?
     
-    var description: String { return "literal \(self.name.label)" } 
+    public var description: String { return "literal \(self.name.label)" }
     
     // if the input Value is an instance of T, it is passed thru as-is without evaluation, otherwise an error is thrown // TO DO: Value.eval() will bypass this (another reason it needs to go away)
     
-    typealias SwiftType = T
+    public typealias SwiftType = T
     
-    func unbox(value: Value, in env: Scope) throws -> SwiftType {
+    public func unbox(value: Value, in env: Scope) throws -> SwiftType {
         guard let result = value as? SwiftType else {
             if value is NullValue { // TO DO: kludgy
                 throw NullCoercionError(value: value, coercion: self)
@@ -282,53 +282,53 @@ struct AsLiteral<T: Value>: SwiftCoercion { // caution: this only works for valu
 }
 
 
-struct AsLiteralName: SwiftCoercion { // TO DO: as above, this currently won't work as Command.[swift]eval() intercepts and performs handler lookup, only applying this coercion to handler's result; moving Command evaluation down to toTYPE() should fix this
+public struct AsLiteralName: SwiftCoercion { // TO DO: as above, this currently won't work as Command.[swift]eval() intercepts and performs handler lookup, only applying this coercion to handler's result; moving Command evaluation down to toTYPE() should fix this
     
-    var name: Symbol = "name" // TO DO: what to call this? "literal_name"? "identifier"?
+    public let name: Symbol = "name" // TO DO: what to call this? "literal_name"? "identifier"?
     
-    typealias SwiftType = Symbol
+    public typealias SwiftType = Symbol
     
-    func unbox(value: Value, in env: Scope) throws -> SwiftType {
+    public func unbox(value: Value, in env: Scope) throws -> SwiftType {
         guard let result = value.asIdentifier() else { throw BadSyntax.missingName }
         return result
     }
 }
 
 
-let asLiteralName = AsLiteralName()
+public let asLiteralName = AsLiteralName()
 
 
 
     
-struct AsSwiftPrecis<T: SwiftCoercion>: SwiftCoercion { // allows a complex coercion’s true technical name to be replaced with a simple, custom name; e.g. used to rename `optional value` to `anything`, or `list {of: integer from: 0 to: 100, min: 4, max: 4}` to `CMYK_color`
+public struct AsSwiftPrecis<T: SwiftCoercion>: SwiftCoercion { // allows a complex coercion’s true technical name to be replaced with a simple, custom name; e.g. used to rename `optional value` to `anything`, or `list {of: integer from: 0 to: 100, min: 4, max: 4}` to `CMYK_color`
     
-    var swiftLiteralDescription: String {
+    public var swiftLiteralDescription: String {
         return "\(type(of: self))(\(self.coercion.swiftLiteralDescription), \(self.precis))"
     }
     
-    var name: Symbol { return Symbol(self.precis) } // TO DO: what should this be?
+    public var name: Symbol { return Symbol(self.precis) } // TO DO: what should this be?
     
-    var description: String { return "«type: \(self.precis)»" } // TO DO: what should this be?
+    public var description: String { return "«type: \(self.precis)»" } // TO DO: what should this be?
     
-    typealias SwiftType = T.SwiftType
+    public typealias SwiftType = T.SwiftType
     
-    let coercion: T
+    private let coercion: T
     
     private let precis: String
     
-    init(_ coercion: T, _ precis: String) { // precis is the custom name under which the wrapped coercion appears; TO DO: this does not currently check that precis string is a valid command/slot name; should it do so and apply escape syntax if not?
+    public init(_ coercion: T, _ precis: String) { // precis is the custom name under which the wrapped coercion appears; TO DO: this does not currently check that precis string is a valid command/slot name; should it do so and apply escape syntax if not?
         self.coercion = coercion
         self.precis = precis
     }
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         return try self.coercion.coerce(value: value, in: scope)
     }
     
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+    public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         return try self.coercion.unbox(value: value, in: scope)
     }
-    func box(value: SwiftType, in scope: Scope) -> Value {
+    public func box(value: SwiftType, in scope: Scope) -> Value {
         return self.coercion.box(value: value, in: scope)
     }
 }

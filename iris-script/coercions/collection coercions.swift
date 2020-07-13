@@ -9,25 +9,25 @@
 import Foundation
 
 
-protocol CollectionCoercion: Coercion {
+public protocol CollectionCoercion: Coercion {
     var item: Coercion { get }
 }
 
 
 
-struct AsList: CollectionCoercion {
+public struct AsList: CollectionCoercion {
     
     // TO DO: rename AsOrderedList?
     
-    let name: Symbol = "list"
+    public let name: Symbol = "list"
     
-    let item: Coercion
+    public let item: Coercion
     
-    init(_ item: Coercion) { // TO DO: optional min/max length constraints
+    public init(_ item: Coercion) { // TO DO: optional min/max length constraints
         self.item = item
     }
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         return try value.toList(in: scope, as: self)
     }
 }
@@ -35,7 +35,7 @@ struct AsList: CollectionCoercion {
 
 // TO DO: what should AsDictionary's SwiftType be? (c.f. Dictionary.Element, which is a `(key:Key,value:Value)` tuple)
 
-protocol SwiftCollectionCoercion: SwiftCoercion, CollectionCoercion {
+public protocol SwiftCollectionCoercion: SwiftCoercion, CollectionCoercion {
     
     associatedtype ElementCoercion: SwiftCoercion
     
@@ -43,31 +43,30 @@ protocol SwiftCollectionCoercion: SwiftCoercion, CollectionCoercion {
 }
 
 
-struct AsArray<ElementCoercion: SwiftCoercion>: SwiftCollectionCoercion {
+public struct AsArray<ElementCoercion: SwiftCoercion>: SwiftCollectionCoercion {
     
-    var swiftLiteralDescription: String { return "AsArray(\(self.item.swiftLiteralDescription))" }
+    public var swiftLiteralDescription: String { return "AsArray(\(self.item.swiftLiteralDescription))" }
     
-    let name: Symbol = "list" // TO DO
+    public let name: Symbol = "list" // TO DO
     
-    typealias SwiftType = [ElementCoercion.SwiftType]
+    public typealias SwiftType = [ElementCoercion.SwiftType]
     
-    let swiftItem: ElementCoercion
+    public let swiftItem: ElementCoercion
+    public var item: Coercion { return self.swiftItem }
     
-    var item: Coercion { return self.swiftItem }
-    
-    init(_ item: ElementCoercion) { // TO DO: optional min/max length constraints
+    public init(_ item: ElementCoercion) { // TO DO: optional min/max length constraints
         self.swiftItem = item
     }
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         return try value.toList(in: scope, as: self)
     }
     
-    func box(value: SwiftType, in scope: Scope) -> Value {
+    public func box(value: SwiftType, in scope: Scope) -> Value {
         return OrderedList(value.map{ self.swiftItem.box(value: $0, in: scope) })
     }
     
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+    public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         return try value.toArray(in: scope, as: self)
     }
 }
@@ -75,4 +74,4 @@ struct AsArray<ElementCoercion: SwiftCoercion>: SwiftCollectionCoercion {
 
 
 
-let asList = AsList(asValue)
+public let asList = AsList(asValue)

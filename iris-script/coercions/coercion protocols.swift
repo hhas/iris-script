@@ -16,7 +16,7 @@ import Foundation
 // important: coercions must always be non-lossy; i.e. while a simpler representation of user data can be coerced to a more complex representation, e.g. `"foo" as list → ["foo"]`, the opposite is not allowed, so `["foo"] as string` → UnsupportedCoercionError()
 
 
-protocol Coercion: Value {
+public protocol Coercion: Value {
     
     var name: Symbol { get } // TO DO: canonical vs reified name? // TO DO: how to support localization?
     
@@ -38,23 +38,23 @@ protocol Coercion: Value {
 
 extension Coercion {
     
-    var swiftLiteralDescription: String { return "\(type(of:self))()" } // TO DO: need to generate Swift source for instantiating a Coercion (also, how to handle Coercions that don't declare SwiftCoercion conformance? presumably these'll need to go in an AsValue-like wrapper, or else be rejected outright)
+    public var swiftLiteralDescription: String { return "\(type(of:self))()" } // TO DO: need to generate Swift source for instantiating a Coercion (also, how to handle Coercions that don't declare SwiftCoercion conformance? presumably these'll need to go in an AsValue-like wrapper, or else be rejected outright)
     
-    var swiftTypeDescription: String { return "Value" }
+    public var swiftTypeDescription: String { return "Value" }
     
-    var description: String { return "\(self.name.label)" } // TO DO: decide what description/debugDescription should show, versus pretty printing; description should include any constraints (constraints aren't included in canonical name)
+    public var description: String { return "\(self.name.label)" } // TO DO: decide what description/debugDescription should show, versus pretty printing; description should include any constraints (constraints aren't included in canonical name)
     
-    static var nominalType: Coercion { return asCoercion }
+    public static var nominalType: Coercion { return asCoercion }
     
-    func isa(_ coercion: Coercion) -> Bool {
+    public func isa(_ coercion: Coercion) -> Bool {
         return self.name == coercion.name // TO DO: implement (same or subset)
     }
     
-    func intersect(with coercion: Coercion) -> Coercion {
+    public func intersect(with coercion: Coercion) -> Coercion {
         return coercion // TO DO: implement
     }
     
-    func swiftIntersect<T: SwiftCoercion>(with coercion: T) -> T {
+    public func swiftIntersect<T: SwiftCoercion>(with coercion: T) -> T {
         return coercion // TO DO: implement
     }
 }
@@ -63,7 +63,7 @@ extension Coercion {
 
 extension Coercion {
     
-    func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T {
+    public func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T {
         guard let result = try self.coerce(value: value, in: scope) as? T else {
             throw UnsupportedCoercionError(value: value, coercion: self)
         }
@@ -73,7 +73,7 @@ extension Coercion {
 
 extension SwiftCoercion {
     
-    func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T {
+    public func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T {
         guard let result = try self.unbox(value: value, in: scope) as? T else {
             throw UnsupportedCoercionError(value: value, coercion: self)
         }
@@ -82,7 +82,7 @@ extension SwiftCoercion {
 }
 
 
-protocol SwiftCoercion: Coercion {
+public protocol SwiftCoercion: Coercion {
 
     associatedtype SwiftType
     
@@ -93,7 +93,7 @@ protocol SwiftCoercion: Coercion {
 
 extension SwiftCoercion {
 
-    var swiftTypeDescription: String { return String(describing: SwiftType.self) }
+    public var swiftTypeDescription: String { return String(describing: SwiftType.self) }
 }
 
 
@@ -108,22 +108,22 @@ protocol NativeCoercion: SwiftCoercion where SwiftType == Value { // TO DO: stup
 
 extension SwiftCoercion where SwiftType: Value { // TO DO: this doesn't work on AsValue; why? (we can work around it with `extension SwiftCoercion where SwiftType == Value` below, but that's kinda kludgy)
         
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         return try self.unbox(value: value, in: scope)
     }
     
-    func box(value: SwiftType, in scope: Scope) -> Value {
+    public func box(value: SwiftType, in scope: Scope) -> Value {
         return value
     }
 }
 
 extension SwiftCoercion where SwiftType == Value {
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         return try self.unbox(value: value, in: scope)
     }
     
-    func box(value: SwiftType, in scope: Scope) -> Value {
+    public func box(value: SwiftType, in scope: Scope) -> Value {
         return value
     }
 }

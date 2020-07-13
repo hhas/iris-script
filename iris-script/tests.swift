@@ -12,6 +12,10 @@ import Foundation
 
 func test() {
     
+    runScript(" {1,3} ")
+    
+    return;
+    
     // get document at 1
     // (‘get’ {‘at’ {‘documents’, 1}})
     

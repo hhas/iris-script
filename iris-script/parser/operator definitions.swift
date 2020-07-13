@@ -8,9 +8,9 @@ import Foundation
 
 
 
-struct OperatorDefinitions: Sequence, CustomStringConvertible { // TO DO: define as class rather than struct? it would reduce no. of method calls needed to populate PartialMatch tree to one add() per OpGrp rather than one add() per OpDef
+public struct OperatorDefinitions: Sequence, CustomStringConvertible { // TO DO: define as class rather than struct? it would reduce no. of method calls needed to populate PartialMatch tree to one add() per OpGrp rather than one add() per OpDef
     
-    var description: String {
+    public var description: String {
         return "<\(self.name.label) \(self.definitions.map{String(describing: $0)}.joined(separator: " "))>"
     }
     
@@ -29,7 +29,7 @@ struct OperatorDefinitions: Sequence, CustomStringConvertible { // TO DO: define
         self.definitions.append(definition)
     }
     
-    __consuming func makeIterator() -> IndexingIterator<[PatternDefinition]> {
+    public __consuming func makeIterator() -> IndexingIterator<[PatternDefinition]> {
         return self.definitions.makeIterator()
     }
     

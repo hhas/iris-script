@@ -12,12 +12,35 @@
 		<key>iris-script.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
+			<integer>14</integer>
+		</dict>
+		<key>iris-shell.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>13</integer>
+		</dict>
+		<key>libIris.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
 			<integer>12</integer>
 		</dict>
 		<key>stdlib-glue.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>13</integer>
+			<integer>15</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>4F8C407124BCC02200735273</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>4F988CB524BCC4D700EE66C7</key>
+		<dict>
+			<key>primary</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>

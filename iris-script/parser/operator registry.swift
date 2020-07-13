@@ -17,21 +17,21 @@ import Foundation
 
 
 
-class OperatorRegistry: CustomDebugStringConvertible { // caution: being a shared resource, this may need locking/copying to prevent modification once populated // TO DO: use a line reader to populate this from `«include: @com.example.mylib.syntax.1»` annotations at top of script? problem: this requires fully parsing all annotations [at least up to the first non-annotation token]
+public class OperatorRegistry: CustomDebugStringConvertible { // caution: being a shared resource, this may need locking/copying to prevent modification once populated // TO DO: use a line reader to populate this from `«include: @com.example.mylib.syntax.1»` annotations at top of script? problem: this requires fully parsing all annotations [at least up to the first non-annotation token]
     
     // Q. is `A < B as NF` valid as a trinary operator? [i.e. mixed symbol+word styles] (given that `A comes_before B as case_sensitive_text` would be the likelier form, it's arguable; alternatively, we could throw all caution to the wind and use considering/ignoring blocks, but they create conflicting semantics where application handlers would want to respect them but library handlers generally don't; TBH it's a pig of a situation, but most likely solution is that all application handlers will get extra `timeout:` and `ignoring:` parameters [c.f. appscript] added automatically, and if library handlers want to provide equivalent parameters they must explicitly declare them)
     
     // TO DO: we really want to bind library handler directly to Command, and also attach the operator definition for use by pretty printer; one compromise is for operator definition to point back to library, and leave handler lookup to first call (note: once a script is nominally compiled, it'll retain the Command + library ID, and possibly the operator name that appears in the code for use in error messages, but not the operator definition)
     
-    var debugDescription: String { return "OperatorRegistry<\(self.wordOperators.keys) \(self.symbolOperators.keys)>" }
+    public var debugDescription: String { return "OperatorRegistry<\(self.wordOperators.keys) \(self.symbolOperators.keys)>" }
     
-    typealias OperatorTable = [String: OperatorDefinitions] // maps a single keyword to all operators that use that keyword
+    private typealias OperatorTable = [String: OperatorDefinitions] // maps a single keyword to all operators that use that keyword
     
     private var wordOperators   = OperatorTable() // whole-token matches
     private var symbolOperators = OperatorTable() // whole-token matches (this is quicker than sub-token matching when a single symbolic operator is clearly delimited by words/punctuation/whitespace)
     
-    var wordOperatorDefinitions: OperatorTable.Values { return self.wordOperators.values }
-    var symbolOperatorDefinitions: OperatorTable.Values { return self.symbolOperators.values }
+    //private var wordOperatorDefinitions: OperatorTable.Values { return self.wordOperators.values }
+    //private var symbolOperatorDefinitions: OperatorTable.Values { return self.symbolOperators.values }
     
     private var symbolMatcher = PartialMatch() // (note: symbolMatcher.description should always be nil) // used by to perform sub-token matches where two or more symbolic operators are written contiguously; e.g. "1<=-2" tokenizes as [.value("1"), .symbols("<=-"), .value("2")], which OperatorReader rewrites to [.value("1"), .operator("<="), .operator("-"), .value("2")]
     
@@ -39,12 +39,12 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
     
     // TO DO: may want longest match for words as well, e.g. autosuggest, autocomplete (including underscore autoinsertion)
     
-    struct PartialMatch { // tree structure where each node can match a sequence of symbol characters to an operator class; used to perform longest match of symbol-based operator names
+    private struct PartialMatch { // tree structure where each node can match a sequence of symbol characters to an operator class; used to perform longest match of symbol-based operator names
         
         private var matches = [Character: PartialMatch]()
         private var definitions: OperatorDefinitions? // nil if this isn't a complete match
         
-        mutating func add(_ name: Substring, _ definition: OperatorDefinitions) {
+        internal mutating func add(_ name: Substring, _ definition: OperatorDefinitions) {
             if let char = name.first {
                 if self.matches[char] == nil { self.matches[char] = PartialMatch() }
                 self.matches[char]!.add(name.dropFirst(1), definition)
@@ -54,7 +54,7 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
             }
         }
         
-        func match(_ value: Substring) -> (endIndex: String.Index, definition: OperatorDefinitions)? {
+        internal func match(_ value: Substring) -> (endIndex: String.Index, definition: OperatorDefinitions)? {
             guard let char = value.first else { // else reached end
                 if let definitions = self.definitions {
                     return (value.endIndex, definitions)
@@ -72,7 +72,10 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
         }
     }
     
-    func add(_ definition: PatternDefinition) {
+    public init() {
+    }
+    
+    public func add(_ definition: PatternDefinition) {
         for keyword in definition.keywords {
             for name in keyword.allNames {
                 assert(!name.isEmpty)
@@ -91,12 +94,12 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
     
     // TO DO: should matchWord/matchSymbols take token and return tokens?
     
-    func matchWord(_ value: Substring) -> OperatorDefinitions? {
+    internal func matchWord(_ value: Substring) -> OperatorDefinitions? {
         assert(!value.isEmpty)
         return self.wordOperators[value.lowercased()]
     }
     
-    func matchSymbols(_ value: Substring) -> [(Substring, OperatorDefinitions)] { // returned substrings should be slices of same underlying string as value
+    internal func matchSymbols(_ value: Substring) -> [(Substring, OperatorDefinitions)] { // returned substrings should be slices of same underlying string as value
         assert(!value.isEmpty)
         if let result = self.symbolOperators[String(value)] { return [(value, result)] }
         var symbols = value
@@ -112,14 +115,14 @@ class OperatorRegistry: CustomDebugStringConvertible { // caution: being a share
         return result
     }
     
-    func get(_ name: Symbol) -> OperatorDefinitions? {
+    public func get(_ name: Symbol) -> OperatorDefinitions? {
         return self.wordOperators[name.key] ?? self.symbolOperators[name.key]
     }
 }
 
 
 
-extension OperatorRegistry { // convenience methods for standard operator forms
+public extension OperatorRegistry { // convenience methods for standard operator forms
     
     //     registry.prefix("NOT", 400)
     //     registry.infix(Keyword("≤", "<="), 540)
