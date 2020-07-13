@@ -84,8 +84,9 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.infix("returning", 300)
     // block
     registry.prefix("do", suffix: "done")
-    // TO DO: `optional`, `editable` prefix operators for constructing coercions (they're commonly used so will allow command operand to use LP syntax as long as their precedence is set lower than argument precedence, e.g. `foo as optional list of: string min: 1 max: 10` -> `as{foo{},optional{list{of:string{},min:1,max:10}}}`)
 
+    registry.prefix("optional", 320)
+    registry.prefix("editable", 320)
     
     
     

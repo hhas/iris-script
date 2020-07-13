@@ -297,3 +297,39 @@ struct AsLiteralName: SwiftCoercion { // TO DO: as above, this currently won't w
 
 let asLiteralName = AsLiteralName()
 
+
+
+    
+struct AsSwiftPrecis<T: SwiftCoercion>: SwiftCoercion { // allows a complex coercion’s true technical name to be replaced with a simple, custom name; e.g. used to rename `optional value` to `anything`, or `list {of: integer from: 0 to: 100, min: 4, max: 4}` to `CMYK_color`
+    
+    var swiftLiteralDescription: String {
+        return "\(type(of: self))(\(self.coercion.swiftLiteralDescription), \(self.precis))"
+    }
+    
+    var name: Symbol { return Symbol(self.precis) } // TO DO: what should this be?
+    
+    var description: String { return "«type: \(self.precis)»" } // TO DO: what should this be?
+    
+    typealias SwiftType = T.SwiftType
+    
+    let coercion: T
+    
+    private let precis: String
+    
+    init(_ coercion: T, _ precis: String) { // precis is the custom name under which the wrapped coercion appears; TO DO: this does not currently check that precis string is a valid command/slot name; should it do so and apply escape syntax if not?
+        self.coercion = coercion
+        self.precis = precis
+    }
+    
+    func coerce(value: Value, in scope: Scope) throws -> Value {
+        return try self.coercion.coerce(value: value, in: scope)
+    }
+    
+    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+        return try self.coercion.unbox(value: value, in: scope)
+    }
+    func box(value: SwiftType, in scope: Scope) -> Value {
+        return self.coercion.box(value: value, in: scope)
+    }
+}
+

@@ -6,6 +6,8 @@
 import Foundation
 
 
+// TO DO: perform top-level reductions within main parse loop; upon exhausting token stream break out of loop indicating if current code is a full parse or requires additional tokens to complete (provide a separate API for getting complete code as ScriptAST instance); allow a new token stream to be added so parsing can resume (this'll allow REPL to support multi-line input without implementing full per-line parser first); public read-only API for examining block stack (e.g. to determine automatic indentation level for new lines)
+
 
 public class Parser {
     

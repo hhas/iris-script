@@ -25,7 +25,7 @@ records:
 
     {…}
     
-expression grouping:
+expression groups:
     
     (…)
 
@@ -38,7 +38,7 @@ Commas, periods and/or linebreaks are used as expression delimiters.
 
 Colons denote `label: value` pairs; semi-colons denote “pipes” (`foo; bar {2}`  ➞ `bar {foo, 2}`).
 
-Standard built-in value types: numbers, strings, symbols, lists (ordered and key-value; aka arrays and dictionaries), records (tuple-struct hybrid).
+Standard built-in value types: numbers, strings, symbols (“hashtags”), lists (both ordered and key-value; aka arrays and dictionaries), records (tuple-struct hybrid).
 
 Syntactic support (via chainable lexers) for currencies, weights and measures, e.g. `$12.02`, `42kg`, `97.5°C`. Literal representations of dates and times should be achievable too: `2020-07-11`, `06:40:55`.
 
@@ -58,14 +58,20 @@ For convenience, an argument’s record punctation can often be omitted:
 
     make new: #document at: end of documents with_properties: {name: “Test”}
 
+Arguments are matched by label where given or by position where not, e.g. given a handler with interface `foo {x as integer, y as integer}`, `foo x: 10 y: 20` and `foo {10, 20}` are both acceptable.
+
+Unlike most imperative languages, command arguments are evaluated by the receiving handler, not at the call site. This allows for deferred evaluation of command arguments, where argument expressions are passed unevaluated and unbound (in a primitive handler), or automatically thunked with the command’s scope  before being added to a native handler’s body scope, to be evaluated later only if/when needed. Flow control operations are thus implemented as ordinary handlers; the only difference is in the parameter type, e.g. `if {test as boolean, action as expression, alternate_action as expression}`.
+
 Library-defined commands may be skinned with library-defined operator syntax. e.g. The above code, represented as commands only (single quotes escape names):
 
     ‘tell’ {‘app’ {"com.apple.TextEdit"}, (
         ‘make’ {new: #‘document’, at: ‘of’ {‘end’, ‘documents’}, with_properties: {name: "Test", text: "Hello again!"}}, 
-        ‘get’ {‘of’ {‘text’, ‘every’ {‘document’}}})
-    })
+        ‘get’ {‘of’ {‘text’, ‘every’ {‘document’}}}
+    )})
 
 “No variables.” (Distinctions between values, variables, and types are confusing to novices.) Values stored under symbolic names are retrieved using commands of the same name. Immutable, bind-on-first-use behavior is default.
+
+Separate operators for performing math vs non-math comparisons (similar to Perl where numbers and text are one type), e.g. `4 < 12`, `“Bob” is_before “Sue”`, ensuring predictable behavior, e.g. `“4” < 12` ➞  `true`. (Contrast e.g. AppleScript/JavaScript where mixed-type comparisons behave differently according to operand order.)
 
 Coercion-based native⬌Swift bridging API for implementing primitive library functions, ensuring clean separation between Swift implementation and automatically generated native-to-Swift bridging glue code. Glue definitions are written in iris and evaluated via the `gluelib` library. e.g. The `tell` command/operator’s definition:
 
@@ -85,7 +91,7 @@ and its implementation:
 
 (Contrast the complexity and coupling of Python/Ruby’s C bridging APIs.)
 
-Interpreter is implemented as slow (but very introspectable) AST walker. Rich native-language interface metadata and clean decoupling of underlying primitive functions should enable partial/full cross-compilation of native iris code to optimized Swift code, e.g. eliminating unnecessary native➞primitive➞native bridging coercions so that compatible Swift functions pass Swift values directly. 
+Interpreter is implemented as slow (but very introspectable) AST walker. Rich native-language interface metadata and clean decoupling of underlying primitive functions should enable partial/full transpilation of native iris code to optimized Swift code, e.g. eliminating redundant native➞primitive➞native bridging coercions so that Swift functions can pass Swift values directly. 
 
 e.g. Consider the expression:
 
@@ -107,16 +113,16 @@ Swift functions:
 
     func joinValues(left: String, right: String) throws -> String { return left + right }
 
-Generated Swift code, obviating redundant `String➞Text➞String` bridging coercions between commands:
+Generated Swift code, obviating the unnecessary `String➞Text➞String` bridging coercions between the `uppercase` and `&` (concatenation) commands:
 
     let native_value  = try env.get("my_name")
     let swift_value   = try asString.unbox(value: native_value, in: env)
     let swift_result  = try joinValues(left: "HELLO, ", right: uppercase(text: swift_value))
     let native_result = asString.box(value: swift_result, in: env)
 
-Additional optimizations might include storing values directly in Swift variables rather than native `Environment` slots and replacing simple function calls with template-based Swift code:
+Additional transpiling optimizations might include storing values directly in Swift variables rather than native `Environment` slots and replacing simple function calls with template-based Swift code:
 
-    let swift_result = "HELLO, \(swift_value.uppercased())"
+    let swift_result = "HELLO, \(swift_my_name.uppercased())"
 
 
 ## TO DO
@@ -125,7 +131,9 @@ Additional optimizations might include storing values directly in Swift variable
 
 * greatly improve error reporting, both in parsing and evaluation
 
-* expand glue generator to struct and class mappings as well
+* handler overloading/multiple dispatch
+
+* expand glue generator to struct and class mappings as well: mapping commands to struct/class initializers is probably straightforward as constructor signature has same form as function signature, e.g. `ElementRange{from,to}` (though would still benefit from having a `swift_object:` label rather than `swift_function:`), though there may be exceptions; OTOH, what about operator patterns that do not map to commands, e.g. `do…done` reduces to an annotated `Block` with no underlying command so does not have a `to…requires…` glue definition; currently the `do…done` operator definition must be manually added to stdlib’s operator glue but really needs to be added by glue definition (otherwse a separate library loading method will need to be added for importing manually-coded definitions); similarly, atomic operators such as `nothing`, `true`, `false`, `π`, etc are defined as constants which also do not have underlying commands but still require operator definitions
 
 * incremental/per-line parsing
 
@@ -133,9 +141,27 @@ Additional optimizations might include storing values directly in Swift variable
 
 * pretty printer with support for user-customizable semantic as well as basic syntactic formatting (e.g. “stylize all commands imported from library X which manipulate lists of strings”) and editor hooks
 
-* expand stdlib
+* expand `stdlib` (e.g. see the basic data manipulation commands defined in `applescript-stdlib`)
 
-* extensible code annotation system (for code comments and TODOs, developer and user documentation, macros and metaprogramming, etc)
+* glue generation for coercion values; coercion objects exposed via libraries need to be parameterizable, e.g. `list` returns a basic (unspecialized) list coercion, whereas `list {of: whole_number {from: 0, to: 100}, min: 4, max: 4}` returns a list coercion with additional element type and length constraints
+
+* decide how best to support [e.g.] non-numerical comparisons, ensuring safe, predictable results within iris’s weak typing model (contrast AppleScript/JavaScript/PHP’s weak typing which makes comparison operations a fragile, hard-to-predict mess); currently `is_before`, `is_same_as`, etc operators can only compare case-insensitive strings; one possible solution is for individual operators to support an optional `as` clause, e.g. `foo is_before bar as list {of: case_sensitive_text}` (here, the `as` keyword is part of the `…is_before…as…` operator, and indicates that both operands should be coerced to lists of strings and compared case-sensitively); another possibility would be to provide a `considering COERCION run BLOCK` structure somewhat similar to AppleScript’s `considering/ignoring` blocks (but with clearly defined, limited scope of effect), which has the advantage of applying over multiple operations
+
+* decimal support in `Numeric`, e.g. for use in currency calculations (also need to nail down rules for mixed math calculations; unlike Swift, where `Int` and `Double` are distinct types that cannot be mixed in math operations without explicit casting, numbers are freely interchangeable, within the precision and absolute range limits of `Double`); might also consider `BigNum` support and user-friendly comparison operations (e.g. unlike AppleScript, Swift, etc, `0.7 * 0.7 = 0.49` should return the expected *true* in spite of the precision errors inherent in FP math) 
+
+* support chunk expressions (aka queries, or “references” in AppleScript) over native collection types (strings, lists, dictionaries, sets); in addition to providing feature parity with chunk expressions sent over AE bridge, an efficient engine for resolving these queries against standard Swift types can also provide the foundation for a new, SwiftUI-friendly Apple event-handling framework (similar to Cocoa Scripting, but platform-agnostic and without CS’s flaws)
+
+* extensible annotation system (for code comments and TODOs, developer and user documentation, macros and metaprogramming, searchable “keyword” tags, etc)
+
+* global namespace (c.f. Frontier, Unix file system) for presenting libraries, apps, and other [typically external] resources; this would use reverse domain names a-la UTIs with `@` prefix, e.g. `@com.example.foo.lib`; objects within this namespace can be addressed directly, e.g. `tell @com.example.foo to do_stuff` eliminating need for an explicit `import` command, and/or may be included into script’s own namespace (if the library defines custom operator syntax, this can also be included/excluded); e.g. adding `«include: @com.example.foo»` to the top of a script allows `do_stuff` to be referenced directly in the script’s body, without need for a `tell` block
+
+* library import API; this includes a standard API for loading library resources (e.g. see `stdlib_loadHandlers`, `stdlib_loadOperators`, `stdlib_loadConstants`) plus support for top-level `«include: LIBNAME»` and `«exclude: LIBNAME»` annotations in scripts; `stdlib`’s handlers, constants, and operator syntax should be included by default, but may be excluded from individual scripts by adding an `exclude` annotation or starting interpreter with `--exclude…` flag)
+
+* standard library packaging scheme; this will probably be zip-encoded bundles containing library scripts/binaries plus user documentation, tests, examples of use
+
+* per-script sandboxing: given the limitations of macOS’s static app-level sandbox model, per-script sandboxing would require running each script in its own completely sandboxed XPC subprocess, with all script IO being performed via the XPC connection to its parent process; the parent process can then decide exactly which of those IO requests to carry out (e.g. a script may include a manifest of essential/optional external resources it wishes to work with explanations for each; the script host can then present that information to user as a single one-time checklist to fully/partially approve/reject as they wish)
+
+* a mediated IO model should also determine the design of the script’s own IO APIs, e.g. rather than have scripts work with arbitrary file paths and raw `open`/`read`/`write` commands, have the script “mount” any file system objects it wishes to access within the global `@` namespace (e.g. using top-level annotations which can be read at parse-/compile-time) and operate directly on them there: e.g. given a file resource, use the file’s UTI to determine the codec/coercion to use for basic read/write operations; thus a `.txt` file would normally read/write as `utf8_text`, a `.plist` file using a `plist` coercion built on `PropertyListSerialization`, etc, with the script able to attach more specific coercions—e.g. `markdown`, `intent_definition`—to the resource as needed (coercions should also indicate where read-write vs default read-only access is required, e.g. `«mount: “/path/to/file” as editable markdown»` would mount a resource at, say, `@path.to.file` which appears to script as a structured, editable Markdown document object)
 
 * robust, easy-to-understand mutability model (experimenting with coercion-defined “editable boxes” within assign-once environment slots)
 
@@ -145,8 +171,12 @@ Additional optimizations might include storing values directly in Swift variable
 
 * add `formlib` for displaying commands as GUI forms, using handler interface metadata to present argument inputs as text fields, checkboxes, etc with tooltip documentation and input validation
 
-* develop dictation UI for executing individual commands and/or writing scripts via voice input/output
+* spellchecker support, with particular emphasis on checking underscored names as individual words (hence snake_case rather than camelCase) and identifying potentially misspelled operator names (which lexer will treat as command names, resulting in code that may still successfully parse but will produce an unintended result); this should also feed into development of auto-suggest/auto-complete/auto-correct APIs which authoring tools can use (“achieving correct code is an iterative process in which user and machine negotiate a common understanding of its intent until both agree”); this should also enable text-based authoring tools to accept spacebar instead of underscores at entry-time, automatically replacing spaces with underscores when names are already known or name boundaries can otherwise be inferred
+
+* develop dictation UI for executing individual commands and/or writing scripts via voice input/output: this would build on above spellchecking, auto-c3, underscore replacement, and inflexion-inferred punctuation insertion, allowing naturalistic spoken input/output which is converted to/from exact code representation on the fly (with the ability to ask user for clarifications where needed)
 
 * explore potential for automated language translations
+
+* explore potential for symbolic DSL with algebraic syntax, e.g. `3𝓍²＋5𝓎－1`; most or all of this syntax can be achieved by adapting lexer chain and pretty-printer with custom stages; symbolic math, e.g. `x = 2y, z = 3x` ➞ `z = 6y`, will require more work to support (implementing fractional support in `Numeric`, allowing e.g. `1/3 * 2/3` ➞ `2/9` to be performed, may provide a stepping stone to that)
 
 * live end-user documentation, including automatically-generated handler documentation using interface metadata and executable examples

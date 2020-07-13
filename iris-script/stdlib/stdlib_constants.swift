@@ -12,7 +12,7 @@ func stdlib_loadConstants(into env: Environment) {
     env.define("false", false)
     
     
-    env.define(coercion: asValue)
+    env.define(coercion: asValue) // `value` (i.e. accepts anything except `nothing`)
     env.define(coercion: asString)
     env.define(coercion: asBool)   // TO DO: need to decide if native Boolean representation should be `true`/`false` constants or non-empty/empty values
     
@@ -28,13 +28,14 @@ func stdlib_loadConstants(into env: Environment) {
     env.define(coercion: asHandler)
     env.define(coercion: asBlock) // TO DO: asBlockLiteral? (this'd need to accept single values too)
     
-    try! env.set("anything", to: asAnything) // temporary until Precis modifier is implemented
     
-    env.define(coercion: asAnything)
     env.define(coercion: asNothing) // by default, a native handler will return the result of the last expression evaluated; use `…returning no_result` to suppress that so that it always returns `nothing` (note that while using `return nothing` would give same the runtime result, declaring it via signature makes it clear and informs introspection and documentation tools as well)
     
     env.define(coercion: AsDefault(asValue, defaultValue: nullValue)) // note: AsDefault requires constraint args (coercion and defaultValue) to instantiate; native language will call() it to create new instances with appropriate constraints
 
+    env.define(coercion: AsEditable())
+
+    env.define(coercion: AsSwiftPrecis(asAnything, "anything")) // `anything` = `optional value` (i.e. accepts anything, including `nothing`)
 
 }
 
