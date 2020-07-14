@@ -136,7 +136,7 @@ func renderGlue(libraryName: String, handlerGlues: [HandlerGlue]) -> String {
 
 // main
 
-func renderHandlerGlue(for libraryName: String, from script: String) throws -> String {
+public func renderHandlerGlue(for libraryName: String, from script: String) throws -> String {
     // parse glue definitions for primitive handlers
     let env = Environment()
     gluelib_loadHandlers(into: env) // TO DO: what handlers must gluelib define? Q. what about loading stdlib handlers into a parent scope, for metaprogramming use?

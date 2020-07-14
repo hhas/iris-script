@@ -4,6 +4,14 @@
 //
 
 import Foundation
+import iris
+
+
+
+// TO DO: get rid of these
+let leftOperand   = Symbol("left")
+let middleOperand = Symbol("middle")
+let rightOperand  = Symbol("right")
 
 
 
@@ -42,7 +50,7 @@ func test2() {
     
     
     
-    let scriptLines = script.split(omittingEmptySubsequences: false, whereSeparator: linebreakCharacters.contains)
+    let scriptLines = script.split(separator: "\n", omittingEmptySubsequences: false)
     
     print(scriptLines)
     
@@ -109,6 +117,7 @@ func test2() {
 }
 
 
+func add(left: Number, right: Number) throws -> Number { return try left + right }
 
 
 

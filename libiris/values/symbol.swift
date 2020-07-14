@@ -56,5 +56,5 @@ public struct Symbol: ComplexValue, KeyConvertible, Comparable, ExpressibleByStr
 
 
 
-let nullSymbol = Symbol("")
+public let nullSymbol = Symbol("")
 

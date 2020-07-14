@@ -4,12 +4,17 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>gen-glue-stdlib.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>16</integer>
+		</dict>
 		<key>iris-lang.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
-		<key>iris-script.xcscheme_^#shared#^_</key>
+		<key>iris-shell (run in Terminal).xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>14</integer>
@@ -19,19 +24,29 @@
 			<key>orderHint</key>
 			<integer>13</integer>
 		</dict>
-		<key>libIris.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>12</integer>
-		</dict>
-		<key>stdlib-glue.xcscheme_^#shared#^_</key>
+		<key>iris-test.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>15</integer>
 		</dict>
+		<key>libiris.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>12</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>4F5B24D423171E54001C1941</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>4F84CFFC22ADA0F200C9FD23</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>4F8C407124BCC02200735273</key>
 		<dict>
 			<key>primary</key>

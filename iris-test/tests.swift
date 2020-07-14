@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import iris
 
 
 
@@ -12,7 +13,7 @@ import Foundation
 
 func test() {
     
-    runScript(" {1,3} ")
+    runScript(" { ( 1 ) }")
     
     return;
     

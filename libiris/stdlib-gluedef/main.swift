@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import iris
 
 // TO DO: AsLiteralName coercion?; this'd allow aliases to be written directly as names rather than strings;
 

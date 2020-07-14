@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4F8C407124BCC02200735273"
-               BuildableName = "iris-shell"
-               BlueprintName = "iris-shell"
+               BlueprintIdentifier = "4F988CB524BCC4D700EE66C7"
+               BuildableName = "liblibiris.a"
+               BlueprintName = "libiris"
                ReferencedContainer = "container:iris-script.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -41,18 +41,7 @@
       debugServiceExtension = "internal"
       enableGPUFrameCaptureMode = "3"
       enableGPUValidationMode = "1"
-      allowLocationSimulation = "YES"
-      GPUProfilerEnabled = "No">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4F8C407124BCC02200735273"
-            BuildableName = "iris-shell"
-            BlueprintName = "iris-shell"
-            ReferencedContainer = "container:iris-script.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
+      allowLocationSimulation = "YES">
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -60,16 +49,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4F8C407124BCC02200735273"
-            BuildableName = "iris-shell"
-            BlueprintName = "iris-shell"
+            BlueprintIdentifier = "4F988CB524BCC4D700EE66C7"
+            BuildableName = "liblibiris.a"
+            BlueprintName = "libiris"
             ReferencedContainer = "container:iris-script.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

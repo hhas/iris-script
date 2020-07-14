@@ -44,11 +44,12 @@ public struct TokenStream: DocumentReader {
     private init(script: ImmutableScript, lineIndex: Int, tokenIndex: Int) {
         self.script = script
         self.location = (lineIndex, tokenIndex)
-        self.token = script.lines[lineIndex].tokens[tokenIndex] // TO DO: crashes on empty script
+        let tokens = script.lines[lineIndex].tokens
+        self.token = tokens.isEmpty ? nullToken : tokens[tokenIndex] // TO DO: what to use when line is empty?
     }
     
     init(_ script: ImmutableScript) {
-        let i = script.lines.firstIndex(where: { !$0.isEmpty }) ?? script.lines.count
+        let i = script.lines.firstIndex(where: { !$0.isEmpty }) ?? (script.lines.count - 1)
         self.init(script: script, lineIndex: i, tokenIndex: 0)
     }
     

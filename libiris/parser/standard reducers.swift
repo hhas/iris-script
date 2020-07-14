@@ -173,7 +173,6 @@ func reductionForCommandLiteral(stack: Parser.TokenStack, match: PatternMatch, s
 }
 
 func reductionForPipeOperator(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value { // pipe (";") is a special case as it transforms its two operands (of which the right-hand operand must be a command) such that `A;B{C,D};E` -> `E{B{A,C,D}}`
-    print("Reduce pipe")
     assert(end >= start + 3)
     // typecheck RH is a Command here rather than in pattern so we can provide a descriptive error
     guard case .value(let directArgument) = stack[start].form,

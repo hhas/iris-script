@@ -36,6 +36,7 @@ public func stdlib_loadConstants(into env: Environment) {
     env.define(coercion: AsEditable())
 
     env.define(coercion: AsSwiftPrecis(asAnything, "anything")) // `anything` = `optional value` (i.e. accepts anything, including `nothing`)
+    env.define(coercion: AsSwiftPrecis(asAnything, "optional")) // TO DO: decide on `optional` vs `anything`; stdlib glue currently uses `optional` rather than `anything` (`anything` may be more easily confused with `value`)
 
 }
 

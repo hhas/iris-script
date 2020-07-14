@@ -1,6 +1,6 @@
 //
 //  main.swift
-//  libIris
+//  libiris
 //
 
 import Foundation

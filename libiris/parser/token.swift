@@ -5,6 +5,7 @@
 
 import Foundation
 
+// TO DO: what should be public vs internal?
 
 
 // TO DO: split punctuation and quotes into sub-enums? what about other 'raw' tokens (letters, symbols, underscores, etc)? if we're going to use partial lexers/parsers to assemble names, numbers, etc from raw tokens, then it'll simplify main parser if it never has to deal with unprocessed .letters/.digits/etc
@@ -269,7 +270,7 @@ public struct Token: CustomStringConvertible {
         // Q. what about Unicode apostrophes, given their visual similarity? (main thing is to ensure code that has been chewed by e.g. TextEdit's standard autocorrect still parses correctly; more testing needed)
     ]
     
-    let form: Form   // enum
+    public let form: Form   // enum
     let whitespaceBefore: Substring?
     let content: Substring   // the matched character[s]
     let whitespaceAfter: Substring? // nil = no adjoining whitespace; if non-nil, 1 or more non-linebreaking whitespace characters (space, tab, vtab, nbsp, etc) // TO DO: when disambiguating token sequences, should the type and length of whitespace be considered? e.g. `100 000 000` might be considered a single number in some locales; for now, best just to treat presence/absence of whitespace as a Boolean condition [the one exception is when analyzing previously indented code when generating best-guesses on where to rebalance unbalanced parens, as there we expect to find N tabs but should also be prepared to find 2N/3N/4N/8N spaces if code has been indented by other tools]
@@ -340,7 +341,7 @@ public struct Token: CustomStringConvertible {
     }
 }
 
-let nullToken = Token(.lineBreak, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source
+public let nullToken = Token(.lineBreak, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source
 
-let eofToken = Token(.endOfScript, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source
+public let eofToken = Token(.endOfScript, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source
 

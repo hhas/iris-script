@@ -38,17 +38,17 @@ import Foundation
 
 
 
-class NullScope: Scope {
+public class NullScope: Scope {
     
     // always returns nil (unless there's a delegate)
-    func get(_ name: Symbol) -> Value? {
+    public func get(_ name: Symbol) -> Value? {
         return nil
     }
     
-    func subscope() -> Scope { return self }
+    public func subscope() -> Scope { return self }
 }
 
-let nullScope = NullScope()
+public let nullScope = NullScope()
 
 
 // Q. how should global scopes treat imported modules? (each native module is a read-locked environment populated with library-defined handlers and other values; Q. what about primitive modules? could use Environment subclass that populates frame dictionary)

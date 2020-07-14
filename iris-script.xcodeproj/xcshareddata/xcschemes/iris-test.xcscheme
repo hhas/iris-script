@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4F988CB524BCC4D700EE66C7"
-               BuildableName = "liblibIris.a"
-               BlueprintName = "libIris"
+               BlueprintIdentifier = "4F84CFFC22ADA0F200C9FD23"
+               BuildableName = "iris-test"
+               BlueprintName = "iris-test"
                ReferencedContainer = "container:iris-script.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -39,7 +39,20 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
-      allowLocationSimulation = "YES">
+      enableGPUFrameCaptureMode = "3"
+      enableGPUValidationMode = "1"
+      allowLocationSimulation = "YES"
+      GPUProfilerEnabled = "No">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "4F84CFFC22ADA0F200C9FD23"
+            BuildableName = "iris-test"
+            BlueprintName = "iris-test"
+            ReferencedContainer = "container:iris-script.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -47,15 +60,16 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4F988CB524BCC4D700EE66C7"
-            BuildableName = "liblibIris.a"
-            BlueprintName = "libIris"
+            BlueprintIdentifier = "4F84CFFC22ADA0F200C9FD23"
+            BuildableName = "iris-test"
+            BlueprintName = "iris-test"
             ReferencedContainer = "container:iris-script.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

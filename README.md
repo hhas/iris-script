@@ -19,9 +19,9 @@ Dependencies:
 * [SwiftAutomation](https://github.com/hhas/SwiftAutomation)
 * [AppleEvents](https://github.com/hhas/AppleEvents)
 
-Ad-hoc tests are currently run under the `iris-script` target.
+Ad-hoc tests are currently run under the `iris-test` target.
 
-A rudimentary interactive shell is available under target `iris-shell`. Bad error reporting, poor help, no multi-line entry or readline support, and prone to falling over when run in Xcode’s console, but should allow simple expressions to be entered and evaluated.
+A rudimentary interactive shell is available under target `iris-shell`. Bad error reporting, poor help, no multi-line entry or readline support, and prone to stuttering and falling over when run in Xcode’s console, but should allow simple expressions to be entered and evaluated.
 
 
 ## Features
@@ -140,7 +140,7 @@ Additional transpiling optimizations might include storing values directly in Sw
 
 ## TO DO
 
-* REPL
+* improve REPL
 
 * greatly improve error reporting, both in parsing and evaluation
 

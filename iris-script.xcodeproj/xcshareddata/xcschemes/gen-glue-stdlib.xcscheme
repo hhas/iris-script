@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4F8C407124BCC02200735273"
-               BuildableName = "iris-shell"
-               BlueprintName = "iris-shell"
+               BlueprintIdentifier = "4F5B24D423171E54001C1941"
+               BuildableName = "gen-glue-stdlib"
+               BlueprintName = "gen-glue-stdlib"
                ReferencedContainer = "container:iris-script.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -47,9 +47,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4F8C407124BCC02200735273"
-            BuildableName = "iris-shell"
-            BlueprintName = "iris-shell"
+            BlueprintIdentifier = "4F5B24D423171E54001C1941"
+            BuildableName = "gen-glue-stdlib"
+            BlueprintName = "gen-glue-stdlib"
             ReferencedContainer = "container:iris-script.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -64,9 +64,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4F8C407124BCC02200735273"
-            BuildableName = "iris-shell"
-            BlueprintName = "iris-shell"
+            BlueprintIdentifier = "4F5B24D423171E54001C1941"
+            BuildableName = "gen-glue-stdlib"
+            BlueprintName = "gen-glue-stdlib"
             ReferencedContainer = "container:iris-script.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -5,6 +5,8 @@
 
 import Foundation
 
+// TO DO: FIX: parser crashes on empty string input
+
 
 // TO DO: give some thought to both in-process and out-of-process APIs; a native editor would typically parse and edit a script in-process, serializing it for execution in a sandboxed subprocess
 

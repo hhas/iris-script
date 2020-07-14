@@ -4,11 +4,27 @@
 //
 
 import Foundation
-import libIris
+import iris
 
 
-// define `help` command
+// REPL support
 
+func writeResult(_ value: Value) {
+    print("☺︎ \(value)")
+}
+
+func writeError(_ error: Error) {
+    fputs("☹︎ \(error)\n", stderr)
+}
+
+func writeHelp(_ string: String) {
+    print(string)
+}
+
+
+// define REPL commands (for now these are handcoded but can eventually move to glue)
+
+// `help` – print help
 let interface_help = HandlerInterface(
     name: "help",
     parameters: [],
@@ -16,7 +32,7 @@ let interface_help = HandlerInterface(
 )
 func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command) }
-    writeOutput("""
+    writeHelp("""
     # iris help
 
     ## REPL commands
@@ -34,6 +50,7 @@ func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handl
 }
 
 
+// `commands` – list the contents of Environment
 let interface_commands = HandlerInterface(
     name: "commands",
     parameters: [],
@@ -43,16 +60,16 @@ func procedure_commands(command: Command, commandEnv: Scope, handler: Handler, h
     if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command) }
     for (name, value) in env.frame.sorted(by: {$0.key < $1.key}) {
         if let handler = value as? Handler {
-            writeOutput("\(handler.interface)\n")
+            writeHelp("\(handler.interface)\n")
         } else {
-            writeOutput("`\(name.label)` – \(value)\n")
+            writeHelp("`\(name.label)` – \(value)\n")
         }
     }
     return nullValue
 }
 
 
-// define `quit` command for exiting REPL
+// `quit` – exit the REPL
 var isRunning = true
 
 let interface_quit = HandlerInterface(
