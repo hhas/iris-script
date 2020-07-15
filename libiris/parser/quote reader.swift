@@ -28,7 +28,7 @@ public struct QuoteReader: DocumentReader { // reduces quoted text (string liter
         case .startAnnotation:
             var s = String(startToken.whitespaceAfter ?? "")
             while reader.token.form != .endAnnotation {
-                if reader.token.form == .endOfScript { fatalError("expected `»` but found end of code") } // TO DO: output .error(…)
+                if reader.token.form == .endOfCode { fatalError("expected `»` but found end of code") } // TO DO: output .error(…)
                 s += reader.token.content + (reader.token.whitespaceAfter ?? "")
                 reader = reader.next()
             }

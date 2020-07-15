@@ -2,38 +2,22 @@
 //  block stack.swift
 //  iris-script
 //
-//  tracks start and end of nestable blocks (lists, records, groups, do…done, if…then…else…, etc)
+//  tracks start and end of nestable blocks (lists, records, groups, do…done) and conjunctive clauses (if…then…else…, etc)
+
+
+// TO DO: formalize block structures (e.g. Keywords at beginning and end, and any number of delimited exprs inbetween) and restrict the patterns that can describe blocks (e.g. no leading/trailing operands and if conjunctions are permitted, e.g. for subdividing blocks, there should be fixed rules on where they must appear); right now this doesn’t matter too much as there is only the built-in `Block` and its two built-in syntaxes—`(…)` and `do…done`—to support, but if alternate evaluators (which is what blocks are) are also to be supported (e.g. for declarative evaluation) then we really need to set down formal rules by which they must operate so that DSLs don’t slide into chaos
+
 
 import Foundation
-
-/*
- 
- BAD:
- 
- Block Stack:
- .(start: -1, form: iris_script.Parser.BlockType.script)
- .(start: 0, form: iris_script.Parser.BlockType.conjunction([#‘then’: [(match: «match `if…then……` U1 O1 G1: () ‘if’ (EXPR ‘then’ EXPR (‘else’ EXPR)?) 104», end: 0)]]))
- .(start: 0, form: iris_script.Parser.BlockType.conjunction([#‘else’: [(match: «match `if…then……` U1 O1 G1: () ‘if’ (EXPR ‘then’ EXPR (‘else’ EXPR)?) 104», end: 0)]]))
-
- OK:
- 
- Block Stack:
- .(start: -1, form: iris_script.Parser.BlockType.script)
- .(start: 0, form: iris_script.Parser.BlockType.conjunction([#‘else’: [(match: «match `if…then……` U1 O1 G1: () ‘if’ (EXPR ‘then’ EXPR (‘else’ EXPR)?) 104», end: 0)]]))
- .(start: 0, form: iris_script.Parser.BlockType.conjunction([#‘then’: [(match: «match `if…then……` U1 O1 G1: () ‘if’ (EXPR ‘then’ EXPR (‘else’ EXPR)?) 104», end: 0)]]))
- 
- 
- */
 
 
 extension Parser {
     
-    
-    
-    typealias ConjunctionMatches = [(match: PatternMatch, keywordIndex: Int)]
+    public typealias ConjunctionMatches = [(match: PatternMatch, keywordIndex: Int)]
 
-    typealias Conjunctions = [Symbol: ConjunctionMatches] // [the operator name (conjunction) to look for (if the pattern defines aliases for this operator name, the matches are stored under those names too): all in-progress matches that use this name as a conjunction]
+    public typealias Conjunctions = [Symbol: ConjunctionMatches] // [the operator name (conjunction) to look for (if the pattern defines aliases for this operator name, the matches are stored under those names too): all in-progress matches that use this name as a conjunction]
 }
+
 
 
 extension Parser.BlockStack {
@@ -45,22 +29,25 @@ extension Parser.BlockStack {
         }
     }
     
-    // secondary stack used to track nested structures (lists, records, groups, keyword-based blocks)
+    // begin/end punctuation- and keyword-based blocks (i.e. any multi-token structure that starts and ends with fixed tokens, e.g. `[…]`, `{…}`, `(…)`, `do…done`)
     
-    mutating func begin(_ form: Parser.BlockType, at index: Int) { // index is first token of block (or conjunction keyword)
+    mutating func beginBlock(for form: Parser.BlockType, at index: Int) { // index is first token of block
+        if case .conjunction(_) = form {
+            fatalError("BUG: Use `BlockStack.beginConjunction(…)` to add conjunctions.")
+        }
         self.append((index, form))
     }
     
-    mutating func end(_ form: Parser.BlockType, at index: Int) throws { // TO DO: this is impractical for removing conjunctions: for those we need keyword (and index?)
+    mutating func endBlock(for form: Parser.BlockType, at index: Int) throws -> Parser.BlockInfo {
         assert(!self.isEmpty, "Can't remove \(form) from parser’s block stack as it is already empty.")
         switch (self.last!.form, form) {
         case (.list, .list), (.record, .record), (.group, .group), (.script, .script):
-            self.removeLast()
+            return self.removeLast()
         case (_, .conjunction(_)):
-            fatalError("BUG: Use `BlockStack.end(conjunction: NAME)` to remove conjunctions.")
+            fatalError("BUG: Use `BlockStack.endConjunction(…)` to remove conjunctions.")
         default:
             // TO DO: what error(s) should this raise? what do do with the value currently at top of stack? leave/discard/speculatively rebalance? (for now we leave as-is, but would probably benefit from scanning rest of code to see how well [or not] that balances against the current stack and suggest fixes based on that)
-            print("Expected end of .\(self.last!) but found end of .\(form) instead.")
+            print("Syntax Error: Expected end of .\(self.last!) but found end of .\(form) instead.")
             switch self.last!.form {
             case .list:           throw BadSyntax.unterminatedList
             case .record:         throw BadSyntax.unterminatedRecord
@@ -72,9 +59,19 @@ extension Parser.BlockStack {
         }
     }
     
+    func blockMatches(for name: Symbol) -> Parser.ConjunctionMatches? {
+        if case .block(let matches) = self.last?.form {
+            assert(!matches.isEmpty, "BUG: blockMatches(for: \(name)) should never return an empty array.")
+            return matches[name]
+        }
+        return nil
+    }
+    
+    // begin/end conjunctive clauses (i.e. any multi-keyword operator where a non-left operand may be terminated by a keyword, e.g. `if…then…else`, `while…repeat…`)
+    
     mutating func beginConjunction(for matches: [PatternMatch], at index: Int) {
         //print("awaitConjunction:", index)
-        // name is the conjunction/block terminator keyword; index is the index at which the previous keyword appears; once the conjunction keyword is found, everything between those keywords is reduced to a single expression, e.g. given `if TEST then EXPR1 else EXPR2`, upon encountering `if` at index 0, the parser's main loop calls awaitConjunction(…) passing it the `if… operator’s in-progress match; a .conjunction entry is added to block stack that awaits an `then` or `else` keyword; when the parser's main loop calls conjunctionMatches(…) with one of those names, the `if…` operator’s in-progress match[es] are removed from block stack and returned, triggering a reduction of the TEST expression, followed by the addition of a new .conjunction entry to await the [optional] `else` keyword
+        // matches is the partially-matched conjunction/block matcher[s]; index is the index at which the previous keyword appears; once the conjunction keyword is found, everything between those keywords is reduced to a single expression, e.g. given `if TEST then EXPR1 else EXPR2`, upon encountering `if` at index 0, the parser's main loop calls awaitConjunction(…) passing it the `if… operator’s in-progress match; a .conjunction entry is added to block stack that awaits an `then` or `else` keyword; when the parser's main loop calls conjunctionMatches(…) with one of those names, the `if…` operator’s in-progress match[es] are removed from block stack and returned, triggering a reduction of the TEST expression, followed by the addition of a new .conjunction entry to await the [optional] `else` keyword
         var conjunctions = Parser.Conjunctions()
         var blocks = Parser.Conjunctions()
         for match in matches {
@@ -93,29 +90,13 @@ extension Parser.BlockStack {
             print("WARNING: conflicting matches use a keyword as both a block terminator and a conjunction. \(matches)")
         }
         // operators cannot span multiple sub-exprs, so any unmatched conjunctions will be discarded when end of expr is reached
-        if !conjunctions.isEmpty { self.begin(.conjunction(conjunctions), at: index) }
+        if !conjunctions.isEmpty { self.append((index, .conjunction(conjunctions))) }
         // blocks can span multiple sub-exprs; the closing keyword is part of the same expr as the opening keyword
-        if !blocks.isEmpty { self.begin(.block(blocks), at: index) }
+        if !blocks.isEmpty { self.beginBlock(for: .block(blocks), at: index) }
     }
     
-    func blockMatches(for name: Symbol) -> Parser.ConjunctionMatches? {
-        if case .block(let matches) = self.last?.form {
-            assert(!matches.isEmpty, "BUG: blockMatches(for: \(name)) should never return an empty array.")
-            return matches[name]
-        }
-        return nil
-    }
-    
-    func conjunctionMatches(for name: Symbol) -> Parser.ConjunctionMatches? {
-        //print("conjunctionMatches:", name, self)
-        if case .conjunction(let matches) = self.last?.form {
-            assert(!matches.isEmpty, "BUG: conjunctionMatches(for: \(name)) should never return an empty array.")
-            return matches[name]
-        }
-        return nil
-    }
-    
-    mutating func end(_ name: Symbol) {
+    // end conjunctive clause or keyword block
+    mutating func endConjunction(at name: Symbol) {
         switch self.last?.form {
         case .block(let matches), .conjunction(let matches):
             if matches[name] != nil {
@@ -127,6 +108,7 @@ extension Parser.BlockStack {
         fatalError("BUG: BlockStack.end(\(name)) should never fail as it should only be called after blockMatches/conjunctionMatches(for: \(name)) has returned a non-nil result.")
     }
     
+    // discards any pending conjunctions at top of stack when the current expression’s right-delimiter is reached, e.g. given `if TEST then ACTION LF`, at the linebreak the parser will ignore the `if…then…else…` operator’s unmatched optional `else EXPR` clause and reduce it to a two-argument `‘if’ {TEST, ACTION}` command
     mutating func endConjunctions() {
         //print("endConjunctions")
         while case .conjunction(_) = self.last?.form {
@@ -134,6 +116,17 @@ extension Parser.BlockStack {
             self.removeLast()
         }
     }
+    
+    func conjunctionMatches(for name: Symbol) -> Parser.ConjunctionMatches? {
+        //print("conjunctionMatches:", name, self)
+        if case .conjunction(let matches) = self.last?.form {
+            assert(!matches.isEmpty, "BUG: conjunctionMatches(for: \(name)) should never return an empty array.")
+            return matches[name]
+        }
+        return nil
+    }
+    
+    //
     
     var leftDelimiterIndex: Int { return self.last?.start ?? -1 }
 }

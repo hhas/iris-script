@@ -3,6 +3,10 @@
 //  iris-shell
 //
 
+// TO DO: better history support for multi-line input (currently history captures single lines only)
+
+// TO DO: given multi-expression group `(1 LF + 2)`, how to clarify that this means `(1, +2)`, not `(1 + 2)` (i.e. the `1` is evaled and discarded, and the `2` is returned as the group expr’s result; in principle, PP could discard side-effect-free exprs whose results are unused, though automatically rewriting code to that extent should only be done after advising/asking the author as they may simply have mistyped in which case correction, not deletion, is required)
+
 import Foundation
 import iris
 
@@ -34,21 +38,29 @@ func newLineReader(_ source: LineReader) -> LineReader {
 func runREPL() {
     writeHelp("Welcome to the iris runtime’s interactive shell. Type `help` for assistance.")
     EL_init(CommandLine.arguments[0])
+    let parser = IncrementalParser()
     while isRunning {
+        EL_setIndent(Int32(parser.incompleteBlocks().count))
         let raw = (EL_read().takeRetainedValue() as String)
         if raw.isEmpty { break }
         let code = raw.trimmingCharacters(in: CharacterSet.newlines)
         if !code.isEmpty {
-            let doc = EditableScript(code, newLineReader)
-            let p = Parser(tokenStream: QuoteReader(doc.tokenStream), operatorRegistry: operatorRegistry)
+            parser.read(code)
             do {
-                let ast = try p.parseScript()
-                //print("PARSED:", ast)
-                let result = try ast.eval(in: env, as: asAnything)
-                previousValue.set(to: result)
-                writeResult(result)
+                if let ast = parser.ast() {
+                    //print("PARSED:", ast)
+                    let result = try ast.eval(in: env, as: asAnything)
+                    previousValue.set(to: result)
+                    if let error = result as? SyntaxErrorDescription {
+                        writeError(error.error)
+                    } else {
+                        writeResult(result)
+                    }
+                    parser.clear()
+                }
             } catch {
                 writeError(error)
+                parser.clear()
             }
         }
     }

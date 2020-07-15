@@ -24,19 +24,22 @@ import Foundation
 // TO DO: custom reducefunc for `as` operator could treat RH list/record literal as visual shorthand for `list{of:}` and `record{…}`, and convert to corresponding commands (note that this shorthand wouldn't be available when written as `‘as’{…}` command, unless we want to perform extra run-time tests)
 
 
-// supporting functions
 
-// caution: skip functions step over specific tokens if found; they do not check if tokens exist (pattern matchers are responsible for checking punctuation)
-
-func skipSeparator(_ stack: Parser.TokenStack, _ i: inout Int) {
-    if i < stack.count, case .separator(_) = stack[i].form { i += 1 }
-}
-func skipLineBreaks(_ stack: Parser.TokenStack, _ i: inout Int) {
-    while i < stack.count, case .lineBreak = stack[i].form { i += 1 }
-}
 
 extension Array where Element == Parser.TokenInfo {
-
+    
+    // caution: skip functions step over specific tokens if found; they do not check if tokens exist (pattern matchers are responsible for checking punctuation)
+    
+    func skipSeparator(_ i: inout Int) {
+        if i < self.count, case .separator(_) = self[i].form { i += 1 }
+    }
+    
+    func skipLineBreaks(_ i: inout Int) {
+        while i < self.count, case .lineBreak = self[i].form { i += 1 }
+    }
+    
+    //
+        
     func label(at i: Int) -> Symbol {
         if case .label(let name) = self[i].form { return name }
         self.show()
@@ -58,15 +61,15 @@ extension Array where Element == Parser.TokenInfo {
 // note: literal list/record/group reduce funcs will ignore a trailing comma after last item (c.f. Python lists),
 
 func reductionForOrderedListLiteral(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
-    //show(stack, start, end)
+    //print("reducing ordered list");stack.show(start, end)
     var items = [Value]()
     var i = start + 1 // ignore `[`
-    skipLineBreaks(stack, &i)
+    stack.skipLineBreaks(&i)
     while i < end - 1 { // ignore `]`
         items.append(stack.value(at: i))
         i += 1 // step over value
-        skipSeparator(stack, &i)
-        skipLineBreaks(stack, &i)
+        stack.skipSeparator(&i)
+        stack.skipLineBreaks(&i)
     }
     return OrderedList(items)
 }
@@ -76,17 +79,17 @@ func reductionForKeyedListLiteral(stack: Parser.TokenStack, match: PatternMatch,
     // TO DO: how to preserve key order in literals?
     var i = start + 1 // ignore `[`
     if case .colon = stack[i].form { return KeyedList([:]) } // `[:]` denotes empty kv-list
-    skipLineBreaks(stack, &i)
+    stack.skipLineBreaks(&i)
     var items = [KeyedList.Key: Value]()
     while i < end - 1 { // ignore `]`
         let key = (stack.value(at: i) as! HashableValue).dictionaryKey
         i += 2 // step over key + colon
-        skipLineBreaks(stack, &i)
+        stack.skipLineBreaks(&i)
         let value = stack.value(at: i)
         items[key] = value
         i += 1 // step over value
-        skipSeparator(stack, &i)
-        skipLineBreaks(stack, &i)
+        stack.skipSeparator(&i)
+        stack.skipLineBreaks(&i)
     }
     return KeyedList(items)
 }
@@ -94,21 +97,21 @@ func reductionForKeyedListLiteral(stack: Parser.TokenStack, match: PatternMatch,
 func reductionForRecordLiteral(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
     var items = Record.Fields()
     var i = start + 1 // ignore `{`
-    skipLineBreaks(stack, &i)
+    stack.skipLineBreaks(&i)
     while i < end - 1 { // ignore `}`
         let label: Symbol
         if case .label(let n) = stack[i].form {
             label = n
             i += 1 // step over label
-            skipLineBreaks(stack, &i)
+            stack.skipLineBreaks(&i)
         } else { // unlabeled field
             label = nullSymbol
         }
         let value = stack.value(at: i)
         items.append((label, value))
         i += 1 // step over value
-        skipSeparator(stack, &i)
-        skipLineBreaks(stack, &i)
+        stack.skipSeparator(&i)
+        stack.skipLineBreaks(&i)
     }
     do {
         return try Record(items) // duplicate keys will return MalformedRecordError
@@ -124,13 +127,13 @@ func reductionForGroupLiteral(stack: Parser.TokenStack, match: PatternMatch, sta
     //print("reductionForGroupLiteral:\n\t", match, "\n\t",stack[start..<end].map{$0.form})
     var items = [Value]()
     var i = start + 1 // ignore `(`
-    skipLineBreaks(stack, &i)
+    stack.skipLineBreaks(&i)
     while i < stack.count - 1 { // ignore `)`
         //print(">>>", stack[i].form)
         items.append(stack.value(at: i))
         i += 1 // step over value
-        skipSeparator(stack, &i)
-        skipLineBreaks(stack, &i)
+        stack.skipSeparator(&i)
+        stack.skipLineBreaks(&i)
     }
     if items.count == 1 {
         return items[0] // TO DO: how to annotate expr with elective parens/LFs (PP should automatically parenthesize as precedence demands, but users may also parenthesize for readability or to flow expr onto another line); may be easiest to use Block to handle elective layout (and make Block, like Command, optionally annotatable with layout and other metadata)
@@ -227,13 +230,13 @@ public func reductionForKeywordBlock(stack: Parser.TokenStack, match: PatternMat
     assert(end >= start + 2)
     var items = [Value]()
     var i = start + 1 // ignore opening keyword (e.g. `do`)
-    skipSeparator(stack, &i)
-    skipLineBreaks(stack, &i)
+    stack.skipSeparator(&i)
+    stack.skipLineBreaks(&i)
     while i < end - 1 { // ignore closing keyword (e.g. `done`)
         items.append(stack.value(at: i))
         i += 1 // step over value
-        skipSeparator(stack, &i)
-        skipLineBreaks(stack, &i)
+        stack.skipSeparator(&i)
+        stack.skipLineBreaks(&i)
     }
     return Block(items, patternDefinition: match.definition)
 }

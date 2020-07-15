@@ -71,8 +71,7 @@ extension Array where Element == Parser.TokenInfo {
         } else { // end of EXPR
             if index != stopIndex - 1 {
                 // TO DO: this smells
-                print("…nextFullMatch: no matches at \(index). (stop: \(stopIndex), size: \(self.count))");
-                self.show(index, stopIndex)
+                //print("…nextFullMatch: no matches at \(index). (stop: \(stopIndex), size: \(self.count))");self.show(index, stopIndex)
             }
             return nil
         }
@@ -201,7 +200,7 @@ extension Array where Element == Parser.TokenInfo {
     
     
     mutating func reduce(match: PatternMatch) -> Bool { // called by Parser.shift() when auto-reducing; this performs a normal SR reduction at head of stack; returns Bool flag indicating if reduction was performed //
-        //        print("AUTO-REDUCING", match)
+        //print("AUTO-REDUCING", match)
         let stopIndex = self.count // non-inclusive
         let startIndex = stopIndex - match.count
         do {

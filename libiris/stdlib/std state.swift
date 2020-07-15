@@ -31,13 +31,23 @@ func ofClause(attribute: Value, target value: Value, commandEnv: Scope, handlerE
 
 // handlers
 
-func defineCommandHandler(right handler: Handler, commandEnv: Scope) throws -> Handler {
-    try (commandEnv as! Environment).set(handler.interface.name, to: handler)
+func defineCommandHandler(interface: HandlerInterface, action: Value, commandEnv: Scope) throws -> Handler {
+    guard let env = commandEnv as? Environment else {
+        fatalError("\(interface.name) handler requires a full Environment but received \(commandEnv)")
+    }
+    let handler = NativeHandler(interface: interface, action: action, in: env)
+    try (commandEnv as! Environment).set(interface.name, to: handler)
     return handler
 }
 
-func defineEventHandler(right handler: Handler, commandEnv: Scope) throws -> Handler {
-    try (commandEnv as! Environment).set(handler.interface.name, to: handler) // TO DO: implement Handler.copy(isEventHandler:Bool) method (also need to finish argument unpacking; whereas command handler throws on unconsumed arguments, event handler should silently discard them)
+func defineEventHandler(interface: HandlerInterface, action: Value, commandEnv: Scope) throws -> Handler {
+    guard let env = commandEnv as? Environment else {
+        fatalError("\(interface.name) handler requires a full Environment but received \(commandEnv)")
+    }
+    let interface = HandlerInterface(name: interface.name, parameters: interface.parameters,
+                                     result: interface.result, isEventHandler: true) // kludgy
+    let handler = NativeHandler(interface: interface, action: action, in: env)
+    try (commandEnv as! Environment).set(interface.name, to: handler)
     return handler
 }
 

@@ -75,5 +75,6 @@ func gluelib_loadHandlers(into env: Environment) {
     
     env.define(coercion: asScope)
     env.define(coercion: asLiteralName)
+    env.define(coercion: asHandlerInterface)
 
 }

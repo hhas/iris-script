@@ -6,6 +6,8 @@
 
 import Foundation
 
+// TO DO: glue definitions could do with a `returns_self:true` property or `itself` return type for indicating a command should evaluate to itself; e.g. `foo returning bar` -> `foo returning bar`; currently stdlib glue manually defines `returning` as an operator, which is fine when used in a handler’s signature as `to` , but without an underlying command it will throw a not-found error if evaled (confusing to language explorers and useless for metaprogramming)
+
 // TO DO: sort 'name' vs 'label' naming convention for all args+params
 
 // TO DO: what about name/arg aliasing (including deprecated names)? (i.e. establishing a formal mechanism for amending an existing interface design enables automatic upgrading of user scripts)
@@ -77,7 +79,7 @@ let asOperatorSyntax = AsRecord([ // TO DO: given a native record/enum coercion,
 
 
 func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEnv: Scope) throws {
-    print("making glue for", interface)
+  //  print("making glue for", interface)
     guard let body = attributes as? Record else {
         print("bad attributes (not record):", attributes)
         throw BadSyntax.missingExpression
@@ -136,25 +138,27 @@ func renderGlue(libraryName: String, handlerGlues: [HandlerGlue]) -> String {
 
 // main
 
-public func renderHandlerGlue(for libraryName: String, from script: String) throws -> String {
+public func renderHandlerGlue(for libraryName: String, from code: String) throws -> String {
     // parse glue definitions for primitive handlers
-    let env = Environment()
-    gluelib_loadHandlers(into: env) // TO DO: what handlers must gluelib define? Q. what about loading stdlib handlers into a parent scope, for metaprogramming use?
-    stdlib_loadConstants(into: env) // mostly needed for coercions
-    
-    let operatorRegistry = OperatorRegistry()
-    gluelib_loadOperators(into: operatorRegistry) // essential operators used in glue defs; these may be overwritten by stdlib operators
+    let parser = IncrementalParser(withStdLib: false)
+    gluelib_loadHandlers(into: parser.env) // TO DO: what handlers must gluelib define? Q. what about loading stdlib handlers into a parent scope, for metaprogramming use?
+    stdlib_loadConstants(into: parser.env) // mostly needed for coercions
+    gluelib_loadOperators(into: parser.operatorRegistry) // essential operators used in glue defs; these may be overwritten by stdlib operators
     //stdlib_loadOperators(into: operatorRegistry)
-    let operatorReader = newOperatorReader(for: operatorRegistry)
-    
-    let doc = EditableScript(script) { NumericReader(operatorReader(NameModifierReader(NameReader(UnicodeReader($0))))) }
-    let p = Parser(tokenStream: QuoteReader(doc.tokenStream), operatorRegistry: operatorRegistry)
+    parser.read(code)
     do {
-        let script = try p.parseScript()
-        //print(script)
-        let _ = (try script.eval(in: env, as: asAnything))
-        let code = renderGlue(libraryName: libraryName, handlerGlues: _handlerGlues)
-        return(code)
+        if let script = parser.ast() {
+            //print(script)
+            // TO DO: gluelib’s `to` handler currently writes glue definitions to global _handlerGlues var; it would be better if it wrote to environment, either into an editable slot with reserved name or by subclassing Environment with appropriate writeGlue APIs
+            let _ = (try script.eval(in: parser.env, as: asAnything))
+            let code = renderGlue(libraryName: libraryName, handlerGlues: _handlerGlues)
+            return(code)
+        } else {
+            let errors = parser.errors()
+            print("Found \(errors.count) syntax error(s):")
+            for e in errors { print(e) }
+            throw NotYetImplementedError()
+        }
     } catch {
         print(error)
         throw error

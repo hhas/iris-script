@@ -5,12 +5,7 @@
 
 import Foundation
 
-// TO DO: FIX: parser crashes on empty string input
-
-
 // TO DO: give some thought to both in-process and out-of-process APIs; a native editor would typically parse and edit a script in-process, serializing it for execution in a sandboxed subprocess
-
-
 
 // TO DO: balance counting per line needs to pass forward both counts so that they are picked up from the last line reader (or perhaps store them as `.lineBreak(bringForward:[Form], carryForward:[Form])`) // problem: what about string quotes? think all parens and quotes need to go on these lists - it's up to the rebalancer to count the string quotes and thus decide which parens to ignore as being inside quoted text
 
@@ -37,7 +32,7 @@ public class EditableScript: CustomStringConvertible, CustomDebugStringConvertib
     
     public var debugDescription: String { return self.lines.enumerated().map{ "\(String(format: "%4i", $0+1)). \($1.tokens.map{ "\($0)" }.joined(separator: "\n      "))" }.joined(separator: "\n") }
     
-    public typealias LineReaderAdapter = (LineReader) -> LineReader // input is usually a CoreLexer struct, but could also be UnpopToken or other adapter (e.g. when autocorrect is attempting to find best-guess solutions)
+    public typealias LineReaderAdapter = (LineReader) -> LineReader // input is usually a BaseLexer struct, but could also be UnpopToken or other adapter (e.g. when autocorrect is attempting to find best-guess solutions)
     
     private var lineIDCount: Int = 0 // every line of code has a unique ID, representing the order in which it was initially read/subsequently inserted; this should allow code editor to modify sections of script while preserving unmodified sections (this'll probably require an API for inserting new lines before[?] a given line no., and replacing/deleting existing lines given a Range of line nos., as well as an array of line nos when performing automatic refactorings (e.g. renamings); these line nos. corresponding to indexes and slices of self.lines, so unlike line IDs are transient; line IDs OTOH allow Lines to be located anywhere within script at any time [assuming they haven't been invalidated by edits], e.g. renaming engine would search all Lines for a given name [with some assistance from EditableScript to distinguish matches within code from matches within quotes], then replace those lines with new lines [which would be constructed from a modified version of the previous line's tokens array, rather than a modified source string])
     
@@ -59,7 +54,7 @@ public class EditableScript: CustomStringConvertible, CustomDebugStringConvertib
         
         let code: String
         let tokens: [Token] // TO DO: var? (parser may need to insert 'fixers' for bad syntax); or just replace line?
-        let id: Int
+        let id: Int // line ID; this is implemented as incrementing counter so no two lines within the same script should ever have the same ID; given a line ID, current line number can be calculated (e.g. when reporting error locations)
         
         // TO DO: also need to record carryForward + bringForward, which record the opening/closing/delimiter tokens that preceding and subsequent lines need to correctly balance the opening/closing/delimiter tokens that appear on this line
         
@@ -90,7 +85,7 @@ public class EditableScript: CustomStringConvertible, CustomDebugStringConvertib
             (line: Substring) -> Line in
             let code = String(line)
             var tokens = [Token]()
-            if let lineReader = Tokenizer(code) {
+            if let lineReader = BaseLexer(code) {
                 var lexer: LineReader = lineReaderAdapter(lineReader)
                 var token: Token
                 repeat {
@@ -102,11 +97,15 @@ public class EditableScript: CustomStringConvertible, CustomDebugStringConvertib
                     
                     // TO DO: parse here to avoid iterating tokens twice (caveat what to do when a syntax error is encountered, e.g. insert smallest-possible 'fixer' for the immediate issue and move on [bearing in mind a naive fix may create more syntax problems than it solves];)
                     
-                } while token.form != .lineBreak
+                } while token.form != .lineBreak && token.form != .endOfCode
             }
             return Line(code, tokens, lineCounter()) // TO DO: also capture next reader?
         })
         self.lineIDCount = lineID
+    }
+    
+    public func lineNumber(forID lineID: Int) -> Int? {
+        return self.lines.firstIndex(where: { $0.id == lineID })
     }
     
 }

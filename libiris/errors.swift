@@ -144,6 +144,10 @@ public struct NullCoercionError: CoercionError { // value is `nothing`
     
     public let value: Value
     public let coercion: Coercion
+    
+    public var description: String {
+        return "Can’t coerce `nothing` to \(self.coercion)."
+    }
 }
 
 struct UnsupportedCoercionError: CoercionError { // cannot coerce value to specified type
@@ -277,18 +281,18 @@ enum BadSyntax: NativeError { // while tokens containing invalid code are marked
 }
 
 
-class SyntaxErrorDescription: NativeError {
+public class SyntaxErrorDescription: NativeError {
     
-    var description: String {
+    public var description: String {
         return "«Syntax Error: \(self.error)»"
     }
     
-    let error: NativeError
+    public let error: NativeError
     
-    init(error: NativeError) {
+    public init(error: NativeError) {
         self.error = error
     }
-    convenience init(_ message: String) {
+    public convenience init(_ message: String) {
         self.init(error: InternalError(description: message))
     }
 }

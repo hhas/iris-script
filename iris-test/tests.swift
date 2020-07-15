@@ -12,8 +12,13 @@ import iris
 
 
 func test() {
+    runScript("  xx")
     
-    runScript(" { ( 1 ) }")
+   // runScript(" to foo run write “bar” \n foo ") // TO DO: FIX: using optional/default coercion modifiers is still buggy: handler throws error on return (it should return `nothing` instead)
+    
+    //runScript("do,done")
+    
+   // runScript(" [\n[\n] ")//{ [ (1, 3) , 2 + 4, 5 ]}")
     
     return;
     

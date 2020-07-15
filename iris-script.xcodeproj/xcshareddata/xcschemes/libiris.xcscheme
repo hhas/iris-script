@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4F988CB524BCC4D700EE66C7"
-               BuildableName = "liblibiris.a"
+               BuildableName = "libiris.a"
                BlueprintName = "libiris"
                ReferencedContainer = "container:iris-script.xcodeproj">
             </BuildableReference>
@@ -53,7 +53,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4F988CB524BCC4D700EE66C7"
-            BuildableName = "liblibiris.a"
+            BuildableName = "libiris.a"
             BlueprintName = "libiris"
             ReferencedContainer = "container:iris-script.xcodeproj">
          </BuildableReference>

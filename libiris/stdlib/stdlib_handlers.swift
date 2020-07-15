@@ -820,7 +820,7 @@ private func procedure_lowercase_text(command: Command, commandEnv: Scope, handl
 
 // format_code {value}
 private let type_formatCode_value = (
-    param_0: (Symbol("value"), AsOptional(AsValue())),
+    param_0: (Symbol("value"), AsSwiftPrecis<AsOptional>(AsOptional(AsValue()), "optional")),
     result: AsString()
 )
 private let interface_formatCode_value = HandlerInterface(
@@ -842,7 +842,7 @@ private func procedure_formatCode_value(command: Command, commandEnv: Scope, han
 
 // write {value}
 private let type_write_value = (
-    param_0: (Symbol("value"), AsOptional(AsValue())),
+    param_0: (Symbol("value"), AsSwiftPrecis<AsOptional>(AsOptional(AsValue()), "anything")),
     result: AsNothing()
 )
 private let interface_write_value = HandlerInterface(
@@ -864,7 +864,7 @@ private func procedure_write_value(command: Command, commandEnv: Scope, handler:
 
 // is_a {left, right}
 private let type_isA_left_right = (
-    param_0: (Symbol("left"), AsOptional(AsValue())),
+    param_0: (Symbol("left"), AsSwiftPrecis<AsOptional>(AsOptional(AsValue()), "anything")),
     param_1: (Symbol("right"), AsCoercion()),
     result: asBool
 )
@@ -891,9 +891,9 @@ private func procedure_isA_left_right(command: Command, commandEnv: Scope, handl
 
 // as {left, right}
 private let type_coerce_left_right = (
-    param_0: (Symbol("left"), AsOptional(AsValue())),
+    param_0: (Symbol("left"), AsSwiftPrecis<AsOptional>(AsOptional(AsValue()), "anything")),
     param_1: (Symbol("right"), AsCoercion()),
-    result: AsOptional(AsValue())
+    result: AsSwiftPrecis<AsOptional>(AsOptional(AsValue()), "anything")
 )
 private let interface_coerce_left_right = HandlerInterface(
     name: "as",
@@ -916,63 +916,71 @@ private func procedure_coerce_left_right(command: Command, commandEnv: Scope, ha
     return type_coerce_left_right.result.box(value: result, in: handlerEnv)
 }
 
-// to {right}
-private let type_defineCommandHandler_right = (
-    param_0: (Symbol("right"), AsHandler()),
+// to {left, right}
+private let type_defineCommandHandler_interface_action = (
+    param_0: (Symbol("left"), AsHandlerInterface()),
+    param_1: (Symbol("right"), asIs),
     result: AsHandler()
 )
-private let interface_defineCommandHandler_right = HandlerInterface(
+private let interface_defineCommandHandler_interface_action = HandlerInterface(
     name: "to",
     parameters: [
-        (type_defineCommandHandler_right.param_0.0, "handler", type_defineCommandHandler_right.param_0.1),
+        (type_defineCommandHandler_interface_action.param_0.0, "interface", type_defineCommandHandler_interface_action.param_0.1),
+        (type_defineCommandHandler_interface_action.param_1.0, "body", type_defineCommandHandler_interface_action.param_1.1),
     ],
-    result: type_defineCommandHandler_right.result
+    result: type_defineCommandHandler_interface_action.result
 )
-private func procedure_defineCommandHandler_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_defineCommandHandler_interface_action(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_defineCommandHandler_right.param_0, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_defineCommandHandler_interface_action.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_defineCommandHandler_interface_action.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try defineCommandHandler(
-        right: arg_0,
+        interface: arg_0,
+        action: arg_1,
         commandEnv: commandEnv
     )
-    return type_defineCommandHandler_right.result.box(value: result, in: handlerEnv)
+    return type_defineCommandHandler_interface_action.result.box(value: result, in: handlerEnv)
 }
 
-// when {right}
-private let type_defineEventHandler_right = (
-    param_0: (Symbol("right"), AsHandler()),
+// when {left, right}
+private let type_defineEventHandler_interface_action = (
+    param_0: (Symbol("left"), AsHandlerInterface()),
+    param_1: (Symbol("right"), asIs),
     result: AsHandler()
 )
-private let interface_defineEventHandler_right = HandlerInterface(
+private let interface_defineEventHandler_interface_action = HandlerInterface(
     name: "when",
     parameters: [
-        (type_defineEventHandler_right.param_0.0, "handler", type_defineEventHandler_right.param_0.1),
+        (type_defineEventHandler_interface_action.param_0.0, "interface", type_defineEventHandler_interface_action.param_0.1),
+        (type_defineEventHandler_interface_action.param_1.0, "body", type_defineEventHandler_interface_action.param_1.1),
     ],
-    result: type_defineEventHandler_right.result
+    result: type_defineEventHandler_interface_action.result
 )
-private func procedure_defineEventHandler_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_defineEventHandler_interface_action(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_defineEventHandler_right.param_0, in: commandEnv)
+    let arg_0 = try command.swiftValue(at: &index, for: type_defineEventHandler_interface_action.param_0, in: commandEnv)
+    let arg_1 = try command.swiftValue(at: &index, for: type_defineEventHandler_interface_action.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try defineEventHandler(
-        right: arg_0,
+        interface: arg_0,
+        action: arg_1,
         commandEnv: commandEnv
     )
-    return type_defineEventHandler_right.result.box(value: result, in: handlerEnv)
+    return type_defineEventHandler_interface_action.result.box(value: result, in: handlerEnv)
 }
 
 // set {name, to}
 private let type_set_name_to = (
-    param_0: (Symbol("name"), AsLiteralName()),
-    param_1: (Symbol("to"), AsValue()),
-    result: AsOptional(AsValue())
+    param_0: (Symbol("left"), AsLiteralName()),
+    param_1: (Symbol("right"), AsValue()),
+    result: AsSwiftPrecis<AsOptional>(AsOptional(AsValue()), "anything")
 )
 private let interface_set_name_to = HandlerInterface(
     name: "set",
     parameters: [
-        (type_set_name_to.param_0.0, "name", type_set_name_to.param_0.1),
-        (type_set_name_to.param_1.0, "value", type_set_name_to.param_1.1),
+        (type_set_name_to.param_0.0, "left", type_set_name_to.param_0.1),
+        (type_set_name_to.param_1.0, "right", type_set_name_to.param_1.1),
     ],
     result: type_set_name_to.result
 )
@@ -994,7 +1002,7 @@ private let type_ifTest_condition_action_alternativeAction = (
     param_0: (Symbol("left"), asBool),
     param_1: (Symbol("middle"), asIs),
     param_2: (Symbol("right"), asIs),
-    result: AsOptional(AsValue())
+    result: AsSwiftPrecis<AsOptional>(AsOptional(AsValue()), "anything")
 )
 private let interface_ifTest_condition_action_alternativeAction = HandlerInterface(
     name: "if",
@@ -1024,7 +1032,7 @@ private func procedure_ifTest_condition_action_alternativeAction(command: Comman
 private let type_whileRepeat_condition_action = (
     param_0: (Symbol("left"), asBool),
     param_1: (Symbol("right"), asIs),
-    result: AsOptional(AsValue())
+    result: AsSwiftPrecis<AsOptional>(AsOptional(AsValue()), "anything")
 )
 private let interface_whileRepeat_condition_action = HandlerInterface(
     name: "while",
@@ -1051,7 +1059,7 @@ private func procedure_whileRepeat_condition_action(command: Command, commandEnv
 private let type_repeatWhile_action_condition = (
     param_0: (Symbol("left"), asIs),
     param_1: (Symbol("right"), asBool),
-    result: AsOptional(AsValue())
+    result: AsSwiftPrecis<AsOptional>(AsOptional(AsValue()), "anything")
 )
 private let interface_repeatWhile_action_condition = HandlerInterface(
     name: "repeat",
@@ -1078,7 +1086,7 @@ private func procedure_repeatWhile_action_condition(command: Command, commandEnv
 private let type_tell_target_action = (
     param_0: (Symbol("left"), AsValue()),
     param_1: (Symbol("right"), asIs),
-    result: AsOptional(AsValue())
+    result: AsSwiftPrecis<AsOptional>(AsOptional(AsValue()), "anything")
 )
 private let interface_tell_target_action = HandlerInterface(
     name: "tell",
@@ -1596,8 +1604,8 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_write_value, procedure_write_value)
     env.define(interface_isA_left_right, procedure_isA_left_right)
     env.define(interface_coerce_left_right, procedure_coerce_left_right)
-    env.define(interface_defineCommandHandler_right, procedure_defineCommandHandler_right)
-    env.define(interface_defineEventHandler_right, procedure_defineEventHandler_right)
+    env.define(interface_defineCommandHandler_interface_action, procedure_defineCommandHandler_interface_action)
+    env.define(interface_defineEventHandler_interface_action, procedure_defineEventHandler_interface_action)
     env.define(interface_set_name_to, procedure_set_name_to)
     env.define(interface_ifTest_condition_action_alternativeAction, procedure_ifTest_condition_action_alternativeAction)
     env.define(interface_whileRepeat_condition_action, procedure_whileRepeat_condition_action)
@@ -1623,4 +1631,3 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_insertAtBeginning_, procedure_insertAtBeginning_)
     env.define(interface_insertAtEnd_, procedure_insertAtEnd_)
 }
-

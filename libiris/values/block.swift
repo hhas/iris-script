@@ -77,7 +77,7 @@ public class Block: BoxedComplexValue { // caution: this does not capture lexica
     
 }
 
-public typealias ScriptAST = Block
+public typealias AbstractSyntaxTree = Block
 
 /*
 class ScriptAST: Block {

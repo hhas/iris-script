@@ -5,6 +5,10 @@
 import Foundation
 import iris
 
+
+// TO DO: FIX: operator definitions need ability to supply custom argument labels for use in underlying Commands (currently operators use generic label arguments—"left", "middle", "right"—which are unhelpful)
+
+
 // TO DO: AsLiteralName coercion?; this'd allow aliases to be written directly as names rather than strings;
 
 // TO DO: how to parameterize run-time return type? (TO DO: any primitive handler that evals native code need ability to pass result coercion as Swift func parameter; for now, best to declare requirement explicitly, c.f.     use_scopes:…)
@@ -250,18 +254,18 @@ to ‘as’ {left: value as anything, right: coercion as coercion} returning any
 
 «TODO: better labels than left/right»
 
-to ‘to’ {right: handler as procedure} returning procedure requires {
+to ‘to’ {left: interface as handler_interface, right: body as expression} returning procedure requires {
     can_error: true
     use_scopes: #command
-    swift_function: defineCommandHandler
-    operator:{#prefix, 80}
+    swift_function: defineCommandHandler {interface, action}
+    operator:{#prefix_with_conjunction, 80, #left, [#to, #run]}
 }
 
-to ‘when’ {right: handler as procedure} returning procedure requires {
+to ‘when’ {left: interface as handler_interface, right: body as expression} returning procedure requires {
     can_error: true
     use_scopes: #command
-    swift_function: defineEventHandler
-    operator:{#prefix, 80}
+    swift_function: defineEventHandler {interface, action}
+    operator:{#prefix_with_conjunction, 80, #left, [#to, #run]}
 }
 
 to ‘set’ {name as name, to: value} returning anything requires { «assignment; TODO: name argument should be a chunk expression»

@@ -12,9 +12,35 @@ EditLine* el;
 History* elHistory;
 HistEvent elEvent;
 
+#define PROMPT_BUFFER_SIZE (13)
+
+char prompt[PROMPT_BUFFER_SIZE];
+
+int indentDepth = -1;
 
 char* EL_prompt(EditLine *e) {
-    return "✎ ";
+    return prompt;
+}
+
+
+void EL_setIndent(int n) {
+    #define MAX_DEPTH (PROMPT_BUFFER_SIZE - 5)
+    if (n != indentDepth) {
+        if (n < 0) n = 0;
+        indentDepth = n > MAX_DEPTH ? MAX_DEPTH : n;
+        for (int i = 0; i < PROMPT_BUFFER_SIZE; i++) { prompt[i] = 0x20; }
+        if (indentDepth == 0) {
+            prompt[indentDepth+0] = 0xE2;
+            prompt[indentDepth+1] = 0x9C;
+            prompt[indentDepth+2] = 0x8E;
+        } else {
+            prompt[indentDepth+0] = 0xE2;
+            prompt[indentDepth+1] = 0x80;
+            prompt[indentDepth+2] = 0xA6;
+        }
+        prompt[indentDepth+3] = 0x20;
+        prompt[indentDepth+4] = 0x00;
+    }
 }
 
 

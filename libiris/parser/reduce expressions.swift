@@ -41,7 +41,7 @@ extension Parser {
             (parentMatch, precedingKeywordIndex) = matchers.min{ $0.match.count < $1.match.count }! // confirm this logic; if there are multiple matchers in progress it should associate with the nearest/innermost, i.e. shortest = most recently started (e.g. consider nested `if…then…` expressions); it does smell though
         }
         // remove the currently matched (though not yet shifted) conjunction from block stack
-        self.blockStack.end(name) // TO DO: don’t _think_ the order of this relative to EXPR reduction is signifcant, but make sure
+        self.blockStack.endConjunction(at: name) // TO DO: don’t _think_ the order of this relative to EXPR reduction is signifcant, but make sure
         // reduce the preceding EXPR
         let startIndex = precedingKeywordIndex + 1
         let stopIndex = self.tokenStack.count

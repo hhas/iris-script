@@ -14,16 +14,16 @@ import Foundation
 // TO DO: if we use UTI line readers for namespace access, users should be able to write `tell @com.apple.TextEdit to …` rather than `tell app “…” to …`; the same syntax can work for libraries too, with the obvious caveat that if a library has the same UTI-based name as an app's bundle ID, we'll need some way to disambiguate
 
 
-public struct NullReader: LineReader { // returned once line reader is exhausted; always outputs .lineBreak token
+public struct EndOfCodeReader: LineReader { // returned once line reader is exhausted; always outputs .lineBreak token
     
     public let code = ""
     
     public func next() -> (Token, LineReader) {
-        return (nullToken, self)
+        return (endOfCodeToken, self)
     }
 }
 
-public let nullReader = NullReader()
+public let endOfCodeReader = EndOfCodeReader()
 
 
 

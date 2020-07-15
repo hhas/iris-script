@@ -14,7 +14,7 @@ let middleOperand = Symbol("middle")
 let rightOperand  = Symbol("right")
 
 
-
+/*
 
 
 func test2() {
@@ -55,14 +55,14 @@ func test2() {
     print(scriptLines)
     
     for line in scriptLines {
-        if let lineReader = Tokenizer(String(line)) {
+        if let lineReader = BaseLexer(String(line)) {
             var lexer: LineReader = NumericReader(lineReader)
             var token: Token
             loop: while true {
                 (token, lexer) = lexer.next()
                 print(token)
                 switch token.form {
-                case .lineBreak, .endOfScript: break loop
+                case .lineBreak, .endOfCode: break loop
                 default: ()
                 }
             }
@@ -261,4 +261,6 @@ func test3() {
     }
 }
 
+
+*/
 

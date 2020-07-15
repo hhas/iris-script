@@ -8,14 +8,16 @@ import Foundation
 
 // TO DO: perform top-level reductions within main parse loop; upon exhausting token stream break out of loop indicating if current code is a full parse or requires additional tokens to complete (provide a separate API for getting complete code as ScriptAST instance); allow a new token stream to be added so parsing can resume (this'll allow REPL to support multi-line input without implementing full per-line parser first); public read-only API for examining block stack (e.g. to determine automatic indentation level for new lines)
 
+// TO DO: parser should keep error tally; in theory script should be [partially] runnable even with [some?] syntax errors, but problematic sections need marked and script should run in debug mode only with extra guards around anything IO (what about unmatched operators? can we infer where an opname is accidentally used where quoted name is needed [i.e. user needs to resolve naming conflict] vs an opname that has incorrect operands [user needs to fix operands]; how do we represent such unresolved syntax errors as Values [again, allowing other code to execute at least in debug mode])
+
 
 public class Parser {
     
     public typealias Form = Token.Form
     
-    typealias BlockInfo = (start: Int, form: BlockType)
+    public typealias BlockInfo = (start: Int, form: BlockType)
     
-    enum BlockType {
+    public enum BlockType {
         case conjunction(Conjunctions) // conjunctions with trailing expr (e.g. `then`)
         case block(Conjunctions) // conjunctions with terminating keyword (e.g. `done`)
         case list
@@ -95,8 +97,9 @@ public class Parser {
     }
     
     
-    func shift(form: Token.Form? = nil, adding newMatches: [PatternMatch] = []) {
-//        print("SHIFTING .\(self.current.token.form) onto stack; current head:", self.tokenStack.last?.form ?? .endOfScript)
+    func shift(form: Token.Form? = nil, adding newMatches: [PatternMatch] = [], from startIndex: Int = 0) {
+        // startIndex provides left boundary for auto-reduction matches (e.g. given `[[]]`, the first `]` token should complete the second `[` match only and be ignored by the first)
+        //print("SHIFTING .\(self.current.token.form) onto stack; start: \(startIndex), current head:", self.tokenStack.last?.form ?? .endOfCode)
      //   print("…", self.tokenStack.last?.matches ?? [])
         // normally the token being shifted is the current token in the parser’s token stream; however, in some special cases parser’s main loop performs an immediate reduction without first shifting, in which case the reduced token form is passed here
         // to initiate one or more new pattern matches on a given token, the parser’s main loop should instantiate those pattern matchers and pass them here
@@ -152,6 +155,8 @@ public class Parser {
                 fullMatches.append(match)
             }
         }
+        // when auto-reducing blocks, we don’t want to overshoot, e.g. given `[[…]]`, both list literal patterns will match the first `]` but only the second should be allowed (requiring a full, not provisional, match would also exclude the first, but this is simpler)
+        fullMatches.removeAll{ $0.startIndex(from: stopIndex) < startIndex }
         if !newConjunctionMatches.isEmpty {
             //print("newConjunctionMatches =", newConjunctionMatches)
             self.blockStack.beginConjunction(for: newConjunctionMatches, at: stopIndex)
@@ -166,7 +171,7 @@ public class Parser {
  //           print(fullMatches)
             if self.tokenStack.reduce(match: longestMatch) {
                 if case .operatorName(let d) = form, self.blockStack.blockMatches(for: d.name) != nil { // kludgy
-                    self.blockStack.end(d.name)
+                    self.blockStack.endConjunction(at: d.name)
                 }
             } else {
                 print("WARNING: failed to auto-reduce at head of stack:", longestMatch) // not sure if part of normal behavior, syntax error, and/or bug
@@ -185,25 +190,25 @@ public class Parser {
     var currentIndex: Int { return self.tokenStack.count - 1 }
     
     func startBlock(for form: Parser.BlockType, adding matchers: [PatternMatch]) {
-        self.blockStack.begin(form, at: self.currentIndex + 1) // track nested blocks on a secondary stack
+        self.blockStack.beginBlock(for: form, at: self.currentIndex + 1) // track nested blocks on a secondary stack
         self.shift(adding: matchers) // shift the opening token onto stack, attaching one or more pattern matchers to it
     }
     
     func endBlock(for form: Parser.BlockType) throws {
         self.foundRightExpressionDelimiter() // ensure last expr in block is reduced to single .value // TO DO: check this as it's possible for last token in block to be a delimiter (e.g. comma and/or linebreak[s])
-        try self.blockStack.end(form, at: self.currentIndex) // TO DO: what to do with error? (for now, we propagate it, but we should probably try to encapsulate as .error/SyntaxErrorDescription)
-        self.shift() // shift the closing token onto stack; shift() will then autoreduce the block literal
+        let startIndex = try self.blockStack.endBlock(for: form, at: self.currentIndex).start // TO DO: what to do with error? (for now, we propagate it, but we should probably try to encapsulate as .error/SyntaxErrorDescription)
+        self.shift(from: startIndex) // shift the closing token onto stack; shift() will then autoreduce the block literal
     }
     
     
     // main loop
     
-    public func parseScript() throws -> ScriptAST {
-        loop: while true { // loop exits below on .endOfScript
+    public func parseScript() {
+        loop: while true { // loop exits below on .endOfCode
             let form = self.current.token.form
-            //print("PARSE .\(form)")
+           // print("READ", form)
             switch form {
-            case .endOfScript: break loop
+            case .endOfCode: break loop
             case .annotation(_): () // discard annotations for now
                 
             case .startList:
@@ -213,12 +218,24 @@ public class Parser {
             case .startGroup:
                 self.startBlock(for: .group, adding: groupLiteral.newMatches())
             case .endGroup:
-                try self.endBlock(for: .group)
+                do {
+                    try self.endBlock(for: .group)
+                } catch {
+                    print(error)
+                }
             case .endList:
-                try self.endBlock(for: .list)
+                do {
+                    try self.endBlock(for: .list)
+                } catch {
+                    print(error)
+                }
             case .endRecord:
-                try self.endBlock(for: .record)
-                self.reduceIfFullPunctuationCommand() // if top of stack is `NAME RECORD` then reduce it
+                do {
+                    try self.endBlock(for: .record)
+                    self.reduceIfFullPunctuationCommand() // if top of stack is `NAME RECORD` then reduce it
+                } catch {
+                    print(error)
+                }
                 
             case .unquotedName(let name), .quotedName(let name): // command name or record label
                 // `NAME COLON` is ALWAYS a label (i.e. is part of core syntax rules), so we can reduce it here to intermediate .label(NAME), which simplifies LP command parsing
@@ -270,14 +287,20 @@ public class Parser {
             }
             self.advance()
         }
-       // self.tokenStack.show()
+        //self.tokenStack.show()
         self.foundRightExpressionDelimiter()
-        return self.reductionForTopLevelExpressions() // top-level is basically a block without delimiters
+        self.reductionForTopLevelExpressions() // top-level is basically a block without delimiters
     }
     
     
+    public func replaceReader(_ tokenStream: DocumentReader) throws {
+        guard case .endOfCode = self.current.token.form else {
+            throw InternalError(description: "Can’t replace current reader as it has not been fully consumed.")
+        }
+        self.current = tokenStream
+    }
     
-    func reductionForTopLevelExpressions() -> ScriptAST {
+    private func reductionForTopLevelExpressions() {
         //        print("\nReductions:")
         // finish reducing delimited expression sequence at top-level of script to a single ScriptAST value
         var result = [Value]()
@@ -285,23 +308,28 @@ public class Parser {
         //print("RESULT:")
         var i = 0
         var wasValue = false
-        skipLineBreaks(self.tokenStack, &i)
+        self.tokenStack.skipLineBreaks(&i)
         while i < self.tokenStack.count {
             // TO DO: token stack captures only Forms, not Tokens, but it would be helpful to include source code ranges for use in error reporting (these would need recalculated after every reduction, but as long as reductions are performed via TokenStack APIs this shouldn't be difficult)
             let (form, _, _) = self.tokenStack[i] // use info from incomplete matches in syntax error messages
             switch form {
-            case .value(let value):
+            case .value(_):
                 if wasValue {
-                    result.append(SyntaxErrorDescription("Found adjacent values (e.g. missing separator): `\(result.last!)` `\(value)`"))
+                    var tokens = [self.tokenStack[i - 1]]
+                    while case .value(_) = self.tokenStack[i].form {
+                        tokens.append(self.tokenStack[i])
+                        self.tokenStack.remove(at: i)
+                    }
+                    // TO DO: SyntaxErrorDescription needs to capture tokens
+                    self.tokenStack[i].form = .value(SyntaxErrorDescription("Found adjacent values (e.g. missing separator): \(tokens)"))
                 }
-                result.append(value)
                 wasValue = true
             case .separator(let sep):
                 if !wasValue {
-                    result.append(SyntaxErrorDescription("Found adjacent punctuation (e.g. duplicate or misplaced): `\(sep)`"))
+                    print("Discarded duplicate punctuation: `\(sep)`")
                 }
                 wasValue = false
-                skipLineBreaks(self.tokenStack, &i)
+                self.tokenStack.skipLineBreaks(&i)
             case .lineBreak:
                 wasValue = false
             default:
@@ -310,12 +338,67 @@ public class Parser {
             }
             i += 1
         }
-        // TO DO: need error tally; in theory script should be [partially] runnable even with [some?] syntax errors, but problematic sections need marked and script should run in debug mode only with extra guards around anything IO (what about unmatched operators? can we infer where an opname is accidentally used where quoted name is needed [i.e. user needs to resolve naming conflict] vs an opname that has incorrect operands [user needs to fix operands]; how do we represent such unresolved syntax errors as Values [again, allowing other code to execute at least in debug mode])
+    }
+    
+    //
+    
+    public func ast() -> AbstractSyntaxTree? {
+        var result = [Value]()
+        var i = 0
+        self.tokenStack.skipLineBreaks(&i)
+        while i < self.tokenStack.count {
+            switch self.tokenStack[i].form {
+            case .value(let v):
+                result.append(v)
+            case .endOfCode:
+                break
+            default:
+                return nil
+            }
+            i += 1
+            self.tokenStack.skipSeparator(&i)
+            self.tokenStack.skipLineBreaks(&i)
+        }
         guard case .script = self.blockStack.last?.form else {
-            print("Unremoved block matchers:", self.blockStack)
-            return ScriptAST(result)
-            //throw BadSyntax.missingExpression
-        } // TO DO: add .error to result
-        return ScriptAST(result)
+            print("BUG: Unremoved block matchers:", self.blockStack)
+            return nil
+        }
+        return AbstractSyntaxTree(result)
+    }
+    
+    public func errors() -> [NativeError] { // TO DO: this returns top-level errors only; how best to get errors nested within block structures? (that's easiest if parser caches all shift+reduce errors as they’re thrown; this may also assist IDE in making [some] in-place corrections)
+        var result = [NativeError]()
+        for (form, _, _) in self.tokenStack {
+            switch form {
+            case .error(let e):
+                result.append(e)
+            case .value(let v):
+                if let e = v as? NativeError { result.append(e) }
+            default: ()
+            }
+        }
+        return result
+    }
+    
+    public func incompleteBlocks() -> [(startIndex: Int, startBlock: String, stopBlock: String)] {
+        // TO DO: return a more limited enum that contains only info relevant to closing incomplete block structures? (i.e. .list/.record/.group/.block(startKeyword,endKeyword) and their start indexes) Q. is there any value in returning info on pending conjunction clauses here? or is that more appropriate in general command/operation auto-completion?
+        assert(!self.blockStack.isEmpty, "Empty block stack.")
+        return self.blockStack.filter {
+            switch $0.form {
+            case .conjunction(_), .script: return false
+            default: return true
+            }
+        }.map {
+            switch $0.form {
+            case .list:     return ($0.start, "[", "]")
+            case .record:   return ($0.start, "{", "}")
+            case .group:    return ($0.start, "(", ")")
+            case .block(let conjunctions):
+                let match = conjunctions.values.first![0].match
+                guard let (start, end) = match.blockKeywords() else { fatalError("TODO: unsupported block pattern") }
+                return ($0.start, start.label, end.label)
+            default: fatalError("This should never occur.")
+            }
+        }
     }
 }

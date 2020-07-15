@@ -3,6 +3,8 @@
 //  iris-shell
 //
 
+// TO DO: `help` should take `optional command` argument, e.g. `help write` should print documentation for `write` command
+
 import Foundation
 import iris
 
@@ -44,6 +46,10 @@ func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handl
     `commands`  – list all available commands
     
     `quit`      – exit the interactive shell
+
+    ## Notes
+    
+    Emacs key bindings are supported, e.g. `Ctrl-L` to clear screen.
     
     """)
     return nullValue

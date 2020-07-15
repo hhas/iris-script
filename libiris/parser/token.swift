@@ -32,7 +32,7 @@ let commandPrecedence: Precedence = 999 // used when parsing low-punctuation com
 
 public struct Token: CustomStringConvertible {
     
-    // initial tokenization by CoreLexer is minimal, recognizing only core punctuation, contiguous digits, whitespace (as delimiter), and symbols and words (everything else); determining which tokens actually appear inside string literals and annotations [meaning they're not real tokens after all], assembling complete number literals from multiple tokens, distinguishing operator names from command names, etc is left to downstream consumers
+    // initial tokenization by BaseLexer is minimal, recognizing only core punctuation, contiguous digits, whitespace (as delimiter), and symbols and words (everything else); determining which tokens actually appear inside string literals and annotations [meaning they're not real tokens after all], assembling complete number literals from multiple tokens, distinguishing operator names from command names, etc is left to downstream consumers
     
     public var description: String { // underscore before/after quoted token text indicates adjoining whitespace
         let form: String
@@ -118,7 +118,7 @@ public struct Token: CustomStringConvertible {
         
         case stringDelimiter    // any of "“” // note: unlike other grouping delimiters (lists, records, parens, annotations), string quotes do not provide clear indication as to whether start of line is inside or outside quoted text; therefore we tokenize everything and leave the parser to figure out which it is (this is slower than tokenizing the full script, but better able to deal with extra/missing quotes, using both line-by-line balance counts and simple best-guess heuristics comparing relative frequencies of tell-tale characters and words [e.g. known command and operator names, punctuation])
         
-        case nameDelimiter      // any of '‘’ // CoreLexer will convert these to quotedName
+        case nameDelimiter      // any of '‘’ // BaseLexer will convert these to quotedName
         
         // no whitespace token as leading/trailing whitespace is associated with token
         // no linebreak token as lexer reads single lines only (Q. any use cases where we'd want a single lexer to scan all lines?)
@@ -152,7 +152,7 @@ public struct Token: CustomStringConvertible {
         // characters that are not allowed anywhere in code should be represented as `.error(BadSyntax.illegalCharacters)`: anything in CharacterSet.illegalCharacters, non-printing control characters [not counting whitespace/linebreaks] (Q. how many non-valid character constructs are there in Unicode standard/ObjC UTF16 NSStrings/Swift Strings; i.e. what do we need to look for, vs what can we trust Swift to reject outright before it ever gets to us?)
 
         case lineBreak
-        case endOfScript
+        case endOfCode
         
         // TO DO: associated values on enums significantly increase complexity (e.g. no automatic Equatable); would it be better to move the details to a separate Content enum? // Q. should we also consolidate expr separators and grouping delimiters into two Form cases (.separator + .grouping), with SeparatorForms and GroupingForms enums under Content?
         
@@ -184,7 +184,7 @@ public struct Token: CustomStringConvertible {
             case (.value(_), .value(_)): return true
             case (.error(_), .error(_)): return true
             case (.lineBreak, .lineBreak): return true
-            case (.endOfScript, .endOfScript): return true
+            case (.endOfCode, .endOfCode): return true
             default: return false // caution: this will mask missing cases, but Swift compiler insists on it; make sure these cases are updated whenever Form enum is modified
             }
         }
@@ -203,7 +203,7 @@ public struct Token: CustomStringConvertible {
         
         var isRightExpressionDelimiter: Bool { // currently unused
             switch self {
-            case .colon, .separator(_), .endList, .endRecord, .endGroup, .lineBreak, .endOfScript: return true
+            case .colon, .separator(_), .endList, .endRecord, .endGroup, .lineBreak, .endOfCode: return true
             default: return false
             }
         }
@@ -341,7 +341,9 @@ public struct Token: CustomStringConvertible {
     }
 }
 
-public let nullToken = Token(.lineBreak, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source
 
-public let eofToken = Token(.endOfScript, nil, "", nil, .last) // caution: eol tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source
+public let lineBreakToken = Token(.lineBreak, nil, "", nil, .last)
+
+
+public let endOfCodeToken = Token(.endOfCode, nil, "", nil, .last) // caution: endOfCode tokens should be treated as opaque placeholders only; they do not capture adjoining whitespace nor indicate their position in original line/script source
 

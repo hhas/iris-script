@@ -207,3 +207,15 @@ func reductionOrderFor(_ leftMatch: PatternMatch, _ rightMatch: PatternMatch) ->
     }
 }
 
+
+public extension PatternMatch {
+
+    func blockKeywords() -> (Symbol, Symbol)? { // KLUDGE (it would be easier if we restricted keyword-based blocks to a standard structure that always begins and ends with keywords)
+        let startKeywords = self.definition.pattern.first!.keywords
+        let endKeywords = self.definition.pattern.last!.keywords
+        if !startKeywords.isEmpty && !endKeywords.isEmpty {
+            return (startKeywords[0].name, endKeywords[0].name)
+        }
+        return nil
+    }
+}

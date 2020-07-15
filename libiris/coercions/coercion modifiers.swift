@@ -82,9 +82,14 @@ public struct AsOptional: SwiftCoercion { // this returns native Value; for Opti
     
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         do {
+            // TO DO: there is a problem with null coercions not being intercepted correctly when value is a command invoking a native handler with default signature that returns nothing; the null coercion error is chained to handler error by the time it gets here, which bypasses the catch below (null coercion errors need to be caught close to point of origin, either to handle in the case of optional/default, or to promote to permanent coercion error; need to check how kiwi does it again)
+            
             return try self.coercion.coerce(value: value, in: scope)
         } catch is NullCoercionError {
             return nullValue
+        } catch {
+       //     print(self.swiftLiteralDescription, "caught", type(of:error), error)
+            throw error
         }
     }
 }
@@ -303,7 +308,7 @@ public let asLiteralName = AsLiteralName()
 public struct AsSwiftPrecis<T: SwiftCoercion>: SwiftCoercion { // allows a complex coercion’s true technical name to be replaced with a simple, custom name; e.g. used to rename `optional value` to `anything`, or `list {of: integer from: 0 to: 100, min: 4, max: 4}` to `CMYK_color`
     
     public var swiftLiteralDescription: String {
-        return "\(type(of: self))(\(self.coercion.swiftLiteralDescription), \(self.precis))"
+        return "\(type(of: self))(\(self.coercion.swiftLiteralDescription), \(self.precis.debugDescription))"
     }
     
     public var name: Symbol { return Symbol(self.precis) } // TO DO: what should this be?
