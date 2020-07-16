@@ -2,8 +2,11 @@
 //  handler stub template.swift
 //  gluelib
 //
+//  generates function stubs
+//
 
 import Foundation
+import iris
 
 // TO DO: need to sort out public vs internal declarations
 
@@ -29,13 +32,16 @@ func ««functionName»»(««+functionParameters»»\
 """
 
 
-let handlerStubsTemplate = TextTemplate(templateSource) { (tpl: Node, args: (libraryName: String, handlerGlues: [HandlerGlue])) in
+let handlerStubsTemplate = TextTemplate(templateSource) {
+    (tpl: Node, args: (libraryName: String, handlerGlues: [HandlerGlue])) in
     tpl.libraryName.set(args.libraryName)
-    tpl.defineHandler.map(args.handlerGlues) { (node: Node, glue: HandlerGlue) -> Void in
+    tpl.defineHandler.map(args.handlerGlues) {
+        (node: Node, glue: HandlerGlue) -> Void in
         node.functionName.set(glue.swiftName)
         node.libraryName.set(args.libraryName)
         let scopes = glue.useScopes.map{(Symbol($0), Symbol($0), asScope) as HandlerInterface.Parameter}
-        node.functionParameters.map(glue.swiftParameters) { (node: Node, item: (label: String, binding: String?, type: String)) -> Void in
+        node.functionParameters.map(glue.swiftParameters) {
+            (node: Node, item: (label: String, binding: String?, type: String)) -> Void in
             node.label.set(item.label)
             if let binding = item.binding { node.binding.set(" \(binding)") }
             node.type.set(item.type)
@@ -52,7 +58,7 @@ let handlerStubsTemplate = TextTemplate(templateSource) { (tpl: Node, args: (lib
 
 
 extension HandlerGlue {
-
+    
     var swiftParameters: [(label: String, binding: String?, type: String)] { // used in primitive handler function stubs; label may include binding name (TO DO: we should probably split binding name into separate String?)
         let params: [(String, String, String)]
         let nativeParameters = self.interface.parameters.map{(camelCase($0.name.label), camelCase($0.binding.label), $0.coercion.swiftTypeDescription)}

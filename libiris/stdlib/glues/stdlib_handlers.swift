@@ -15,8 +15,8 @@ private let type_exponent_left_right = (
 private let interface_exponent_left_right = HandlerInterface(
     name: "^",
     parameters: [
-        (type_exponent_left_right.param_0.0, "left", type_exponent_left_right.param_0.1),
-        (type_exponent_left_right.param_1.0, "right", type_exponent_left_right.param_1.1),
+		(type_exponent_left_right.param_0.0, "left", type_exponent_left_right.param_0.1),
+		(type_exponent_left_right.param_1.0, "right", type_exponent_left_right.param_1.1),
     ],
     result: type_exponent_left_right.result
 )
@@ -26,8 +26,8 @@ private func procedure_exponent_left_right(command: Command, commandEnv: Scope, 
     let arg_1 = try command.swiftValue(at: &index, for: type_exponent_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try exponent(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_exponent_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -40,7 +40,7 @@ private let type_positive_right = (
 private let interface_positive_right = HandlerInterface(
     name: "positive",
     parameters: [
-        (type_positive_right.param_0.0, "right", type_positive_right.param_0.1),
+		(type_positive_right.param_0.0, "right", type_positive_right.param_0.1),
     ],
     result: type_positive_right.result
 )
@@ -49,7 +49,7 @@ private func procedure_positive_right(command: Command, commandEnv: Scope, handl
     let arg_0 = try command.swiftValue(at: &index, for: type_positive_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try positive(
-        right: arg_0
+    	right: arg_0
     )
     return type_positive_right.result.box(value: result, in: handlerEnv)
 }
@@ -62,7 +62,7 @@ private let type_negative_right = (
 private let interface_negative_right = HandlerInterface(
     name: "negative",
     parameters: [
-        (type_negative_right.param_0.0, "right", type_negative_right.param_0.1),
+		(type_negative_right.param_0.0, "right", type_negative_right.param_0.1),
     ],
     result: type_negative_right.result
 )
@@ -71,7 +71,7 @@ private func procedure_negative_right(command: Command, commandEnv: Scope, handl
     let arg_0 = try command.swiftValue(at: &index, for: type_negative_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try negative(
-        right: arg_0
+    	right: arg_0
     )
     return type_negative_right.result.box(value: result, in: handlerEnv)
 }
@@ -85,8 +85,8 @@ private let type_multiply_left_right = (
 private let interface_multiply_left_right = HandlerInterface(
     name: "*",
     parameters: [
-        (type_multiply_left_right.param_0.0, "left", type_multiply_left_right.param_0.1),
-        (type_multiply_left_right.param_1.0, "right", type_multiply_left_right.param_1.1),
+		(type_multiply_left_right.param_0.0, "left", type_multiply_left_right.param_0.1),
+		(type_multiply_left_right.param_1.0, "right", type_multiply_left_right.param_1.1),
     ],
     result: type_multiply_left_right.result
 )
@@ -96,8 +96,8 @@ private func procedure_multiply_left_right(command: Command, commandEnv: Scope, 
     let arg_1 = try command.swiftValue(at: &index, for: type_multiply_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try multiply(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_multiply_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -111,8 +111,8 @@ private let type_divide_left_right = (
 private let interface_divide_left_right = HandlerInterface(
     name: "/",
     parameters: [
-        (type_divide_left_right.param_0.0, "left", type_divide_left_right.param_0.1),
-        (type_divide_left_right.param_1.0, "right", type_divide_left_right.param_1.1),
+		(type_divide_left_right.param_0.0, "left", type_divide_left_right.param_0.1),
+		(type_divide_left_right.param_1.0, "right", type_divide_left_right.param_1.1),
     ],
     result: type_divide_left_right.result
 )
@@ -122,8 +122,8 @@ private func procedure_divide_left_right(command: Command, commandEnv: Scope, ha
     let arg_1 = try command.swiftValue(at: &index, for: type_divide_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try divide(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_divide_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -137,8 +137,8 @@ private let type_div_left_right = (
 private let interface_div_left_right = HandlerInterface(
     name: "div",
     parameters: [
-        (type_div_left_right.param_0.0, "left", type_div_left_right.param_0.1),
-        (type_div_left_right.param_1.0, "right", type_div_left_right.param_1.1),
+		(type_div_left_right.param_0.0, "left", type_div_left_right.param_0.1),
+		(type_div_left_right.param_1.0, "right", type_div_left_right.param_1.1),
     ],
     result: type_div_left_right.result
 )
@@ -148,8 +148,8 @@ private func procedure_div_left_right(command: Command, commandEnv: Scope, handl
     let arg_1 = try command.swiftValue(at: &index, for: type_div_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try div(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_div_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -163,8 +163,8 @@ private let type_mod_left_right = (
 private let interface_mod_left_right = HandlerInterface(
     name: "mod",
     parameters: [
-        (type_mod_left_right.param_0.0, "left", type_mod_left_right.param_0.1),
-        (type_mod_left_right.param_1.0, "right", type_mod_left_right.param_1.1),
+		(type_mod_left_right.param_0.0, "left", type_mod_left_right.param_0.1),
+		(type_mod_left_right.param_1.0, "right", type_mod_left_right.param_1.1),
     ],
     result: type_mod_left_right.result
 )
@@ -174,8 +174,8 @@ private func procedure_mod_left_right(command: Command, commandEnv: Scope, handl
     let arg_1 = try command.swiftValue(at: &index, for: type_mod_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try mod(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_mod_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -189,8 +189,8 @@ private let type_add_left_right = (
 private let interface_add_left_right = HandlerInterface(
     name: "+",
     parameters: [
-        (type_add_left_right.param_0.0, "left", type_add_left_right.param_0.1),
-        (type_add_left_right.param_1.0, "right", type_add_left_right.param_1.1),
+		(type_add_left_right.param_0.0, "left", type_add_left_right.param_0.1),
+		(type_add_left_right.param_1.0, "right", type_add_left_right.param_1.1),
     ],
     result: type_add_left_right.result
 )
@@ -200,8 +200,8 @@ private func procedure_add_left_right(command: Command, commandEnv: Scope, handl
     let arg_1 = try command.swiftValue(at: &index, for: type_add_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try add(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_add_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -215,8 +215,8 @@ private let type_subtract_left_right = (
 private let interface_subtract_left_right = HandlerInterface(
     name: "-",
     parameters: [
-        (type_subtract_left_right.param_0.0, "left", type_subtract_left_right.param_0.1),
-        (type_subtract_left_right.param_1.0, "right", type_subtract_left_right.param_1.1),
+		(type_subtract_left_right.param_0.0, "left", type_subtract_left_right.param_0.1),
+		(type_subtract_left_right.param_1.0, "right", type_subtract_left_right.param_1.1),
     ],
     result: type_subtract_left_right.result
 )
@@ -226,8 +226,8 @@ private func procedure_subtract_left_right(command: Command, commandEnv: Scope, 
     let arg_1 = try command.swiftValue(at: &index, for: type_subtract_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try subtract(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_subtract_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -241,8 +241,8 @@ private let type_isLess_left_right = (
 private let interface_isLess_left_right = HandlerInterface(
     name: "<",
     parameters: [
-        (type_isLess_left_right.param_0.0, "left", type_isLess_left_right.param_0.1),
-        (type_isLess_left_right.param_1.0, "right", type_isLess_left_right.param_1.1),
+		(type_isLess_left_right.param_0.0, "left", type_isLess_left_right.param_0.1),
+		(type_isLess_left_right.param_1.0, "right", type_isLess_left_right.param_1.1),
     ],
     result: type_isLess_left_right.result
 )
@@ -252,8 +252,8 @@ private func procedure_isLess_left_right(command: Command, commandEnv: Scope, ha
     let arg_1 = try command.swiftValue(at: &index, for: type_isLess_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = isLess(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isLess_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -267,8 +267,8 @@ private let type_isLessOrEqual_left_right = (
 private let interface_isLessOrEqual_left_right = HandlerInterface(
     name: "≤",
     parameters: [
-        (type_isLessOrEqual_left_right.param_0.0, "left", type_isLessOrEqual_left_right.param_0.1),
-        (type_isLessOrEqual_left_right.param_1.0, "right", type_isLessOrEqual_left_right.param_1.1),
+		(type_isLessOrEqual_left_right.param_0.0, "left", type_isLessOrEqual_left_right.param_0.1),
+		(type_isLessOrEqual_left_right.param_1.0, "right", type_isLessOrEqual_left_right.param_1.1),
     ],
     result: type_isLessOrEqual_left_right.result
 )
@@ -278,8 +278,8 @@ private func procedure_isLessOrEqual_left_right(command: Command, commandEnv: Sc
     let arg_1 = try command.swiftValue(at: &index, for: type_isLessOrEqual_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = isLessOrEqual(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isLessOrEqual_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -293,8 +293,8 @@ private let type_isEqual_left_right = (
 private let interface_isEqual_left_right = HandlerInterface(
     name: "=",
     parameters: [
-        (type_isEqual_left_right.param_0.0, "left", type_isEqual_left_right.param_0.1),
-        (type_isEqual_left_right.param_1.0, "right", type_isEqual_left_right.param_1.1),
+		(type_isEqual_left_right.param_0.0, "left", type_isEqual_left_right.param_0.1),
+		(type_isEqual_left_right.param_1.0, "right", type_isEqual_left_right.param_1.1),
     ],
     result: type_isEqual_left_right.result
 )
@@ -304,8 +304,8 @@ private func procedure_isEqual_left_right(command: Command, commandEnv: Scope, h
     let arg_1 = try command.swiftValue(at: &index, for: type_isEqual_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = isEqual(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isEqual_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -319,8 +319,8 @@ private let type_isNotEqual_left_right = (
 private let interface_isNotEqual_left_right = HandlerInterface(
     name: "≠",
     parameters: [
-        (type_isNotEqual_left_right.param_0.0, "left", type_isNotEqual_left_right.param_0.1),
-        (type_isNotEqual_left_right.param_1.0, "right", type_isNotEqual_left_right.param_1.1),
+		(type_isNotEqual_left_right.param_0.0, "left", type_isNotEqual_left_right.param_0.1),
+		(type_isNotEqual_left_right.param_1.0, "right", type_isNotEqual_left_right.param_1.1),
     ],
     result: type_isNotEqual_left_right.result
 )
@@ -330,8 +330,8 @@ private func procedure_isNotEqual_left_right(command: Command, commandEnv: Scope
     let arg_1 = try command.swiftValue(at: &index, for: type_isNotEqual_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = isNotEqual(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isNotEqual_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -345,8 +345,8 @@ private let type_isGreater_left_right = (
 private let interface_isGreater_left_right = HandlerInterface(
     name: ">",
     parameters: [
-        (type_isGreater_left_right.param_0.0, "left", type_isGreater_left_right.param_0.1),
-        (type_isGreater_left_right.param_1.0, "right", type_isGreater_left_right.param_1.1),
+		(type_isGreater_left_right.param_0.0, "left", type_isGreater_left_right.param_0.1),
+		(type_isGreater_left_right.param_1.0, "right", type_isGreater_left_right.param_1.1),
     ],
     result: type_isGreater_left_right.result
 )
@@ -356,8 +356,8 @@ private func procedure_isGreater_left_right(command: Command, commandEnv: Scope,
     let arg_1 = try command.swiftValue(at: &index, for: type_isGreater_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = isGreater(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isGreater_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -371,8 +371,8 @@ private let type_isGreaterOrEqual_left_right = (
 private let interface_isGreaterOrEqual_left_right = HandlerInterface(
     name: "≥",
     parameters: [
-        (type_isGreaterOrEqual_left_right.param_0.0, "left", type_isGreaterOrEqual_left_right.param_0.1),
-        (type_isGreaterOrEqual_left_right.param_1.0, "right", type_isGreaterOrEqual_left_right.param_1.1),
+		(type_isGreaterOrEqual_left_right.param_0.0, "left", type_isGreaterOrEqual_left_right.param_0.1),
+		(type_isGreaterOrEqual_left_right.param_1.0, "right", type_isGreaterOrEqual_left_right.param_1.1),
     ],
     result: type_isGreaterOrEqual_left_right.result
 )
@@ -382,8 +382,8 @@ private func procedure_isGreaterOrEqual_left_right(command: Command, commandEnv:
     let arg_1 = try command.swiftValue(at: &index, for: type_isGreaterOrEqual_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = isGreaterOrEqual(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isGreaterOrEqual_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -396,7 +396,7 @@ private let type_NOT_right = (
 private let interface_NOT_right = HandlerInterface(
     name: "NOT",
     parameters: [
-        (type_NOT_right.param_0.0, "right", type_NOT_right.param_0.1),
+		(type_NOT_right.param_0.0, "right", type_NOT_right.param_0.1),
     ],
     result: type_NOT_right.result
 )
@@ -405,7 +405,7 @@ private func procedure_NOT_right(command: Command, commandEnv: Scope, handler: H
     let arg_0 = try command.swiftValue(at: &index, for: type_NOT_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = NOT(
-        right: arg_0
+    	right: arg_0
     )
     return type_NOT_right.result.box(value: result, in: handlerEnv)
 }
@@ -419,8 +419,8 @@ private let type_AND_left_right = (
 private let interface_AND_left_right = HandlerInterface(
     name: "AND",
     parameters: [
-        (type_AND_left_right.param_0.0, "left", type_AND_left_right.param_0.1),
-        (type_AND_left_right.param_1.0, "right", type_AND_left_right.param_1.1),
+		(type_AND_left_right.param_0.0, "left", type_AND_left_right.param_0.1),
+		(type_AND_left_right.param_1.0, "right", type_AND_left_right.param_1.1),
     ],
     result: type_AND_left_right.result
 )
@@ -430,8 +430,8 @@ private func procedure_AND_left_right(command: Command, commandEnv: Scope, handl
     let arg_1 = try command.swiftValue(at: &index, for: type_AND_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = AND(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_AND_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -445,8 +445,8 @@ private let type_OR_left_right = (
 private let interface_OR_left_right = HandlerInterface(
     name: "OR",
     parameters: [
-        (type_OR_left_right.param_0.0, "left", type_OR_left_right.param_0.1),
-        (type_OR_left_right.param_1.0, "right", type_OR_left_right.param_1.1),
+		(type_OR_left_right.param_0.0, "left", type_OR_left_right.param_0.1),
+		(type_OR_left_right.param_1.0, "right", type_OR_left_right.param_1.1),
     ],
     result: type_OR_left_right.result
 )
@@ -456,8 +456,8 @@ private func procedure_OR_left_right(command: Command, commandEnv: Scope, handle
     let arg_1 = try command.swiftValue(at: &index, for: type_OR_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = OR(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_OR_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -471,8 +471,8 @@ private let type_XOR_left_right = (
 private let interface_XOR_left_right = HandlerInterface(
     name: "XOR",
     parameters: [
-        (type_XOR_left_right.param_0.0, "left", type_XOR_left_right.param_0.1),
-        (type_XOR_left_right.param_1.0, "right", type_XOR_left_right.param_1.1),
+		(type_XOR_left_right.param_0.0, "left", type_XOR_left_right.param_0.1),
+		(type_XOR_left_right.param_1.0, "right", type_XOR_left_right.param_1.1),
     ],
     result: type_XOR_left_right.result
 )
@@ -482,8 +482,8 @@ private func procedure_XOR_left_right(command: Command, commandEnv: Scope, handl
     let arg_1 = try command.swiftValue(at: &index, for: type_XOR_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = XOR(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_XOR_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -497,8 +497,8 @@ private let type_isBefore_left_right = (
 private let interface_isBefore_left_right = HandlerInterface(
     name: "is_before",
     parameters: [
-        (type_isBefore_left_right.param_0.0, "left", type_isBefore_left_right.param_0.1),
-        (type_isBefore_left_right.param_1.0, "right", type_isBefore_left_right.param_1.1),
+		(type_isBefore_left_right.param_0.0, "left", type_isBefore_left_right.param_0.1),
+		(type_isBefore_left_right.param_1.0, "right", type_isBefore_left_right.param_1.1),
     ],
     result: type_isBefore_left_right.result
 )
@@ -508,8 +508,8 @@ private func procedure_isBefore_left_right(command: Command, commandEnv: Scope, 
     let arg_1 = try command.swiftValue(at: &index, for: type_isBefore_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try isBefore(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isBefore_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -523,8 +523,8 @@ private let type_isNotAfter_left_right = (
 private let interface_isNotAfter_left_right = HandlerInterface(
     name: "is_not_after",
     parameters: [
-        (type_isNotAfter_left_right.param_0.0, "left", type_isNotAfter_left_right.param_0.1),
-        (type_isNotAfter_left_right.param_1.0, "right", type_isNotAfter_left_right.param_1.1),
+		(type_isNotAfter_left_right.param_0.0, "left", type_isNotAfter_left_right.param_0.1),
+		(type_isNotAfter_left_right.param_1.0, "right", type_isNotAfter_left_right.param_1.1),
     ],
     result: type_isNotAfter_left_right.result
 )
@@ -534,8 +534,8 @@ private func procedure_isNotAfter_left_right(command: Command, commandEnv: Scope
     let arg_1 = try command.swiftValue(at: &index, for: type_isNotAfter_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try isNotAfter(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isNotAfter_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -549,8 +549,8 @@ private let type_isSameAs_left_right = (
 private let interface_isSameAs_left_right = HandlerInterface(
     name: "is_same_as",
     parameters: [
-        (type_isSameAs_left_right.param_0.0, "left", type_isSameAs_left_right.param_0.1),
-        (type_isSameAs_left_right.param_1.0, "right", type_isSameAs_left_right.param_1.1),
+		(type_isSameAs_left_right.param_0.0, "left", type_isSameAs_left_right.param_0.1),
+		(type_isSameAs_left_right.param_1.0, "right", type_isSameAs_left_right.param_1.1),
     ],
     result: type_isSameAs_left_right.result
 )
@@ -560,8 +560,8 @@ private func procedure_isSameAs_left_right(command: Command, commandEnv: Scope, 
     let arg_1 = try command.swiftValue(at: &index, for: type_isSameAs_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try isSameAs(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isSameAs_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -575,8 +575,8 @@ private let type_isNotSameAs_left_right = (
 private let interface_isNotSameAs_left_right = HandlerInterface(
     name: "is_not_same_as",
     parameters: [
-        (type_isNotSameAs_left_right.param_0.0, "left", type_isNotSameAs_left_right.param_0.1),
-        (type_isNotSameAs_left_right.param_1.0, "right", type_isNotSameAs_left_right.param_1.1),
+		(type_isNotSameAs_left_right.param_0.0, "left", type_isNotSameAs_left_right.param_0.1),
+		(type_isNotSameAs_left_right.param_1.0, "right", type_isNotSameAs_left_right.param_1.1),
     ],
     result: type_isNotSameAs_left_right.result
 )
@@ -586,8 +586,8 @@ private func procedure_isNotSameAs_left_right(command: Command, commandEnv: Scop
     let arg_1 = try command.swiftValue(at: &index, for: type_isNotSameAs_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try isNotSameAs(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isNotSameAs_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -601,8 +601,8 @@ private let type_isAfter_left_right = (
 private let interface_isAfter_left_right = HandlerInterface(
     name: "is_after",
     parameters: [
-        (type_isAfter_left_right.param_0.0, "left", type_isAfter_left_right.param_0.1),
-        (type_isAfter_left_right.param_1.0, "right", type_isAfter_left_right.param_1.1),
+		(type_isAfter_left_right.param_0.0, "left", type_isAfter_left_right.param_0.1),
+		(type_isAfter_left_right.param_1.0, "right", type_isAfter_left_right.param_1.1),
     ],
     result: type_isAfter_left_right.result
 )
@@ -612,8 +612,8 @@ private func procedure_isAfter_left_right(command: Command, commandEnv: Scope, h
     let arg_1 = try command.swiftValue(at: &index, for: type_isAfter_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try isAfter(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isAfter_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -627,8 +627,8 @@ private let type_isNotBefore_left_right = (
 private let interface_isNotBefore_left_right = HandlerInterface(
     name: "is_not_before",
     parameters: [
-        (type_isNotBefore_left_right.param_0.0, "left", type_isNotBefore_left_right.param_0.1),
-        (type_isNotBefore_left_right.param_1.0, "right", type_isNotBefore_left_right.param_1.1),
+		(type_isNotBefore_left_right.param_0.0, "left", type_isNotBefore_left_right.param_0.1),
+		(type_isNotBefore_left_right.param_1.0, "right", type_isNotBefore_left_right.param_1.1),
     ],
     result: type_isNotBefore_left_right.result
 )
@@ -638,8 +638,8 @@ private func procedure_isNotBefore_left_right(command: Command, commandEnv: Scop
     let arg_1 = try command.swiftValue(at: &index, for: type_isNotBefore_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try isNotBefore(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isNotBefore_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -653,8 +653,8 @@ private let type_beginsWith_left_right = (
 private let interface_beginsWith_left_right = HandlerInterface(
     name: "begins_with",
     parameters: [
-        (type_beginsWith_left_right.param_0.0, "left", type_beginsWith_left_right.param_0.1),
-        (type_beginsWith_left_right.param_1.0, "right", type_beginsWith_left_right.param_1.1),
+		(type_beginsWith_left_right.param_0.0, "left", type_beginsWith_left_right.param_0.1),
+		(type_beginsWith_left_right.param_1.0, "right", type_beginsWith_left_right.param_1.1),
     ],
     result: type_beginsWith_left_right.result
 )
@@ -664,8 +664,8 @@ private func procedure_beginsWith_left_right(command: Command, commandEnv: Scope
     let arg_1 = try command.swiftValue(at: &index, for: type_beginsWith_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try beginsWith(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_beginsWith_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -679,8 +679,8 @@ private let type_endsWith_left_right = (
 private let interface_endsWith_left_right = HandlerInterface(
     name: "ends_with",
     parameters: [
-        (type_endsWith_left_right.param_0.0, "left", type_endsWith_left_right.param_0.1),
-        (type_endsWith_left_right.param_1.0, "right", type_endsWith_left_right.param_1.1),
+		(type_endsWith_left_right.param_0.0, "left", type_endsWith_left_right.param_0.1),
+		(type_endsWith_left_right.param_1.0, "right", type_endsWith_left_right.param_1.1),
     ],
     result: type_endsWith_left_right.result
 )
@@ -690,8 +690,8 @@ private func procedure_endsWith_left_right(command: Command, commandEnv: Scope, 
     let arg_1 = try command.swiftValue(at: &index, for: type_endsWith_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try endsWith(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_endsWith_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -705,8 +705,8 @@ private let type_contains_left_right = (
 private let interface_contains_left_right = HandlerInterface(
     name: "contains",
     parameters: [
-        (type_contains_left_right.param_0.0, "left", type_contains_left_right.param_0.1),
-        (type_contains_left_right.param_1.0, "right", type_contains_left_right.param_1.1),
+		(type_contains_left_right.param_0.0, "left", type_contains_left_right.param_0.1),
+		(type_contains_left_right.param_1.0, "right", type_contains_left_right.param_1.1),
     ],
     result: type_contains_left_right.result
 )
@@ -716,8 +716,8 @@ private func procedure_contains_left_right(command: Command, commandEnv: Scope, 
     let arg_1 = try command.swiftValue(at: &index, for: type_contains_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try contains(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_contains_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -731,8 +731,8 @@ private let type_isIn_left_right = (
 private let interface_isIn_left_right = HandlerInterface(
     name: "is_in",
     parameters: [
-        (type_isIn_left_right.param_0.0, "left", type_isIn_left_right.param_0.1),
-        (type_isIn_left_right.param_1.0, "right", type_isIn_left_right.param_1.1),
+		(type_isIn_left_right.param_0.0, "left", type_isIn_left_right.param_0.1),
+		(type_isIn_left_right.param_1.0, "right", type_isIn_left_right.param_1.1),
     ],
     result: type_isIn_left_right.result
 )
@@ -742,8 +742,8 @@ private func procedure_isIn_left_right(command: Command, commandEnv: Scope, hand
     let arg_1 = try command.swiftValue(at: &index, for: type_isIn_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try isIn(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_isIn_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -757,8 +757,8 @@ private let type_joinValues_left_right = (
 private let interface_joinValues_left_right = HandlerInterface(
     name: "&",
     parameters: [
-        (type_joinValues_left_right.param_0.0, "left", type_joinValues_left_right.param_0.1),
-        (type_joinValues_left_right.param_1.0, "right", type_joinValues_left_right.param_1.1),
+		(type_joinValues_left_right.param_0.0, "left", type_joinValues_left_right.param_0.1),
+		(type_joinValues_left_right.param_1.0, "right", type_joinValues_left_right.param_1.1),
     ],
     result: type_joinValues_left_right.result
 )
@@ -768,8 +768,8 @@ private func procedure_joinValues_left_right(command: Command, commandEnv: Scope
     let arg_1 = try command.swiftValue(at: &index, for: type_joinValues_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try joinValues(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_joinValues_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -782,7 +782,7 @@ private let type_uppercase_text = (
 private let interface_uppercase_text = HandlerInterface(
     name: "uppercase",
     parameters: [
-        (type_uppercase_text.param_0.0, "text", type_uppercase_text.param_0.1),
+		(type_uppercase_text.param_0.0, "text", type_uppercase_text.param_0.1),
     ],
     result: type_uppercase_text.result
 )
@@ -791,7 +791,7 @@ private func procedure_uppercase_text(command: Command, commandEnv: Scope, handl
     let arg_0 = try command.swiftValue(at: &index, for: type_uppercase_text.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = uppercase(
-        text: arg_0
+    	text: arg_0
     )
     return type_uppercase_text.result.box(value: result, in: handlerEnv)
 }
@@ -804,7 +804,7 @@ private let type_lowercase_text = (
 private let interface_lowercase_text = HandlerInterface(
     name: "lowercase",
     parameters: [
-        (type_lowercase_text.param_0.0, "text", type_lowercase_text.param_0.1),
+		(type_lowercase_text.param_0.0, "text", type_lowercase_text.param_0.1),
     ],
     result: type_lowercase_text.result
 )
@@ -813,7 +813,7 @@ private func procedure_lowercase_text(command: Command, commandEnv: Scope, handl
     let arg_0 = try command.swiftValue(at: &index, for: type_lowercase_text.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = lowercase(
-        text: arg_0
+    	text: arg_0
     )
     return type_lowercase_text.result.box(value: result, in: handlerEnv)
 }
@@ -826,7 +826,7 @@ private let type_formatCode_value = (
 private let interface_formatCode_value = HandlerInterface(
     name: "format_code",
     parameters: [
-        (type_formatCode_value.param_0.0, "value", type_formatCode_value.param_0.1),
+		(type_formatCode_value.param_0.0, "value", type_formatCode_value.param_0.1),
     ],
     result: type_formatCode_value.result
 )
@@ -835,7 +835,7 @@ private func procedure_formatCode_value(command: Command, commandEnv: Scope, han
     let arg_0 = try command.swiftValue(at: &index, for: type_formatCode_value.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = formatCode(
-        value: arg_0
+    	value: arg_0
     )
     return type_formatCode_value.result.box(value: result, in: handlerEnv)
 }
@@ -848,7 +848,7 @@ private let type_write_value = (
 private let interface_write_value = HandlerInterface(
     name: "write",
     parameters: [
-        (type_write_value.param_0.0, "value", type_write_value.param_0.1),
+		(type_write_value.param_0.0, "value", type_write_value.param_0.1),
     ],
     result: type_write_value.result
 )
@@ -856,8 +856,8 @@ private func procedure_write_value(command: Command, commandEnv: Scope, handler:
     var index = 0
     let arg_0 = try command.swiftValue(at: &index, for: type_write_value.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
-     write(
-        value: arg_0
+	 write(
+    	value: arg_0
     )
     return nullValue
 }
@@ -871,8 +871,8 @@ private let type_isA_left_right = (
 private let interface_isA_left_right = HandlerInterface(
     name: "is_a",
     parameters: [
-        (type_isA_left_right.param_0.0, "value", type_isA_left_right.param_0.1),
-        (type_isA_left_right.param_1.0, "coercion", type_isA_left_right.param_1.1),
+		(type_isA_left_right.param_0.0, "value", type_isA_left_right.param_0.1),
+		(type_isA_left_right.param_1.0, "coercion", type_isA_left_right.param_1.1),
     ],
     result: type_isA_left_right.result
 )
@@ -882,9 +882,9 @@ private func procedure_isA_left_right(command: Command, commandEnv: Scope, handl
     let arg_1 = try command.swiftValue(at: &index, for: type_isA_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = isA(
-        left: arg_0,
-        right: arg_1,
-        commandEnv: commandEnv
+    	left: arg_0,
+    	right: arg_1,
+    	commandEnv: commandEnv
     )
     return type_isA_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -898,8 +898,8 @@ private let type_coerce_left_right = (
 private let interface_coerce_left_right = HandlerInterface(
     name: "as",
     parameters: [
-        (type_coerce_left_right.param_0.0, "value", type_coerce_left_right.param_0.1),
-        (type_coerce_left_right.param_1.0, "coercion", type_coerce_left_right.param_1.1),
+		(type_coerce_left_right.param_0.0, "value", type_coerce_left_right.param_0.1),
+		(type_coerce_left_right.param_1.0, "coercion", type_coerce_left_right.param_1.1),
     ],
     result: type_coerce_left_right.result
 )
@@ -909,9 +909,9 @@ private func procedure_coerce_left_right(command: Command, commandEnv: Scope, ha
     let arg_1 = try command.swiftValue(at: &index, for: type_coerce_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try coerce(
-        left: arg_0,
-        right: arg_1,
-        commandEnv: commandEnv
+    	left: arg_0,
+    	right: arg_1,
+    	commandEnv: commandEnv
     )
     return type_coerce_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -925,8 +925,8 @@ private let type_defineCommandHandler_interface_action = (
 private let interface_defineCommandHandler_interface_action = HandlerInterface(
     name: "to",
     parameters: [
-        (type_defineCommandHandler_interface_action.param_0.0, "interface", type_defineCommandHandler_interface_action.param_0.1),
-        (type_defineCommandHandler_interface_action.param_1.0, "body", type_defineCommandHandler_interface_action.param_1.1),
+		(type_defineCommandHandler_interface_action.param_0.0, "interface", type_defineCommandHandler_interface_action.param_0.1),
+		(type_defineCommandHandler_interface_action.param_1.0, "body", type_defineCommandHandler_interface_action.param_1.1),
     ],
     result: type_defineCommandHandler_interface_action.result
 )
@@ -936,9 +936,9 @@ private func procedure_defineCommandHandler_interface_action(command: Command, c
     let arg_1 = try command.swiftValue(at: &index, for: type_defineCommandHandler_interface_action.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try defineCommandHandler(
-        interface: arg_0,
-        action: arg_1,
-        commandEnv: commandEnv
+    	interface: arg_0,
+    	action: arg_1,
+    	commandEnv: commandEnv
     )
     return type_defineCommandHandler_interface_action.result.box(value: result, in: handlerEnv)
 }
@@ -952,8 +952,8 @@ private let type_defineEventHandler_interface_action = (
 private let interface_defineEventHandler_interface_action = HandlerInterface(
     name: "when",
     parameters: [
-        (type_defineEventHandler_interface_action.param_0.0, "interface", type_defineEventHandler_interface_action.param_0.1),
-        (type_defineEventHandler_interface_action.param_1.0, "body", type_defineEventHandler_interface_action.param_1.1),
+		(type_defineEventHandler_interface_action.param_0.0, "interface", type_defineEventHandler_interface_action.param_0.1),
+		(type_defineEventHandler_interface_action.param_1.0, "body", type_defineEventHandler_interface_action.param_1.1),
     ],
     result: type_defineEventHandler_interface_action.result
 )
@@ -963,24 +963,24 @@ private func procedure_defineEventHandler_interface_action(command: Command, com
     let arg_1 = try command.swiftValue(at: &index, for: type_defineEventHandler_interface_action.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try defineEventHandler(
-        interface: arg_0,
-        action: arg_1,
-        commandEnv: commandEnv
+    	interface: arg_0,
+    	action: arg_1,
+    	commandEnv: commandEnv
     )
     return type_defineEventHandler_interface_action.result.box(value: result, in: handlerEnv)
 }
 
 // set {name, to}
 private let type_set_name_to = (
-    param_0: (Symbol("left"), AsLiteralName()),
-    param_1: (Symbol("right"), AsValue()),
+    param_0: (Symbol("name"), AsLiteralName()),
+    param_1: (Symbol("to"), AsValue()),
     result: AsSwiftPrecis<AsOptional>(AsOptional(AsValue()), "anything")
 )
 private let interface_set_name_to = HandlerInterface(
     name: "set",
     parameters: [
-        (type_set_name_to.param_0.0, "left", type_set_name_to.param_0.1),
-        (type_set_name_to.param_1.0, "right", type_set_name_to.param_1.1),
+		(type_set_name_to.param_0.0, "name", type_set_name_to.param_0.1),
+		(type_set_name_to.param_1.0, "value", type_set_name_to.param_1.1),
     ],
     result: type_set_name_to.result
 )
@@ -990,9 +990,9 @@ private func procedure_set_name_to(command: Command, commandEnv: Scope, handler:
     let arg_1 = try command.swiftValue(at: &index, for: type_set_name_to.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try set(
-        name: arg_0,
-        to: arg_1,
-        commandEnv: commandEnv
+    	name: arg_0,
+    	to: arg_1,
+    	commandEnv: commandEnv
     )
     return type_set_name_to.result.box(value: result, in: handlerEnv)
 }
@@ -1007,9 +1007,9 @@ private let type_ifTest_condition_action_alternativeAction = (
 private let interface_ifTest_condition_action_alternativeAction = HandlerInterface(
     name: "if",
     parameters: [
-        (type_ifTest_condition_action_alternativeAction.param_0.0, "condition", type_ifTest_condition_action_alternativeAction.param_0.1),
-        (type_ifTest_condition_action_alternativeAction.param_1.0, "action", type_ifTest_condition_action_alternativeAction.param_1.1),
-        (type_ifTest_condition_action_alternativeAction.param_2.0, "alternative_action", type_ifTest_condition_action_alternativeAction.param_2.1),
+		(type_ifTest_condition_action_alternativeAction.param_0.0, "condition", type_ifTest_condition_action_alternativeAction.param_0.1),
+		(type_ifTest_condition_action_alternativeAction.param_1.0, "action", type_ifTest_condition_action_alternativeAction.param_1.1),
+		(type_ifTest_condition_action_alternativeAction.param_2.0, "alternative_action", type_ifTest_condition_action_alternativeAction.param_2.1),
     ],
     result: type_ifTest_condition_action_alternativeAction.result
 )
@@ -1020,10 +1020,10 @@ private func procedure_ifTest_condition_action_alternativeAction(command: Comman
     let arg_2 = try command.swiftValue(at: &index, for: type_ifTest_condition_action_alternativeAction.param_2, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try ifTest(
-        condition: arg_0,
-        action: arg_1,
-        alternativeAction: arg_2,
-        commandEnv: commandEnv
+    	condition: arg_0,
+    	action: arg_1,
+    	alternativeAction: arg_2,
+    	commandEnv: commandEnv
     )
     return type_ifTest_condition_action_alternativeAction.result.box(value: result, in: handlerEnv)
 }
@@ -1037,8 +1037,8 @@ private let type_whileRepeat_condition_action = (
 private let interface_whileRepeat_condition_action = HandlerInterface(
     name: "while",
     parameters: [
-        (type_whileRepeat_condition_action.param_0.0, "condition", type_whileRepeat_condition_action.param_0.1),
-        (type_whileRepeat_condition_action.param_1.0, "action", type_whileRepeat_condition_action.param_1.1),
+		(type_whileRepeat_condition_action.param_0.0, "condition", type_whileRepeat_condition_action.param_0.1),
+		(type_whileRepeat_condition_action.param_1.0, "action", type_whileRepeat_condition_action.param_1.1),
     ],
     result: type_whileRepeat_condition_action.result
 )
@@ -1048,9 +1048,9 @@ private func procedure_whileRepeat_condition_action(command: Command, commandEnv
     let arg_1 = try command.swiftValue(at: &index, for: type_whileRepeat_condition_action.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try whileRepeat(
-        condition: arg_0,
-        action: arg_1,
-        commandEnv: commandEnv
+    	condition: arg_0,
+    	action: arg_1,
+    	commandEnv: commandEnv
     )
     return type_whileRepeat_condition_action.result.box(value: result, in: handlerEnv)
 }
@@ -1064,8 +1064,8 @@ private let type_repeatWhile_action_condition = (
 private let interface_repeatWhile_action_condition = HandlerInterface(
     name: "repeat",
     parameters: [
-        (type_repeatWhile_action_condition.param_0.0, "action", type_repeatWhile_action_condition.param_0.1),
-        (type_repeatWhile_action_condition.param_1.0, "condition", type_repeatWhile_action_condition.param_1.1),
+		(type_repeatWhile_action_condition.param_0.0, "action", type_repeatWhile_action_condition.param_0.1),
+		(type_repeatWhile_action_condition.param_1.0, "condition", type_repeatWhile_action_condition.param_1.1),
     ],
     result: type_repeatWhile_action_condition.result
 )
@@ -1075,9 +1075,9 @@ private func procedure_repeatWhile_action_condition(command: Command, commandEnv
     let arg_1 = try command.swiftValue(at: &index, for: type_repeatWhile_action_condition.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try repeatWhile(
-        action: arg_0,
-        condition: arg_1,
-        commandEnv: commandEnv
+    	action: arg_0,
+    	condition: arg_1,
+    	commandEnv: commandEnv
     )
     return type_repeatWhile_action_condition.result.box(value: result, in: handlerEnv)
 }
@@ -1091,8 +1091,8 @@ private let type_tell_target_action = (
 private let interface_tell_target_action = HandlerInterface(
     name: "tell",
     parameters: [
-        (type_tell_target_action.param_0.0, "target", type_tell_target_action.param_0.1),
-        (type_tell_target_action.param_1.0, "action", type_tell_target_action.param_1.1),
+		(type_tell_target_action.param_0.0, "target", type_tell_target_action.param_0.1),
+		(type_tell_target_action.param_1.0, "action", type_tell_target_action.param_1.1),
     ],
     result: type_tell_target_action.result
 )
@@ -1102,9 +1102,9 @@ private func procedure_tell_target_action(command: Command, commandEnv: Scope, h
     let arg_1 = try command.swiftValue(at: &index, for: type_tell_target_action.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try tell(
-        target: arg_0,
-        action: arg_1,
-        commandEnv: commandEnv
+    	target: arg_0,
+    	action: arg_1,
+    	commandEnv: commandEnv
     )
     return type_tell_target_action.result.box(value: result, in: handlerEnv)
 }
@@ -1118,8 +1118,8 @@ private let type_ofClause_attribute_target = (
 private let interface_ofClause_attribute_target = HandlerInterface(
     name: "of",
     parameters: [
-        (type_ofClause_attribute_target.param_0.0, "attribute", type_ofClause_attribute_target.param_0.1),
-        (type_ofClause_attribute_target.param_1.0, "value", type_ofClause_attribute_target.param_1.1),
+		(type_ofClause_attribute_target.param_0.0, "attribute", type_ofClause_attribute_target.param_0.1),
+		(type_ofClause_attribute_target.param_1.0, "value", type_ofClause_attribute_target.param_1.1),
     ],
     result: type_ofClause_attribute_target.result
 )
@@ -1129,10 +1129,10 @@ private func procedure_ofClause_attribute_target(command: Command, commandEnv: S
     let arg_1 = try command.swiftValue(at: &index, for: type_ofClause_attribute_target.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try ofClause(
-        attribute: arg_0,
-        target: arg_1,
-        commandEnv: commandEnv,
-        handlerEnv: handlerEnv
+    	attribute: arg_0,
+    	target: arg_1,
+    	commandEnv: commandEnv,
+    	handlerEnv: handlerEnv
     )
     return type_ofClause_attribute_target.result.box(value: result, in: handlerEnv)
 }
@@ -1145,7 +1145,7 @@ private let type_Application_bundleIdentifier = (
 private let interface_Application_bundleIdentifier = HandlerInterface(
     name: "app",
     parameters: [
-        (type_Application_bundleIdentifier.param_0.0, "bundle_identifier", type_Application_bundleIdentifier.param_0.1),
+		(type_Application_bundleIdentifier.param_0.0, "bundle_identifier", type_Application_bundleIdentifier.param_0.1),
     ],
     result: type_Application_bundleIdentifier.result
 )
@@ -1154,7 +1154,7 @@ private func procedure_Application_bundleIdentifier(command: Command, commandEnv
     let arg_0 = try command.swiftValue(at: &index, for: type_Application_bundleIdentifier.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try Application(
-        bundleIdentifier: arg_0
+    	bundleIdentifier: arg_0
     )
     return type_Application_bundleIdentifier.result.box(value: result, in: handlerEnv)
 }
@@ -1168,8 +1168,8 @@ private let type_atSelector_elementType_selectorData = (
 private let interface_atSelector_elementType_selectorData = HandlerInterface(
     name: "at",
     parameters: [
-        (type_atSelector_elementType_selectorData.param_0.0, "element_type", type_atSelector_elementType_selectorData.param_0.1),
-        (type_atSelector_elementType_selectorData.param_1.0, "selector_data", type_atSelector_elementType_selectorData.param_1.1),
+		(type_atSelector_elementType_selectorData.param_0.0, "element_type", type_atSelector_elementType_selectorData.param_0.1),
+		(type_atSelector_elementType_selectorData.param_1.0, "selector_data", type_atSelector_elementType_selectorData.param_1.1),
     ],
     result: type_atSelector_elementType_selectorData.result
 )
@@ -1179,10 +1179,10 @@ private func procedure_atSelector_elementType_selectorData(command: Command, com
     let arg_1 = try command.swiftValue(at: &index, for: type_atSelector_elementType_selectorData.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try atSelector(
-        elementType: arg_0,
-        selectorData: arg_1,
-        commandEnv: commandEnv,
-        handlerEnv: handlerEnv
+    	elementType: arg_0,
+    	selectorData: arg_1,
+    	commandEnv: commandEnv,
+    	handlerEnv: handlerEnv
     )
     return type_atSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
 }
@@ -1196,8 +1196,8 @@ private let type_nameSelector_elementType_selectorData = (
 private let interface_nameSelector_elementType_selectorData = HandlerInterface(
     name: "named",
     parameters: [
-        (type_nameSelector_elementType_selectorData.param_0.0, "element_type", type_nameSelector_elementType_selectorData.param_0.1),
-        (type_nameSelector_elementType_selectorData.param_1.0, "selector_data", type_nameSelector_elementType_selectorData.param_1.1),
+		(type_nameSelector_elementType_selectorData.param_0.0, "element_type", type_nameSelector_elementType_selectorData.param_0.1),
+		(type_nameSelector_elementType_selectorData.param_1.0, "selector_data", type_nameSelector_elementType_selectorData.param_1.1),
     ],
     result: type_nameSelector_elementType_selectorData.result
 )
@@ -1207,9 +1207,9 @@ private func procedure_nameSelector_elementType_selectorData(command: Command, c
     let arg_1 = try command.swiftValue(at: &index, for: type_nameSelector_elementType_selectorData.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try nameSelector(
-        elementType: arg_0,
-        selectorData: arg_1,
-        commandEnv: commandEnv
+    	elementType: arg_0,
+    	selectorData: arg_1,
+    	commandEnv: commandEnv
     )
     return type_nameSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
 }
@@ -1223,8 +1223,8 @@ private let type_idSelector_elementType_selectorData = (
 private let interface_idSelector_elementType_selectorData = HandlerInterface(
     name: "id",
     parameters: [
-        (type_idSelector_elementType_selectorData.param_0.0, "element_type", type_idSelector_elementType_selectorData.param_0.1),
-        (type_idSelector_elementType_selectorData.param_1.0, "selector_data", type_idSelector_elementType_selectorData.param_1.1),
+		(type_idSelector_elementType_selectorData.param_0.0, "element_type", type_idSelector_elementType_selectorData.param_0.1),
+		(type_idSelector_elementType_selectorData.param_1.0, "selector_data", type_idSelector_elementType_selectorData.param_1.1),
     ],
     result: type_idSelector_elementType_selectorData.result
 )
@@ -1234,9 +1234,9 @@ private func procedure_idSelector_elementType_selectorData(command: Command, com
     let arg_1 = try command.swiftValue(at: &index, for: type_idSelector_elementType_selectorData.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try idSelector(
-        elementType: arg_0,
-        selectorData: arg_1,
-        commandEnv: commandEnv
+    	elementType: arg_0,
+    	selectorData: arg_1,
+    	commandEnv: commandEnv
     )
     return type_idSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
 }
@@ -1250,8 +1250,8 @@ private let type_rangeSelector_elementType_selectorData = (
 private let interface_rangeSelector_elementType_selectorData = HandlerInterface(
     name: "from",
     parameters: [
-        (type_rangeSelector_elementType_selectorData.param_0.0, "element_type", type_rangeSelector_elementType_selectorData.param_0.1),
-        (type_rangeSelector_elementType_selectorData.param_1.0, "selector_data", type_rangeSelector_elementType_selectorData.param_1.1),
+		(type_rangeSelector_elementType_selectorData.param_0.0, "element_type", type_rangeSelector_elementType_selectorData.param_0.1),
+		(type_rangeSelector_elementType_selectorData.param_1.0, "selector_data", type_rangeSelector_elementType_selectorData.param_1.1),
     ],
     result: type_rangeSelector_elementType_selectorData.result
 )
@@ -1261,10 +1261,10 @@ private func procedure_rangeSelector_elementType_selectorData(command: Command, 
     let arg_1 = try command.swiftValue(at: &index, for: type_rangeSelector_elementType_selectorData.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try rangeSelector(
-        elementType: arg_0,
-        selectorData: arg_1,
-        commandEnv: commandEnv,
-        handlerEnv: handlerEnv
+    	elementType: arg_0,
+    	selectorData: arg_1,
+    	commandEnv: commandEnv,
+    	handlerEnv: handlerEnv
     )
     return type_rangeSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
 }
@@ -1278,8 +1278,8 @@ private let type_testSelector_elementType_selectorData = (
 private let interface_testSelector_elementType_selectorData = HandlerInterface(
     name: "whose",
     parameters: [
-        (type_testSelector_elementType_selectorData.param_0.0, "element_type", type_testSelector_elementType_selectorData.param_0.1),
-        (type_testSelector_elementType_selectorData.param_1.0, "selector_data", type_testSelector_elementType_selectorData.param_1.1),
+		(type_testSelector_elementType_selectorData.param_0.0, "element_type", type_testSelector_elementType_selectorData.param_0.1),
+		(type_testSelector_elementType_selectorData.param_1.0, "selector_data", type_testSelector_elementType_selectorData.param_1.1),
     ],
     result: type_testSelector_elementType_selectorData.result
 )
@@ -1289,10 +1289,10 @@ private func procedure_testSelector_elementType_selectorData(command: Command, c
     let arg_1 = try command.swiftValue(at: &index, for: type_testSelector_elementType_selectorData.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = try testSelector(
-        elementType: arg_0,
-        selectorData: arg_1,
-        commandEnv: commandEnv,
-        handlerEnv: handlerEnv
+    	elementType: arg_0,
+    	selectorData: arg_1,
+    	commandEnv: commandEnv,
+    	handlerEnv: handlerEnv
     )
     return type_testSelector_elementType_selectorData.result.box(value: result, in: handlerEnv)
 }
@@ -1306,8 +1306,8 @@ private let type_ElementRange_from_to = (
 private let interface_ElementRange_from_to = HandlerInterface(
     name: "thru",
     parameters: [
-        (type_ElementRange_from_to.param_0.0, "startSelector", type_ElementRange_from_to.param_0.1),
-        (type_ElementRange_from_to.param_1.0, "endSelector", type_ElementRange_from_to.param_1.1),
+		(type_ElementRange_from_to.param_0.0, "startSelector", type_ElementRange_from_to.param_0.1),
+		(type_ElementRange_from_to.param_1.0, "endSelector", type_ElementRange_from_to.param_1.1),
     ],
     result: type_ElementRange_from_to.result
 )
@@ -1317,8 +1317,8 @@ private func procedure_ElementRange_from_to(command: Command, commandEnv: Scope,
     let arg_1 = try command.swiftValue(at: &index, for: type_ElementRange_from_to.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = ElementRange(
-        from: arg_0,
-        to: arg_1
+    	from: arg_0,
+    	to: arg_1
     )
     return type_ElementRange_from_to.result.box(value: result, in: handlerEnv)
 }
@@ -1331,7 +1331,7 @@ private let type_firstElement_right = (
 private let interface_firstElement_right = HandlerInterface(
     name: "first",
     parameters: [
-        (type_firstElement_right.param_0.0, "element_type", type_firstElement_right.param_0.1),
+		(type_firstElement_right.param_0.0, "element_type", type_firstElement_right.param_0.1),
     ],
     result: type_firstElement_right.result
 )
@@ -1340,7 +1340,7 @@ private func procedure_firstElement_right(command: Command, commandEnv: Scope, h
     let arg_0 = try command.swiftValue(at: &index, for: type_firstElement_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = firstElement(
-        right: arg_0
+    	right: arg_0
     )
     return type_firstElement_right.result.box(value: result, in: handlerEnv)
 }
@@ -1353,7 +1353,7 @@ private let type_middleElement_right = (
 private let interface_middleElement_right = HandlerInterface(
     name: "middle",
     parameters: [
-        (type_middleElement_right.param_0.0, "element_type", type_middleElement_right.param_0.1),
+		(type_middleElement_right.param_0.0, "element_type", type_middleElement_right.param_0.1),
     ],
     result: type_middleElement_right.result
 )
@@ -1362,7 +1362,7 @@ private func procedure_middleElement_right(command: Command, commandEnv: Scope, 
     let arg_0 = try command.swiftValue(at: &index, for: type_middleElement_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = middleElement(
-        right: arg_0
+    	right: arg_0
     )
     return type_middleElement_right.result.box(value: result, in: handlerEnv)
 }
@@ -1375,7 +1375,7 @@ private let type_lastElement_right = (
 private let interface_lastElement_right = HandlerInterface(
     name: "last",
     parameters: [
-        (type_lastElement_right.param_0.0, "element_type", type_lastElement_right.param_0.1),
+		(type_lastElement_right.param_0.0, "element_type", type_lastElement_right.param_0.1),
     ],
     result: type_lastElement_right.result
 )
@@ -1384,7 +1384,7 @@ private func procedure_lastElement_right(command: Command, commandEnv: Scope, ha
     let arg_0 = try command.swiftValue(at: &index, for: type_lastElement_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = lastElement(
-        right: arg_0
+    	right: arg_0
     )
     return type_lastElement_right.result.box(value: result, in: handlerEnv)
 }
@@ -1397,7 +1397,7 @@ private let type_randomElement_right = (
 private let interface_randomElement_right = HandlerInterface(
     name: "any",
     parameters: [
-        (type_randomElement_right.param_0.0, "element_type", type_randomElement_right.param_0.1),
+		(type_randomElement_right.param_0.0, "element_type", type_randomElement_right.param_0.1),
     ],
     result: type_randomElement_right.result
 )
@@ -1406,7 +1406,7 @@ private func procedure_randomElement_right(command: Command, commandEnv: Scope, 
     let arg_0 = try command.swiftValue(at: &index, for: type_randomElement_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = randomElement(
-        right: arg_0
+    	right: arg_0
     )
     return type_randomElement_right.result.box(value: result, in: handlerEnv)
 }
@@ -1419,7 +1419,7 @@ private let type_allElements_right = (
 private let interface_allElements_right = HandlerInterface(
     name: "every",
     parameters: [
-        (type_allElements_right.param_0.0, "element_type", type_allElements_right.param_0.1),
+		(type_allElements_right.param_0.0, "element_type", type_allElements_right.param_0.1),
     ],
     result: type_allElements_right.result
 )
@@ -1428,7 +1428,7 @@ private func procedure_allElements_right(command: Command, commandEnv: Scope, ha
     let arg_0 = try command.swiftValue(at: &index, for: type_allElements_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = allElements(
-        right: arg_0
+    	right: arg_0
     )
     return type_allElements_right.result.box(value: result, in: handlerEnv)
 }
@@ -1442,8 +1442,8 @@ private let type_beforeElement_left_right = (
 private let interface_beforeElement_left_right = HandlerInterface(
     name: "before",
     parameters: [
-        (type_beforeElement_left_right.param_0.0, "element_type", type_beforeElement_left_right.param_0.1),
-        (type_beforeElement_left_right.param_1.0, "expression", type_beforeElement_left_right.param_1.1),
+		(type_beforeElement_left_right.param_0.0, "element_type", type_beforeElement_left_right.param_0.1),
+		(type_beforeElement_left_right.param_1.0, "expression", type_beforeElement_left_right.param_1.1),
     ],
     result: type_beforeElement_left_right.result
 )
@@ -1453,8 +1453,8 @@ private func procedure_beforeElement_left_right(command: Command, commandEnv: Sc
     let arg_1 = try command.swiftValue(at: &index, for: type_beforeElement_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = beforeElement(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_beforeElement_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -1468,8 +1468,8 @@ private let type_afterElement_left_right = (
 private let interface_afterElement_left_right = HandlerInterface(
     name: "after",
     parameters: [
-        (type_afterElement_left_right.param_0.0, "element_type", type_afterElement_left_right.param_0.1),
-        (type_afterElement_left_right.param_1.0, "expression", type_afterElement_left_right.param_1.1),
+		(type_afterElement_left_right.param_0.0, "element_type", type_afterElement_left_right.param_0.1),
+		(type_afterElement_left_right.param_1.0, "expression", type_afterElement_left_right.param_1.1),
     ],
     result: type_afterElement_left_right.result
 )
@@ -1479,8 +1479,8 @@ private func procedure_afterElement_left_right(command: Command, commandEnv: Sco
     let arg_1 = try command.swiftValue(at: &index, for: type_afterElement_left_right.param_1, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = afterElement(
-        left: arg_0,
-        right: arg_1
+    	left: arg_0,
+    	right: arg_1
     )
     return type_afterElement_left_right.result.box(value: result, in: handlerEnv)
 }
@@ -1493,7 +1493,7 @@ private let type_insertBefore_right = (
 private let interface_insertBefore_right = HandlerInterface(
     name: "before",
     parameters: [
-        (type_insertBefore_right.param_0.0, "expression", type_insertBefore_right.param_0.1),
+		(type_insertBefore_right.param_0.0, "expression", type_insertBefore_right.param_0.1),
     ],
     result: type_insertBefore_right.result
 )
@@ -1502,7 +1502,7 @@ private func procedure_insertBefore_right(command: Command, commandEnv: Scope, h
     let arg_0 = try command.swiftValue(at: &index, for: type_insertBefore_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = insertBefore(
-        right: arg_0
+    	right: arg_0
     )
     return type_insertBefore_right.result.box(value: result, in: handlerEnv)
 }
@@ -1515,7 +1515,7 @@ private let type_insertAfter_right = (
 private let interface_insertAfter_right = HandlerInterface(
     name: "after",
     parameters: [
-        (type_insertAfter_right.param_0.0, "expression", type_insertAfter_right.param_0.1),
+		(type_insertAfter_right.param_0.0, "expression", type_insertAfter_right.param_0.1),
     ],
     result: type_insertAfter_right.result
 )
@@ -1524,14 +1524,14 @@ private func procedure_insertAfter_right(command: Command, commandEnv: Scope, ha
     let arg_0 = try command.swiftValue(at: &index, for: type_insertAfter_right.param_0, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = insertAfter(
-        right: arg_0
+    	right: arg_0
     )
     return type_insertAfter_right.result.box(value: result, in: handlerEnv)
 }
 
 // beginning {}
 private let type_insertAtBeginning_ = (
-    _: (),
+	_: (),
     result: asIs
 )
 private let interface_insertAtBeginning_ = HandlerInterface(
@@ -1549,7 +1549,7 @@ private func procedure_insertAtBeginning_(command: Command, commandEnv: Scope, h
 
 // end {}
 private let type_insertAtEnd_ = (
-    _: (),
+	_: (),
     result: asIs
 )
 private let interface_insertAtEnd_ = HandlerInterface(

@@ -159,7 +159,7 @@ public class Command: ComplexValue {
     }
     
     // TO DO: really need to attach handler (or at least its interface)
-    internal func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
+    public func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
         let i = index
         do {
             //print("Command.swiftValue() for:", param, "from", self.arguments)
@@ -187,7 +187,7 @@ let leftOperand   = Symbol("left")
 let middleOperand = Symbol("middle")
 let rightOperand  = Symbol("right")
 
-extension Command {
+public extension Command {
     
     // TO DO: also annotate Command instance with operator definition for use in error messages/pp
     
@@ -212,7 +212,7 @@ extension Command {
 }
 
 
-extension Value { // parser converts all names to commands; provide convenience method to convert back
+public extension Value { // parser converts all names to commands; provide convenience method to convert back
     
     func asIdentifier() -> Symbol? {
         if let cmd = self as? Command, cmd.arguments.isEmpty { return cmd.name } else { return nil }

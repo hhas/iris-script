@@ -6,6 +6,13 @@
 // code generator
 
 import Foundation
+import iris
+
+
+// TO DO: get rid of these
+let leftOperand   = Symbol("left")
+let middleOperand = Symbol("middle")
+let rightOperand  = Symbol("right")
 
 
 
@@ -33,7 +40,8 @@ func procedure_defineHandlerGlue_handler_commandEnv(command: Command, commandEnv
     try defineHandlerGlue(
         interface: arg_0,
         attributes: arg_1,
-        commandEnv: commandEnv
+        commandEnv: commandEnv,
+        handlerEnv: handlerEnv
     )
     return nullValue
 }

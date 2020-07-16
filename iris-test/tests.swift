@@ -12,7 +12,7 @@ import iris
 
 
 func test() {
-    runScript("  xx")
+    runScript("  a of b of c ")
     
    // runScript(" to foo run write “bar” \n foo ") // TO DO: FIX: using optional/default coercion modifiers is still buggy: handler throws error on return (it should return `nothing` instead)
     

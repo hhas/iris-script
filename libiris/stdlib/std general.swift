@@ -18,6 +18,12 @@
 
 // Q. when implementing FS interaction (ideally by mounting filesystem resources as values within the global @namespace, is there any way to take advantage of APFS's copy-on-write file versioning, such that we can observe the outputted file as distinct to the inputted file, even when it's the same 'file', thus supporting file-level Undo where the user can run a script, inspect the new resource, and revert it to the previous version if isn't what they intended? not to mention something approaching referential transparency in IO operations, since two file objects with the same path but different versions are not equal [obviously, openfile(path) is still problematic, though even that might be dealt with by taking an 'attime' argument with current time as its default; thus openfile(path,at:DATE) would open the version of the file that existed at that date, and the only time ref transparency will fail is if that file revision is old enough to have been dearchived to reclaim storage space, in which case that's a halting error])
 
+// TO DO: try implementing a repeating pattern for `&` operator, e.g. `foo & bar & baz` should reduce to a single command that joins an N-ary list of operands in a single operation (aside from testing parser implementation, this should also simplify partial evaluation and allow cross-compilation to idiomatic Swift code as interpolated string literals)
+
+// TO DO: need to decide on Swift- vs Icon-style semantics (one option might be to define 'true' as a wrapper struct that encloses the actual value, allowing it to be obtained when needed, e.g. when chaining conditional operators as `a < b < c`, while displaying as "true" by default; similarly, 'false' would enclose only those values that may represent a false state: `false`, `nothing`, `did_nothing` [Q. should `did_nothing` be the standard "false" value returned by comparison operators, same as for `if`, `while` flow control tests? could be dicey? if so, would need to ensure `did_nothing` is immediately promoted to `nothing`/`false` if not intercepted by `else` clause])
+
+
+
 
 /******************************************************************************/
 // comparison

@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4F5B24D423171E54001C1941"
-               BuildableName = "gen-glue-stdlib"
-               BlueprintName = "gen-glue-stdlib"
+               BlueprintIdentifier = "4FE5502324C035D500509806"
+               BuildableName = "iris-glue"
+               BlueprintName = "iris-glue"
                ReferencedContainer = "container:iris-script.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -39,17 +39,14 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
-      enableGPUFrameCaptureMode = "3"
-      enableGPUValidationMode = "1"
-      allowLocationSimulation = "YES"
-      GPUProfilerEnabled = "No">
+      allowLocationSimulation = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4F5B24D423171E54001C1941"
-            BuildableName = "gen-glue-stdlib"
-            BlueprintName = "gen-glue-stdlib"
+            BlueprintIdentifier = "4FE5502324C035D500509806"
+            BuildableName = "iris-glue"
+            BlueprintName = "iris-glue"
             ReferencedContainer = "container:iris-script.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -64,9 +61,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4F5B24D423171E54001C1941"
-            BuildableName = "gen-glue-stdlib"
-            BlueprintName = "gen-glue-stdlib"
+            BlueprintIdentifier = "4FE5502324C035D500509806"
+            BuildableName = "iris-glue"
+            BlueprintName = "iris-glue"
             ReferencedContainer = "container:iris-script.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

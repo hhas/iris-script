@@ -1,9 +1,12 @@
 //
-//  operator template.swift
+//  operator glue template.swift
 //  gluelib
+//
+//  generates operator definitions for primitive handler definitions that have an `operator:` field
 //
 
 import Foundation
+import iris
 
 
 // Operation(pattern: [.keyword(name)], precedence: precedence, associate: associate)

@@ -2,8 +2,41 @@
 //  stdlib_constants.swift
 //
 
+//  declares various constants and operators that glue generator doesn’t yet support
+
+// TO DO: autogenerate?
+
+
+// from language’s POV, should the nominal type for numbers and text be `scalar`? (i.e. while they are implemented internally as multiple Swift types, presenting natively as a single uniform datatype reminds that the data’s behavior depends on how it is used, not on how it is encoded); Q. how would other atomic values—e.g. dates and times, file paths [where used], currencies and weights and measures—mesh with this?
+
 
 public func stdlib_loadConstants(into env: Environment) {
+    
+    // define operator names for constants, miscellany
+    if let registry = (env as? ExtendedEnvironment)?.operatorRegistry {
+        
+        // constants
+        registry.atom("nothing") // analogous to Python's `None`
+        //registry.atom("did_nothing") // TO DO: get rid of this if a satisfactory solution to `…else…` operator can’t be found
+        registry.atom("true")
+        registry.atom("false")
+        
+        // used in procedure interface
+        registry.infix("returning", 300)
+        
+        // keyword-based block
+        registry.prefix("do", suffix: "done")
+
+        // coercion modifiers (defined as operators to allow nesting of LP commands)
+        registry.prefix("optional", 320)
+        registry.prefix("editable", 320)
+        
+        // TO DO: confirm atomic and prefix forms of same operator parse correctly
+        registry.atom("optional")
+        registry.atom("editable")
+
+    }
+    
     env.define("nothing", nullValue) // TO DO: should `nothing` be both Value and TYPE? e.g. `foo {} returning nothing`? (note: primitive handlers use `asNoResult` as signature's return coercion to indicate no return value, in which case bridge code generator changes return statement to `return nullValue`)
     env.define("π", Double.pi) // Q. should `π` slot always evaluate to `π` symbol (with asTYPE methods converting it to Double when required)? (Swift, Python, AppleScript, etc define `pi` constant as numeric [64-bit float] value, 3.1415…, which is technically correct [enough], but aesthetically less helpful when displayed; Q. what other values might have different symbolic Text vs raw data representations? [currently true/false constants, though those will probably go away]) // TO DO: decide policy on when to define constants as .atom operators vs plain commands (e.g. `π2` is currently legal syntax, being a command with right-hand operand)
     
@@ -14,7 +47,7 @@ public func stdlib_loadConstants(into env: Environment) {
     
     env.define(coercion: asValue) // `value` (i.e. accepts anything except `nothing`)
     env.define(coercion: asString)
-    env.define(coercion: asBool)   // TO DO: need to decide if native Boolean representation should be `true`/`false` constants or non-empty/empty values
+    env.define(coercion: asBool)   // TO DO: need to decide if native Boolean representation should be `true`/`false` constants or non-empty/empty values (probably best with traditional constants for pedagogical purposes, although “emptiness” does have its advantages as does Icon-style result/failure)
     
     env.define(coercion: asNumber)
     env.define(coercion: asSymbol)

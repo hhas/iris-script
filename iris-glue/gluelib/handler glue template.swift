@@ -1,14 +1,19 @@
 //
-//  handler template.swift
+//  handler glue template.swift
 //  gluelib
+//
+//  generates primitive handler glue code
 //
 
 import Foundation
+import iris
 
 
 // TO DO: would be simpler if type def's parameter tuple could be passed directly to interface params, but Swift doesn't want to downcast it ("Cannot express tuple conversion…")
 
 // TO DO: how best to structure argument unpacking so that Command can best optimize? (e.g. length check really only needs to be performed once, and both it and argument-to-parameter matching could easily be moved up to first-run and/or parse-time); that said, current arrangement is unlikely to be major performance sink
+
+// TO DO: while texttemplate library is designed for plain text templating, maybe allow limited code-generation extensions, e.g. for literal string quoting: `««"someText"»»`
 
 private let templateSource = """
 //
@@ -82,7 +87,8 @@ let nullParameters: [HandlerGlue.Parameter] = [("", "", "()")]
 
 let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (libraryName: String, handlerGlues: [HandlerGlue])) in
     tpl.libraryName.set(args.libraryName)
-    tpl.defineHandler.map(args.handlerGlues) { (node: Node, glue: HandlerGlue) -> Void in
+    tpl.defineHandler.map(args.handlerGlues) {
+        (node: Node, glue: HandlerGlue) -> Void in
         node.signature.set(glue.signature)
         node.nativeName.set(glue.name)
         node.nativeArgumentNames.set(glue.parameters.map{$0.name}.joined(separator: ", "))
@@ -107,7 +113,8 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
             node.procedureParameters.delete()
         } else {
             node.checkForUnexpectedArguments.delete()
-            node.procedureParameters.unboxArguments.map(0..<glue.parameters.count) { (node: Node, count: Int) -> Void in
+            node.procedureParameters.unboxArguments.map(0..<glue.parameters.count) {
+                (node: Node, count: Int) -> Void in
                 node.signature.set(glue.signature)
                 node.count.set(count)
             }
@@ -122,12 +129,14 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
         }
         if !glue.canError { node.tryKeyword.delete() }
         node.functionName.set(glue.swiftName)
-        node.functionArguments.map(glue.swiftArguments) { (node: Node, item: (label: String, param: String)) -> Void in
+        node.functionArguments.map(glue.swiftArguments) {
+            (node: Node, item: (label: String, param: String)) -> Void in
             node.label.set(item.label)
             node.argument.set(item.param)
         }
     }
-    tpl.loadHandlers.map(args.handlerGlues) { (node: Node, glue: HandlerGlue) -> Void in
+    tpl.loadHandlers.map(args.handlerGlues) {
+        (node: Node, glue: HandlerGlue) -> Void in
         node.signature.set(glue.signature)
     }
 }

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4F5B24D823171E55001C1941 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24D723171E55001C1941 /* main.swift */; };
 		4F877A5E24BD90A90067A463 /* libedit.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F877A5924BD90A90067A463 /* libedit.tbd */; };
 		4F877A6624BD97D10067A463 /* libedit.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F877A5924BD90A90067A463 /* libedit.tbd */; };
 		4F877A6824BD995F0067A463 /* iris-shell.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F877A6724BD995F0067A463 /* iris-shell.c */; };
@@ -16,14 +15,6 @@
 		4F877A6F24BDC0130067A463 /* tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28B59624ACE1C2005583C7 /* tests.swift */; };
 		4F877A7024BDC0150067A463 /* misc tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28B59424ACDF44005583C7 /* misc tests.swift */; };
 		4F877A7124BDC0180067A463 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00022ADA0F200C9FD23 /* main.swift */; };
-		4F877A7224BDDBE90067A463 /* libiris.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988CB624BCC4D700EE66C7 /* libiris.a */; };
-		4F877A7524BDDCF50067A463 /* handler glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81C23129BCC007D694C /* handler glue.swift */; };
-		4F877A7624BDDCF50067A463 /* handler stub template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F409195231904C900045E85 /* handler stub template.swift */; };
-		4F877A7724BDDCF60067A463 /* handler glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81B23129BCC007D694C /* handler glue template.swift */; };
-		4F877A7824BDDCF60067A463 /* operator glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24B123150C52001C1941 /* operator glue template.swift */; };
-		4F877A7924BDDCF60067A463 /* text template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81D23129BCC007D694C /* text template.swift */; };
-		4F877A7A24BDDCF60067A463 /* gluelib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FA23109824007D694C /* gluelib_handlers.swift */; };
-		4F877A7B24BDDCF60067A463 /* gluelib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FB23109826007D694C /* gluelib_operators.swift */; };
 		4F8C407524BCC02200735273 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F8C407424BCC02200735273 /* main.swift */; };
 		4F988CC024BCC57E00EE66C7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F988CBF24BCC57E00EE66C7 /* main.swift */; };
 		4F988CC124BCC5A500EE66C7 /* parser protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2694DA22E06D24009B8FC0 /* parser protocols.swift */; };
@@ -102,6 +93,17 @@
 		4F988D1124BCEA5C00EE66C7 /* commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F988D1024BCEA5C00EE66C7 /* commands.swift */; };
 		4FD41C1524BE487D00B56A14 /* incremental parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FD41C1424BE487D00B56A14 /* incremental parser.swift */; };
 		4FD41C1C24BE614600B56A14 /* null token stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FD41C1B24BE614600B56A14 /* null token stream.swift */; };
+		4FE5502724C035D500509806 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5502624C035D500509806 /* main.swift */; };
+		4FE5503124C0387E00509806 /* libiris.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988CB624BCC4D700EE66C7 /* libiris.a */; };
+		4FE5503424C0389400509806 /* define handler glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81C23129BCC007D694C /* define handler glue.swift */; };
+		4FE5503524C0389400509806 /* handler stub template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F409195231904C900045E85 /* handler stub template.swift */; };
+		4FE5503624C0389400509806 /* handler glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81B23129BCC007D694C /* handler glue template.swift */; };
+		4FE5503724C0389400509806 /* operator glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24B123150C52001C1941 /* operator glue template.swift */; };
+		4FE5503824C0389400509806 /* texttemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81D23129BCC007D694C /* texttemplate.swift */; };
+		4FE5503924C0389400509806 /* gluelib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FA23109824007D694C /* gluelib_handlers.swift */; };
+		4FE5503A24C0389400509806 /* gluelib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FB23109826007D694C /* gluelib_operators.swift */; };
+		4FE5504024C06B9600509806 /* glue renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5503F24C06B9600509806 /* glue renderer.swift */; };
+		4FE5504324C06EFC00509806 /* opaque value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5504224C06EFC00509806 /* opaque value.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -161,7 +163,7 @@
 			remoteGlobalIDString = 4F988CB524BCC4D700EE66C7;
 			remoteInfo = libiris;
 		};
-		4F877A7324BDDBEE0067A463 /* PBXContainerItemProxy */ = {
+		4FE5503224C0388300509806 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4F84CFF522ADA0F100C9FD23 /* Project object */;
 			proxyType = 1;
@@ -178,15 +180,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		4F5B24D323171E54001C1941 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
 		4F84CFFB22ADA0F200C9FD23 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -197,6 +190,15 @@
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 		4F8C407024BCC02200735273 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		4FE5502224C035D500509806 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -261,8 +263,6 @@
 		4F5B24B123150C52001C1941 /* operator glue template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator glue template.swift"; sourceTree = "<group>"; };
 		4F5B24B323156A8F001C1941 /* std text.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "std text.swift"; sourceTree = "<group>"; };
 		4F5B24CD23165870001C1941 /* std control.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "std control.swift"; sourceTree = "<group>"; };
-		4F5B24D523171E54001C1941 /* gen-glue-stdlib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "gen-glue-stdlib"; sourceTree = BUILT_PRODUCTS_DIR; };
-		4F5B24D723171E55001C1941 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4F5B58842302098200B039DC /* pair.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pair.swift; sourceTree = "<group>"; };
 		4F731D2E23254869008700C6 /* result descriptor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "result descriptor.swift"; sourceTree = "<group>"; };
 		4F84CFFD22ADA0F200C9FD23 /* iris-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "iris-test"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -295,13 +295,19 @@
 		4FC5C7FC23110B1F007D694C /* quote reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "quote reader.swift"; sourceTree = "<group>"; };
 		4FC5C7FE23110B76007D694C /* name reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "name reader.swift"; sourceTree = "<group>"; };
 		4FC5C81B23129BCC007D694C /* handler glue template.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "handler glue template.swift"; sourceTree = "<group>"; };
-		4FC5C81C23129BCC007D694C /* handler glue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "handler glue.swift"; sourceTree = "<group>"; };
-		4FC5C81D23129BCC007D694C /* text template.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "text template.swift"; sourceTree = "<group>"; };
+		4FC5C81C23129BCC007D694C /* define handler glue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "define handler glue.swift"; sourceTree = "<group>"; };
+		4FC5C81D23129BCC007D694C /* texttemplate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = texttemplate.swift; sourceTree = "<group>"; };
 		4FC5C8232312A06C007D694C /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		4FC5C825231316D9007D694C /* unicode reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "unicode reader.swift"; sourceTree = "<group>"; };
 		4FD41C1424BE487D00B56A14 /* incremental parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "incremental parser.swift"; sourceTree = "<group>"; };
 		4FD41C1B24BE614600B56A14 /* null token stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "null token stream.swift"; sourceTree = "<group>"; };
 		4FDAE7B1232B9F31005197DE /* reference coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reference coercions.swift"; sourceTree = "<group>"; };
+		4FE5502424C035D500509806 /* iris-glue */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "iris-glue"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4FE5502624C035D500509806 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		4FE5503024C0378600509806 /* stdlib.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "stdlib.iris-glue"; sourceTree = "<group>"; };
+		4FE5503F24C06B9600509806 /* glue renderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "glue renderer.swift"; sourceTree = "<group>"; };
+		4FE5504224C06EFC00509806 /* opaque value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "opaque value.swift"; sourceTree = "<group>"; };
+		4FE5504624C080EE00509806 /* stdlib stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib stubs.swift"; sourceTree = "<group>"; };
 		4FE78455246AB15E006AC859 /* pattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pattern.swift; sourceTree = "<group>"; };
 		4FE7845C246AB1CC006AC859 /* pattern definition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "pattern definition.swift"; sourceTree = "<group>"; };
 		4FE7845E246AB298006AC859 /* keyword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = keyword.swift; sourceTree = "<group>"; };
@@ -310,14 +316,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		4F5B24D223171E54001C1941 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				4F877A7224BDDBE90067A463 /* libiris.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		4F84CFFA22ADA0F200C9FD23 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -342,6 +340,14 @@
 				4F877A5E24BD90A90067A463 /* libedit.tbd in Frameworks */,
 				4F988D0924BCC62C00EE66C7 /* libAppleEvents.a in Frameworks */,
 				4F988D0A24BCC62C00EE66C7 /* libSwiftAutomation.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4FE5502124C035D500509806 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4FE5503124C0387E00509806 /* libiris.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -403,8 +409,9 @@
 		4F25FB8822B6AC57007EE7AE /* stdlib */ = {
 			isa = PBXGroup;
 			children = (
+				4FE5503024C0378600509806 /* stdlib.iris-glue */,
 				4F282D5424AE55A80027D6DE /* handlers */,
-				4F4091922317B28B00045E85 /* glues */,
+				4F5B24D623171E55001C1941 /* glues */,
 			);
 			path = stdlib;
 			sourceTree = "<group>";
@@ -533,16 +540,6 @@
 			name = parser;
 			sourceTree = "<group>";
 		};
-		4F4091922317B28B00045E85 /* glues */ = {
-			isa = PBXGroup;
-			children = (
-				4F25FB8B22B6E561007EE7AE /* stdlib_handlers.swift */,
-				4F26F7172306C410002DD292 /* stdlib_operators.swift */,
-				4F857700230C9247002B47F2 /* stdlib_constants.swift */,
-			);
-			name = glues;
-			sourceTree = "<group>";
-		};
 		4F46A415232258E6008E0265 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -572,12 +569,15 @@
 			path = formatting;
 			sourceTree = "<group>";
 		};
-		4F5B24D623171E55001C1941 /* stdlib-gluedef */ = {
+		4F5B24D623171E55001C1941 /* glues */ = {
 			isa = PBXGroup;
 			children = (
-				4F5B24D723171E55001C1941 /* main.swift */,
+				4FE5504624C080EE00509806 /* stdlib stubs.swift */,
+				4F25FB8B22B6E561007EE7AE /* stdlib_handlers.swift */,
+				4F26F7172306C410002DD292 /* stdlib_operators.swift */,
+				4F857700230C9247002B47F2 /* stdlib_constants.swift */,
 			);
-			path = "stdlib-gluedef";
+			path = glues;
 			sourceTree = "<group>";
 		};
 		4F84CFF422ADA0F100C9FD23 = {
@@ -587,6 +587,7 @@
 				4FC5C8232312A06C007D694C /* notes.txt */,
 				4F28388D24B8C4D80054C70E /* SwiftAutomation.xcodeproj */,
 				4F8C407324BCC02200735273 /* iris-shell */,
+				4FE5502524C035D500509806 /* iris-glue */,
 				4F84CFFF22ADA0F200C9FD23 /* iris-test */,
 				4F988CB724BCC4D700EE66C7 /* libiris */,
 				4F84CFFE22ADA0F200C9FD23 /* Products */,
@@ -598,9 +599,9 @@
 			isa = PBXGroup;
 			children = (
 				4F84CFFD22ADA0F200C9FD23 /* iris-test */,
-				4F5B24D523171E54001C1941 /* gen-glue-stdlib */,
 				4F8C407224BCC02200735273 /* iris-shell */,
 				4F988CB624BCC4D700EE66C7 /* libiris.a */,
+				4FE5502424C035D500509806 /* iris-glue */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -638,8 +639,6 @@
 				4F84D01522AE819000C9FD23 /* errors.swift */,
 				4F25FB8822B6AC57007EE7AE /* stdlib */,
 				4F46A41D23225A14008E0265 /* aelib */,
-				4F5B24D623171E55001C1941 /* stdlib-gluedef */,
-				4FC5C7F9231097FE007D694C /* gluelib */,
 			);
 			path = libiris;
 			sourceTree = "<group>";
@@ -656,13 +655,11 @@
 		4FC5C7F9231097FE007D694C /* gluelib */ = {
 			isa = PBXGroup;
 			children = (
-				4FC5C81C23129BCC007D694C /* handler glue.swift */,
-				4F409195231904C900045E85 /* handler stub template.swift */,
-				4FC5C81B23129BCC007D694C /* handler glue template.swift */,
-				4F5B24B123150C52001C1941 /* operator glue template.swift */,
+				4FE5503F24C06B9600509806 /* glue renderer.swift */,
+				4FE5504124C06E9E00509806 /* handlers */,
+				4FE5503B24C0396900509806 /* templates */,
+				4FE5503E24C064B600509806 /* glues */,
 				4FC5C8242312B8FA007D694C /* support */,
-				4FC5C7FA23109824007D694C /* gluelib_handlers.swift */,
-				4FC5C7FB23109826007D694C /* gluelib_operators.swift */,
 			);
 			path = gluelib;
 			sourceTree = "<group>";
@@ -670,9 +667,46 @@
 		4FC5C8242312B8FA007D694C /* support */ = {
 			isa = PBXGroup;
 			children = (
-				4FC5C81D23129BCC007D694C /* text template.swift */,
+				4FE5504224C06EFC00509806 /* opaque value.swift */,
+				4FC5C81D23129BCC007D694C /* texttemplate.swift */,
 			);
 			name = support;
+			sourceTree = "<group>";
+		};
+		4FE5502524C035D500509806 /* iris-glue */ = {
+			isa = PBXGroup;
+			children = (
+				4FE5502624C035D500509806 /* main.swift */,
+				4FC5C7F9231097FE007D694C /* gluelib */,
+			);
+			path = "iris-glue";
+			sourceTree = "<group>";
+		};
+		4FE5503B24C0396900509806 /* templates */ = {
+			isa = PBXGroup;
+			children = (
+				4FC5C81B23129BCC007D694C /* handler glue template.swift */,
+				4F409195231904C900045E85 /* handler stub template.swift */,
+				4F5B24B123150C52001C1941 /* operator glue template.swift */,
+			);
+			name = templates;
+			sourceTree = "<group>";
+		};
+		4FE5503E24C064B600509806 /* glues */ = {
+			isa = PBXGroup;
+			children = (
+				4FC5C7FA23109824007D694C /* gluelib_handlers.swift */,
+				4FC5C7FB23109826007D694C /* gluelib_operators.swift */,
+			);
+			name = glues;
+			sourceTree = "<group>";
+		};
+		4FE5504124C06E9E00509806 /* handlers */ = {
+			isa = PBXGroup;
+			children = (
+				4FC5C81C23129BCC007D694C /* define handler glue.swift */,
+			);
+			name = handlers;
 			sourceTree = "<group>";
 		};
 		4FFC6F2322D6816F00D636B9 /* parser */ = {
@@ -711,24 +745,6 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		4F5B24D423171E54001C1941 /* gen-glue-stdlib */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 4F5B24D923171E55001C1941 /* Build configuration list for PBXNativeTarget "gen-glue-stdlib" */;
-			buildPhases = (
-				4F5B24D123171E54001C1941 /* Sources */,
-				4F5B24D223171E54001C1941 /* Frameworks */,
-				4F5B24D323171E54001C1941 /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				4F877A7424BDDBEE0067A463 /* PBXTargetDependency */,
-			);
-			name = "gen-glue-stdlib";
-			productName = "stdlib-glue";
-			productReference = 4F5B24D523171E54001C1941 /* gen-glue-stdlib */;
-			productType = "com.apple.product-type.tool";
-		};
 		4F84CFFC22ADA0F200C9FD23 /* iris-test */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4F84D00422ADA0F200C9FD23 /* Build configuration list for PBXNativeTarget "iris-test" */;
@@ -783,6 +799,24 @@
 			productReference = 4F988CB624BCC4D700EE66C7 /* libiris.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		4FE5502324C035D500509806 /* iris-glue */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4FE5502F24C035D500509806 /* Build configuration list for PBXNativeTarget "iris-glue" */;
+			buildPhases = (
+				4FE5502024C035D500509806 /* Sources */,
+				4FE5502124C035D500509806 /* Frameworks */,
+				4FE5502224C035D500509806 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4FE5503324C0388300509806 /* PBXTargetDependency */,
+			);
+			name = "iris-glue";
+			productName = "iris-glue";
+			productReference = 4FE5502424C035D500509806 /* iris-glue */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -792,9 +826,6 @@
 				LastSwiftUpdateCheck = 1130;
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
-					4F5B24D423171E54001C1941 = {
-						CreatedOnToolsVersion = 10.3;
-					};
 					4F84CFFC22ADA0F200C9FD23 = {
 						CreatedOnToolsVersion = 10.2.1;
 					};
@@ -805,6 +836,9 @@
 					4F988CB524BCC4D700EE66C7 = {
 						CreatedOnToolsVersion = 11.3.1;
 						LastSwiftMigration = 1130;
+					};
+					4FE5502324C035D500509806 = {
+						CreatedOnToolsVersion = 11.3.1;
 					};
 				};
 			};
@@ -830,7 +864,7 @@
 				4F8C407124BCC02200735273 /* iris-shell */,
 				4F988CB524BCC4D700EE66C7 /* libiris */,
 				4F84CFFC22ADA0F200C9FD23 /* iris-test */,
-				4F5B24D423171E54001C1941 /* gen-glue-stdlib */,
+				4FE5502324C035D500509806 /* iris-glue */,
 			);
 		};
 /* End PBXProject section */
@@ -881,14 +915,6 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
-		4F5B24D123171E54001C1941 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				4F5B24D823171E55001C1941 /* main.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		4F84CFF922ADA0F200C9FD23 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -913,13 +939,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4F877A7524BDDCF50067A463 /* handler glue.swift in Sources */,
-				4F877A7624BDDCF50067A463 /* handler stub template.swift in Sources */,
-				4F877A7724BDDCF60067A463 /* handler glue template.swift in Sources */,
-				4F877A7824BDDCF60067A463 /* operator glue template.swift in Sources */,
-				4F877A7924BDDCF60067A463 /* text template.swift in Sources */,
-				4F877A7A24BDDCF60067A463 /* gluelib_handlers.swift in Sources */,
-				4F877A7B24BDDCF60067A463 /* gluelib_operators.swift in Sources */,
 				4F988CF624BCC5CB00EE66C7 /* std general.swift in Sources */,
 				4F988CF724BCC5CB00EE66C7 /* std math.swift in Sources */,
 				4F988CF824BCC5CB00EE66C7 /* std text.swift in Sources */,
@@ -997,6 +1016,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4FE5502024C035D500509806 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4FE5502724C035D500509806 /* main.swift in Sources */,
+				4FE5503424C0389400509806 /* define handler glue.swift in Sources */,
+				4FE5504024C06B9600509806 /* glue renderer.swift in Sources */,
+				4FE5503524C0389400509806 /* handler stub template.swift in Sources */,
+				4FE5503624C0389400509806 /* handler glue template.swift in Sources */,
+				4FE5503724C0389400509806 /* operator glue template.swift in Sources */,
+				4FE5503924C0389400509806 /* gluelib_handlers.swift in Sources */,
+				4FE5503A24C0389400509806 /* gluelib_operators.swift in Sources */,
+				4FE5503824C0389400509806 /* texttemplate.swift in Sources */,
+				4FE5504324C06EFC00509806 /* opaque value.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1010,10 +1046,10 @@
 			target = 4F988CB524BCC4D700EE66C7 /* libiris */;
 			targetProxy = 4F877A6D24BDBD840067A463 /* PBXContainerItemProxy */;
 		};
-		4F877A7424BDDBEE0067A463 /* PBXTargetDependency */ = {
+		4FE5503324C0388300509806 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4F988CB524BCC4D700EE66C7 /* libiris */;
-			targetProxy = 4F877A7324BDDBEE0067A463 /* PBXContainerItemProxy */;
+			targetProxy = 4FE5503224C0388300509806 /* PBXContainerItemProxy */;
 		};
 		4FFD83C124BCF01B00E5E28A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1023,28 +1059,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		4F5B24DA23171E55001C1941 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 27XZ82KJ77;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		4F5B24DB23171E55001C1941 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 27XZ82KJ77;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
 		4F84D00222ADA0F200C9FD23 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1256,18 +1270,31 @@
 			};
 			name = Release;
 		};
+		4FE5502824C035D500509806 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 27XZ82KJ77;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		4FE5502924C035D500509806 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 27XZ82KJ77;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4F5B24D923171E55001C1941 /* Build configuration list for PBXNativeTarget "gen-glue-stdlib" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				4F5B24DA23171E55001C1941 /* Debug */,
-				4F5B24DB23171E55001C1941 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		4F84CFF822ADA0F100C9FD23 /* Build configuration list for PBXProject "iris-script" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1300,6 +1327,15 @@
 			buildConfigurations = (
 				4F988CBD24BCC4D700EE66C7 /* Debug */,
 				4F988CBE24BCC4D700EE66C7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4FE5502F24C035D500509806 /* Build configuration list for PBXNativeTarget "iris-glue" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FE5502824C035D500509806 /* Debug */,
+				4FE5502924C035D500509806 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

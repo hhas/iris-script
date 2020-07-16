@@ -219,26 +219,26 @@ public struct HandlerError: NativeError {
 
 struct BadInterfaceError: NativeError {
     
-    var description: String { return "Invalid interface: \(self.interface)." }
+    public var description: String { return "Invalid interface: \(self.interface)." }
     
-    let interface: HandlerInterface
+    public let interface: HandlerInterface
     
-    init(_ interface: HandlerInterface) {
+    public init(_ interface: HandlerInterface) {
         self.interface = interface
     }
 }
 
 
 
-struct InternalError: NativeError {
+public struct InternalError: NativeError {
 
-    let description: String
+    public let description: String
     
-    init(description: String) {
+    public init(description: String) {
         self.description = description
     }
     
-    init(_ error: Error) {
+    public init(_ error: Error) {
         self.init(description: String(describing: error))
     }
 }
@@ -246,9 +246,9 @@ struct InternalError: NativeError {
 
 // syntax errors
 
-enum BadSyntax: NativeError { // while tokens containing invalid code are marked as bad syntax, they do not constitute syntax errors if they appear within a string or annotation literal; however, this can only be determined when the script is parsed in full - all a single-line lexer can do is mark it as a potential issue and move on to the next token
+public enum BadSyntax: NativeError { // while tokens containing invalid code are marked as bad syntax, they do not constitute syntax errors if they appear within a string or annotation literal; however, this can only be determined when the script is parsed in full - all a single-line lexer can do is mark it as a potential issue and move on to the next token
     
-    var description: String {
+    public var description: String {
         switch self {
         case .unterminatedAnnotation:   return "unterminated annotation"
         case .unterminatedList:         return "unterminated list"

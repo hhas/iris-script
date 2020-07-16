@@ -275,6 +275,8 @@ public struct AsLiteral<T: Value>: SwiftCoercion { // caution: this only works f
     
     public typealias SwiftType = T
     
+    public init() { }
+    
     public func unbox(value: Value, in env: Scope) throws -> SwiftType {
         guard let result = value as? SwiftType else {
             if value is NullValue { // TO DO: kludgy

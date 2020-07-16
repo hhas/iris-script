@@ -105,45 +105,45 @@ func unpackHandlerInterface(_ signature: Value, in env: Scope, isEventHandler: B
 
 
 
-let asHandlerInterface = AsHandlerInterface() // TO DO: handler interface can be coerced to/from Record (problem: records may also describe argument list in minimal handler sig; if coercion matches {name:,input:,output:} as handler interface, user will need to include a handler name or `returning` clause if they want it treated as arg list; alternative is we always treat records as arg lists, and use a command or other constructor to build a signature from a record)
+public let asHandlerInterface = AsHandlerInterface() // TO DO: handler interface can be coerced to/from Record (problem: records may also describe argument list in minimal handler sig; if coercion matches {name:,input:,output:} as handler interface, user will need to include a handler name or `returning` clause if they want it treated as arg list; alternative is we always treat records as arg lists, and use a command or other constructor to build a signature from a record)
 
 
 
-let nullHandlerInterface = HandlerInterface(name: nullSymbol, parameters: [], result: asAnything)
+public let nullHandlerInterface = HandlerInterface(name: nullSymbol, parameters: [], result: asAnything)
 
 
 
-struct AsHandlerInterface: SwiftCoercion {
+public struct AsHandlerInterface: SwiftCoercion {
     
-    let name: Symbol = "handler_interface"
+    public let name: Symbol = "handler_interface"
     
-    typealias SwiftType = HandlerInterface
+    public typealias SwiftType = HandlerInterface
     
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+    public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         //print("AsHandlerInterface.unbox:", value)
         return try unpackHandlerInterface(value, in: scope)
     }
 
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         return try self.unbox(value: value, in: scope)
     }
     
-    func box(value: SwiftType, in scope: Scope) -> Value {
+    public func box(value: SwiftType, in scope: Scope) -> Value {
         return value
     }
 }
 
 
-struct AsHandler: SwiftCoercion {
+public struct AsHandler: SwiftCoercion {
     
-    let name: Symbol = "procedure"
+    public let name: Symbol = "procedure"
     
-    typealias SwiftType = Handler
+    public typealias SwiftType = Handler
     
     // TO DO: when should handlers capture their lexical scope? and when should that capture be strongref vs weakref?
     
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+    public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         let env = scope as! Environment // TO DO: fix (NativeHandler currently takes Environment argument [effectively an activation record]; why?)
         // TO DO: return strongrefd handler?
         
@@ -163,14 +163,14 @@ struct AsHandler: SwiftCoercion {
         }
     }
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
         return try self.unbox(value: value, in: scope)
     }
     
-    func box(value: SwiftType, in scope: Scope) -> Value {
+    public func box(value: SwiftType, in scope: Scope) -> Value {
         return value
     }
 }
 
-let asHandler = AsHandler()
+public let asHandler = AsHandler()
 

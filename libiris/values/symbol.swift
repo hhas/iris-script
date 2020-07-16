@@ -22,7 +22,7 @@ public struct Symbol: ComplexValue, KeyConvertible, Comparable, ExpressibleByStr
     public static let nominalType: Coercion = asSymbol
     
     public let label: String
-    internal let key: String // interning symbols would enable more efficient key representation, but for now it's sufficient to use case-normalized string
+    public let key: String // interning symbols would enable more efficient key representation, but for now it's sufficient to use case-normalized string
     
     // if interning, need to make these inits private and provide public class method as constructor instead (one downside of this is that ExpressibleByStringLiteral will no longer be allowable, as the constructor needs to look for existing symbols in cache and return those when found; also need to decide what to use as keys - it may be an idea to move all state out of Symbol struct and store only an integer key - this'll reduce symbol comparisons to simple integer == test and eliminate string wrangling overheads; getting the label/description string will involve a cache hit each time, but that's a much less frequent operation than hash lookups and comparisons)
     

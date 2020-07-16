@@ -20,6 +20,10 @@ public struct AsComplex<T: Value>: SwiftCoercion { // T must be concrete struct 
     
     public typealias SwiftType = T
     
+    public init(name: Symbol) {
+        self.name = name
+    }
+    
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         // TO DO: this has issues
         guard let result = try asValue.unbox(value: value, in: scope) as? SwiftType else {
@@ -96,7 +100,7 @@ public struct AsIs: SwiftCoercion {
     
     public var swiftLiteralDescription: String { return "asIs" }
 
-    public let name: Symbol = "anything"
+    public let name: Symbol = "expression"
     
     public typealias SwiftType = Value
     

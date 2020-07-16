@@ -54,7 +54,7 @@ public let nullScope = NullScope()
 // Q. how should global scopes treat imported modules? (each native module is a read-locked environment populated with library-defined handlers and other values; Q. what about primitive modules? could use Environment subclass that populates frame dictionary)
 
 
-public class Environment: MutableScope {
+public class Environment: MutableScope { // TO DO: open?
     
     internal let parent: Environment?
     
@@ -158,4 +158,14 @@ class TargetScope: MutableScope { // TO DO: what uses (if any) does this have ou
     func subscope(withWriteBarrier isLocked: Bool) -> MutableScope { // TO DO: what should this return?
         return TargetScope(target: self.target, parent: self.parent.subscope(withWriteBarrier: isLocked) as! Environment)
     }
+}
+
+
+
+
+public class ExtendedEnvironment: Environment {
+    
+    public let operatorRegistry = OperatorRegistry()
+    
+
 }

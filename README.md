@@ -21,7 +21,7 @@ Dependencies:
 
 Ad-hoc tests are currently run under the `iris-test` target.
 
-A rudimentary interactive shell is available under target `iris-shell`. Bad error reporting, poor help, no multi-line entry or readline support, and prone to stuttering and falling over when run in Xcode’s console, but should allow simple expressions to be entered and evaluated.
+A rudimentary interactive shell is available under target `iris-shell`. Bad error reporting, poor help, and prone to stuttering and falling over when run in Xcode’s console, but should allow simple expressions to be entered and evaluated.
 
 
 ## Features
@@ -63,11 +63,11 @@ Ubiquitous use of parameterizable coercions (also first-class values) for automa
 
 No built-in behaviors beyond evaluating values. All other behavior is provided by library-defined handles, including “primitive” behaviors such as assignment and flow control.
 
-Commands are unary prefix operators with an arbitrary name and optional (record) operand, e.g.:
+Commands are effectively unary prefix operators with an arbitrary name and optional (record) operand, e.g.:
 
     make {new: #document, at: end of documents, with_properties: {name: “Test”}}
 
-For convenience, an argument’s record punctation can often be omitted: 
+For convenience, an argument’s record punctation can usually be omitted: 
 
     make new: #document at: end of documents with_properties: {name: “Test”}
 
@@ -86,20 +86,21 @@ Library-defined commands may be skinned with library-defined operator syntax. e.
 
 Separate operators for performing math vs non-math comparisons (similar to Perl where numbers and text are one type), e.g. `4 < 12`, `“Bob” is_before “Sue”`, ensuring predictable behavior, e.g. `“4” < 12` ➞  `true`. (Contrast e.g. AppleScript/JavaScript where mixed-type comparisons behave differently according to operand order.)
 
-Coercion-based native⬌Swift bridging API for implementing primitive library functions, ensuring clean separation between Swift implementation and automatically generated native-to-Swift bridging glue code. Glue definitions are written in iris and evaluated via the `gluelib` library. e.g. The `tell` command/operator’s definition:
+Coercion-based native⬌Swift bridging API for implementing primitive library functions, ensuring clean separation between Swift implementation and automatically generated native-to-Swift bridging glue code. Glue definitions are written in iris and evaluated via the `gluelib` library. e.g. The `if…then…else…` handler’s glue definition, including custom operator syntax:
 
-    to ‘tell’ {left: target as value, right: action as expression} returning anything requires {
+    to ‘if’ {left:   condition as boolean, 
+             middle: action as expression, 
+             right:  alternative_action as expression} returning anything requires {
         can_error: true
         use_scopes: #command
-        swift_function: tell {target, action}
-        operator:{#prefix_with_conjunction, 101, #left, [#tell, #to]}
+        swift_function: ifTest {condition, action, alternativeAction}
+        operator: {#prefix_with_two_conjunctions, 101, #left, [#if, #then, #else]}
     }
     
-and its implementation:
+and its underlying Swift implementation:
     
-    func tell(target: AttributedValue, action: Value, commandEnv: Scope) throws -> Value {
-        let env = TargetScope(target: target, parent: (commandEnv as? MutableScope) ?? MutableShim(commandEnv))
-        return try action.eval(in: env, as: asAnything)
+    func ifTest(condition: Bool, action: Value, alternativeAction: Value, commandEnv: Scope) throws -> Value {
+        return try (condition ? action : alternativeAction).eval(in: commandEnv, as: asAnything)
     }
 
 (Contrast the complexity and coupling of Python/Ruby’s C bridging APIs.)
@@ -117,7 +118,7 @@ Handler definitions:
     to ‘&’ {left as string, right as string} returning string requires {
         can_error: true
         swift_function: joinValues
-        operator:{form: #infix, precedence: 340}
+        operator: {form: #infix, precedence: 340}
     }
 
 Swift functions:
@@ -190,6 +191,6 @@ Additional transpiling optimizations might include storing values directly in Sw
 
 * explore potential for automated language translations
 
-* explore potential for symbolic DSL with algebraic syntax, e.g. `3𝓍²＋5𝓎－1`; most or all of this syntax can be achieved by adapting lexer chain and pretty-printer with custom stages; symbolic math, e.g. `x = 2y, z = 3x` ➞ `z = 6y`, will require more work to support (implementing fractional support in `Numeric`, allowing e.g. `1/3 * 2/3` ➞ `2/9` to be performed, may provide a stepping stone to that)
+* explore potential for symbolic DSL with algebraic syntax, e.g. `3𝓍²－2𝓎＋1`; most or all of this syntax can be achieved by adapting lexer chain and pretty-printer with custom stages; symbolic math, e.g. `x = 2y, z = 3x` ➞ `z = 6y`, will require more work to support (implementing fractional support in `Numeric`, allowing e.g. `1/3 * 2/3` ➞ `2/9` to be performed, may provide a stepping stone to that)
 
 * live end-user documentation, including automatically-generated handler documentation using interface metadata and executable examples

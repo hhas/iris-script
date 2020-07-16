@@ -1,7 +1,20 @@
 //
-//  text template.swift
-//  gluelib
+//  texttemplate.swift
 //
+
+/*
+ 
+ Simple plain-text templating library for Swift. A String containing one or more `««…»»` tags is parsed into simplified DOM. Swift code manipulates that DOM to insert content into tagged areas and the result is rendered as String.
+ 
+ 
+ Tag syntax:
+ 
+ ««NAME»» -- `node.NAME.set(STRING)` substitutes named tag with STRING
+ 
+ ««+NAME»» CONTENT ««-NAME»» -- `node.NAME.map(ARRAY<ELEMENT>[,OPTIONS]) {(CONTENT_NODE,ELEMENT[,OPTIONS])->Void}` renders CONTENT_NODE once for each item in ARRAY; CONTENT text contains tags to be rendered in closure
+ 
+ ««+NAME»» CONTENT ««~NAME»» SEPARATOR ««-NAME»» -- as above, except SEPARATOR text is inserted between each rendered CONTENT (if omitted, the default separator is "")
+ */
 
 import Foundation
 

@@ -29,11 +29,11 @@ void EL_setIndent(int n) {
         if (n < 0) n = 0;
         indentDepth = n > MAX_DEPTH ? MAX_DEPTH : n;
         for (int i = 0; i < PROMPT_BUFFER_SIZE; i++) { prompt[i] = 0x20; }
-        if (indentDepth == 0) {
+        if (indentDepth == 0) { // ✎
             prompt[indentDepth+0] = 0xE2;
             prompt[indentDepth+1] = 0x9C;
             prompt[indentDepth+2] = 0x8E;
-        } else {
+        } else { // …
             prompt[indentDepth+0] = 0xE2;
             prompt[indentDepth+1] = 0x80;
             prompt[indentDepth+2] = 0xA6;
@@ -64,7 +64,7 @@ CFStringRef EL_read(void) {
     int count;
     const char* line = el_gets(el, &count);
     if (count > 0) { // -ve count indicates error
-        history(elHistory, &elEvent, H_ENTER, line);
+        if (count > 1) history(elHistory, &elEvent, H_ENTER, line);
         return CFStringCreateWithCString(NULL, line, kCFStringEncodingUTF8); // caller is responsible for releasing
     } else {
         return CFSTR("");

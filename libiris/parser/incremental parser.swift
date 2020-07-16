@@ -53,8 +53,7 @@ public class IncrementalParser {
     
     typealias LineReaderAdapter = (LineReader) -> LineReader
     
-    public let env = Environment()
-    public let operatorRegistry = OperatorRegistry()
+    public let env = ExtendedEnvironment()
     
     private let operatorReader: LineReaderAdapter
     private var parser: Parser
@@ -66,15 +65,15 @@ public class IncrementalParser {
     public init(withStdLib useStdlib: Bool = true) {
         if useStdlib {
             stdlib_loadHandlers(into: self.env)
+            stdlib_loadOperators(into: self.env.operatorRegistry)
             stdlib_loadConstants(into: self.env)
-            stdlib_loadOperators(into: self.operatorRegistry)
         }
-        self.operatorReader = newOperatorReader(for: operatorRegistry)
-        self.parser = Parser(tokenStream: EndOfDocumentReader(), operatorRegistry: self.operatorRegistry)
+        self.operatorReader = newOperatorReader(for: self.env.operatorRegistry)
+        self.parser = Parser(tokenStream: EndOfDocumentReader(), operatorRegistry: self.env.operatorRegistry)
     }
     
     public func clear() {
-        self.parser = Parser(tokenStream: EndOfDocumentReader(), operatorRegistry: self.operatorRegistry)
+        self.parser = Parser(tokenStream: EndOfDocumentReader(), operatorRegistry: self.env.operatorRegistry)
     }
     
     public func read(_ code: String) {

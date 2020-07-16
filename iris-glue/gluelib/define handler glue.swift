@@ -5,6 +5,13 @@
 //
 
 import Foundation
+import iris
+
+// TO DO: should stdlib be baked into libiris? or should it be built as a separate static/dynamic linked module?
+
+
+
+// TO DO: operator syntax should eventually be expressible as patterns, e.g. `if condition:EXPR then action:EXPR (else alternative_action)?`
 
 // TO DO: glue definitions could do with a `returns_self:true` property or `itself` return type for indicating a command should evaluate to itself; e.g. `foo returning bar` -> `foo returning bar`; currently stdlib glue manually defines `returning` as an operator, which is fine when used in a handler’s signature as `to` , but without an underlying command it will throw a not-found error if evaled (confusing to language explorers and useless for metaprogramming)
 
@@ -12,7 +19,7 @@ import Foundation
 
 // TO DO: what about name/arg aliasing (including deprecated names)? (i.e. establishing a formal mechanism for amending an existing interface design enables automatic upgrading of user scripts)
 
-// TO DO: what about introspecting the Swift func's API, e.g. to extract parameter names and primitive types, `throws`, and primitive return type? (also check for scope and coercion params)
+// TO DO: what about introspecting the Swift func's API, e.g. to extract parameter names and primitive types, `throws`, and primitive return type? (also check for scope and coercion params); see: https://github.com/apple/swift-syntax
 
 // TO DO: need `swift` coercion modifier to indicate where arguments/results should be bridged to Swift primitives (String, Array<T>, etc) rather than passed as native Values
 
@@ -27,10 +34,10 @@ var _handlerGlues = [HandlerGlue]()
 // TO DO: glue definitions could be constructed by running the glue definition script with a custom Environment and custom/standard `to` handler, where evaluating the `to` operator's procedure operand populates a sub-scope that is a wrapper around/extension of HandlerGlue (for now we use a custom `to` handler that directly disassembles the procedure body, but this approach doesn't allow for metaprogramming); one caveat to evaluation strategy is that pair values need to be lazily evaluated - not entirely sure how to distinguish a command that returns the value to be used (e.g. when factoring out common information such as arithmetic operator definitions into a shared handler) from a command that is the value to be used (e.g. as in swift_function)
 
 
-struct HandlerGlue: Value {
+public struct HandlerGlue: Value {
     
-    var description: String { return "«HandlerGlue \(self.interface) \(self.canError), \(self.useScopes), \(String(describing: self.swiftFunction)), \(String(describing: self.operatorSyntax))»"}
-    static let nominalType: Coercion = AsComplex<HandlerGlue>(name: "HandlerGlue")
+    public var description: String { return "«HandlerGlue \(self.interface) \(self.canError), \(self.useScopes), \(String(describing: self.swiftFunction)), \(String(describing: self.operatorSyntax))»"}
+    public static let nominalType: Coercion = AsComplex<HandlerGlue>(name: "HandlerGlue")
     
     // TO DO: also extract user documentation (from annotations); Q. where should user docs go? may be an idea to put them in separate data file that is loaded as needed (or just use the native glue def itself, assuming it isn't too slow to parse)
     typealias Parameter = (name: String, binding: String, coercion: String)
@@ -78,9 +85,12 @@ let asOperatorSyntax = AsRecord([ // TO DO: given a native record/enum coercion,
     ])
 
 
-func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEnv: Scope) throws {
+func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEnv: Scope, handlerEnv: Scope) throws {
   //  print("making glue for", interface)
-    guard let body = attributes as? Record else {
+    guard let handlerGlues = handlerEnv.get(handlerGluesName) as? OpaqueHandlerGlues else {
+        throw UnknownNameError(name: handlerGluesName, in: handlerEnv)
+    }
+    guard let body = attributes as? Record else { // TO DO: glue currently uses asIs to pass record without any evaluation, leaving defineHandlerGlue to extract its fields below; eventually handler_glue record should be defined as a SwiftCoercion with named+typed fields, allowing it to unbox directly to HandlerGlue
         print("bad attributes (not record):", attributes)
         throw BadSyntax.missingExpression
     }
@@ -119,49 +129,8 @@ func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEn
     } else {
         operatorSyntax = nil
     }
-    let glue = HandlerGlue(interface: interface, canError: canError, useScopes: useScopes, swiftFunction: swiftFunction, operatorSyntax: operatorSyntax)
-    
-    //print(glue)
-    
-    _handlerGlues.append(glue) // ideally should append glues to editable list stored in commandEnv (or use an Environment subclass that captures glues directly, or pass collector array to defineHandlerGlue as an ExternalResource, but for now just chuck them all in a global and run renderer on that)
+    handlerGlues.data.append(HandlerGlue(interface: interface, canError: canError, useScopes: useScopes,
+                                         swiftFunction: swiftFunction, operatorSyntax: operatorSyntax))
 }
 
-
-
-func renderGlue(libraryName: String, handlerGlues: [HandlerGlue]) -> String {
-    // TO DO: what about defining operators for constants and other non-command structures (e.g. `do…done` block keywords) [for now, put them in handcoded function and call that separately]
-    return handlersTemplate.render((libraryName, handlerGlues))
-        + "\n\n" + operatorsTemplate.render((libraryName, handlerGlues))
-        + "\n\n" + handlerStubsTemplate.render((libraryName, handlerGlues)) 
-}
-
-
-// main
-
-public func renderHandlerGlue(for libraryName: String, from code: String) throws -> String {
-    // parse glue definitions for primitive handlers
-    let parser = IncrementalParser(withStdLib: false)
-    gluelib_loadHandlers(into: parser.env) // TO DO: what handlers must gluelib define? Q. what about loading stdlib handlers into a parent scope, for metaprogramming use?
-    stdlib_loadConstants(into: parser.env) // mostly needed for coercions
-    gluelib_loadOperators(into: parser.operatorRegistry) // essential operators used in glue defs; these may be overwritten by stdlib operators
-    //stdlib_loadOperators(into: operatorRegistry)
-    parser.read(code)
-    do {
-        if let script = parser.ast() {
-            //print(script)
-            // TO DO: gluelib’s `to` handler currently writes glue definitions to global _handlerGlues var; it would be better if it wrote to environment, either into an editable slot with reserved name or by subclassing Environment with appropriate writeGlue APIs
-            let _ = (try script.eval(in: parser.env, as: asAnything))
-            let code = renderGlue(libraryName: libraryName, handlerGlues: _handlerGlues)
-            return(code)
-        } else {
-            let errors = parser.errors()
-            print("Found \(errors.count) syntax error(s):")
-            for e in errors { print(e) }
-            throw NotYetImplementedError()
-        }
-    } catch {
-        print(error)
-        throw error
-    }
-}
 
