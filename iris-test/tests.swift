@@ -12,6 +12,27 @@ import iris
 
 
 func test() {
+    
+    let parser = IncrementalParser()
+    parser.read("3/4 = true. [1,2]. if this then do,foo bar: baz,done")
+    
+    if let script = parser.ast() {
+        
+        let f = BasicFormatter()
+        
+        //print(script, type(of:script))
+        
+        f.walk(script)
+        
+        print(f.result)
+    } else {
+        print("Couldn't parse script.")
+    }
+    
+}
+
+
+func test_() {
     runScript("  a of b of c ")
     
    // runScript(" to foo run write “bar” \n foo ") // TO DO: FIX: using optional/default coercion modifiers is still buggy: handler throws error on return (it should return `nothing` instead)

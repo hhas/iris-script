@@ -240,7 +240,7 @@ extension OrderedList: SelfPacking {
 extension Record: SelfPacking {
     
     public func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor { // TO DO: this is a mess
-        return try packAsRecord(self.fields.map{ (label: Symbol, value: Value) throws -> (AEKeyword, Value) in
+        return try packAsRecord(self.data.map{ (label: Symbol, value: Value) throws -> (AEKeyword, Value) in
             guard let desc = (appData as! NativeAppData).descriptor(for: label) else {
                 throw UnsupportedCoercionError(value: self, coercion: asValue) // TO DO: what error?
             }

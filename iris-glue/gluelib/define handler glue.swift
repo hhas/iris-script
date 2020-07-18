@@ -94,7 +94,7 @@ func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEn
         print("bad attributes (not record):", attributes)
         throw BadSyntax.missingExpression
     }
-    let options = Options(uniqueKeysWithValues: body.fields.map{ ($0.key, $1) })
+    let options = Options(uniqueKeysWithValues: body.data.map{ ($0.key, $1) })
     let canError = try unpackOption(options, "can_error", in: commandEnv, as: AsSwiftDefault(asBool, defaultValue: false))
     let swiftFunction: HandlerGlue.SwiftFunction?
     if let cmd = try unboxOption(options, "swift_function", in: commandEnv, as: AsSwiftOptional(AsLiteral<Command>())) {
@@ -111,10 +111,10 @@ func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEn
     
     let operatorSyntax: HandlerGlue.OperatorSyntax?
     if let record = try unboxOption(options, "operator", in: commandEnv, as: AsOptional(asOperatorSyntax)) as? Record {
-        let form = record.fields[0].value as! Symbol
-        let precedence = try! asInt.unbox(value: record.fields[1].value, in: commandEnv) // native coercion may return Number
+        let form = record.data[0].value as! Symbol
+        let precedence = try! asInt.unbox(value: record.data[1].value, in: commandEnv) // native coercion may return Number
         let associativity: PatternDefinition.Associativity
-        switch record.fields[2].value as! Symbol {
+        switch record.data[2].value as! Symbol {
         case "left":
             associativity = .left
         case "right":
@@ -123,8 +123,8 @@ func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEn
             print("malformed operator record", record)
             throw BadSyntax.missingExpression
         }
-        let keywords = try! AsArray(asSymbol).unbox(value: record.fields[3].value, in: commandEnv).map{$0.key} // TO DO: what type?
-        let reducefunc = try! AsSwiftOptional(asSymbol).unbox(value: record.fields[4].value, in: commandEnv)?.label
+        let keywords = try! AsArray(asSymbol).unbox(value: record.data[3].value, in: commandEnv).map{$0.key} // TO DO: what type?
+        let reducefunc = try! AsSwiftOptional(asSymbol).unbox(value: record.data[4].value, in: commandEnv)?.label
         operatorSyntax = (form.key, precedence, associativity, keywords, reducefunc)
     } else {
         operatorSyntax = nil

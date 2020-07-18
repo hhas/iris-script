@@ -87,13 +87,16 @@ public class Command: ComplexValue {
     public let name: Symbol
     public let arguments: [Argument] // TO DO: single, optional argument which is coerced to record and pattern-matched against HandlerInterface.Parameter
     
-    public init(_ name: Symbol, _ arguments: [Argument] = []) {
+    let operatorDefinition: PatternMatch?
+    
+    public init(_ name: Symbol, _ arguments: [Argument] = [], operatorDefinition: PatternMatch? = nil) {
         self.name = name
         self.arguments = arguments
+        self.operatorDefinition = operatorDefinition
     }
     
-    public convenience init(_ name: Symbol, _ record: Record) {
-        self.init(name, record.fields)
+    public convenience init(_ name: Symbol, _ record: Record, operatorDefinition: PatternMatch? = nil) {
+        self.init(name, record.data, operatorDefinition: operatorDefinition)
     }
     
     internal var _handler: Handler = _bindHandlerOnFirstUse
@@ -191,23 +194,23 @@ public extension Command {
     
     // TO DO: also annotate Command instance with operator definition for use in error messages/pp
     
-    convenience init(_ definition: PatternDefinition) {
-        self.init(definition.name)
+    convenience init(_ definition: PatternMatch) {
+        self.init(definition.name, operatorDefinition: definition)
     }
-    convenience init(_ definition: PatternDefinition, left: Value) { // TO DO: get rid of keywords; pass Values as Array and/or varargs and rely on PatternDefinition to supply correct arg labels (we need arg labels to distinguish overloaded operators, e.g. `op arg` vs `arg op`)
-        self.init(definition.name, [(leftOperand, left)])
+    convenience init(_ definition: PatternMatch, left: Value) { // TO DO: get rid of keywords; pass Values as Array and/or varargs and rely on PatternMatch to supply correct arg labels (we need arg labels to distinguish overloaded operators, e.g. `op arg` vs `arg op`)
+        self.init(definition.name, [(leftOperand, left)], operatorDefinition: definition)
     }
-    convenience init(_ definition: PatternDefinition, middle: Value) {
-        self.init(definition.name, [(middleOperand, middle)])
+    convenience init(_ definition: PatternMatch, middle: Value) {
+        self.init(definition.name, [(middleOperand, middle)], operatorDefinition: definition)
     }
-    convenience init(_ definition: PatternDefinition, right: Value) {
-        self.init(definition.name, [(rightOperand, right)])
+    convenience init(_ definition: PatternMatch, right: Value) {
+        self.init(definition.name, [(rightOperand, right)], operatorDefinition: definition)
     }
-    convenience init(_ definition: PatternDefinition, left: Value, right: Value) {
-        self.init(definition.name, [(leftOperand, left), (rightOperand, right)])
+    convenience init(_ definition: PatternMatch, left: Value, right: Value) {
+        self.init(definition.name, [(leftOperand, left), (rightOperand, right)], operatorDefinition: definition)
     }
-    convenience init(_ definition: PatternDefinition, left: Value, middle: Value, right: Value) {
-        self.init(definition.name, [(leftOperand, left), (middleOperand, middle), (rightOperand, right)])
+    convenience init(_ definition: PatternMatch, left: Value, middle: Value, right: Value) {
+        self.init(definition.name, [(leftOperand, left), (middleOperand, middle), (rightOperand, right)], operatorDefinition: definition)
     }
 }
 

@@ -38,7 +38,7 @@ extension RandomAccessCollection where Element == Pattern {
 // - the most commonly used patterns (prefix, infix, postfix, keyword block, etc) are predefined by convenience constructors in `OperatorRegistry` extension; any other patterns can be provided using `registry.add(PatternDefinition(…))` (once library glue syntax and implementation is finalized, much of these details will be hidden beneath that)
 
 
-indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
+public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
     
     case keyword(Keyword)
     case expression // any value
@@ -55,7 +55,7 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
     // TO DO: whitespace patterns?
     
     // .name and .label should only be needed if patterns are used to match command syntax; if commands are matched directly by parser code then probably get rid of these (Q. what about `name:value` bindings? note: might want to consider AS-style `property name:value` syntax as it's clear and unambiguous to parse, and avoids stray colon-pairs being misinterpreted as anything other than syntax error)
-    case name  // `NAME` // TO DO: this will match even if followed by colon; is that appropriate?
+    case name  // `NAME`; used in nestedCommandLiteral pattern
     case label // `NAME COLON`
     
     case token(Token.Form) // TO DO: .token(…)? (this might be a subset of Token.Form - braces and punctuation only; powerful, e.g. able to match `HH:MM:SS`, but could also be dangerous)
@@ -66,11 +66,11 @@ indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
     case delimiter // punctuation or linebreak required; e.g. prefix `to` operator should be left-delimited to avoid confusion with infix `to` conjunction; that delimiter may be start of code, linebreak, `(` (`[` and `{` would also work, although that implies `to` is being used within a record or list which is typically a semantic error as a list of closures should be defined using `as [handler]` cast; using `to` will bind them to current namespace as well) // TO DO: what about requiring a leading/trailing delimiter without consuming it? any situations where that might be helpful/necessary (e.g. indicating clear-left for the prefix `to` operator, to prevent it being confused for a command argument, e.g. `tell foo to bar` *should* longest-match the `tell…to…` op, but if the prefix `to` operator can require a LH delimiter then that will also help to disambiguate by making it impossible for `foo to bar` to be interpreted as `foo{to{bar}}`, particularly when reading incomplete/invalid code where a syntax error may prevent the `tell…to…` operator being matched)
     case lineBreak // linebreak required
     
-    init(arrayLiteral patterns: Pattern...) {
+    public init(arrayLiteral patterns: Pattern...) {
         self = .sequence(patterns)
     }
     
-    var debugDescription: String {
+    public var debugDescription: String {
         switch self {
         case .keyword(let k):       return "‘\(k.name.label)’"
         case .optional(let p):      return "\(p)?"

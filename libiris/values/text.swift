@@ -56,6 +56,15 @@ public struct Text: BoxedScalarValue, ExpressibleByStringLiteral {
 
 extension Text: KeyConvertible {
     
+    public func literalRepresentation() -> String {
+        var result = ""
+        for c in self.data { // escape double quotes
+            result.append(c)
+            if quotedStringDelimiterCharacters.contains(c) { result.append(c) }
+        }
+        return "“\(result)”"
+    }
+    
     public func hash(into hasher: inout Hasher) {
         self.data.hash(into: &hasher)
     }
@@ -63,8 +72,6 @@ extension Text: KeyConvertible {
     public static func == (lhs: Text, rhs: Text) -> Bool {
         return lhs.data == rhs.data //lhs.data.localizedCaseInsensitiveCompare(rhs.data) == .orderedSame
     }
-    
-
 }
 
 

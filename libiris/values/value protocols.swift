@@ -191,6 +191,16 @@ extension KeyConvertible {
 
 
 
+public protocol AtomicValue: Value { // e.g. nothing, true/false, Symbol
+    
+}
+
+extension AtomicValue {
+
+}
+
+
+
 public protocol ScalarValue: Value {
 }
 
@@ -199,8 +209,8 @@ public protocol ScalarValue: Value {
 extension ScalarValue {
     
     public var isMemoizable: Bool { return true }
-    public   
-    func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue { // TO DO: toScalar? (as long as Text can represent all scalars, we should be OK; this does mean that boolean and symbol are not scalars though)
+    
+    public func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue { // TO DO: toScalar? (as long as Text can represent all scalars, we should be OK; this does mean that boolean and symbol are not scalars though)
         return self
     }
 }

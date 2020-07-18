@@ -1,15 +1,28 @@
 //
-//  null.swift
+//  atoms.swift
 //  iris-lang
 //
 
 import Foundation
 
 
+
+extension Bool: AtomicValue {
+    
+    public var swiftLiteralDescription: String { return String(self) }
+    
+    public static let nominalType: Coercion = asBool
+    
+    public func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool {
+        return self
+    }
+}
+
+
+
 // TO DO: might want to implement as enum, allowing specialized null values (e.g. `did_nothing`, `test_failed`) to be expressed
 
-
-public struct NullValue: Value { // expanding `nothing` always throws transient NullCoercionError; this may be intercepted by coercion modifiers to supply default value, otherwise it'll be rethrown as permanent EvaluationError
+public struct NullValue: AtomicValue { // expanding `nothing` always throws transient NullCoercionError; this may be intercepted by coercion modifiers to supply default value, otherwise it'll be rethrown as permanent EvaluationError
     
     // TO DO: need an easier way to rethrow NullCoercionError, regardless of which toTYPE method is called
     
@@ -37,7 +50,7 @@ public let nullValue = NullValue()
 
 
 
-struct NullAction: Value {
+struct NullAction: AtomicValue { // TO DO: get rid of this? (need to make decision on flow control operators and whether or not it’s practical to compose using independent `…else…` operator)
     
     // TO DO: need an easier way to rethrow NullCoercionError, regardless of which toTYPE method is called
     
@@ -63,4 +76,5 @@ struct NullAction: Value {
 
 
 let nullAction = NullAction()
+
 

@@ -21,7 +21,7 @@ Dependencies:
 
 Ad-hoc tests are currently run under the `iris-test` target.
 
-A rudimentary interactive shell is available under target `iris-shell`. Bad error reporting, poor help, and prone to stuttering and falling over when run in Xcode’s console, but should allow simple expressions to be entered and evaluated.
+A basic interactive shell is available under target `iris-shell`. Bad error reporting, poor help, and prone to stuttering and falling over when run in Xcode’s console, but should allow simple expressions to be entered and evaluated.
 
 
 ## Features
@@ -38,7 +38,7 @@ records:
 
     {…}
     
-expression groups:
+grouping (of zero or more expressions):
     
     (…)
 
@@ -57,11 +57,11 @@ Syntactic support (via chainable lexers) for currencies, weights and measures, e
 
 Commands and blocks (sequences of expressions) are also first-class values; thus iris code is also iris data.
 
-Shift-reduce parser with modifications to detect expression boundaries and to identify and reduce commands and operators using PEG-style pattern matching. (Bottom-up parsing should be amenable to incremental/interactive use. Syntax errors should be non-halting, enabling unfinished code to be at least partially executed in debug mode, even with typos.)
+Shift-reduce parser with some customizations to detect expression boundaries and to identify and reduce commands and operators using PEG-style pattern matching. Bottom-up parsing supports incremental/interactive use. Syntax errors are non-halting, enabling rough/unfinished code to be at least partially executed in debug mode, even with typos.
 
-Ubiquitous use of parameterizable coercions (also first-class values) for automatic type conversion and constraint checking. Code is untyped; however, handler interfaces can include coercion information to provide both auto-generated user documentation and guarantees that handler arguments and results are what they say. Weak latent structural rather than strong nominal typing: “If a value looks acceptable, it [generally] is.”
+Ubiquitous use of parameterizable coercions (also first-class values) for automatic type conversion and constraint checking. Code is untyped; however, handler interfaces can include coercion information to provide both auto-generated user documentation and run-time conversions and checks that handler arguments and results are suitable for use. Weak latent structural rather than strong nominal typing: “If a value looks acceptable, it [generally] is.”
 
-No built-in behaviors beyond evaluating values. All other behavior is provided by library-defined handles, including “primitive” behaviors such as assignment and flow control.
+No built-in behavior beyond evaluating values. All other behavior is provided by library-supplied handlers. This includes “standard” behaviors such as assignment and flow control. e.g. It is trivial to define a JSON-style data-transfer language and safely parse and render it: instantiate an `Environment` containing no commands or operators except those used to represent `true`/`false`/`nothing` and evaluate code in that.
 
 Commands are effectively unary prefix operators with an arbitrary name and optional (record) operand, e.g.:
 
@@ -149,7 +149,7 @@ Additional transpiling optimizations might include storing values directly in Sw
 
 * expand glue generator to struct and class mappings as well: mapping commands to struct/class initializers is probably straightforward as constructor signature has same form as function signature, e.g. `ElementRange{from,to}` (though would still benefit from having a `swift_object:` label rather than `swift_function:`), though there may be exceptions; OTOH, what about operator patterns that do not map to commands, e.g. `do…done` reduces to an annotated `Block` with no underlying command so does not have a `to…requires…` glue definition; currently the `do…done` operator definition must be manually added to stdlib’s operator glue but really needs to be added by glue definition (otherwse a separate library loading method will need to be added for importing manually-coded definitions); similarly, atomic operators such as `nothing`, `true`, `false`, `π`, etc are defined as constants which also do not have underlying commands but still require operator definitions
 
-* incremental/per-line parsing
+* editable scripts—currently iris supports whole-script and incremental line parsing, suitable for run-only and CLI shell respectively; eventually it should also support a syntax-directed document editor, where the parser maintains a mutable partial/whole AST representation of the program, allowing individual edits to a text (source code) buffer to be immediately applied to that AST, with API hooks for auto-suggest, auto-complete, auto-correct and other modern IDE/text authoring features
 
 * interactive “debugging” mode (this includes using built-in `?` and `!` punctuation as customizable run-time modifiers, e.g. for triggering introspection breakpoints and “Are you sure?” guards on potentially destructive operations)
 

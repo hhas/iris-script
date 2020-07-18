@@ -18,10 +18,10 @@ public struct PatternMatch: CustomStringConvertible, Equatable {
     private static var _matchID = 0
     
     public var description: String {
-        return "«match `\(self.definition.precis)` U\(self.uniqueID) O\(self.originID) G\(self.groupID): \([Pattern](self.matchedPattern).description) \(self.remainingPattern[0]) \([Pattern](self.remainingPattern.dropFirst()).description)\(self.isAFullMatch ? (self.isLongestFullMatch ? "✔︎" : "✓") : "") \(self.definition.precedence)»"
+        return "«match `\(self.definition.precis)` U\(self.uniqueID) O\(self.originID) G\(self.groupID): \([Pattern](self.completedPattern).description) \(self.remainingPattern[0]) \([Pattern](self.remainingPattern.dropFirst()).description)\(self.isAFullMatch ? (self.isLongestFullMatch ? "✔︎" : "✓") : "") \(self.definition.precedence)»"
     }
     
-    public var count: Int { return self.matchedPattern.count + 1 }
+    public var count: Int { return self.completedPattern.count + 1 }
     
     public var name: Symbol { return self.definition.name }
     
@@ -36,7 +36,7 @@ public struct PatternMatch: CustomStringConvertible, Equatable {
     // TO DO: provide a public API that returns the patterns for a full match? (e.g. reducefuncs might want to use this); if not, then we should consider capturing only as much of matched pattern as we need to satisfy PatternMatch’s own requirements (i.e. first pattern matched + no. of matches made), otherwise we're allocating lots of potentially large arrays unnecessarily
 
     // patterns that were matched by earlier instances of this matcher (not including the pattern currently being matched)
-    private let matchedPattern: [Pattern]
+    private let completedPattern: [Pattern]
     
     // pattern[0] is the pattern currently being matched and has already been reified; this is followed by zero or more additional patterns which have yet to be matched // TO DO: is it worth moving remainingPattern[0] to its own `let currentPattern:Pattern` slot?
     private let remainingPattern: [Pattern] // any patterns to match to next Reduction[s] in parser stack (caution: do not assume these patterns are the same as definition.patterns[OFFSET..<END_INDEX])
@@ -46,7 +46,7 @@ public struct PatternMatch: CustomStringConvertible, Equatable {
         assert(!remainingPattern.isEmpty, "Invalid PatternMatch (remainingPattern is empty): \(definition.precis)")
         self.definition = definition
         self.remainingPattern = remainingPattern
-        self.matchedPattern = matchedPattern
+        self.completedPattern = matchedPattern
         self.groupID = groupID
         self.originID = originID // equivalent to (groupID,patternDefinition) product
         PatternMatch._matchID += 1
@@ -78,7 +78,7 @@ public struct PatternMatch: CustomStringConvertible, Equatable {
     
     func next() -> [PatternMatch] {
         var remaining = self.remainingPattern
-        let matched = self.matchedPattern + [remaining.removeFirst()]
+        let matched = self.completedPattern + [remaining.removeFirst()]
         return remaining.reify().filter{!$0.isEmpty}.map{
             PatternMatch(for: self.definition, matching: $0, matched: matched, groupID: self.groupID, originID: self.originID)
         }
@@ -91,10 +91,10 @@ public struct PatternMatch: CustomStringConvertible, Equatable {
         }
     }
     
-    public var isAtBeginningOfMatch: Bool { return self.matchedPattern.isEmpty } // when true, PatternMatch.match() will match the first pattern in the operator definition's remainingPattern array
+    public var isAtBeginningOfMatch: Bool { return self.completedPattern.isEmpty } // when true, PatternMatch.match() will match the first pattern in the operator definition's remainingPattern array
     
     public var isAtConjunction: Bool { // when true, the pattern currently being matched is a conjunction keyword (i.e. assuming that patterns will *always* start with either `EXPR KEYWORD …` or `KEYWORD EXPR …`, we ignore the first two matches; this assumption is currently not enforced, but probably could/should be [preferably in glue generator to avoid additional startup overheads])
-        if self.matchedPattern.count > 1, case .keyword(_) = self.remainingPattern[0] { return true } else { return false }
+        if self.completedPattern.count > 1, case .keyword(_) = self.remainingPattern[0] { return true } else { return false }
     }
     
     public var isAFullMatch: Bool { // if match() returns true and a longer match isn't possible, the tokens identified by this matcher can be passed to the operator defintion's reducefunc // caution: isAFullMatch only indicates that this matcher represents a complete match of its pattern; to determine if a longer match is/isn’t possible, get isLongestFullMatch as well
@@ -119,7 +119,7 @@ public struct PatternMatch: CustomStringConvertible, Equatable {
         // TO DO: do we need this warning? (pattern matchers will always report true/false correctly for left operand)
         if !self.isAFullMatch { print("WARNING: called hasLeftOperand on incomplete match: \(self)") }
         // remainingPattern[0] is the pattern currently being matched
-        return (self.matchedPattern.first ?? self.remainingPattern.first!).isExpression // reification ensures the pattern currently being matched is always non-composite; no optionals or branching
+        return (self.completedPattern.first ?? self.remainingPattern.first!).isExpression // reification ensures the pattern currently being matched is always non-composite; no optionals or branching
     }
     
     var hasRightOperand: Bool {
@@ -156,7 +156,7 @@ public struct PatternMatch: CustomStringConvertible, Equatable {
      //   print("REDUCING", self)
         let stopIndex = startIndex + self.count
         // confirm operand[s] are reduced and match any special constraints specified by pattern
-        let isLeftFullyMatched = !self.hasLeftOperand || self.matchedPattern[0].fullyMatch(stack[startIndex].form)
+        let isLeftFullyMatched = !self.hasLeftOperand || self.completedPattern[0].fullyMatch(stack[startIndex].form)
         let isRightFullyMatched = !self.hasRightOperand || self.remainingPattern[0].fullyMatch(stack[stopIndex-1].form)
         if isLeftFullyMatched && isRightFullyMatched {
             let result: Token.Form
@@ -209,6 +209,8 @@ func reductionOrderFor(_ leftMatch: PatternMatch, _ rightMatch: PatternMatch) ->
 
 
 public extension PatternMatch {
+    
+    // used in Parser.incompleteBlocks() to get a block’s opening and closing keywords
 
     func blockKeywords() -> (Symbol, Symbol)? { // KLUDGE (it would be easier if we restricted keyword-based blocks to a standard structure that always begins and ends with keywords)
         let startKeywords = self.definition.pattern.first!.keywords
@@ -217,5 +219,21 @@ public extension PatternMatch {
             return (startKeywords[0].name, endKeywords[0].name)
         }
         return nil
+    }
+}
+
+public extension PatternMatch {
+    
+    var exactMatch: [Pattern] {
+        // TO DO: there’s a slight problem here in that reification is applied after matching remainingPattern[0], however, the match being stored in the Command isn’t guaranteed to have no remaining patterns left; this isn’t a problem when all operands are required, but if final operand is optional then that optional clause is included in the stored pattern, e.g. for `if`, remaining = [EXPR, (else EXPR)?]; for now, we discard that trailing clause below, but it would make PatternMatch behavior easier to understand if the final matcher was completely reified with no unmatched patterns left
+        let remaining = self.remainingPattern.dropFirst().reify()
+        if !remaining.contains(where: {$0.isEmpty}) {
+            fatalError("Pattern is not fully matched: \(self.remainingPattern)")
+        }
+        if self.completedPattern.isEmpty {
+            return [self.remainingPattern[0]]
+        } else {
+            return self.completedPattern + [self.remainingPattern[0]]
+        }
     }
 }

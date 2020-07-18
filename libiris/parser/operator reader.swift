@@ -68,14 +68,14 @@ public struct OperatorReader: LineReader {
             if matches.count > 0 {
                 var idx = token.content.endIndex
                 for (substr, definition) in matches.reversed() {
-                    if substr.endIndex != idx { // if operator is followed by non-operator symbols, put those back on token stream firt
+                    if substr.endIndex != idx { // if operator is followed by non-operator symbols, put those back on token stream first…
                         reader = UnpopToken(token.extract(.symbols, from: substr.endIndex, to: idx), reader)
                     }
-                    // put operator back on token stream
+                    // …then put operator back on token stream as .operatorName(…)
                     reader = UnpopToken(token.extract(.operatorName(definition), from: substr.startIndex, to: substr.endIndex), reader)
                     idx = substr.startIndex
                 }
-                
+                // lastly, check for any symbol characters appearing before the first operator
                 if idx != token.content.startIndex { // return non-operator .symbols that appears before first operator
                     token = token.extract(.symbols, from: token.content.startIndex, to: idx)
                 } else { // return first operator

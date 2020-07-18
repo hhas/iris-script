@@ -79,7 +79,7 @@ let quotedNameDelimiterCharacters = CharacterSet(charactersIn: "'‘’") // TO 
 let quotedStringDelimiterCharacters = CharacterSet(charactersIn: "\"“”")
 let annotationDelimiterCharacters = CharacterSet(charactersIn: "«»")
 
-// characters that may appear within single quotes
+// characters that may appear within single-quoted names (basically everything except quotes and linebreaks)
 let quotedNameCharacters = (quotedNameDelimiterCharacters.union(quotedStringDelimiterCharacters)
     .union(annotationDelimiterCharacters).union(linebreakCharacters).union(_invalidCharacters)).inverted
 

@@ -113,17 +113,6 @@ public let asIs = AsIs()
 
 
 
-extension Bool: Value {
-    
-    public var swiftLiteralDescription: String { return String(self) }
-    
-    public static let nominalType: Coercion = asBool
-    
-    public func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool {
-        return self
-    }
-}
-
 public let asBool = AsComplex<Bool>(name: "boolean")
 
 

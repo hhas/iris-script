@@ -37,9 +37,9 @@ public struct AsRecord: RecordCoercion {
         var result = [Record.Field]()
         do {
             if self.fields.isEmpty {
-                result = try record.fields.map{($0, try $1.eval(in: scope, as: asAnything))}
+                result = try record.data.map{($0, try $1.eval(in: scope, as: asAnything))}
             } else {
-                var iter = record.fields.makeIterator()
+                var iter = record.data.makeIterator()
                 var (key, value) = iter.next() ?? (nullSymbol, nullValue) // record may be empty record
                 for (asSymbol, asType) in self.fields {
                     // catch and rethrow to indicate failed field?

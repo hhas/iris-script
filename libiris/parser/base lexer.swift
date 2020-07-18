@@ -86,7 +86,7 @@ public struct BaseLexer: LineReader { // don't think lexer should care if it's a
     public let code: String // the entire script // TO DO: should probably be pre-split into single lines; that way, each single-line Lexer instance isn't affected when changes are made to other lines (only the modified lines need new lexers)
     private let leadingWhitespace: Substring?
     private let offset: String.Index
-    private let isFirst: Bool
+    private let isFirst: Bool // is first token of a new line?
     
     // TO DO: should code also be Substring? (e.g. script.split() returns Array<Substring>); challenge is dealing with editing: every time a line of code is changed, it's probably better to put a new String into script array
     

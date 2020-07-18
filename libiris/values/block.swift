@@ -7,7 +7,7 @@ import Foundation
 
 
 
-public class Block: BoxedComplexValue { // caution: this does not capture lexical scope
+public class Block: BoxedCollectionValue { // caution: this does not capture lexical scope
     
     // TO DO: what about preserving user's punctuation?
         
@@ -24,16 +24,20 @@ public class Block: BoxedComplexValue { // caution: this does not capture lexica
     public typealias ArrayLiteralElement = Value
     public static let nominalType: Coercion = asBlock
     
-    let patternDefinition: PatternDefinition? // TO DO: make this part of optional annotation metadata and standardize annotation API and types across Blocks and Commands (Q. what about lists and records?)
+    let operatorDefinition: PatternMatch? // TO DO: make this part of optional annotation metadata and standardize annotation API and types across Blocks and Commands (Q. what about lists and records?)
     
     public let data: [Value]
     
-    public required init(_ data: [Value], patternDefinition: PatternDefinition?) {
+    public required init(_ data: [Value], patternDefinition: PatternMatch?) {
         self.data = data
-        self.patternDefinition = patternDefinition
+        self.operatorDefinition = patternDefinition
     }
     public required convenience init(_ data: [Value]) {
         self.init(data, patternDefinition: nil)
+    }
+    
+    public __consuming func makeIterator() -> IndexingIterator<[Value]> {
+        return self.data.makeIterator()
     }
     
     /*

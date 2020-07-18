@@ -5,6 +5,8 @@
 
 import Foundation
 
+// TO DO: make these public? (depends on what the API we provide to libraries for defining operators)
+
 // TO DO: these matchers assume leading/trailing/interstitial EXPRs have been non-partially-matched and reduced to .value(…); need to make sure that parser does perform final full match of reduced EXPRs to confirm, and that these reduction funcs are either not called or respond to unsuccessful reductions gracefully (e.g. `TokenStack.value(at:)` currently exits with fatalError exception upon encountering unreduced tokens)
 
 // caution: endIndex is non-inclusive (i.e. use i<endIndex, stack[startIndex..<endIndex]) // TO DO: should endIndex be inclusive? (probably; easier when selecting first/last stack indices)
@@ -151,6 +153,8 @@ func reductionForCommandLiteral(stack: Parser.TokenStack, match: PatternMatch, s
     //print("reduceCommandLiteral:", name)
     //stack.show(start, end)
     //print()
+    //let operatorDefinition
+    
     switch end - start {
     case 1:
         return Command(name) // no argument
@@ -193,28 +197,28 @@ func reductionForPipeOperator(stack: Parser.TokenStack, match: PatternMatch, sta
 
 func reductionForPrefixOperator(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
     assert(end == start + 2)
-    return Command(match.definition, right: stack.value(at: end - 1))
+    return Command(match, right: stack.value(at: end - 1))
 }
 
 func reductionForInfixOperator(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value { // TO DO: need to pass operator match? or can we pick up from stack? (problem is when two matchers complete on same frame, but again that's an SR conflict problem which parser needs to solve in order to decide which reduce func to call); if we pass Parser, could set var on Parser to hold the opdef for the duration
     assert(end == start + 3)
-    return Command(match.definition, left: stack.value(at: start), right: stack.value(at: end - 1))
+    return Command(match, left: stack.value(at: start), right: stack.value(at: end - 1))
 }
 
 func reductionForPostfixOperator(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
     assert(end == start + 2)
-    return Command(match.definition, left: stack.value(at: end - 1))
+    return Command(match, left: stack.value(at: end - 1))
 }
 
 func reductionForAtomOperator(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
     // TO DO: for operators such as `true`, `false`, `π`, etc, can/should we optimize away commands in favor of returning underlying Value directly? (caveat: safest way to do that is by getting symbols from populated env, but that'd require libraries to be loaded first)
     assert(end == start + 1) // TO DO: check this
-    return Command(match.definition)
+    return Command(match)
 }
 
 func reductionForPrefixOperatorWithConjunction(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
     assert(end == start + 4) // TO DO: check this
-    return Command(match.definition, left: stack.value(at: start + 1), right: stack.value(at: end - 1)) // TO DO: this uses convenience initializer
+    return Command(match, left: stack.value(at: start + 1), right: stack.value(at: end - 1)) // TO DO: this uses convenience initializer
 }
 
 // for now, we compromise on `if…then…else…`, defining it as one operator with two conjunctive clauses rather than two independent composable operators
@@ -222,7 +226,7 @@ func reductionForPrefixOperatorWithConjunctionAndAlternate(stack: Parser.TokenSt
     // the alternate clause is optional, e.g. `if EXPR then EXPR ( else EXPR )?`
     assert(end == start + 4 || end == start + 6)
     let alternate = end == start + 6 ? stack.value(at: start + 5) : nullValue
-    return Command(match.definition, left: stack.value(at: start + 1), middle: stack.value(at: start + 3), right: alternate)
+    return Command(match, left: stack.value(at: start + 1), middle: stack.value(at: start + 3), right: alternate)
 }
 
 public func reductionForKeywordBlock(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
@@ -238,14 +242,14 @@ public func reductionForKeywordBlock(stack: Parser.TokenStack, match: PatternMat
         stack.skipSeparator(&i)
         stack.skipLineBreaks(&i)
     }
-    return Block(items, patternDefinition: match.definition)
+    return Block(items, patternDefinition: match)
 }
 
 func reductionForInfixOperatorWithConjunction(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value { // trinary operator (c.f. Swift's `…?…:…`)
     assert(end == start + 5)
-    return Command(match.definition, left: stack.value(at: start),
-                                       middle: stack.value(at: start + 2),
-                                        right: stack.value(at: start + 4))
+    return Command(match, left: stack.value(at: start),
+                        middle: stack.value(at: start + 2),
+                         right: stack.value(at: start + 4))
 }
 
 
@@ -257,7 +261,7 @@ func reductionForInfixOperatorWithConjunction(stack: Parser.TokenStack, match: P
 func reductionForPositiveOperator(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
     assert(end == start + 2)
     let expr = stack.value(at: end - 1)
-    return expr is NumericValue ? expr : Command(match.definition, right: expr)
+    return expr is NumericValue ? expr : Command(match, right: expr)
 }
 
 func reductionForNegativeOperator(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
@@ -271,7 +275,7 @@ func reductionForNegativeOperator(stack: Parser.TokenStack, match: PatternMatch,
         default: ()
         }
     }
-    return Command(match.definition, right: expr)
+    return Command(match, right: expr)
 }
 
 

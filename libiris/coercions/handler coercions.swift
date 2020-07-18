@@ -17,7 +17,7 @@ func unpackSignature(_ value: Value, in env: Scope) throws -> (Symbol, [HandlerI
         parameters = try unpackParameters(command.arguments, in: env)
     case let record as Record: // params only
         name = nullSymbol
-        parameters = try unpackParameters(record.fields, in: env)
+        parameters = try unpackParameters(record.data, in: env)
     default:
         print("unpackSignature failed on", type(of:value))
         throw UnsupportedCoercionError(value: value, coercion: asHandlerInterface)
