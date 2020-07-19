@@ -42,7 +42,7 @@ public struct Token: CustomStringConvertible {
         case .unquotedName(_):  form = "unquotedName"
         default:                form = String(describing: self.form)
         }
-        return "<.\(form) \(self.whitespaceBefore == nil ? "" : "_")\(self.content.debugDescription)\(self.whitespaceAfter == nil ? "" : "_")>"
+        return "<.\(form) \(self.leadingWhitespace == nil ? "" : "_")\(self.content.debugDescription)\(self.trailingWhitespace == nil ? "" : "_")>"
     }
     
     // Q. what about non-Latin scripts? e.g. Arabic comma is `،` (don't suppose NFKC remaps it to `,`?); probably best to rely on top-level «language:…» annotation to switch/extend lexer's character sets [we can worry about implementing that later]
@@ -271,19 +271,20 @@ public struct Token: CustomStringConvertible {
     ]
     
     public let form: Form   // enum
-    let whitespaceBefore: Substring?
+    let leadingWhitespace: Substring?
     let content: Substring   // the matched character[s]
-    let whitespaceAfter: Substring? // nil = no adjoining whitespace; if non-nil, 1 or more non-linebreaking whitespace characters (space, tab, vtab, nbsp, etc) // TO DO: when disambiguating token sequences, should the type and length of whitespace be considered? e.g. `100 000 000` might be considered a single number in some locales; for now, best just to treat presence/absence of whitespace as a Boolean condition [the one exception is when analyzing previously indented code when generating best-guesses on where to rebalance unbalanced parens, as there we expect to find N tabs but should also be prepared to find 2N/3N/4N/8N spaces if code has been indented by other tools]
+    let trailingWhitespace: Substring? // nil = no adjoining whitespace; if non-nil, 1 or more non-linebreaking whitespace characters (space, tab, vtab, nbsp, etc) // TO DO: when disambiguating token sequences, should the type and length of whitespace be considered? e.g. `100 000 000` might be considered a single number in some locales; for now, best just to treat presence/absence of whitespace as a Boolean condition [the one exception is when analyzing previously indented code when generating best-guesses on where to rebalance unbalanced parens, as there we expect to find N tabs but should also be prepared to find 2N/3N/4N/8N spaces if code has been indented by other tools]
     let position: Position
     
     // TO DO: could do with isLeftDelimited:Bool, which needs to know if preceding token (if any) is punctuation (checking for right-delimited is a lookahead); Q. what about lexeme/value/error? [one of the problems here is that `word*` is a delimiter if `*` is an operator, otherwise it isn't, which implies that operators must be lexed before numbers can be extracted]; simplest way to force a solution is to require users to whitespace-separate all operators, thus `1*2` must be written as `1 * 2` or a syntax error occurs; this rule could be limited to cases where operator has adjoining words or digits, in which case `"a"&"b"` is still legal (since core punctuation always delimits), though we may want to keep the whitespace rule consistent; worth noting that in AS, `1mod 2` is legal [if unhelpful] while `1mod2` is a syntax error, so definitely something to be said for consistent clearance; main exception is unary +/-, where right-hand clearance should be non-required (or possibly even disallowed), thus `-foo`, not `- foo` (since the latter becomes ambiguous if the preceding token is a word)
     
-    init(_ form: Form, _ whitespaceBefore: Substring?, _ content: Substring, _ whitespaceAfter: Substring?, _ position: Position) {
-        assert(whitespaceBefore?.count != 0 && whitespaceAfter?.count != 0) // must be nil or non-empty
+    init(_ form: Form, _ leadingWhitespace: Substring?, _ content: Substring,
+                       _ trailingWhitespace: Substring?, _ position: Position) {
+        assert(leadingWhitespace?.count != 0 && trailingWhitespace?.count != 0) // must be nil or non-empty
         self.form = form
-        self.whitespaceBefore = whitespaceBefore
+        self.leadingWhitespace = leadingWhitespace
         self.content = content
-        self.whitespaceAfter = whitespaceAfter
+        self.trailingWhitespace = trailingWhitespace
         self.position = position
     }
     
@@ -307,20 +308,20 @@ public struct Token: CustomStringConvertible {
             position = .middle
         }
         return Token(form,
-                     (startIndex == self.content.startIndex ? self.whitespaceBefore : nil),
+                     (startIndex == self.content.startIndex ? self.leadingWhitespace : nil),
                      self.content[startIndex..<endIndex],
-                     (endIndex == self.content.endIndex ? self.whitespaceAfter : nil),
+                     (endIndex == self.content.endIndex ? self.trailingWhitespace : nil),
                      position)
     }
     
     func extract(_ form: Form) -> Token {
-        return Token(form, self.whitespaceBefore, self.content, self.whitespaceAfter, self.position)
+        return Token(form, self.leadingWhitespace, self.content, self.trailingWhitespace, self.position)
     }
     
     // caution: these only indicate presence/absence of adjoining whitespace; they do not indicate if contiguous tokens are self-delimiting (e.g. `foo123` vs `foo]`; `123.45` vs `123. 45`); only parsers can determine that (this is a problem for e.g. numeric parser, which needs to know start of number match is left-delimited)
     
-    var hasLeadingWhitespace: Bool { return self.whitespaceBefore != nil || self.position.isFirst }
-    var hasTrailingWhitespace: Bool { return self.whitespaceAfter != nil || self.position.isAFullMatch }
+    var hasLeadingWhitespace: Bool { return self.leadingWhitespace != nil || self.position.isFirst }
+    var hasTrailingWhitespace: Bool { return self.trailingWhitespace != nil || self.position.isAFullMatch }
     
     var isLeftContiguous: Bool { return !self.hasLeadingWhitespace }
     var isRightContiguous: Bool { return !self.hasTrailingWhitespace }

@@ -39,9 +39,9 @@ func endsWith(left: String, right: String) throws -> Bool {
 }
 
 func contains(left: String, right: String) throws -> Bool {
-    fatalError("Not yet implemented.")
+    return left.lowercased().contains(right.lowercased())
 }
 
 func isIn(left: String, right: String) throws -> Bool {
-    fatalError("Not yet implemented.")
+    return right.lowercased().contains(left.lowercased())
 }

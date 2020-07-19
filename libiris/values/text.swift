@@ -11,12 +11,12 @@
 import Foundation
 
 
-// Q. need to decide on interpolated strings - should they be a distinct datatype with literal representation, or library-defined `format_text {template, …}`; it may help to compare 'interpolated' lists, where list items may be resolved at runtime by commands, e.g. `["foo",bar,"baz",fub-2]` (also bear in mind that ScalarValues, being literal values, are meant to evaluate as themselves; an interpolated string value would be a non-literal expression whose value depends on where and when it's evaluated)
+// Q. need to decide on interpolated strings - should they be a distinct datatype with literal representation, or library-defined `format_text {template, …}`; it may help to compare 'interpolated' lists, where list items may be resolved at runtime by commands, e.g. `["foo",bar,"baz",fub-2]` (also bear in mind that ScalarValues, being literal values, are meant to evaluate as themselves; an interpolated string value would be a non-literal expression whose value depends on where and when it's evaluated); also worth considering whether to use texttemplate as foundation for interpolation command
 
 
 public struct Text: BoxedScalarValue, ExpressibleByStringLiteral {
     
-    public var description: String { return self.data.debugDescription } // temporary
+    public var description: String { return self.literalRepresentation() }
     
     public typealias StringLiteralType = String
     
@@ -33,6 +33,19 @@ public struct Text: BoxedScalarValue, ExpressibleByStringLiteral {
     public init(_ data: String) {
         self.data = data
     }
+    
+    //
+    
+    public func literalRepresentation() -> String {
+        var result = ""
+        for c in self.data { // escape double quotes
+            result.append(c)
+            if quotedStringDelimiterCharacters.contains(c) { result.append(c) }
+        }
+        return "“\(result)”"
+    }
+    
+    // coercion
     
     public func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
         guard let result = Int(self.data) else { // Int("0.0") returns nil, so need additional fallback
@@ -55,15 +68,6 @@ public struct Text: BoxedScalarValue, ExpressibleByStringLiteral {
 
 
 extension Text: KeyConvertible {
-    
-    public func literalRepresentation() -> String {
-        var result = ""
-        for c in self.data { // escape double quotes
-            result.append(c)
-            if quotedStringDelimiterCharacters.contains(c) { result.append(c) }
-        }
-        return "“\(result)”"
-    }
     
     public func hash(into hasher: inout Hasher) {
         self.data.hash(into: &hasher)

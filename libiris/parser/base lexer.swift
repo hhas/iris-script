@@ -3,6 +3,8 @@
 //  iris-script
 //
 
+// TO DO: there are a lot of misses (where the same lexer instance’s next() is called more than once, only for it to be discarded; this is probably unavoidable as it's essentially how lexers perform +1 lookahead, but it does mean a lot of repeat work; should base lexer at least keep a lookahead cache to reduce that overhead?)
+
 //  BaseLexer, given a string of source code, generates a stream of primitive .letters, .symbols, .digits and punctuation tokens. This is more granular than most lexers, e.g. the code `-3.14` will yield four tokens: .symbol("-"), .digits("3"), .separator(.period), .digits("14"). These low-level tokens require further reduction before they sufficiently high-level to be accepted by the downstream Parser, matching the `-` symbol as .operatorName("-") and combining the remaining three primitives into a single .value("3.14") token
 
 //  The base lexer can be wrapped with additional LineReaders that match particular sequences of low-level tokens and reduce them to higher-level tokens: names, numbers, operators, etc. The ordering of these adapters is significant, e.g. consider a DateReader which matches one very specific pattern of .digits(…) and .symbols(…) tokens, `0000-00-00` [where `0` = 0-9], and reduces it to a .value(DATE) token. This specialized reader must be applied before NumericReader and OperatorReader, otherwise those more general readers would reduce that character sequence to `.value(NUMBER)` and `.operatorName(HYPHEN)` tokens, which the DateReader would then ignore.

@@ -9,7 +9,12 @@ void EL_init(const char *argv0);
 
 void EL_dispose(void);
 
-CFStringRef EL_read(void);
+CFStringRef EL_readLine(void);
 
 void EL_setIndent(int n);
 
+char* EL_prompt(EditLine *e);
+
+void EL_writeHistory(const char *line);
+
+void EL_rewriteLine(const char *oldLine, const char *newLine);

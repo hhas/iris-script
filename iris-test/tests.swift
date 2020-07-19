@@ -13,8 +13,18 @@ import iris
 
 func test() {
     
+    // TO DO: sort out operand labels (and get rid of left/middle/right), and re-add keyword alias support to patterns
+    
+    var s: String
+    
+    s = "3/4 = true. [1,2]. if this then do,foo bar: baz,done"
+    
+    s = "true and true "
+    
+    s = " “helo” "
+    
     let parser = IncrementalParser()
-    parser.read("3/4 = true. [1,2]. if this then do,foo bar: baz,done")
+    parser.read(s)
     
     if let script = parser.ast() {
         

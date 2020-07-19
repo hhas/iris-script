@@ -31,8 +31,8 @@ public struct NameReader: LineReader {
             }
             let endToken = token
             let name = self.code[startToken.content.startIndex..<endToken.content.endIndex]
-            token = Token(.unquotedName(Symbol(String(name))), startToken.whitespaceBefore, name,
-                          endToken.whitespaceAfter, startToken.position.span(to: endToken.position))
+            token = Token(.unquotedName(Symbol(String(name))), startToken.leadingWhitespace, name,
+                          endToken.trailingWhitespace, startToken.position.span(to: endToken.position))
         //print("read name:", token, reader)
         default: ()
         }

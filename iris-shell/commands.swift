@@ -12,11 +12,11 @@ import iris
 // REPL support
 
 func writeResult(_ value: Value) {
-    print("☺︎ \(value)")
+    print("\u{1b}[32m☺︎\u{1b}[m \(value)")
 }
 
 func writeError(_ error: Error) {
-    fputs("☹︎ \(error)\n", stderr)
+    fputs("\u{1b}[31m☹︎\u{1b}[m \(error)\n", stderr)
 }
 
 func writeHelp(_ string: String) {

@@ -6,22 +6,25 @@
 //
 
 #include "iris-shell-Bridging-Header.h"
+#include <sys/ioctl.h>
+#include <sys/ttycom.h>
 
 
 EditLine* el;
 History* elHistory;
 HistEvent elEvent;
 
+
 #define PROMPT_BUFFER_SIZE (13)
 
 char prompt[PROMPT_BUFFER_SIZE];
-
-int indentDepth = -1;
 
 char* EL_prompt(EditLine *e) {
     return prompt;
 }
 
+
+int indentDepth = -1;
 
 void EL_setIndent(int n) {
     #define MAX_DEPTH (PROMPT_BUFFER_SIZE - 5)
@@ -59,14 +62,26 @@ void EL_dispose(void) {
     el_end(el);
 }
 
+void EL_writeHistory(const char *line) {
+    history(elHistory, &elEvent, H_ENTER, line);
+}
 
-CFStringRef EL_read(void) {
+//
+
+CFStringRef EL_readLine(void) {
     int count;
-    const char* line = el_gets(el, &count);
-    if (count > 0) { // -ve count indicates error
-        if (count > 1) history(elHistory, &elEvent, H_ENTER, line);
-        return CFStringCreateWithCString(NULL, line, kCFStringEncodingUTF8); // caller is responsible for releasing
+    const char *line = el_gets(el, &count);
+    if (count > 0) { // -ve count indicates error; 0 = input canceled
+        return CFStringCreateWithCString(NULL, line, kCFStringEncodingUTF8); // caller takes ownership
     } else {
         return CFSTR("");
     }
+}
+
+void EL_rewriteLine(const char *oldLine, const char *newLine) { // crude, but hopefully does the job
+    struct winsize w;
+    if (ioctl(fileno(stdout), TIOCGWINSZ, &w)) return;
+    int n = ((int)strlen(oldLine) + 1) / w.ws_col + 1; // calculate number of lines to move cursor up
+    printf("\x1b[%iA\x1bJ", n); // move cursor up and delete to end of screen to remove inputted code
+    printf("%s%s\n", EL_prompt(el), newLine); // reprint the prompt followed by the re-colored code
 }

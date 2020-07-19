@@ -15,7 +15,7 @@ func add(left: Number, right: Number) throws -> Number { return try left + right
 func subtract(left: Number, right: Number) throws -> Number { return try left - right }
 func multiply(left: Number, right: Number) throws -> Number { return try left * right }
 func divide(left: Number, right: Number) throws -> Number { return try left / right }
-func div(left: Double, right: Double) throws -> Double { return Double(left / right) }
+func div(left: Double, right: Double) throws -> Double { return (left / right).rounded(.towardZero) }
 func mod(left: Double, right: Double) throws -> Double { return left.truncatingRemainder(dividingBy: right) }
 
 // math comparison

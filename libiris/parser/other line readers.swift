@@ -69,8 +69,8 @@ public struct NameModifierReader: LineReader { // read hashtag, mentions, dot-no
                 let code = self.code[token.content.startIndex..<endToken.content.endIndex]
                 switch token.form {
                 case .hashtag:
-                    token = Token(.value(name), token.whitespaceBefore, code,
-                                  endToken.whitespaceAfter, token.position.span(to: endToken.position))
+                    token = Token(.value(name), token.leadingWhitespace, code,
+                                  endToken.trailingWhitespace, token.position.span(to: endToken.position))
                 default: fatalError("TODO: support .mentions token")
                 }
                 reader = endReader

@@ -225,3 +225,100 @@ extension Pattern {
 
 
 
+
+
+// terminal
+
+
+public class VT100Formatter {
+    
+    enum VT100: String {
+        
+        typealias RawValue = String
+        case none         = ""
+        case reset        = "\u{1b}[m"
+        case bold         = "\u{1b}[1m"
+        case faint        = "\u{1b}[2m"
+        case underline    = "\u{1b}[4m"
+        case red          = "\u{1b}[31m"
+        case green        = "\u{1b}[32m"
+        case yellow       = "\u{1b}[33m"
+        case blue         = "\u{1b}[34m"
+        case magenta      = "\u{1b}[35m"
+        case cyan         = "\u{1b}[36m"
+    }
+    
+    let nameStyle     = VT100.magenta.rawValue
+    let operatorStyle = "\u{1b}[1;31m" // bold red
+    let numberStyle   = VT100.blue.rawValue
+    let textStyle     = VT100.blue.rawValue
+    let symbolStyle   = VT100.green.rawValue
+    
+    private var result = ""
+    
+    public init() { }
+    
+    private func faintUnderscores(_ s: Substring, _ color: String) -> String {
+        return "\(color)\(s.replacingOccurrences(of: "_", with: "\u{1b}[2m_\u{1b}[m\(color)"))\u{1b}[m"
+    }
+    
+    private var id = -1
+    
+    public func write(_ token: Token, _ id: Int) {
+        // because LineReader.next() may be invoked more than once per state (e.g. when performing lookahead or rolling back when an optimistic match fails), we use an incrementing ID to filter out duplicate calls
+        if id > self.id { self.id = id } else { return }
+        if let ws = token.leadingWhitespace { result.append(String(ws)) }
+        switch token.form {
+        case .unquotedName:
+            result.append(self.faintUnderscores(token.content, self.nameStyle))
+        case .operatorName: // this includes `nothing` and `true`/`false`
+            result.append(self.faintUnderscores(token.content, self.operatorStyle))
+        default:
+            let code: String
+            switch token.form {
+            case .quotedName:                   code = self.nameStyle
+            case .value(let v):
+                switch v {
+                case is Text:                   code = self.textStyle
+                case is Int, is Double:         code = self.numberStyle
+                case is Number:                 code = self.numberStyle
+                case is Symbol:                 code = self.symbolStyle
+                default:                        code = ""
+                }
+            default:                            code = ""
+            }
+            result.append("\(code)\(token.content)\(code.isEmpty ? "" : "\u{1b}[m")")
+        }
+    }
+    
+    public func read() -> String {
+        defer { self.result = "" }
+        return self.result
+    }
+}
+
+
+public struct VT100Reader: LineReader {
+    
+    private static var count: Int = 0
+    
+    let id: Int
+
+    public var code: String { return self.reader.code }
+
+    private let formatter: VT100Formatter
+    private let reader: LineReader
+    
+    public init(_ reader: LineReader, _ formatter: VT100Formatter) {
+        self.reader = reader
+        self.formatter = formatter
+        VT100Reader.count += 1
+        self.id = VT100Reader.count
+    }
+    
+    public func next() -> (Token, LineReader) {
+        let (token, nextReader) = self.reader.next()
+        formatter.write(token, self.id)
+        return (token, VT100Reader(nextReader, self.formatter))
+    }
+}

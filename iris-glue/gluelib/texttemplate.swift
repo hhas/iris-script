@@ -16,10 +16,15 @@
  ««+NAME»» CONTENT ««~NAME»» SEPARATOR ««-NAME»» -- as above, except SEPARATOR text is inserted between each rendered CONTENT (if omitted, the default separator is "")
  */
 
+// See also: https://github.com/hhas/htmltemplate
+
+
 import Foundation
 
 
 // TO DO: should render funcs [re]throw?
+
+// TO DO: opening and closing delimiters should be customizable in initializer (`««…»»` is used in iris’s gluelib to generate Swift code as angle quotes aren’t part of Swift’s own syntax, but general text templating would probably want to use familiar `{…}` or `{{…}}`)
 
 
 @dynamicMemberLookup
