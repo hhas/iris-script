@@ -34,6 +34,7 @@ public func stdlib_loadConstants(into env: Environment) {
         // TO DO: confirm atomic and prefix forms of same operator parse correctly
         registry.atom("optional")
         registry.atom("editable")
+        registry.infix("with_default", 500)
 
     }
     
@@ -64,7 +65,7 @@ public func stdlib_loadConstants(into env: Environment) {
     
     env.define(coercion: asNothing) // by default, a native handler will return the result of the last expression evaluated; use `…returning no_result` to suppress that so that it always returns `nothing` (note that while using `return nothing` would give same the runtime result, declaring it via signature makes it clear and informs introspection and documentation tools as well)
     
-    env.define(coercion: AsDefault(asValue, defaultValue: nullValue)) // note: AsDefault requires constraint args (coercion and defaultValue) to instantiate; native language will call() it to create new instances with appropriate constraints
+    env.define(coercion: AsSwiftPrecis(AsSwiftDefault(asValue, defaultValue: nullValue), "with_default")) // TO DO: AsDefault requires constraint args (coercion and defaultValue) to instantiate; native language will call() it to create new instances with appropriate constraints // TO DO: need to review SwiftCoercion usage within native environment // TO DO: should `with_default` be an optional clause to `optional…with_default…`?
 
     env.define(coercion: AsEditable())
 

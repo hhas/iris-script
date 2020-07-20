@@ -16,7 +16,7 @@ import Foundation
 
 public struct Text: BoxedScalarValue, ExpressibleByStringLiteral {
     
-    public var description: String { return self.literalRepresentation() }
+    public var description: String { return self.literalDescription() }
     
     public typealias StringLiteralType = String
     
@@ -36,7 +36,7 @@ public struct Text: BoxedScalarValue, ExpressibleByStringLiteral {
     
     //
     
-    public func literalRepresentation() -> String {
+    public func literalDescription() -> String {
         var result = ""
         for c in self.data { // escape double quotes
             result.append(c)

@@ -313,9 +313,9 @@ public struct AsSwiftPrecis<T: SwiftCoercion>: SwiftCoercion { // allows a compl
         return "\(type(of: self))(\(self.coercion.swiftLiteralDescription), \(self.precis.debugDescription))"
     }
     
-    public var name: Symbol { return Symbol(self.precis) } // TO DO: what should this be?
+    public var name: Symbol { return Symbol(self.precis) } // TO DO: what should this be? (issue is when we store precis in environment slot so it can be used natively)
     
-    public var description: String { return "«type: \(self.precis)»" } // TO DO: what should this be?
+    public var description: String { return self.precis }
     
     public typealias SwiftType = T.SwiftType
     

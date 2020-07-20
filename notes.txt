@@ -202,3 +202,6 @@
 
 // `matchers` argument is from the head of the blockStack (used to track nesting)
 // e.g. given an in-progress match for `if EXPR1 then EXPR2` that has matched the `if` keyword and the start of EXPR1, when the `then` keyword is encountered, fully reduce the preceding EXPR1 (for this, we need to backsearch the shift stack for that matcher by uniqueID; once we find it, we know the range of tokens to reduce; e.g. given `if…then…` we want to reduce everything between the `if` and the `then` keywords to a single .value, but we don't want to risk reducing the `if EXPR` as well in the event that `if` is overloaded as a prefix operator as well; i.e. we can't make assumptions about library-defined operators)
+
+
+// queryable AST, e.g. see petevilter.me/post/datalog-typechecking, witheve.com

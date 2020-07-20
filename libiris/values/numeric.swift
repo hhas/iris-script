@@ -94,7 +94,7 @@ public enum Number: NumericValue, KeyConvertible { // what about fractions? (thi
         }
     }
     
-    public var description: String { return self.literalRepresentation() }
+    public var description: String { return self.literalDescription() }
     
     public static let nominalType: Coercion = asNumber
     
@@ -151,7 +151,7 @@ public enum Number: NumericValue, KeyConvertible { // what about fractions? (thi
         return try self.toDouble()
     }
     public func toString(in scope: Scope, as coercion: Coercion) throws -> String { // TO DO: coercion param's type?
-        return self.literalRepresentation()
+        return self.literalDescription()
     }
     
     public func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
@@ -181,18 +181,18 @@ public enum Number: NumericValue, KeyConvertible { // what about fractions? (thi
     /*
     private func _toInt(_ min: Int, _ max: Int) throws -> Int {
         let n = try self.toInt()
-        if n < min || n > max { throw ConstraintError(value: self, message: "Number is not in allowed range: \(self.literalRepresentation())") }
+        if n < min || n > max { throw ConstraintError(value: self, message: "Number is not in allowed range: \(self.literalDescription())") }
         return n
     }
     private func _toUInt(_ max: UInt) throws -> UInt {
         let n = try self.toInt()
-        if n < 0 || UInt(n) > max { throw ConstraintError(value: self, message: "Number is not in allowed range: \(self.literalRepresentation())") }
+        if n < 0 || UInt(n) > max { throw ConstraintError(value: self, message: "Number is not in allowed range: \(self.literalDescription())") }
         return UInt(n)
     }
     */
     //
     
-    func literalRepresentation() -> String { // get canonical native code representation (note: this is currently implemented as a method to allow for formatting options to be passed in future; TO DO: decide method name, e.g. `nativeLiteralDescription(…)`?, and add to Value protoco) // TO DO: check these representations are always correct
+    func literalDescription() -> String { // get canonical native code representation (note: this is currently implemented as a method to allow for formatting options to be passed in future; TO DO: decide method name, e.g. `nativeLiteralDescription(…)`?, and add to Value protoco) // TO DO: check these representations are always correct
         switch self {
         case .integer(let n, _):
             return String(n)

@@ -29,6 +29,21 @@ public protocol LineReader { // common API by which [partial] lexers and parsers
     // TO DO: worth adding peek()? (while next() can safely be used for lookahead, it doesn't allow for, say, ignoring linebreaks or annotations)
 }
 
+public extension LineReader {
+    
+    func sliceCode(from startToken: Token, to endToken: Token) -> Substring {
+        return self.code[startToken.content.startIndex..<endToken.content.endIndex]
+    }
+        
+    func newToken(for form: Token.Form, from startToken: Token, to endToken: Token) -> Token {
+        return Token(form,
+                     startToken.leadingWhitespace,
+                     self.sliceCode(from: startToken, to: endToken),
+                     endToken.trailingWhitespace,
+                     startToken.position.span(to: endToken.position))
+    }
+}
+
 
 
 

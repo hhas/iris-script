@@ -21,7 +21,7 @@ import Foundation
 
 // TO DO: parenthesize operations to override operator precedence as needed
 
-// TO DO: should Symbol implement default literalRepresentation that single-quotes anything outside of C-like identifiers (see .unquotedName); problem here is that names are defined by custom lexer stage, e.g. NameLexer, not base lexer (which only defines built-in punctuation and sub-word components)
+// TO DO: should Symbol implement default literalDescription that single-quotes anything outside of C-like identifiers (see .unquotedName); problem here is that names are defined by custom lexer stage, e.g. NameLexer, not base lexer (which only defines built-in punctuation and sub-word components)
 
 // TO DO: language really needs annotation support before pretty printing can be implemented (otherwise PP will “disappear” comments, etc); also need to decide default layout rules, and how to annotate elective formatting (e.g. lists and records laid out vertically using LF separators instead of horizontally using commas; blocks laid out horizontally instead of vertically, non-essential parens)
 
@@ -89,26 +89,26 @@ open class BasicFormatter {
 
     public func atomic(_ value: AtomicValue) {
         switch value {
-        case let value as Bool:
-            self.append(value ? "true" : "false")
+        case let v as Bool:
+            self.append(v ? "true" : "false")
         case is NullValue:
             self.append("nothing")
-        case let value as Symbol:
-            self.append("#\(value.label)") // TO DO: add single quotes if label is empty or contains restricted chars
+        case let v as Symbol:
+            self.append("#\(v.label)") // TO DO: add single quotes if label is empty or contains restricted chars
         default: self.opaque(value)
         }
     }
     
     public func scalar(_ value: ScalarValue) {
         switch value {
-        case let value as Text:
-            self.append(value.literalRepresentation())
-        case let value as Number:
-            self.append(value.literalRepresentation())
-        case let value as Int:
-            self.append(Number(value).literalRepresentation())
-        case let value as Double:
-            self.append(Number(value).literalRepresentation())
+        case let v as Text:
+            self.append(v.literalDescription())
+        case let v as Number:
+            self.append(v.literalDescription())
+        case let v as Int:
+            self.append(Number(v).literalDescription())
+        case let v as Double:
+            self.append(Number(v).literalDescription())
         case is NullValue:
             self.append("nothing")
         default: self.opaque(value)
@@ -234,6 +234,8 @@ public class VT100Formatter {
     
     enum VT100: String {
         
+        var description: String { return self.rawValue }
+        
         typealias RawValue = String
         case none         = ""
         case reset        = "\u{1b}[m"
@@ -248,8 +250,9 @@ public class VT100Formatter {
         case cyan         = "\u{1b}[36m"
     }
     
-    let nameStyle     = VT100.magenta.rawValue
-    let operatorStyle = "\u{1b}[1;31m" // bold red
+    let nameStyle     = VT100.red.rawValue + VT100.bold.rawValue
+    let labelStyle    = VT100.red.rawValue
+    let operatorStyle = VT100.magenta.rawValue
     let numberStyle   = VT100.blue.rawValue
     let textStyle     = VT100.blue.rawValue
     let symbolStyle   = VT100.green.rawValue
@@ -259,7 +262,7 @@ public class VT100Formatter {
     public init() { }
     
     private func faintUnderscores(_ s: Substring, _ color: String) -> String {
-        return "\(color)\(s.replacingOccurrences(of: "_", with: "\u{1b}[2m_\u{1b}[m\(color)"))\u{1b}[m"
+        return "\(color)\(s == "_" ? String(s) : s.replacingOccurrences(of: "_", with: "\u{1b}[2m_\u{1b}[m\(color)"))\u{1b}[m"
     }
     
     private var id = -1
@@ -271,7 +274,9 @@ public class VT100Formatter {
         switch token.form {
         case .unquotedName:
             result.append(self.faintUnderscores(token.content, self.nameStyle))
-        case .operatorName: // this includes `nothing` and `true`/`false`
+        case .label:
+            result.append(self.faintUnderscores(token.content, self.labelStyle))
+        case .operatorName: // TO DO: this currently applies to `nothing`, `true`/`false`, `π` as these are defined as atomic operators and the standard reductionForAtomOperator() reduces down to command rather than to constant; see also TODO on reductionForAtomOperator (TBH, library glues should probably specify when to reduce operator directly to constant, although it does leave the question of whether `nothing`, `true`, and `false` should be treated as core syntax rather than operators given they are [effectively] core features; keeping them as operators does allow more flexibility wrt DSLs and localization though)
             result.append(self.faintUnderscores(token.content, self.operatorStyle))
         default:
             let code: String
@@ -283,6 +288,7 @@ public class VT100Formatter {
                 case is Int, is Double:         code = self.numberStyle
                 case is Number:                 code = self.numberStyle
                 case is Symbol:                 code = self.symbolStyle
+                case is Bool, is NullValue:     code = self.symbolStyle
                 default:                        code = ""
                 }
             default:                            code = ""

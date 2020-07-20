@@ -8,6 +8,8 @@ import Foundation
 // TO DO: what should be public vs internal?
 
 
+// TO DO: support `➞ VALUE` syntax as shortcut for `«result: VALUE»` annotation? this'd standardize the syntax for illustrating script results, allowing it to be ignored by eval when it appears in code (`-->` could be used, c.f. AppleScript, as ASCII alias, though unlike AS it would cover to end of value, not just end of line); Q. what should be syntax for illustrating run-time errors? (for that matter, how should errors display natively? if they can appear as literal values, there’s no need for separate syntax; plus that same literal syntax could be used to instantiate them as well; possible represent as an `error {…}` command, with record containing error info? [evaluating `error` would in the first instance raise an error, which might be a discrete Value or possibly an instance of Command or a subclass of Command])
+
 // TO DO: split punctuation and quotes into sub-enums? what about other 'raw' tokens (letters, symbols, underscores, etc)? if we're going to use partial lexers/parsers to assemble names, numbers, etc from raw tokens, then it'll simplify main parser if it never has to deal with unprocessed .letters/.digits/etc
 
 // TO DO: where to define core punctuation's adjoining whitespace rules? (presumably full parser will digest these pattern-matching rules, along with pattern-matching rules for command grammar, and library-defined operator patterns)

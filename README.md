@@ -61,7 +61,7 @@ Shift-reduce parser with some customizations to detect expression boundaries and
 
 Ubiquitous use of parameterizable coercions (also first-class values) for automatic type conversion and constraint checking. Code is untyped; however, handler interfaces can include coercion information to provide both auto-generated user documentation and run-time conversions and checks that handler arguments and results are suitable for use. Weak latent structural rather than strong nominal typing: “If a value looks acceptable, it [generally] is.”
 
-No built-in behavior beyond evaluating values. All other behavior is provided by library-supplied handlers. This includes “standard” behaviors such as assignment and flow control. e.g. It is trivial to define a JSON-style data-transfer language and safely parse and render it: instantiate an `Environment` containing no commands or operators except those used to represent `true`/`false`/`nothing` and evaluate code in that.
+No built-in behavior beyond evaluating values. All other behavior is provided by library-supplied handlers. This includes “standard” behaviors such as assignment and flow control. e.g. It is trivial to define a JSON-style data-transfer language and safely parse and render it: instantiate an `Environment` containing no commands or operators except those used to represent `true`/`false`/`nothing` and evaluate code in that. Similarly, the `iris-glue` code generator imports only a subset of stdlib functionality (coercions) and instead obtains its main behavior from `gluelib`.
 
 Commands are effectively unary prefix operators with an arbitrary name and optional (record) operand, e.g.:
 

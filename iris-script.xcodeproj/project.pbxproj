@@ -23,7 +23,7 @@
 		4F988CC224BCC5A500EE66C7 /* characters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25553C22E5D3DE002FAE5E /* characters.swift */; };
 		4F988CC324BCC5A500EE66C7 /* token.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2694D622DF5607009B8FC0 /* token.swift */; };
 		4F988CC424BCC5A500EE66C7 /* base lexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2422D6818000D636B9 /* base lexer.swift */; };
-		4F988CC524BCC5A500EE66C7 /* name reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FE23110B76007D694C /* name reader.swift */; };
+		4F988CC524BCC5A500EE66C7 /* name readers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FE23110B76007D694C /* name readers.swift */; };
 		4F988CC624BCC5A500EE66C7 /* numeric reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2694D822E061AC009B8FC0 /* numeric reader.swift */; };
 		4F988CC724BCC5A500EE66C7 /* unicode reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C825231316D9007D694C /* unicode reader.swift */; };
 		4F988CC824BCC5A500EE66C7 /* operator reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F29320322E25E7100BC0AD4 /* operator reader.swift */; };
@@ -295,7 +295,7 @@
 		4FC5C7FA23109824007D694C /* gluelib_handlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gluelib_handlers.swift; sourceTree = "<group>"; };
 		4FC5C7FB23109826007D694C /* gluelib_operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gluelib_operators.swift; sourceTree = "<group>"; };
 		4FC5C7FC23110B1F007D694C /* quote document reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "quote document reader.swift"; sourceTree = "<group>"; };
-		4FC5C7FE23110B76007D694C /* name reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "name reader.swift"; sourceTree = "<group>"; };
+		4FC5C7FE23110B76007D694C /* name readers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "name readers.swift"; sourceTree = "<group>"; };
 		4FC5C81B23129BCC007D694C /* handler glue template.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "handler glue template.swift"; sourceTree = "<group>"; };
 		4FC5C81C23129BCC007D694C /* define handler glue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "define handler glue.swift"; sourceTree = "<group>"; };
 		4FC5C81D23129BCC007D694C /* texttemplate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = texttemplate.swift; sourceTree = "<group>"; };
@@ -509,7 +509,7 @@
 			isa = PBXGroup;
 			children = (
 				4F345E9F24C38C7900532054 /* quote reader.swift */,
-				4FC5C7FE23110B76007D694C /* name reader.swift */,
+				4FC5C7FE23110B76007D694C /* name readers.swift */,
 				4F2694D822E061AC009B8FC0 /* numeric reader.swift */,
 				4FC5C825231316D9007D694C /* unicode reader.swift */,
 				4F29320322E25E7100BC0AD4 /* operator reader.swift */,
@@ -974,7 +974,7 @@
 				4F988CC224BCC5A500EE66C7 /* characters.swift in Sources */,
 				4F988CC324BCC5A500EE66C7 /* token.swift in Sources */,
 				4F988CC424BCC5A500EE66C7 /* base lexer.swift in Sources */,
-				4F988CC524BCC5A500EE66C7 /* name reader.swift in Sources */,
+				4F988CC524BCC5A500EE66C7 /* name readers.swift in Sources */,
 				4F988CC624BCC5A500EE66C7 /* numeric reader.swift in Sources */,
 				4F988CC724BCC5A500EE66C7 /* unicode reader.swift in Sources */,
 				4F988CC824BCC5A500EE66C7 /* operator reader.swift in Sources */,

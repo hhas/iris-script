@@ -8,6 +8,8 @@
 
 //  TO DO: what about defining a .partiallyQuotedText(type,content) token form? that should allow interim reduction of text between quote and linebreak (not sure how this should signal to next line that it should continue reading quoted content, but can think about that later; ideally, we also want a heuristic for making "best guess" as to whether a given text is intended to appear inside or outside quotes, providing error messages and autocorrection with smarter boundary detection when quoted text is missing closing quote)
 
+// TO DO: when scanning a line to best-guess if it’s inside or outside quotes, need a negative-probability heuristic for "word word word word…" sequences as while these are valid code they are unlikely to be as commands rarely nest more than 2 or 3 deep in real-world use
+
 import Foundation
 
 
@@ -34,11 +36,7 @@ public struct QuoteReader: LineReader { // reduces quoted text (string literal o
                 (token, reader) = reader.next()
             }
             let endToken = token
-            token = Token(.annotation(s),
-                               startToken.leadingWhitespace,
-                               // TO DO: this slice fails if `»` appears on a new line (think we need to fix .lineBreak tokens so they contain the original linebreaks, not empty placeholder); we should probably also capture original string's indexes within Token, rather than taking them from substrings (which may be both undocumented behavior and a golden opportunity for obscure bugs to sneak in [not to mention it's just a right old pain]); alternatively, implement a proper code-slicing API on Token that takes the start and end tokens and a new Form and synthesizes a new Token spanning from start of one to end of the other (which is what this line and others are trying to do in awkwardly repetitive and ad-hoc fashion)
-                               reader.code[startToken.content.startIndex..<endToken.content.endIndex], endToken.trailingWhitespace,
-                               startToken.position.span(to: endToken.position)) // TO DO: make sure this picks up entire content
+            token = self.newToken(for: .annotation(s), from: startToken, to: endToken) // TO DO: this slice fails if `»` appears on a new line (think we need to fix .lineBreak tokens so they contain the original linebreaks, not empty placeholder); we should probably also capture original string's indexes within Token, rather than taking them from substrings (which may be both undocumented behavior and a golden opportunity for obscure bugs to sneak in [not to mention it's just a right old pain]); alternatively, implement a proper code-slicing API on Token that takes the start and end tokens and a new Form and synthesizes a new Token spanning from start of one to end of the other (which is what this line and others are trying to do in awkwardly repetitive and ad-hoc fashion)
         case .endAnnotation:
             fatalError("found unbalanced `»`") // TO DO: ditto
         case .stringDelimiter:
@@ -59,11 +57,7 @@ public struct QuoteReader: LineReader { // reduces quoted text (string literal o
                 (token, reader) = reader.next()
             }
             let endToken = token
-            token = Token(.value(Text(s)),
-                               startToken.leadingWhitespace,
-                               reader.code[startToken.content.startIndex..<endToken.content.endIndex], // TO DO: confirm slicing original string with substrings' indexes is legal
-                endToken.trailingWhitespace,
-                startToken.position.span(to: endToken.position))
+            token = self.newToken(for: .value(Text(s)), from: startToken, to: endToken)
         default:
             token = startToken
         }

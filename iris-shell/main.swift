@@ -5,9 +5,9 @@
 
 // TO DO: how to handle multi-line strings? (currently typing LF within a string literal breaks input)
 
-// TO DO: better history support for multi-line input (currently history captures single lines only)
-
 // TO DO: given multi-expression group `(1 LF + 2)`, how to clarify that this means `(1, +2)`, not `(1 + 2)` (i.e. the `1` is evaled and discarded, and the `2` is returned as the group expr’s result; in principle, PP could discard side-effect-free exprs whose results are unused, though automatically rewriting code to that extent should only be done after advising/asking the author as they may simply have mistyped in which case correction, not deletion, is required)
+
+// TO DO: CLI should enable experimentation with `!` and `?` modifiers (just need to decide how those are applied in blocks, e.g. should comma-separated exprs ending in !/? be grouped and the modifier attached to entire group/each expr in group, or should it only apply to immediately preceding expr? there is a good argument for treating entire comma sequence as a single modified group—else why bother with comma separators at all?—but need to check how that is scoped)
 
 import Foundation
 import iris
@@ -18,27 +18,18 @@ import iris
 // the previous line’s result will be stored under the name `_`
 let previousValue = EditableValue(nullValue, as: asAnything)
 
-
-// load REPL-specific handlers into environment
-func loadSessionState(_ env: Environment) {
-    // load REPL-specific commands
-    env.define(interface_help, procedure_help)
-    env.define(interface_commands, procedure_commands)
-    env.define(interface_quit, procedure_quit)
-    try! env.set("_", to: previousValue)
-}
-
-// TO DO: REPL session should probably run in subscope, with a read-only barrier between that and the top-level environment
+// TO DO: REPL session should probably run in subscope, with a write barrier between session env and the top-level environment containing stdlib (will give this more thought when implementing library loader, as libraries should by default share a single read-only env instance containing stdlib as their parent to avoid unnecessary overheads)
 
 
 func runREPL() {
     writeHelp("Welcome to the iris runtime’s interactive shell. Type `help` for assistance.")
     EL_init(CommandLine.arguments[0])
     let parser = IncrementalParser()
+    loadREPLHandlers(parser.env)
+    try! parser.env.set("_", to: previousValue)
     let formatter = VT100Formatter()
     parser.adapterHook = { VT100Reader($0, formatter) } // install extra lexer stage
     var block = "" // captures multi-line input for use in history
-    loadSessionState(parser.env)
     while isRunning {
         let indent = parser.incompleteBlocks().count
         block += String(repeating: " ", count: indent)
@@ -49,21 +40,22 @@ func runREPL() {
         if !code.isEmpty {
             block += code + "\n"
             parser.read(code) // modified lexer chain writes VT100-annotated code to VT100Formatter as a side-effect
-            EL_rewriteLine(raw, formatter.read()); // re-print code, this time in color
+            EL_rewriteLine(raw, formatter.read()) // replace the plain line input with the VT100-formatted code
             do {
-                if let ast = parser.ast() { // parser has a complete single-/multi-line expression, so evaluate it
+                if let ast = parser.ast() { // parser has accummulated a complete single-/multi-line expression sequence
                     //print("PARSED:", ast)
                     let result = try ast.eval(in: parser.env, as: asAnything)
+                    let ignoreNullResult = previousValue.get(nullSymbol)! is NullValue
                     previousValue.set(to: result)
-                    if let error = result as? SyntaxErrorDescription {
+                    if let error = result as? SyntaxErrorDescription { // TO DO: this is a bit hazy as we decide exactly how to encapsulate and discover syntax errors within AST
                         writeError(error.error)
-                    } else {
+                    } else if !(ignoreNullResult && result is NullValue) {
                         writeResult(result)
                     }
                     EL_writeHistory(block)
                     block = ""
                     parser.clear() // once the expression is evaluated, clear it so parser can start reading next one
-                } // else expression is incomplete, e.g. "[[1]" will continue reading lines until the closing "]" is received, allowing parser to complete the AST
+                } // else the expression is incomplete, e.g. if first line is `[[1]`, will continue reading lines until the closing "]" is received
             } catch {
                 EL_writeHistory(block)
                 block = ""

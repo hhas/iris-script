@@ -237,21 +237,12 @@ public class Parser {
                     print(error)
                 }
                 
-            case .unquotedName(let name), .quotedName(let name): // command name or record label
-                // `NAME COLON` is ALWAYS a label (i.e. is part of core syntax rules), so we can reduce it here to intermediate .label(NAME), which simplifies LP command parsing
-                if case .colon = self.current.next().token.form { // this performs +1 lookahead
-                    self.shiftLabel(named: name) // this shifts the reduced `.label(NAME)` onto stack
-                } else {
-                    self.shift() // shift the name onto stack
-                }
             case .operatorName(let definitions):
                 //print("READOP", definitions.name);  print(self.blockStack)
                 // called by parser's main loop when an .operatorName(…) token is encountered
                 let name = Symbol(self.current.token.content)
               //  print(".OP", definitions.name); self.blockStack.show()
-                if case .colon = self.current.next().token.form { // `NAME COLON` is reduced to .label(NAME) same as above
-                    self.shiftLabel(named: name)
-                } else if let matches = self.blockStack.conjunctionMatches(for: name) { // conjunction keywords are greedily matched, e.g. given the expression `tell foo to bar`, the `to` keyword is immediately claimed by the in-progress `tell…to…` matcher so a new prefix `to…` matcher is not created
+                if let matches = self.blockStack.conjunctionMatches(for: name) { // conjunction keywords are greedily matched, e.g. given the expression `tell foo to bar`, the `to` keyword is immediately claimed by the in-progress `tell…to…` matcher so a new prefix `to…` matcher is not created
                     // note: this only executes if the keyword is an expected conjunction
                     self.reduceExpressionBeforeConjunction(name, matchedBy: matches) // this also shifts the conjunction onto stack
                 } else {

@@ -47,37 +47,3 @@ public struct UnpopToken: LineReader { // analogous to pushing an existing/modif
     }
 }
 
-
-
-public struct NameModifierReader: LineReader { // read hashtag, mentions, dot-notation // TO DO: currently only `#NAME` is implemented (Q. should dot notation be limited to `@NAME.NAME…`, or might it also be used outside of `@…`?)
-    
-    public var code: String { return reader.code }
-    
-    private let reader: LineReader
-    
-    public init(_ reader: LineReader) {
-        self.reader = reader
-    }
-    
-    public func next() -> (Token, LineReader) {
-        var (token, reader) = self.reader.next()
-        switch token.form {
-        case .hashtag, .mentions:
-            let (endToken, endReader) = reader.next()
-            switch endToken.form {
-            case .quotedName(let name), .unquotedName(let name):
-                let code = self.code[token.content.startIndex..<endToken.content.endIndex]
-                switch token.form {
-                case .hashtag:
-                    token = Token(.value(name), token.leadingWhitespace, code,
-                                  endToken.trailingWhitespace, token.position.span(to: endToken.position))
-                default: fatalError("TODO: support .mentions token")
-                }
-                reader = endReader
-            default: ()
-            }
-        default: ()
-        }
-        return (token, NameModifierReader(reader))
-    }
-}

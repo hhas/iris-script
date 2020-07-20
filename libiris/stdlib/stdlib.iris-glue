@@ -5,6 +5,10 @@
 
 «TODO: should symbolic operators have word-based aliases? (these would provide speakable support automatically; alternative is to match spoken phrases to the symbols’ Unicode names)»
 
+«TODO: should `&` have higher precedence than command? e.g. `uppercase "Hello," & name`»
+
+
+
 to ‘^’ {left as number, right as number} returning number requires {
     can_error: true
     swift_function: exponent

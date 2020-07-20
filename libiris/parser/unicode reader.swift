@@ -53,7 +53,7 @@ public struct UnicodeReader: LineReader { // needs applied before NumericReader
         if !result.isEmpty {
             // TO DO: what about annotating Text for PP?
             // TO DO: also need to decide if/where contiguous string literals and/or 0u sequences should be merged into single Text value
-            endToken = Token(.value(Text(result)), startToken.leadingWhitespace, self.code[startToken.content.startIndex..<endToken.content.endIndex], endToken.trailingWhitespace, startToken.position.span(to: endToken.position))
+            endToken = self.newToken(for: .value(Text(result)), from: startToken, to: endToken)
             //print(endToken)
         }
         return (endToken, UnicodeReader(endReader))

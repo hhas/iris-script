@@ -68,6 +68,8 @@ void EL_writeHistory(const char *line) {
 
 //
 
+// TO DO: if we want to colorize per-token during input, use el_getc() to read chars up to next space or linebreak and let main loop feed that immediately to parser
+
 CFStringRef EL_readLine(void) {
     int count;
     const char *line = el_gets(el, &count);
@@ -81,7 +83,19 @@ CFStringRef EL_readLine(void) {
 void EL_rewriteLine(const char *oldLine, const char *newLine) { // crude, but hopefully does the job
     struct winsize w;
     if (ioctl(fileno(stdout), TIOCGWINSZ, &w)) return;
-    int n = ((int)strlen(oldLine) + 1) / w.ws_col + 1; // calculate number of lines to move cursor up
-    printf("\x1b[%iA\x1bJ", n); // move cursor up and delete to end of screen to remove inputted code
+    int linecount = 0; // oldLine includes trailing LF
+    int offset = (int)strlen(EL_prompt(NULL));
+    char c;
+    int i = 0;
+    while ((c = oldLine[i])) {
+        if (c == '\x0a' || offset == w.ws_col) {
+            linecount++;
+            offset = 0;
+        } else {
+            offset++;
+        }
+        i++;
+    }
+    printf("\x1b[%iA\x1bJ", linecount); // move cursor up and delete to end of screen to remove inputted code
     printf("%s%s\n", EL_prompt(el), newLine); // reprint the prompt followed by the re-colored code
 }
