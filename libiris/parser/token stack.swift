@@ -181,8 +181,9 @@ extension Array where Element == Parser.TokenInfo {
                 result.append(self[index].form)
                 index += 1
             } else {
-                print("Missing last match in reduceOperatorExpression: \(index), \(stopIndex), \(self[index])")
-                result.append(.value(SyntaxErrorDescription("Missing last match in reduceOperatorExpression: \(index), \(stopIndex)"))) // TO DO: better error message
+                print("Missing last match in reduceOperatorExpression: \(index..<stopIndex), \(self[index])")
+                self.show()
+                result.append(.value(SyntaxErrorDescription("Missing last match in reduceOperatorExpression: \(index..<stopIndex)"))) // TO DO: better error message
                 index += 1 //
             }
         }

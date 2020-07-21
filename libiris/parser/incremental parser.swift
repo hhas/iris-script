@@ -60,6 +60,8 @@ public class IncrementalParser {
     
     private let operatorReader: LineReaderAdapter
     private var parser: Parser
+    
+    private var lastToken: Token.Form?
 
     public func lineReaderAdapter(_ lexer: LineReader) -> LineReader {
         return NumericReader(self.operatorReader(NameModifierReader(NameReader(QuoteReader(lexer)))))
@@ -81,13 +83,31 @@ public class IncrementalParser {
         self.parser = Parser(tokenStream: EndOfDocumentReader(), operatorRegistry: self.env.operatorRegistry)
     }
     
-    public func read(_ code: String) {
+    func newLexer(_ code: String) -> LineReader? {
         if let baseLexer = BaseLexer(code) {
-            let lexer = self.adapterHook(self.lineReaderAdapter(baseLexer))
-            let doc = IncrementalDocumentReader(lexer: lexer)
-            try! self.parser.replaceReader(EndOfLineReader(nextReader: doc))
-            self.parser.parseScript()
+            return self.adapterHook(self.lineReaderAdapter(baseLexer))
+        } else {
+            return nil
         }
+    }
+    
+    public func read(_ code: String) {
+        // TO DO: if last token was partial quote then create RemainingStringQuoteReader to continue that
+        let lexer: LineReader
+        if case .beginningOfQuote = self.lastToken {
+            lexer = RemainingStringQuoteReader(code, resumeLexer: { self.newLexer($0) ?? EndOfCodeReader() })
+        } else if case .middleOfQuote = self.lastToken {
+            lexer = RemainingStringQuoteReader(code, resumeLexer: { self.newLexer($0) ?? EndOfCodeReader() })
+        } else if let baseLexer = BaseLexer(code) {
+            lexer = self.adapterHook(self.lineReaderAdapter(baseLexer))
+        } else {
+            return
+        }
+        let doc = IncrementalDocumentReader(lexer: lexer)
+        try! self.parser.replaceReader(EndOfLineReader(nextReader: doc))
+        self.parser.parseScript()
+        self.lastToken = self.parser.tokenStack.last?.form
+        //print("lastToken:", self.lastToken as Any)
     }
     
     public func ast() -> AbstractSyntaxTree? { // being a “stealth-Lisp”, an iris AST is just a native Value (currently a Block) // TO DO: once annotation support is implemented, annotation and layout information will also be attached to the AST value (we'll probably want to make it a class for this so that top-level annotations can be stored more easily; also, while Command is a class so easily annotatable, other [literal] values are generally structs so would require wrappers to annotate, which we want to avoid as traversing AST is heavily recursive as it is; putting these annotations in AST as well will avoid adding run-time overheads, though will increase complexity as each indirect annotation will need some way to reference the Value to which it applies)

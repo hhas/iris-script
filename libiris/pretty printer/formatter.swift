@@ -48,6 +48,7 @@ open class BasicFormatter {
     private(set) public var result = ""
     
     func append(_ string: String) {
+        // TO DO: this is inserting extra chars into multi-line string literal, which is wrong
         if let first = string.first, let last = self.result.last {
             if !delimitingChars.contains(first) && !delimitingChars.contains(last) {
                 self.result += " "

@@ -47,7 +47,7 @@ let linebreakCharacters     = CharacterSet.newlines
 let whitespaceCharacters    = CharacterSet.whitespaces // TO DO: how to treat vtab, nbsp?
 let nonWhitespaceCharacters = whitespaceCharacters.inverted
 let digitCharacters         = CharacterSet.decimalDigits // 0-9; parsing
-let punctuationCharacters   = CharacterSet(Token.predefinedSymbols.keys.map{ $0.unicodeScalars.first! })
+let punctuationCharacters   = CharacterSet(Token.Form.predefinedSymbols.keys.map{ $0.unicodeScalars.first! })
 
 
 

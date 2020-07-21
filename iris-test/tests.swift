@@ -23,8 +23,14 @@ func test() {
     
     s = " “helo” "
     
+    
     let parser = IncrementalParser()
-    parser.read(s)
+    
+    parser.read(" “abc ")
+
+    parser.read(" def” ")
+
+    //parser.read(s)
     
     if let script = parser.ast() {
         
@@ -38,6 +44,7 @@ func test() {
     } else {
         print("Couldn't parse script.")
     }
+    let _ = s
     
 }
 

@@ -92,10 +92,11 @@ public struct BaseLexer: LineReader { // don't think lexer should care if it's a
     
     // TO DO: should code also be Substring? (e.g. script.split() returns Array<Substring>); challenge is dealing with editing: every time a line of code is changed, it's probably better to put a new String into script array
     
-    internal init(code: String, at offset: String.Index, after whitespace: Substring?, isFirst: Bool = false) {
+    internal init(code: String, at offset: String.Index, after leadingWhitespace: Substring?, isFirst: Bool = false) {
+        assert(leadingWhitespace != "", "whitespace must be nil or non-empty substring") // TO DO: would it be better just to use empty substring rather than nil throughout?
         self.code = code
         self.offset = offset
-        self.leadingWhitespace = whitespace
+        self.leadingWhitespace = leadingWhitespace
         self.isFirst = isFirst
     }
     
@@ -136,7 +137,7 @@ public struct BaseLexer: LineReader { // don't think lexer should care if it's a
         let form: Token.Form
         let tokenEnd: String.Index
         let firstCharacter = self.code[self.offset]
-        if let punctuationForm = Token.predefinedSymbols[firstCharacter] { // core punctuation character
+        if let punctuationForm = Token.Form.predefinedSymbols[firstCharacter] { // core punctuation character
             if case .nameDelimiter = punctuationForm { // found a single quote
                 let start = self.advanceByOne() // step over opening quote
                 // find the closing quote (string/annotation/linbreak)
@@ -172,6 +173,7 @@ public struct BaseLexer: LineReader { // don't think lexer should care if it's a
                 form = .lineBreak
                 tokenEnd = self.advanceOver(linebreakCharacters)
             default:
+                if whitespaceCharacters.contains(firstCharacter) { print("BUG: lexer received untrimmed string.") }
                 print("BaseLexer received illegal character: \(firstCharacter.debugDescription)")
                 form = .error(BadSyntax.illegalCharacters)
                 tokenEnd = self.advanceByOne() // this assumes invalid chars are relatively rare; if common, we'd want to match sequences

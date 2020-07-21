@@ -269,18 +269,63 @@ public class Parser {
                 self.shift() // shift the punctuation onto stack
             case .lineBreak: // expression terminator
                // print("LF REDUCE, stack size =", self.tokenStack.count)
-                self.foundRightExpressionDelimiter() // reduce the preceding EXPR to a single .value
-               // print("LF SHIFT")
+                
+                switch self.tokenStack.last?.form {
+                case .beginningOfQuote(_), .middleOfQuote(_): ()
+                default:
+                    self.foundRightExpressionDelimiter() // reduce the preceding EXPR to a single .value
+                }
+                // print("LF SHIFT")
                 self.shift() // shift the linebreak onto stack
                 
+            case .endOfQuote(kind: let kind, content: _):
+                switch kind {
+                case .string: self.reduceMultiPartStringLiteral(form)
+                case .annotation(_): fatalError("TODO: multipart annotation")
+                }
             default:
                 self.shift()
             }
             self.advance()
         }
         //self.tokenStack.show()
-        self.foundRightExpressionDelimiter()
-        self.reductionForTopLevelExpressions() // top-level is basically a block without delimiters
+        switch self.tokenStack.last?.form {
+        case .beginningOfQuote(_), .middleOfQuote(_): ()
+        default:
+            //print("foundRightExpressionDelimiter")
+            self.foundRightExpressionDelimiter()
+            self.reductionForTopLevelExpressions() // top-level is basically a block without delimiters
+        }
+    }
+    
+    func reduceMultiPartStringLiteral(_ form: Token.Form) {
+        //print("reduceMultiPartStringLiteral");self.tokenStack.show()
+        // TO DO: guard cases shouldn't happen unless parser’s being fed crap; how to handle if it is?
+        guard case .endOfQuote(kind: let kind, content: var content) = form, case .string = kind else { fatalError() }
+        loop: while let form = self.tokenStack.popLast()?.form {
+            switch form {
+            case .beginningOfQuote(kind: let kind, content: let text, leadingWhitespace: _):
+                guard case .string = kind else {
+                    fatalError("TODO: expected beginning of string literal but found: \(form)")
+                    //break loop
+                }
+                self.shift(form: .value(Text(text + content)))
+                //print("REDUCED");self.tokenStack.show()
+                return
+            case .middleOfQuote(kind: let kind, content: let text):
+                guard case .string = kind else {
+                    fatalError("TODO: expected beginning of string literal but found: \(form)")
+                    //break loop
+                }
+                content = text + content
+            case .lineBreak:
+                content = "\n" + content
+            default:
+                fatalError("TODO: expected beginning of string literal but found: \(form)")
+            }
+        }
+        // TO DO: deal with empty stack (shouldn't happen)
+        fatalError("TODO: expected beginning of string literal but found start of code")
     }
     
     
@@ -321,6 +366,13 @@ public class Parser {
                 }
                 wasValue = false
                 self.tokenStack.skipLineBreaks(&i)
+            
+            case .beginningOfQuote:
+                print(".beginningOfQuote")
+                wasValue = true
+            case .middleOfQuote:
+                wasValue = true
+                
             case .lineBreak:
                 wasValue = false
             default:
