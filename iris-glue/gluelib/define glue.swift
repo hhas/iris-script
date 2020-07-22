@@ -28,39 +28,7 @@ import iris
 // TO DO: distinguish between swift_function, swift_struct, etc; this'll allow stub template to create appropriate skeleton (currently ElementRange stub renders as a func instead of struct+init)
 
 
-var _handlerGlues = [HandlerGlue]()
-
-
 // TO DO: glue definitions could be constructed by running the glue definition script with a custom Environment and custom/standard `to` handler, where evaluating the `to` operator's procedure operand populates a sub-scope that is a wrapper around/extension of HandlerGlue (for now we use a custom `to` handler that directly disassembles the procedure body, but this approach doesn't allow for metaprogramming); one caveat to evaluation strategy is that pair values need to be lazily evaluated - not entirely sure how to distinguish a command that returns the value to be used (e.g. when factoring out common information such as arithmetic operator definitions into a shared handler) from a command that is the value to be used (e.g. as in swift_function)
-
-
-public struct HandlerGlue: Value {
-    
-    public var description: String { return "«HandlerGlue \(self.interface) \(self.canError), \(self.useScopes), \(String(describing: self.swiftFunction)), \(String(describing: self.operatorSyntax))»"}
-    public static let nominalType: Coercion = AsComplex<HandlerGlue>(name: "HandlerGlue")
-    
-    // TO DO: also extract user documentation (from annotations); Q. where should user docs go? may be an idea to put them in separate data file that is loaded as needed (or just use the native glue def itself, assuming it isn't too slow to parse)
-    typealias Parameter = (name: String, binding: String, coercion: String)
-    
-    typealias SwiftFunction = (name: String, params: [String])
-    typealias OperatorSyntax = (form: String,
-                                precedence: Int,
-                                associate: PatternDefinition.Associativity,
-                                keywords: [String],
-                                reducefunc: String?) // TO DO: use [Keyword]
-    
-    let interface: HandlerInterface
-    
-    var name: String { return self.interface.name.label }
-    var parameters: [Parameter] { return self.interface.parameters.map{($0.name.label, $0.binding.label, $0.coercion.swiftLiteralDescription)} }
-    var result: String { return self.interface.result.swiftLiteralDescription } // coercion name
-    
-    let canError: Bool
-    let useScopes: [String] // commandEnv, handlerEnv // TO DO: any use-cases for per-invocation sub-env?
-    let swiftFunction: SwiftFunction? // if different to native names
-    let operatorSyntax: OperatorSyntax?
-}
-
 
 // TO DO: this is replaced with record
 typealias Options = [String: Value]
@@ -75,27 +43,29 @@ func unboxOption<T: SwiftCoercion>(_ options: Options, _ name: String, in scope:
     return try coercion.unbox(value: options[name] ?? nullValue, in: scope) // TO DO: slightly skeezy; we bypass swiftEval() as we don't want Command to look up handler (kludge it for now, but this is part of larger debate on double dispatch); nope, that doesn't work either as AsComplex calls swiftEval
 }
 
+let asPatternValues = AsArray(asPatternValue)
 
 let asOperatorSyntax = AsRecord([ // TO DO: given a native record/enum coercion, code generator should emit corresponding struct/enum definition and/or extension with static `unboxNativeValue()` method and primitive coercion // TO DO: rework this to allow patterns to be specified
-    ("form", asSymbol),
+    ("pattern", asPatternValues),
     ("precedence", asInt),
-    ("associate", AsSwiftDefault(asSymbol, defaultValue: "left")), // TO DO: need AsEnum(ofType,options)
-    ("keywords", AsSwiftDefault(AsArray(asSymbol), defaultValue: [])),
+    ("associate", AsSwiftDefault(asSymbol, default: "left")), // TO DO: need AsEnum(ofType,options)
     ("reducer", AsSwiftOptional(asSymbol))
     ])
 
 
+
+
 func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEnv: Scope, handlerEnv: Scope) throws {
-  //  print("making glue for", interface)
-    guard let handlerGlues = handlerEnv.get(handlerGluesName) as? OpaqueHandlerGlues else {
-        throw UnknownNameError(name: handlerGluesName, in: handlerEnv)
+    print("making glue for", interface)
+    guard let handlerGlues = handlerEnv.get(handlerGluesKey) as? OpaqueHandlerGlues else {
+        throw UnknownNameError(name: handlerGluesKey, in: handlerEnv)
     }
     guard let body = attributes as? Record else { // TO DO: glue currently uses asIs to pass record without any evaluation, leaving defineHandlerGlue to extract its fields below; eventually handler_glue record should be defined as a SwiftCoercion with named+typed fields, allowing it to unbox directly to HandlerGlue
         print("bad attributes (not record):", attributes)
         throw BadSyntax.missingExpression
     }
     let options = Options(uniqueKeysWithValues: body.data.map{ ($0.key, $1) })
-    let canError = try unpackOption(options, "can_error", in: commandEnv, as: AsSwiftDefault(asBool, defaultValue: false))
+    let canError = try unpackOption(options, "can_error", in: commandEnv, as: AsSwiftDefault(asBool, default: false))
     let swiftFunction: HandlerGlue.SwiftFunction?
     if let cmd = try unboxOption(options, "swift_function", in: commandEnv, as: AsSwiftOptional(AsLiteral<Command>())) {
         // TO DO: if given, swiftfunc's parameter record should be of form `{label,…}` and/or `{label:binding,…}`
@@ -107,30 +77,40 @@ func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEn
     } else {
         swiftFunction = nil
     }
-    let useScopes = try unpackOption(options, "use_scopes", in: commandEnv, as: AsSwiftDefault(AsArray(asSymbol), defaultValue: [])).map{"\($0.key)Env"}
+    let useScopes = try unpackOption(options, "use_scopes", in: commandEnv, as: AsSwiftDefault(AsArray(asSymbol), default: [])).map{"\($0.key)Env"}
     
     let operatorSyntax: HandlerGlue.OperatorSyntax?
     if let record = try unboxOption(options, "operator", in: commandEnv, as: AsOptional(asOperatorSyntax)) as? Record {
-        let form = record.data[0].value as! Symbol
-        let precedence = try! asInt.unbox(value: record.data[1].value, in: commandEnv) // native coercion may return Number
-        let associativity: PatternDefinition.Associativity
-        switch record.data[2].value as! Symbol {
-        case "left":
-            associativity = .left
-        case "right":
-            associativity = .right
-        default:
-            print("malformed operator record", record)
-            throw BadSyntax.missingExpression
-        }
-        let keywords = try! AsArray(asSymbol).unbox(value: record.data[3].value, in: commandEnv).map{$0.key} // TO DO: what type?
-        let reducefunc = try! AsSwiftOptional(asSymbol).unbox(value: record.data[4].value, in: commandEnv)?.label
-        operatorSyntax = (form.key, precedence, associativity, keywords, reducefunc)
+        operatorSyntax = try unpackOperatorDefinition(record, in: commandEnv)
     } else {
         operatorSyntax = nil
     }
     handlerGlues.data.append(HandlerGlue(interface: interface, canError: canError, useScopes: useScopes,
                                          swiftFunction: swiftFunction, operatorSyntax: operatorSyntax))
+}
+
+func unpackOperatorDefinition(_ record: Record, in commandEnv: Scope) throws -> HandlerGlue.OperatorSyntax {
+    let patterns = try! asPatternValues.unbox(value: record.data[0].value, in: commandEnv).map{$0.data}
+    let patternSeq: [iris.Pattern]
+    if patterns.count == 1, case .sequence(let seq) = patterns[0] {
+        patternSeq = seq
+    } else {
+        patternSeq = patterns
+    }
+    let precedence = try! asInt.unbox(value: record.data[1].value, in: commandEnv) // native coercion may return Number
+    let associativity: Associativity
+    switch record.data[2].value as! Symbol {
+    case "left":
+        associativity = .left
+    case "right":
+        associativity = .right
+    default:
+        print("malformed operator record", record)
+        throw BadSyntax.missingExpression
+    }
+    let reducefunc = try! AsSwiftOptional(asSymbol).unbox(value: record.data[3].value, in: commandEnv)!.label
+    return (patternSeq, precedence, associativity, reducefunc)
+
 }
 
 

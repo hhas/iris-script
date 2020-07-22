@@ -31,20 +31,22 @@ public struct QuoteReader: LineReader { // reduces quoted text (string literal o
             var s = String(startToken.trailingWhitespace ?? "")
             var depth = 1
             (token, reader) = reader.next()
-            while token.form != .endOfCode {
+            loop: while token.form != .endOfCode {
                 switch token.form {
                 case .startAnnotation:
                     depth += 1
                 case .endAnnotation:
                     depth -= 1
-                    if depth == 0 { break }
+                    if depth == 0 { break loop }
                 default: ()
                 }
                 s += token.content + (token.trailingWhitespace ?? "")
                 (token, reader) = reader.next()
             }
             if token.form == .endOfCode {
-                fatalError("TODO")
+                print(depth)
+                //print(self.code[startToken.content.startIndex..<self.code.endIndex])
+                fatalError("TODO: finish QuoteReader annotation support")
                 
             } else {
                 token = self.newToken(for: .annotation(s), from: startToken, to: token) // TO DO: this slice fails if `»` appears on a new line (think we need to fix .lineBreak tokens so they contain the original linebreaks, not empty placeholder); we should probably also capture original string's indexes within Token, rather than taking them from substrings (which may be both undocumented behavior and a golden opportunity for obscure bugs to sneak in [not to mention it's just a right old pain]); alternatively, implement a proper code-slicing API on Token that takes the start and end tokens and a new Form and synthesizes a new Token spanning from start of one to end of the other (which is what this line and others are trying to do in awkwardly repetitive and ad-hoc fashion)

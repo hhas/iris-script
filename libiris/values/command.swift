@@ -32,7 +32,7 @@ import Foundation
 
 // handlers with operator syntax should be non-maskable and non-mutable by default
 
-
+// labels permit decoupling of interface from implementation in native handlers, so probably best not to use binding names as fallback when matching labeled arguments; rather, avoid unnecessary labels in primitive signatures (where label is omitted, the binding name—which is purely for documentation there—is automatically used as label); Q. should packaged native libraries require/add labels and/or coercions automatically?
 
 
 //
@@ -74,10 +74,11 @@ public class Command: ComplexValue {
     public var swiftLiteralDescription: String { return "\(type(of: self))(\(self.name.swiftLiteralDescription)\(self.arguments.isEmpty ? "" : ", [\(self.arguments.map{"(\($0.label.swiftLiteralDescription), \($0.value.swiftLiteralDescription))"}.joined(separator: ", "))]"))" }
     
     public typealias Argument = Record.Field
+    public typealias Arguments = [Argument]
     
     public var description: String {
         // TO DO: PP needs to apply operator syntax/quote name if command's name matches an existing operator (Q. how should operator definitions be scoped? per originating library, or per main script? [if we annotate command in parser, it'll presumably capture originating library's operator syntax])
-        return "‘\(self.name.label)’" + (self.arguments.count == 0 ? "" : " {\(self.arguments.map{ "\(["", leftOperand, middleOperand, rightOperand].contains($0) ? "" : "\($0.label): ")\($1)" }.joined(separator: ", "))}")
+        return "‘\(self.name.label)’" + (self.arguments.count == 0 ? "" : " {\(self.arguments.map{ "\($0.isEmpty ? "" : "\($0.label): ")\($1)" }.joined(separator: ", "))}")
     }
     
     public static let nominalType: Coercion = asCommand
@@ -85,18 +86,18 @@ public class Command: ComplexValue {
     // TO DO: what about a slot for storing optional operator definition? (or general 'annotations' slot?) we also need to indicate when pp should wrap a command in elective parens (as opposed to required parens, which pp should add automatically as operator precedence dictates)
     
     public let name: Symbol
-    public let arguments: [Argument] // TO DO: single, optional argument which is coerced to record and pattern-matched against HandlerInterface.Parameter
+    public let arguments: Arguments // TO DO: single, optional argument which is coerced to record and pattern-matched against HandlerInterface.Parameter
     
-    let operatorDefinition: PatternMatch?
+    let operatorPattern: PatternMatch?
     
-    public init(_ name: Symbol, _ arguments: [Argument] = [], operatorDefinition: PatternMatch? = nil) {
+    public init(_ name: Symbol, _ arguments: Arguments = [], operatorPattern: PatternMatch? = nil) {
         self.name = name
         self.arguments = arguments
-        self.operatorDefinition = operatorDefinition
+        self.operatorPattern = operatorPattern
     }
     
-    public convenience init(_ name: Symbol, _ record: Record, operatorDefinition: PatternMatch? = nil) {
-        self.init(name, record.data, operatorDefinition: operatorDefinition)
+    public convenience init(_ name: Symbol, _ record: Record, operatorPattern: PatternMatch? = nil) {
+        self.init(name, record.data, operatorPattern: operatorPattern)
     }
     
     internal var _handler: Handler = _bindHandlerOnFirstUse
@@ -152,7 +153,7 @@ public class Command: ComplexValue {
         return nullValue
     }
         
-    internal func value(at index: inout Int, for param: (label: Symbol, coercion: Coercion), in commandEnv: Scope) throws -> Value {
+    internal func value(at index: inout Int, for param: (label: Symbol, binding: Symbol, coercion: Coercion), in commandEnv: Scope) throws -> Value {
         let i = index
         do {
             return try self.value(at: &index, named: param.label).eval(in: commandEnv, as: param.coercion)
@@ -162,7 +163,7 @@ public class Command: ComplexValue {
     }
     
     // TO DO: really need to attach handler (or at least its interface)
-    public func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
+    public func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Symbol, binding: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
         let i = index
         do {
             //print("Command.swiftValue() for:", param, "from", self.arguments)
@@ -177,7 +178,7 @@ public class Command: ComplexValue {
                 print(self)
                 print(self._handler.interface)
                 print(param)
-                print("Couldn't match the `\(self.name.label)` handler’s `\(param.label.label)` parameter to any of the `\(self.name.label)` command’s labeled arguments: `\(self.arguments.map{$0.label.label}.filter{!$0.isEmpty}.joined(separator: ", "))`")
+                print("Couldn't match the `\(self.name.label)` handler’s `\(param.label.label)` parameter to any of the `\(self.name.label)` command’s labeled arguments: \(self.arguments.map{$0.label.label}.filter{!$0.isEmpty})") // DEBUG
                 throw UnknownArgumentError(at: i, of: self).from(error) // TO DO: need better error description that compares expected labels to found labels, indicating mismatch
             }
         }
@@ -185,32 +186,18 @@ public class Command: ComplexValue {
 }
 
 
-// TO DO: get rid of these
-let leftOperand   = Symbol("left")
-let middleOperand = Symbol("middle")
-let rightOperand  = Symbol("right")
-
 public extension Command {
     
     // TO DO: also annotate Command instance with operator definition for use in error messages/pp
     
-    convenience init(_ definition: PatternMatch) {
-        self.init(definition.name, operatorDefinition: definition)
+    convenience init(_ match: PatternMatch) {
+        self.init(match.name, operatorPattern: match)
     }
-    convenience init(_ definition: PatternMatch, left: Value) { // TO DO: get rid of keywords; pass Values as Array and/or varargs and rely on PatternMatch to supply correct arg labels (we need arg labels to distinguish overloaded operators, e.g. `op arg` vs `arg op`)
-        self.init(definition.name, [(leftOperand, left)], operatorDefinition: definition)
-    }
-    convenience init(_ definition: PatternMatch, middle: Value) {
-        self.init(definition.name, [(middleOperand, middle)], operatorDefinition: definition)
-    }
-    convenience init(_ definition: PatternMatch, right: Value) {
-        self.init(definition.name, [(rightOperand, right)], operatorDefinition: definition)
-    }
-    convenience init(_ definition: PatternMatch, left: Value, right: Value) {
-        self.init(definition.name, [(leftOperand, left), (rightOperand, right)], operatorDefinition: definition)
-    }
-    convenience init(_ definition: PatternMatch, left: Value, middle: Value, right: Value) {
-        self.init(definition.name, [(leftOperand, left), (middleOperand, middle), (rightOperand, right)], operatorDefinition: definition)
+    
+    convenience init(_ match: PatternMatch, _ arguments: Value...) {
+        assert(arguments.count == match.argumentLabels.count) // these should _always_ be the same (any optional operands omitted in script will not appear in the final exact match); anything else is a bug
+        // caution: this assumes operands will always have same ordering as parameters // TO DO: are there any use cases where operands may appear in different order to parameters? if so, reducefunc will also need HandlerInterface to reorder the arguments correctly
+        self.init(match.name, [(Symbol, Value)](zip(match.argumentLabels, arguments)), operatorPattern: match)
     }
 }
 

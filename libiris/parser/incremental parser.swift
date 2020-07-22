@@ -64,7 +64,7 @@ public class IncrementalParser {
     private var lastToken: Token.Form?
 
     public func lineReaderAdapter(_ lexer: LineReader) -> LineReader {
-        return NumericReader(self.operatorReader(NameModifierReader(NameReader(QuoteReader(lexer)))))
+        return NumericReader(self.operatorReader(NameModifierReader(NameReader(QuoteReader(UnicodeReader(lexer))))))
     }
     
     public var adapterHook: (LineReader) -> LineReader = { $0 }

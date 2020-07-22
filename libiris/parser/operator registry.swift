@@ -124,12 +124,16 @@ public class OperatorRegistry: CustomDebugStringConvertible { // caution: being 
 
 public extension OperatorRegistry { // convenience methods for standard operator forms
     
-    //     registry.prefix("NOT", 400)
-    //     registry.infix(Keyword("≤", "<="), 540)
-    //     registry.infix("else", 100, .right)
+    func add(_ pattern: [Pattern], _ precedence: Precedence,
+             _ associate: Associativity, _ reducer: @escaping Parser.ReduceFunc) {
+        self.add(PatternDefinition(pattern: pattern, precedence: precedence, associate: associate, reducer: reducer))
+    }
+    func add(_ pattern: [Pattern], _ precedence: Precedence, _ reducer: @escaping Parser.ReduceFunc) {
+        self.add(PatternDefinition(pattern: pattern, precedence: precedence, associate: .left, reducer: reducer))
+    }
     
-    // as in original, need sub-token matching of symbol char sequences
-
+    // TO DO: following are still used in stdlib_loadConstants
+    
     // `OPNAME`
     func atom(_ name: Keyword, reducer: Parser.ReduceFunc? = nil) {
         self.add(PatternDefinition(pattern: [.keyword(name)], autoReduce: true, reducer: reducer ?? reductionForAtomOperator))
@@ -142,7 +146,7 @@ public extension OperatorRegistry { // convenience methods for standard operator
     }
     
     // `EXPR OPNAME EXPR`
-    func infix(_ name: Keyword, _ precedence: Precedence, _ associate: PatternDefinition.Associativity = .left, reducer: Parser.ReduceFunc? = nil) {
+    func infix(_ name: Keyword, _ precedence: Precedence, _ associate: Associativity = .left, reducer: Parser.ReduceFunc? = nil) {
         self.add(PatternDefinition(pattern: [.expression, .keyword(name), Pattern.expression],
                                     precedence: precedence, associate: associate, reducer: reducer ?? reductionForInfixOperator))
     }
@@ -168,7 +172,7 @@ public extension OperatorRegistry { // convenience methods for standard operator
     // `OPNAME DELIM (EXPR DELIM)* OPNAME`
     func prefix(_ name: Keyword, suffix: Keyword, reducer: @escaping Parser.ReduceFunc = reductionForKeywordBlock) {
         self.add(PatternDefinition(pattern:
-            [.keyword(name), M_DELIM, .zeroOrMore([.expression, M_DELIM]), .keyword(suffix)], 
+            [.keyword(name), M_DELIM, .zeroOrMore([.expression, M_DELIM]), .keyword(suffix)],
                                     autoReduce: true, reducer: reducer))
     }
     
@@ -178,10 +182,4 @@ public extension OperatorRegistry { // convenience methods for standard operator
                                     precedence: precedence, reducer: reducer ?? reductionForInfixOperatorWithConjunction))
     }
     
-    /*
-    func add(_ pattern: [Pattern], _ precedence: Precedence = Precedence.min,
-             _ associate: PatternDefinition.Associativity = .left,
-             autoReduce: Bool = false, reducer: @escaping Parser.ReduceFunc) {
-        self.add(PatternDefinition(pattern: pattern, precedence: precedence, associate: associate, autoReduce: autoReduce, reducer: reducer))
-    }*/
 }

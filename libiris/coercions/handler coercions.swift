@@ -119,12 +119,13 @@ public struct AsHandlerInterface: SwiftCoercion {
     
     public typealias SwiftType = HandlerInterface
     
+    public init() {}
+    
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         //print("AsHandlerInterface.unbox:", value)
         return try unpackHandlerInterface(value, in: scope)
     }
 
-    
     public func coerce(value: Value, in scope: Scope) throws -> Value {
         return try self.unbox(value: value, in: scope)
     }
@@ -140,6 +141,8 @@ public struct AsHandler: SwiftCoercion {
     public let name: Symbol = "procedure"
     
     public typealias SwiftType = Handler
+    
+    public init() {}
     
     // TO DO: when should handlers capture their lexical scope? and when should that capture be strongref vs weakref?
     

@@ -168,4 +168,9 @@ public class ExtendedEnvironment: Environment {
     public let operatorRegistry = OperatorRegistry()
     
 
+    public func dump() {
+        for (k, v) in self.frame {
+            print(k,"=", type(of: v), " ", v)
+        }
+    }
 }

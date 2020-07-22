@@ -8,6 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		4F2B0C6624C0CC4F00664ABB /* formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B0C6524C0CC4F00664ABB /* formatter.swift */; };
+		4F2C4D1E24C864CE0058749A /* pattern value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D1624C863420058749A /* pattern value.swift */; };
+		4F2C4D2124C86BD30058749A /* patterns.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2024C86BD30058749A /* patterns.swift */; };
+		4F2C4D2324C8C0A40058749A /* handler glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2224C8C0A40058749A /* handler glue.swift */; };
+		4F2C4D2924C8DC910058749A /* gluelib_constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2824C8DC910058749A /* gluelib_constants.swift */; };
+		4F2C4D2C24C8F5CC0058749A /* stdlib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2A24C8F5CB0058749A /* stdlib_operators.swift */; };
+		4F2C4D2D24C8F5CC0058749A /* stdlib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2B24C8F5CC0058749A /* stdlib_handlers.swift */; };
+		4F2F81A024C739CC00EB2F0F /* opaque value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5504224C06EFC00509806 /* opaque value.swift */; };
 		4F345EA024C38C7900532054 /* quote reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F345E9F24C38C7900532054 /* quote reader.swift */; };
 		4F877A5E24BD90A90067A463 /* libedit.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F877A5924BD90A90067A463 /* libedit.tbd */; };
 		4F877A6624BD97D10067A463 /* libedit.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F877A5924BD90A90067A463 /* libedit.tbd */; };
@@ -76,8 +83,6 @@
 		4F988CF824BCC5CB00EE66C7 /* std text.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24B323156A8F001C1941 /* std text.swift */; };
 		4F988CF924BCC5CC00EE66C7 /* std control.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24CD23165870001C1941 /* std control.swift */; };
 		4F988CFA24BCC5CC00EE66C7 /* std state.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F857702230D34AE002B47F2 /* std state.swift */; };
-		4F988CFB24BCC5CC00EE66C7 /* stdlib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25FB8B22B6E561007EE7AE /* stdlib_handlers.swift */; };
-		4F988CFC24BCC5CC00EE66C7 /* stdlib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26F7172306C410002DD292 /* stdlib_operators.swift */; };
 		4F988CFD24BCC5CC00EE66C7 /* stdlib_constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F857700230C9247002B47F2 /* stdlib_constants.swift */; };
 		4F988CFE24BCC5CC00EE66C7 /* reference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FAF5F44231E817A0082FB6F /* reference.swift */; };
 		4F988CFF24BCC5CC00EE66C7 /* reference selectors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2594002324E58400B57593 /* reference selectors.swift */; };
@@ -96,7 +101,7 @@
 		4FD41C1C24BE614600B56A14 /* null token stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FD41C1B24BE614600B56A14 /* null token stream.swift */; };
 		4FE5502724C035D500509806 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5502624C035D500509806 /* main.swift */; };
 		4FE5503124C0387E00509806 /* libiris.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988CB624BCC4D700EE66C7 /* libiris.a */; };
-		4FE5503424C0389400509806 /* define handler glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81C23129BCC007D694C /* define handler glue.swift */; };
+		4FE5503424C0389400509806 /* define glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81C23129BCC007D694C /* define glue.swift */; };
 		4FE5503524C0389400509806 /* handler stub template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F409195231904C900045E85 /* handler stub template.swift */; };
 		4FE5503624C0389400509806 /* handler glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81B23129BCC007D694C /* handler glue template.swift */; };
 		4FE5503724C0389400509806 /* operator glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24B123150C52001C1941 /* operator glue template.swift */; };
@@ -104,7 +109,6 @@
 		4FE5503924C0389400509806 /* gluelib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FA23109824007D694C /* gluelib_handlers.swift */; };
 		4FE5503A24C0389400509806 /* gluelib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FB23109826007D694C /* gluelib_operators.swift */; };
 		4FE5504024C06B9600509806 /* glue renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5503F24C06B9600509806 /* glue renderer.swift */; };
-		4FE5504324C06EFC00509806 /* opaque value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5504224C06EFC00509806 /* opaque value.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -229,7 +233,6 @@
 		4F25FB8422B64B58007EE7AE /* numeric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = numeric.swift; sourceTree = "<group>"; };
 		4F25FB8622B68530007EE7AE /* query funcs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "query funcs.swift"; sourceTree = "<group>"; };
 		4F25FB8922B6AC82007EE7AE /* std general.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "std general.swift"; sourceTree = "<group>"; };
-		4F25FB8B22B6E561007EE7AE /* stdlib_handlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = stdlib_handlers.swift; sourceTree = "<group>"; };
 		4F26065322BECD7B0036D904 /* record.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = record.swift; sourceTree = "<group>"; };
 		4F26065522C0158C0036D904 /* value modifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "value modifiers.swift"; sourceTree = "<group>"; };
 		4F26065722C015A30036D904 /* symbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = symbol.swift; sourceTree = "<group>"; };
@@ -240,7 +243,6 @@
 		4F2694D622DF5607009B8FC0 /* token.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = token.swift; sourceTree = "<group>"; };
 		4F2694D822E061AC009B8FC0 /* numeric reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "numeric reader.swift"; sourceTree = "<group>"; };
 		4F2694DA22E06D24009B8FC0 /* parser protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "parser protocols.swift"; sourceTree = "<group>"; };
-		4F26F7172306C410002DD292 /* stdlib_operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = stdlib_operators.swift; sourceTree = "<group>"; };
 		4F27087522D9E584009F40B2 /* keyed list.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "keyed list.swift"; sourceTree = "<group>"; };
 		4F282D5524AEFF470027D6DE /* reduce expressions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reduce expressions.swift"; sourceTree = "<group>"; };
 		4F28323E2474712C004C9CE5 /* reduce commands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reduce commands.swift"; sourceTree = "<group>"; };
@@ -255,7 +257,14 @@
 		4F29320322E25E7100BC0AD4 /* operator reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator reader.swift"; sourceTree = "<group>"; };
 		4F2B0C6524C0CC4F00664ABB /* formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = formatter.swift; sourceTree = "<group>"; };
 		4F2B81BE22CCD63E00FD1EB8 /* record coercion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record coercion.swift"; sourceTree = "<group>"; };
+		4F2BA06F24C7805F006CAF22 /* stdlib.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "stdlib.iris-glue"; sourceTree = "<group>"; };
 		4F2BAC3824B6017800107A87 /* block stack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "block stack.swift"; sourceTree = "<group>"; };
+		4F2C4D1624C863420058749A /* pattern value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "pattern value.swift"; sourceTree = "<group>"; };
+		4F2C4D2024C86BD30058749A /* patterns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = patterns.swift; sourceTree = "<group>"; };
+		4F2C4D2224C8C0A40058749A /* handler glue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler glue.swift"; sourceTree = "<group>"; };
+		4F2C4D2824C8DC910058749A /* gluelib_constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gluelib_constants.swift; sourceTree = "<group>"; };
+		4F2C4D2A24C8F5CB0058749A /* stdlib_operators.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = stdlib_operators.swift; sourceTree = "<group>"; };
+		4F2C4D2B24C8F5CC0058749A /* stdlib_handlers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = stdlib_handlers.swift; sourceTree = "<group>"; };
 		4F2D2ADE245AFDCE005F3709 /* parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = parser.swift; sourceTree = "<group>"; };
 		4F345E9F24C38C7900532054 /* quote reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "quote reader.swift"; sourceTree = "<group>"; };
 		4F409193231876E600045E85 /* range clause.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "range clause.swift"; sourceTree = "<group>"; };
@@ -297,7 +306,7 @@
 		4FC5C7FC23110B1F007D694C /* quote document reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "quote document reader.swift"; sourceTree = "<group>"; };
 		4FC5C7FE23110B76007D694C /* name readers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "name readers.swift"; sourceTree = "<group>"; };
 		4FC5C81B23129BCC007D694C /* handler glue template.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "handler glue template.swift"; sourceTree = "<group>"; };
-		4FC5C81C23129BCC007D694C /* define handler glue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "define handler glue.swift"; sourceTree = "<group>"; };
+		4FC5C81C23129BCC007D694C /* define glue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "define glue.swift"; sourceTree = "<group>"; };
 		4FC5C81D23129BCC007D694C /* texttemplate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = texttemplate.swift; sourceTree = "<group>"; };
 		4FC5C8232312A06C007D694C /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		4FC5C825231316D9007D694C /* unicode reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "unicode reader.swift"; sourceTree = "<group>"; };
@@ -306,7 +315,6 @@
 		4FDAE7B1232B9F31005197DE /* reference coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reference coercions.swift"; sourceTree = "<group>"; };
 		4FE5502424C035D500509806 /* iris-glue */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "iris-glue"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FE5502624C035D500509806 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		4FE5503024C0378600509806 /* stdlib.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "stdlib.iris-glue"; sourceTree = "<group>"; };
 		4FE5503F24C06B9600509806 /* glue renderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "glue renderer.swift"; sourceTree = "<group>"; };
 		4FE5504224C06EFC00509806 /* opaque value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "opaque value.swift"; sourceTree = "<group>"; };
 		4FE5504624C080EE00509806 /* stdlib stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib stubs.swift"; sourceTree = "<group>"; };
@@ -411,7 +419,7 @@
 		4F25FB8822B6AC57007EE7AE /* stdlib */ = {
 			isa = PBXGroup;
 			children = (
-				4FE5503024C0378600509806 /* stdlib.iris-glue */,
+				4F2BA06F24C7805F006CAF22 /* stdlib.iris-glue */,
 				4F282D5424AE55A80027D6DE /* handlers */,
 				4F5B24D623171E55001C1941 /* glues */,
 			);
@@ -454,6 +462,7 @@
 				4F26065722C015A30036D904 /* symbol.swift */,
 				4F26065322BECD7B0036D904 /* record.swift */,
 				4F84D01322AE7EEA00C9FD23 /* block.swift */,
+				4FE5504224C06EFC00509806 /* opaque value.swift */,
 			);
 			name = other;
 			sourceTree = "<group>";
@@ -536,6 +545,15 @@
 			path = "pretty printer";
 			sourceTree = "<group>";
 		};
+		4F2C4D1F24C8690A0058749A /* handlers */ = {
+			isa = PBXGroup;
+			children = (
+				4FC5C81C23129BCC007D694C /* define glue.swift */,
+				4F2C4D2024C86BD30058749A /* patterns.swift */,
+			);
+			name = handlers;
+			sourceTree = "<group>";
+		};
 		4F2D2ADD245AFDA7005F3709 /* parser */ = {
 			isa = PBXGroup;
 			children = (
@@ -583,8 +601,8 @@
 			isa = PBXGroup;
 			children = (
 				4FE5504624C080EE00509806 /* stdlib stubs.swift */,
-				4F25FB8B22B6E561007EE7AE /* stdlib_handlers.swift */,
-				4F26F7172306C410002DD292 /* stdlib_operators.swift */,
+				4F2C4D2B24C8F5CC0058749A /* stdlib_handlers.swift */,
+				4F2C4D2A24C8F5CB0058749A /* stdlib_operators.swift */,
 				4F857700230C9247002B47F2 /* stdlib_constants.swift */,
 			);
 			path = glues;
@@ -666,9 +684,11 @@
 		4FC5C7F9231097FE007D694C /* gluelib */ = {
 			isa = PBXGroup;
 			children = (
+				4F2C4D2224C8C0A40058749A /* handler glue.swift */,
 				4FE5503F24C06B9600509806 /* glue renderer.swift */,
-				4FE5504124C06E9E00509806 /* handlers */,
+				4F2C4D1624C863420058749A /* pattern value.swift */,
 				4FE5503B24C0396900509806 /* templates */,
+				4F2C4D1F24C8690A0058749A /* handlers */,
 				4FE5503E24C064B600509806 /* glues */,
 				4FC5C8242312B8FA007D694C /* support */,
 			);
@@ -678,7 +698,6 @@
 		4FC5C8242312B8FA007D694C /* support */ = {
 			isa = PBXGroup;
 			children = (
-				4FE5504224C06EFC00509806 /* opaque value.swift */,
 				4FC5C81D23129BCC007D694C /* texttemplate.swift */,
 			);
 			name = support;
@@ -708,16 +727,9 @@
 			children = (
 				4FC5C7FA23109824007D694C /* gluelib_handlers.swift */,
 				4FC5C7FB23109826007D694C /* gluelib_operators.swift */,
+				4F2C4D2824C8DC910058749A /* gluelib_constants.swift */,
 			);
 			name = glues;
-			sourceTree = "<group>";
-		};
-		4FE5504124C06E9E00509806 /* handlers */ = {
-			isa = PBXGroup;
-			children = (
-				4FC5C81C23129BCC007D694C /* define handler glue.swift */,
-			);
-			name = handlers;
 			sourceTree = "<group>";
 		};
 		4FFC6F2322D6816F00D636B9 /* parser */ = {
@@ -956,8 +968,6 @@
 				4F988CF824BCC5CB00EE66C7 /* std text.swift in Sources */,
 				4F988CF924BCC5CC00EE66C7 /* std control.swift in Sources */,
 				4F988CFA24BCC5CC00EE66C7 /* std state.swift in Sources */,
-				4F988CFB24BCC5CC00EE66C7 /* stdlib_handlers.swift in Sources */,
-				4F988CFC24BCC5CC00EE66C7 /* stdlib_operators.swift in Sources */,
 				4F988CFD24BCC5CC00EE66C7 /* stdlib_constants.swift in Sources */,
 				4F988CFE24BCC5CC00EE66C7 /* reference.swift in Sources */,
 				4F988CFF24BCC5CC00EE66C7 /* reference selectors.swift in Sources */,
@@ -986,6 +996,7 @@
 				4F988CCE24BCC5A500EE66C7 /* pattern match.swift in Sources */,
 				4F988CCF24BCC5A500EE66C7 /* pattern definition.swift in Sources */,
 				4F988CD024BCC5A500EE66C7 /* standard patterns.swift in Sources */,
+				4F2C4D2D24C8F5CC0058749A /* stdlib_handlers.swift in Sources */,
 				4F988CD124BCC5A500EE66C7 /* standard reducers.swift in Sources */,
 				4F988CD224BCC5A500EE66C7 /* operator definitions.swift in Sources */,
 				4F988CD324BCC5A500EE66C7 /* operator registry.swift in Sources */,
@@ -995,8 +1006,10 @@
 				4F988CD724BCC5A500EE66C7 /* reduce expressions.swift in Sources */,
 				4F988CD824BCC5A500EE66C7 /* parser.swift in Sources */,
 				4F988CD924BCC5A500EE66C7 /* editable script.swift in Sources */,
+				4F2F81A024C739CC00EB2F0F /* opaque value.swift in Sources */,
 				4F988CDA24BCC5A500EE66C7 /* value protocols.swift in Sources */,
 				4F988CDB24BCC5A500EE66C7 /* text.swift in Sources */,
+				4F2C4D2C24C8F5CC0058749A /* stdlib_operators.swift in Sources */,
 				4F988CDC24BCC5A500EE66C7 /* numeric.swift in Sources */,
 				4F988CDD24BCC5A500EE66C7 /* ordered list.swift in Sources */,
 				4F988CDE24BCC5A500EE66C7 /* keyed list.swift in Sources */,
@@ -1033,15 +1046,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				4FE5502724C035D500509806 /* main.swift in Sources */,
-				4FE5503424C0389400509806 /* define handler glue.swift in Sources */,
+				4FE5503424C0389400509806 /* define glue.swift in Sources */,
+				4F2C4D2924C8DC910058749A /* gluelib_constants.swift in Sources */,
+				4F2C4D2124C86BD30058749A /* patterns.swift in Sources */,
 				4FE5504024C06B9600509806 /* glue renderer.swift in Sources */,
+				4F2C4D2324C8C0A40058749A /* handler glue.swift in Sources */,
+				4F2C4D1E24C864CE0058749A /* pattern value.swift in Sources */,
 				4FE5503524C0389400509806 /* handler stub template.swift in Sources */,
 				4FE5503624C0389400509806 /* handler glue template.swift in Sources */,
 				4FE5503724C0389400509806 /* operator glue template.swift in Sources */,
 				4FE5503924C0389400509806 /* gluelib_handlers.swift in Sources */,
 				4FE5503A24C0389400509806 /* gluelib_operators.swift in Sources */,
 				4FE5503824C0389400509806 /* texttemplate.swift in Sources */,
-				4FE5504324C06EFC00509806 /* opaque value.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

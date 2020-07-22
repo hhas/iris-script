@@ -32,6 +32,7 @@ import Foundation
 
 // TO DO: can we get rid of swiftEval by defining native 'overlay' protocol+extension for Coercions that return Values, e.g. an AsText Coercion that returns Text would implement eval()->Text, which can be re-exported as eval()->Value, thereby satisfying both native->primitive bridging and native runtime typing. (Whereas an AsString Coercion that returns String would only be usable in bridging APIs, but can convert itself to an AsText instance when a native Coercion is required.) Main challenge is supporting generic Coercions, e.g. AsArray(T); need to prototype APIs to confirm they'll support both use-cases. [Also bear in mind that we want to get rid of eval() if we can, and have Coercion.coerce() be the entrypoint, in order to minimize the amount of double-dispatch API-bouncing.]
 
+// TO DO: LiteralConvertible protocol for literalDescription var? or should all Values implement literalDescription? (A. depends on whether we want opaque values to provide an annotation-based placeholder, or if we should kick responsibility for providing a descriptive representation back to formatter at that point; also, what about JS-style 'objects' which will often provide a summary description rather than literal self-representation?)
 
 // TO DO: should Values adopt Accessor rather than Mutator?
 
@@ -74,7 +75,7 @@ public protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible
 
 extension Value { // default implementations
 
-    public var swiftLiteralDescription: String { fatalError("\(type(of: self)).swiftLiteralDescription is not supported.") } // TO DO: any use-cases where it should be?
+    public var swiftLiteralDescription: String { fatalError("\(type(of: self)).swiftLiteralDescription is not supported.") } // TO DO: get rid of this and use SwiftLiteralConvertible protocol
     
     public var nominalType: Coercion { return type(of: self).nominalType }
     

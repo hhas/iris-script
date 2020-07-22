@@ -38,10 +38,35 @@ extension RandomAccessCollection where Element == Pattern {
 // - the most commonly used patterns (prefix, infix, postfix, keyword block, etc) are predefined by convenience constructors in `OperatorRegistry` extension; any other patterns can be provided using `registry.add(PatternDefinition(…))` (once library glue syntax and implementation is finalized, much of these details will be hidden beneath that)
 
 
-public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLiteral {
+public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringLiteral, ExpressibleByArrayLiteral, SwiftLiteralConvertible {
+    
+    private func literalPattern(_ patterns: [Pattern]) -> String {
+        return "[\(patterns.map{$0.swiftLiteralDescription}.joined(separator: ","))]"
+    }
+    
+    public var swiftLiteralDescription: String {
+        switch self {
+        case .keyword(let k):           return ".keyword(\(k.swiftLiteralDescription))"
+        case .optional(let p):          return ".optional(\(p.swiftLiteralDescription))"
+        case .sequence(let p):          return self.literalPattern(p)
+        case .anyOf(let p):             return ".anyOf(\(self.literalPattern(p)))"
+        case .zeroOrMore(let p):        return ".zeroOrMore(\(p.swiftLiteralDescription))"
+        case .oneOrMore(let p):         return ".oneOrMore(\(p.swiftLiteralDescription))"
+        case .name:                     return ".name"
+        case .label:                    return ".label"
+        case .expression:               return ".expression"
+        case .expressionNamed(let k):   return ".expressionNamed(\(k.swiftLiteralDescription))"
+        case .token(let t):             fatalError("TODO: .token(\(t))")
+        case .testValue(let f):         fatalError("TODO: .testValue(\(String(describing: f)))")
+        case .delimiter:                return ".delimiter"
+        case .lineBreak:                return ".lineBreak"
+        }
+    }
+
     
     case keyword(Keyword)
     case expression // any value
+    case expressionNamed(Keyword) // any value // TO DO: keyword’s canonical name must match handler parameter’s binding name
     
     // TO DO: case binding(Symbol, Pattern); allows e.g. arg labels to be attached to operator pattern for use in constructed Command (while we could supply a descriptive binding name here for documentation purposes, since operators are defined as part of handler definition the documentation generator can already obtain binding name from that; for now, operands are treated as positional only, which is fine for the common case where there operator has no optional clauses); TO DO: what about `do…done` blocks, where the body is an expression sequence? (these use a custom reducefunc which can simply ignore any labels, but it could be a problem for tooling that reads these patterns for other purposes)
     
@@ -60,11 +85,14 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLi
     
     case token(Token.Form) // TO DO: .token(…)? (this might be a subset of Token.Form - braces and punctuation only; powerful, e.g. able to match `HH:MM:SS`, but could also be dangerous)
     
-    case testToken((Token.Form)->Bool) // currently unused; TO DO: get rid of this? (it makes it harder to reason about patterns) // TO DO: String precis? (would help when generating error messages)
-    case testValue((Value)->Bool) // currently used to match dictionary keys // TO DO: ditto
+    case testValue((Value)->Bool) // currently used to match dictionary keys // TO DO: replace this with more limited case that takes a literal value’s type/coercion and tests for that? (it will self-document better and its behavior will be fixed so can be reasoned about)
     
     case delimiter // punctuation or linebreak required; e.g. prefix `to` operator should be left-delimited to avoid confusion with infix `to` conjunction; that delimiter may be start of code, linebreak, `(` (`[` and `{` would also work, although that implies `to` is being used within a record or list which is typically a semantic error as a list of closures should be defined using `as [handler]` cast; using `to` will bind them to current namespace as well) // TO DO: what about requiring a leading/trailing delimiter without consuming it? any situations where that might be helpful/necessary (e.g. indicating clear-left for the prefix `to` operator, to prevent it being confused for a command argument, e.g. `tell foo to bar` *should* longest-match the `tell…to…` op, but if the prefix `to` operator can require a LH delimiter then that will also help to disambiguate by making it impossible for `foo to bar` to be interpreted as `foo{to{bar}}`, particularly when reading incomplete/invalid code where a syntax error may prevent the `tell…to…` operator being matched)
     case lineBreak // linebreak required
+    
+    public init(stringLiteral value: String) {
+        self = .keyword(Keyword(Symbol(value)))
+    }
     
     public init(arrayLiteral patterns: Pattern...) {
         self = .sequence(patterns)
@@ -72,20 +100,20 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLi
     
     public var debugDescription: String {
         switch self {
-        case .keyword(let k):       return "‘\(k.name.label)’"
-        case .optional(let p):      return "\(p)?"
-        case .sequence(let p):      return "(\(p.map{String(describing:$0)}.joined(separator: " ")))"
-        case .anyOf(let p):         return "(\(p.map{String(describing:$0)}.joined(separator: "|")))"
-        case .zeroOrMore(let p):    return "\(p)*"
-        case .oneOrMore(let p):     return "\(p)+"
-        case .name:                 return "NAME"
-        case .label:                return "LABEL"
-        case .expression:           return "EXPR"
-        case .token(let t):         return ".\(t)"
-        case .testToken(_):         return "«TOKEN»"
-        case .testValue(_):         return "«VALUE»"
-        case .delimiter:            return "DELIM"
-        case .lineBreak:            return "LF"
+        case .keyword(let k):           return "‘\(k.name.label)’"
+        case .optional(let p):          return "\(p)?"
+        case .sequence(let p):          return "(\(p.map{String(describing:$0)}.joined(separator: " ")))"
+        case .anyOf(let p):             return "(\(p.map{String(describing:$0)}.joined(separator: "|")))"
+        case .zeroOrMore(let p):        return "\(p)*"
+        case .oneOrMore(let p):         return "\(p)+"
+        case .name:                     return "NAME"
+        case .label:                    return "LABEL"
+        case .expression:               return "EXPR"
+        case .expressionNamed(let k):   return "EXPR(\(k.name.label))"
+        case .token(let t):             return ".\(t)"
+        case .testValue(_):             return "«VALUE»"
+        case .delimiter:                return "DELIM"
+        case .lineBreak:                return "LF"
         }
     }
     
@@ -177,13 +205,10 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLi
             case .quotedName(_), .unquotedName(_), .operatorName(_): return true // TO DO: ditto; `NAME COLON` should probably be reduced to `Form.label(NAME)` before matchers are applied
             default: return false
             }
-        case .expression:
+        case .expression, .expressionNamed(_):
             if case .value(_) = form { return true } // TO DO: what about .error? should it always be immediately reduced to error value, or are there cases where it's preferable to put .error token on parser stack for later processing?
         case .token(let t):
             return form == t // TO DO: why does Form.==() not compare exactly? (probably because we currently only use `==` when matching punctuation tokens; it is dicey though; we probably should define a custom method for this, or else implement exact comparison [the other problem with `==` is that it's no use for matching names and other parameterized cases unless we use dummy values, which makes code very confusing/potentially misleading - best to implement those tests as Form.isName:Bool, etc])
-        case .testToken(let f): // use this to match non-exprs only // TO DO: needed/desirable? see also .testValue(…)
-            if case .value(_) = form { return false } // this also ensure users *can't* accidentally use .testToken when testing for EXPR; this allows hasLeft/RightOperand tests to distinguish operands from non-operands
-            return f(form)
         case .testValue(let f): // this matches an expr that's been reduced to a Value which satisfies the provided test, e.g. `{$0 is HashableValue}`
             if case .value(let v) = form, f(v) { return true } // for provisional matches, only test if token is a .value; for full matches, confirm is satisfies condition func too; TO DO: need to check this doesn't cause any problems itself
         case .delimiter: // this matches separator punctuation OR a single linebreak; to match e.g. a block separator (where the comma may be followed by any number of linebreaks), use `[.delimiter, .zeroOrMore(.lineBreak)]`
@@ -204,7 +229,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLi
 
     var isExpression: Bool { // does this pattern match an EXPR? caution: this must ONLY be called on reified patterns (i.e. currently/previously matched, NEVER on remainingPatterns[1...])
         switch self {
-        case .expression, .testValue(_):
+        case .expression, .expressionNamed(_), .testValue(_):
             return true
         case .optional(let p), .zeroOrMore(let p), .oneOrMore(let p):
             fatalError("Cannot get isExpression for non-reified pattern: \(p)")
@@ -217,7 +242,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLi
 
     var hasLeftOperand: Bool { // crude; assumes all branches are consistent
         switch self {
-        case .expression, .testValue(_): return true
+        case .expression, .expressionNamed(_), .testValue(_): return true
         case .optional(let p):           return p.hasLeftOperand
         case .sequence(let p):           return p.first!.hasLeftOperand
         case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasLeftOperand }
@@ -229,7 +254,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByArrayLi
     
     var hasRightOperand: Bool { // ditto
         switch self {
-        case .expression, .testValue(_): return true
+        case .expression, .expressionNamed(_), .testValue(_): return true
         case .optional(let p):           return p.hasRightOperand
         case .sequence(let p):           return p.last!.hasRightOperand
         case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasRightOperand }

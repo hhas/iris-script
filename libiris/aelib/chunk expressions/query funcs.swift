@@ -62,41 +62,41 @@ func testSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, h
     throw InternalError(description: "Can’t create a reference to `\(elementType) whose \(selectorData)` of \(commandEnv) as it is not selectable.")
 }
 
-func firstElement(right elementType: Symbol) -> Value {
+func firstElement(elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
     //return AEQuery(name: "first \(elementType) of \(commandEnv)") // TO DO: this needs target (if we treat all selectors as methods [closures over] AEQuery, the handlerEnv will be parent AEQuery)
     //fatalError("Not yet implemented.")
 }
 
-func middleElement(right elementType: Symbol) -> Value {
+func middleElement(elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func lastElement(right elementType: Symbol) -> Value {
+func lastElement(elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func randomElement(right elementType: Symbol) -> Value {
+func randomElement(elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func allElements(right elementType: Symbol) -> Value {
+func allElements(elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func beforeElement(left elementType: Symbol, right expression: Value) -> Value {
+func beforeElement(elementType: Symbol, expression: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func afterElement(left elementType: Symbol, right expression: Value) -> Value {
+func afterElement(elementType: Symbol, expression: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func insertBefore(right expression: Value) -> Value {
+func insertBefore(expression: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func insertAfter(right expression: Value) -> Value {
+func insertAfter(expression: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 

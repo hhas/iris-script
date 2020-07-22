@@ -21,6 +21,8 @@ public struct AsValue: SwiftScalarCoercion {
     
     public typealias SwiftType = Value
     
+    public init() {}
+    
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         return try value.toValue(in: scope, as: self)
     }
@@ -37,6 +39,8 @@ public struct AsInt: SwiftScalarCoercion {
     
     public typealias NativeType = Int
     public typealias SwiftType = NativeType
+    
+    public init() {}
     
     public func coerce(value: Value, in scope: Scope) throws -> Value { // this implementation preserves original value type; is there any benefit to this? (e.g. a Text value coerced to asInt remains a Text value; only its validity as an integer is checked; its constrained type could be updated to reflect this [if that provides any benefit over recalculating], or it could be otherwise annotated)
         let result: Value
@@ -111,6 +115,8 @@ public struct AsDouble: SwiftScalarCoercion {
     public typealias NativeType = Double
     public typealias SwiftType = NativeType
     
+    public init() {}
+    
     public func coerce(value: Value, in scope: Scope) throws -> Value { // this implementation preserves original type; is there any benefit to this? (in case of text-based numbers, it preserves original data where converting to Double would add FP rounding errors; this may be an argument in favor of using Number or other boxed value for FP numbers, as the original string can be captured too)
         let result = try value.toScalar(in: scope, as: self)
         if !(result is Double) { let _ = try value.toDouble(in: scope, as: self) }
@@ -130,6 +136,8 @@ public struct AsString: SwiftScalarCoercion {
     public let name: Symbol = "string"
     
     public typealias SwiftType = String
+    
+    public init() {}
     
     public func coerce(value: Value, in scope: Scope) throws -> Value {
         switch value {
@@ -153,6 +161,8 @@ public struct AsScalar: SwiftScalarCoercion {
     public let name: Symbol = "scalar"
     
     public typealias SwiftType = ScalarValue
+    
+    public init() {}
     
     public func coerce(value: Value, in scope: Scope) throws -> Value {
         return try value.toScalar(in: scope, as: self)
@@ -182,6 +192,8 @@ public struct AsNumber: SwiftScalarCoercion {
     
     public typealias NativeType = Number
     public typealias SwiftType = NativeType
+    
+    public init() {}
     
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         // TO DO: is it worth using switches to reduce runtime processing of common types, or should we keep this rigorously consistent (and inefficient) and focus on performance improvement by better reasoning about types and interfaces

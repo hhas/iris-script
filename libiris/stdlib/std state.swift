@@ -52,20 +52,20 @@ func defineEventHandler(interface: HandlerInterface, action: Value, commandEnv: 
 }
 
 
-func returning(left: Value, right: Value) -> Value { // `returning` operator evaluates to self
-    return Command("returning", [(leftOperand, left), (rightOperand, right)])
+func returning(left: Value, right: Value) -> Value { // `returning` operator evaluates to self // TO DO: move to glue
+    return Command("returning", [(nullSymbol, left), (nullSymbol, right)]) // TO DO: how to attach operator definition if available? (and should it? bear in mind it rather depends on context where command is presented; probably best to punt representation to formatter and let it decide on command vs operator presentation)
 }
 
 // set
 
-func set(name: Symbol, to value: Value, commandEnv: Scope) throws -> Value { // `set name to: expr`
+func set(name: Symbol, to value: Value, commandEnv: Scope) throws -> Value { // `set name to expr`
     try (commandEnv as! Environment).set(name, to: value)
     return value
 }
 
 // coerce
 
-func coerce(left value: Value, right coercion: Coercion, commandEnv: Scope) throws -> Value { // `expr as coercion`
+func coerce(value: Value, coercion: Coercion, commandEnv: Scope) throws -> Value { // `expr as coercion`
     return try value.eval(in: commandEnv, as: coercion) // TO DO: check this
 }
 

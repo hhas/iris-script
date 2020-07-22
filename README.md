@@ -153,7 +153,7 @@ Additional transpiling optimizations might include storing values directly in Sw
 
 * interactive “debugging” mode (this includes using built-in `?` and `!` punctuation as customizable run-time modifiers, e.g. for triggering introspection breakpoints and “Are you sure?” guards on potentially destructive operations)
 
-* pretty printer with support for user-customizable semantic as well as basic syntactic formatting (e.g. “stylize all commands imported from library X which manipulate lists of strings”) and editor hooks
+* pretty printer with support for user-customizable semantic as well as basic syntactic formatting (e.g. “stylize all commands imported from library X which manipulate lists of strings”; a Datalog interpreter might be appropriate for this) and editor hooks (e.g. when rewriting code, PP is indicating its own understanding of the code to user—where this understanding is uncertain, need to highlight the problem code and attach description of concern and any proposed clarifications, c.f. Word grammar checker)
 
 * expand `stdlib` (e.g. see the basic data manipulation commands defined in `applescript-stdlib`)
 

@@ -184,7 +184,7 @@ public struct PatternMatch: CustomStringConvertible, Equatable {
 // TO DO: given two different operators of same precedence but different associativity, should associativity affect which binds first?
 
 
-typealias ReductionOrder = PatternDefinition.Associativity
+typealias ReductionOrder = Associativity
 
 
 func reductionOrderFor(_ leftMatch: PatternMatch, _ rightMatch: PatternMatch) -> ReductionOrder {
@@ -224,7 +224,7 @@ public extension PatternMatch {
 
 public extension PatternMatch {
     
-    var exactMatch: [Pattern] {
+    var exactMatch: [Pattern] { // returns fully reified array of simple matches (mostly .keyword and .expression)
         // TO DO: there’s a slight problem here in that reification is applied after matching remainingPattern[0], however, the match being stored in the Command isn’t guaranteed to have no remaining patterns left; this isn’t a problem when all operands are required, but if final operand is optional then that optional clause is included in the stored pattern, e.g. for `if`, remaining = [EXPR, (else EXPR)?]; for now, we discard that trailing clause below, but it would make PatternMatch behavior easier to understand if the final matcher was completely reified with no unmatched patterns left
         let remaining = self.remainingPattern.dropFirst().reify()
         if !remaining.contains(where: {$0.isEmpty}) {
@@ -234,6 +234,16 @@ public extension PatternMatch {
             return [self.remainingPattern[0]]
         } else {
             return self.completedPattern + [self.remainingPattern[0]]
+        }
+    }
+    
+    var argumentLabels: [Symbol] {
+        return self.exactMatch.reduce([]) {
+            switch $1 {
+            case .expression: return $0 + [nullSymbol]
+            case .expressionNamed(let name): return $0 + [name.name] // TO DO: aliases?
+            default: return $0
+            }
         }
     }
 }

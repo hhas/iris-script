@@ -32,7 +32,7 @@ import Foundation
 public struct HandlerInterface: ComplexValue { // native representation is a record; how best to convert to/from that?
     
     public var description: String {
-        return "‘\(self.name.label)’ {\(self.parameters.map{ "\($0.label): \($1.label.isEmpty ? $0.label : $1.label) as \($2)" }.joined(separator: ", "))} returning \(self.result)"
+        return "‘\(self.name.label)’ {\(self.parameters.map{ "\($0.label == $1.label ? "" : "\($0.label): ")\($1.label) as \($2)" }.joined(separator: ", "))} returning \(self.result)"
     }
     
     // TO DO: store binding names separately? primitive handlers don't need them, and native handlers should probably treat them as private (i.e. third-party code should not make any assumptions about these names - they are defined by and for the handler's own use only); in theory, code analysis tools will want to know all bound names; then again, the easiest way to do code analysis in iris it to execute the script against alternate libraries that have the same signatures but different behaviors (e.g. whereas a standard `switch` handler lazily matches conditions and only evaluates the first matched case, an analytical `switch` handler would evaluate all conditions and all cases to generate an analysis of all possible behaviors)
@@ -69,13 +69,13 @@ public struct HandlerInterface: ComplexValue { // native representation is a rec
     // TO DO: move this up to AsHandlerInterface?
     static func validatedInterface(name: Symbol, parameters: [Parameter], result: Coercion, isEventHandler: Bool = false) throws -> HandlerInterface {
         var uniqueLabels = Set<Symbol>(), uniqueBindings = Set<Symbol>()
-        let parameters = parameters.map{ (name: Symbol, binding: Symbol, coercion: Coercion) -> Parameter in
+        let parameters = parameters.map{ (label: Symbol, binding: Symbol, coercion: Coercion) -> Parameter in
             // TO DO: in native handler definitions, binding should always be given while label is optional; that said, we may want to keep current logic depending on where AsHandlerInterface coercion does its validation (since the same coercion may be applied to primitive as well as native handler interfaces)
-            let name = name == nullSymbol ? binding : name
-            let binding = binding == nullSymbol ? name : binding
-            uniqueLabels.insert(name)
-            uniqueBindings.insert(binding)
-            return (name, binding, coercion)
+            let label_ = label == nullSymbol ? binding : label
+            let binding_ = binding == nullSymbol ? label_ : binding
+            uniqueLabels.insert(label_)
+            uniqueBindings.insert(binding_)
+            return (label_, binding_, coercion)
         }
         let interface = self.init(name: name, parameters: parameters, result: result, isEventHandler: isEventHandler)
         if name == nullSymbol || uniqueLabels.contains(nullSymbol)

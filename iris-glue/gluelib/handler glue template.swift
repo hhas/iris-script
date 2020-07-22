@@ -15,6 +15,8 @@ import iris
 
 // TO DO: while texttemplate library is designed for plain text templating, maybe allow limited code-generation extensions, e.g. for literal string quoting: `««"someText"»»`
 
+// command.swiftValue() needs to know coercion’s exact type in order to unbox given Value to SwiftType suitable for passing to underlying Swift func; thus it’s simplest to declare signatures in type_NAME.param_N tuples (while we could capture parameter info in a generic Parameter struct, it wouldn’t add any benefit)
+
 private let templateSource = """
 //
 //  ««libraryName»»_handlers.swift
@@ -28,16 +30,17 @@ import Foundation
 
 // ««nativeName»» {««nativeArgumentNames»»}
 private let type_««signature»» = (
+    name: Symbol("««nativeName»»"),
 	««+typeParameters»»
-    param_««count»»: (Symbol("««nativeName»»"), ««coercion»»),
+    param_««count»»: (Symbol("««label»»"), Symbol("««binding»»"), ««coercion»»),
 	««-typeParameters»»
     result: ««returnType»»
 )
 private let interface_««signature»» = HandlerInterface(
-    name: "««nativeName»»",
+    name: type_««signature»».name,
     parameters: [
     ««+interfaceParameters»»
-		(type_««signature»».param_««count»».0, "««bindingName»»", type_««signature»».param_««count»».1),
+		type_««signature»».param_««count»»,
     ««-interfaceParameters»»
     ],
     result: type_««signature»».result
@@ -85,7 +88,8 @@ public func stdlib_loadHandlers(into env: Environment) {
 
 let nullParameters: [HandlerGlue.Parameter] = [("", "", "()")]
 
-let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (libraryName: String, handlerGlues: [HandlerGlue])) in
+let handlersTemplate = TextTemplate(templateSource) {
+    (tpl: Node, args: (libraryName: String, handlerGlues: [HandlerGlue])) in
     tpl.libraryName.set(args.libraryName)
     tpl.defineHandler.map(args.handlerGlues) {
         (node: Node, glue: HandlerGlue) -> Void in
@@ -98,7 +102,8 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
             node.typeParameters.map(glue.parameters.enumerated()) {
                 (node: Node, item: (count: Int, param: HandlerGlue.Parameter)) -> Void in
                 node.count.set(item.count)
-                node.nativeName.set(item.param.name)
+                node.label.set(item.param.name)
+                node.binding.set(item.param.binding)
                 node.coercion.set(item.param.coercion)
             }
         }
@@ -106,7 +111,6 @@ let handlersTemplate = TextTemplate(templateSource) { (tpl: Node, args: (library
         node.interfaceParameters.map(glue.parameters.enumerated()) {
             (node: Node, item: (count: Int, param: HandlerGlue.Parameter)) -> Void in
             node.signature.set(glue.signature)
-            node.bindingName.set(item.param.binding)
             node.count.set(item.count)
         }
         if glue.parameters.isEmpty {

@@ -21,6 +21,13 @@ public struct GlueError: Error, CustomStringConvertible {
 }
 
 
+typealias OpaqueHandlerGlues = OpaqueValue<[HandlerGlue]>
+
+let asHandlerGlues = AsComplex<OpaqueHandlerGlues>(name: "opaque_handler_glues")
+
+let handlerGluesKey = Symbol(".handler_glues")
+
+
 public struct GlueRenderer {
     
     private let parser: IncrementalParser
@@ -32,12 +39,13 @@ public struct GlueRenderer {
         // TO DO: validate library name (it should eventually be a UTI, although this will need further swizzling to be used in Swift glue’s load funcs’ names; mostly it depends on how we name the external entry points to primitive/native libraries so the library loader can find and call them)
         self.libraryName = libraryName
         let parser = IncrementalParser(withStdLib: false)
-        gluelib_loadHandlers(into: parser.env) // TO DO: what handlers must gluelib define? Q. what about loading stdlib handlers into a parent scope, for metaprogramming use?
+        gluelib_loadHandlers(into: parser.env) // TO DO: what handlers must gluelib define? Q. what about optionally loading stdlib handlers (and operators?) into a parent scope, for metaprogramming use? (this option should be off by default, not least to allow unimpeded generation of stdlib glue, and because it adds complexity that straightforward glue definitions don’t need)
         gluelib_loadOperators(into: parser.env.operatorRegistry) // essential operators used in glue defs; these may be overwritten by stdlib operators
+        gluelib_loadConstants(into: parser.env)
         stdlib_loadConstants(into: parser.env) // mostly needed for coercions
         self.parser = parser
         let handlerGlues = OpaqueHandlerGlues([])
-        parser.env.define(handlerGluesName, handlerGlues)
+        parser.env.define(handlerGluesKey, handlerGlues)
         self.handlerGlues = handlerGlues
     }
     
@@ -50,8 +58,8 @@ public struct GlueRenderer {
             throw GlueError(description: "Found errors in glue: \(self.parser.errors())")
         }
         let _ = (try script.eval(in: parser.env, as: asAnything))
-        guard let handlerGlues = (parser.env.get(handlerGluesName) as? OpaqueHandlerGlues) else {
-            throw GlueError(description: "Can’t get \(handlerGluesName.label).")
+        guard let handlerGlues = (parser.env.get(handlerGluesKey) as? OpaqueHandlerGlues) else {
+            throw GlueError(description: "Can’t get \(handlerGluesKey.label).")
         }
         let handlersGlueFile = outDir.appendingPathComponent("\(self.libraryName)_handlers.swift")
         let operatorsGlueFile = outDir.appendingPathComponent("\(self.libraryName)_operators.swift")

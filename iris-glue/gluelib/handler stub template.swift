@@ -39,7 +39,7 @@ let handlerStubsTemplate = TextTemplate(templateSource) {
         (node: Node, glue: HandlerGlue) -> Void in
         node.functionName.set(glue.swiftName)
         node.libraryName.set(args.libraryName)
-        let scopes = glue.useScopes.map{(Symbol($0), Symbol($0), asScope) as HandlerInterface.Parameter}
+      //  let scopes = glue.useScopes.map{(Symbol($0), Symbol($0), asScope) as HandlerInterface.Parameter}
         node.functionParameters.map(glue.swiftParameters) {
             (node: Node, item: (label: String, binding: String?, type: String)) -> Void in
             node.label.set(item.label)

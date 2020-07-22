@@ -123,7 +123,7 @@ open class BasicFormatter {
     //
     
     public func command(_ value: Command) {
-        if let match = value.operatorDefinition {
+        if let match = value.operatorPattern {
             var operands = value.arguments.map{ $0.value }
             //print(operands)
             for p in match.exactMatch { p.format(operands: &operands, using: self) }
@@ -214,8 +214,8 @@ extension Pattern {
         //case .name:                 return "NAME"
         //case .label:                return "LABEL"
         case .expression:           formatter.walk(operands.removeFirst())
+        case .expressionNamed:      fatalError("labeled expressions not yet supported")
         //case .token(let t):         return ".\(t)"
-        //case .testToken(_):         return "«TOKEN»"
         case .testValue(_):         formatter.walk(operands.removeFirst())
         //case .delimiter:            return ", "
         //case .lineBreak:            return "LF"

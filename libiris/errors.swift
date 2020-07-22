@@ -206,7 +206,8 @@ public struct BadArgumentError: ArgumentError {
 
 public struct HandlerError: NativeError {
     
-    public var description: String { return "The handler `\(self.handler)` failed on command `\(self.command)`." }
+    // TO DO: how to describe the handler’s owner (defining scope) within this error message:
+    public var description: String { return "\(self.handler) failed on command: \(self.command)" }
     
     let handler: Handler
     let command: Command

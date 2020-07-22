@@ -41,6 +41,8 @@ public struct AsSymbol: SwiftCoercion {
     
     public typealias SwiftType = Symbol
     
+    public init() {}
+    
     public func coerce(value: Value, in scope: Scope) throws -> Value {
         guard let result = try asValue.coerce(value: value, in: scope) as? Symbol else { throw UnsupportedCoercionError(value: value, coercion: self) }
         return result
@@ -76,6 +78,8 @@ public struct AsHashableValue: SwiftCoercion {
     
     public typealias SwiftType = HashableValue
     
+    public init() {}
+    
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         guard let result = try? asAnything.coerce(value: value, in: scope) as? HashableValue else {
             throw UnsupportedCoercionError(value: value, coercion: self)
@@ -102,6 +106,8 @@ public struct AsIs: SwiftCoercion {
 
     public let name: Symbol = "expression"
     
+    public init() {}
+    
     public typealias SwiftType = Value
     
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
@@ -126,6 +132,8 @@ public struct AsCoercion: SwiftCoercion {
     public let name: Symbol = "coercion"
     
     public typealias SwiftType = Coercion
+    
+    public init() {}
     
     public func coerce(value: Value, in scope: Scope) throws -> Value {
         if !(value is Coercion) { throw UnsupportedCoercionError(value: value, coercion: self) }
@@ -160,6 +168,8 @@ public struct AsError: SwiftCoercion {
     public let name: Symbol = "error"
     
     public typealias SwiftType = NativeError
+    
+    public init() {}
     
     // TO DO: why isn't SwiftCoercion extension adding coerce and box methods?
     

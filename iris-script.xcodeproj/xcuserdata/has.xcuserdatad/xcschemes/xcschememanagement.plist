@@ -27,7 +27,7 @@
 		<key>iris-test.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>17</integer>
+			<integer>18</integer>
 		</dict>
 		<key>libiris.xcscheme_^#shared#^_</key>
 		<dict>
@@ -58,6 +58,11 @@
 			<true/>
 		</dict>
 		<key>4F988CB524BCC4D700EE66C7</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>4FE5502324C035D500509806</key>
 		<dict>
 			<key>primary</key>
 			<true/>

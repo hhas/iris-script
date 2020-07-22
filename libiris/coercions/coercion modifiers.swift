@@ -21,6 +21,8 @@ public struct AsNothing: Coercion { // used in HandlerInterface.result to return
     
     public var swiftTypeDescription: String { return "" }
     
+    public init() {}
+    
     public func coerce(value: Value, in scope: Scope) throws -> Value {
         let _ = try asAnything.coerce(value: value, in: scope) // this still needs to evaluate value asAnything, discarding result (if value is scalar, it can be discarded immediately) // Q. how necessary is this? (i.e. we want to make sure last expr in handler evaluates, which could get funky when intersecting AsNothing with other coercions)
         return nullValue
@@ -146,7 +148,7 @@ public struct AsDefault: Coercion {
     public let coercion: Coercion
     private let defaultValue: Value
 
-    public init(_ coercion: Coercion = asValue, defaultValue: Value) { // TO DO: should coercion be defaultValue.nominalType/constrainedType?
+    public init(_ coercion: Coercion = asValue, default defaultValue: Value) { // TO DO: should coercion be defaultValue.nominalType/constrainedType?
         self.coercion = coercion
         self.defaultValue = defaultValue // TO DO: this should be member of coercion; how/where to check this? also need to consider how collections/exprs might be used here
     }
@@ -178,7 +180,7 @@ public struct AsSwiftDefault<T: SwiftCoercion>: SwiftCoercion {
     private let coercion: T
     private let defaultValue: SwiftType
     
-    public init(_ coercion: T, defaultValue: SwiftType) {
+    public init(_ coercion: T, default defaultValue: SwiftType) {
         self.coercion = coercion
         self.defaultValue = defaultValue // TO DO: this should be member of coercion; how/where to check this? also need to consider how collections/exprs might be used here
     }
@@ -294,6 +296,8 @@ public struct AsLiteralName: SwiftCoercion { // TO DO: as above, this currently 
     public let name: Symbol = "name" // TO DO: what to call this? "literal_name"? "identifier"?
     
     public typealias SwiftType = Symbol
+    
+    public init() {}
     
     public func unbox(value: Value, in env: Scope) throws -> SwiftType {
         guard let result = value.asIdentifier() else { throw BadSyntax.missingName }

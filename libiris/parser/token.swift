@@ -44,6 +44,12 @@ public typealias Annotation = String
 
 public typealias Precedence = Int16
 
+public enum Associativity {
+    case left
+    case right
+    // TO DO: `case none` (e.g. `1 thru 2 thru 3` should be a syntax error; ditto for `at`, `named`, etc) [note that treating `a OP b OP c` as syntax error isn't absolute protection as parenthesizing one or other operation will allow it to parse, as will using underlying command syntax, at which point it's up to argument unpacking to reject the bad operand as being the wrong type]
+}
+
 
 let commandPrecedence: Precedence = 999 // used when parsing low-punctuation commands to determine if a right-hand infix/postfix operator should be part of command’s argument or if command should be operator's left operand, e.g. `foo 1 + 1` vs `foo bar of baz`; note that PP should automatically parenthesize where clarity is needed, e.g. `(foo 1) + 1` // TO DO: what should argument precedence be? e.g. given `foo 1 + 2`, should it parse as `foo {1 + 2}` or `foo {1} + 2`; currently math operators are ~600; `else` is 90
 

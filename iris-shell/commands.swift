@@ -108,13 +108,14 @@ func procedure_quit(command: Command, commandEnv: Scope, handler: Handler, handl
 // `read` – read line input
 
 private let type_read_prompt = (
-    param_0: (Symbol("prompt"), AsSwiftDefault(asString, defaultValue: "?")),
+    name: Symbol("read"),
+    param_0: (Symbol("prompt"), Symbol("prompt"), AsSwiftDefault(asString, default: "?")),
     result: asString
 )
 
 let interface_read_prompt = HandlerInterface(
-    name: "read",
-    parameters: [(type_read_prompt.param_0.0, "", type_read_prompt.param_0.1)],
+    name: type_read_prompt.name,
+    parameters: [type_read_prompt.param_0],
     result: type_read_prompt.result
 )
 func procedure_read_prompt(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
