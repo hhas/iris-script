@@ -1,0 +1,86 @@
+
+«= stdlib glue definition =»
+
+«== String operators ==»
+
+«note: comparisons may throw if/when trinary `as` clause is added [unless we build extra smarts into glue generator to apply that coercion to the other args automatically, in which case glue code with throw so primitive funcs don’t have to]»
+
+«Q. how to name these operators? ideally they should not be confused with arithmetical comparison operators when spoken»
+
+«=== comparison operators ===»
+
+to ‘is_before’ {left as string, right as string} returning boolean requires {
+    can_error: true
+    operator: {infix [“is_before”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+to ‘is_not_after’ {left as string, right as string} returning boolean requires {
+    can_error: true
+    operator: {infix [“is_not_after”, “is_before_or_same_as”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+to ‘is_same_as’ {left as string, right as string} returning boolean requires {
+    can_error: true
+    operator: {infix [“is_same_as”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+to ‘is_not_same_as’ {left as string, right as string} returning boolean requires {
+    can_error: true
+    operator: {infix [“is_not_same_as”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+to ‘is_after’ {left as string, right as string} returning boolean requires {
+    can_error: true
+    operator: {infix [“is_after”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+to ‘is_not_before’ {left as string, right as string} returning boolean requires {
+    can_error: true
+    operator: {infix [“is_not_before”, “is_same_as_or_after”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+«=== containment operators ===»
+
+«TO DO: convenience `does_not_begin_with`, etc.»
+
+to ‘begins_with’ {left as string, right as string} returning boolean requires {
+    can_error: true
+    operator: {infix [“begins_with”], precedence: 542, #left, #reductionForInfixOperator}
+}
+
+to ‘ends_with’ {left as string, right as string} returning boolean requires {
+    can_error: true
+    operator: {infix [“ends_with”], precedence: 542, #left, #reductionForInfixOperator}
+}
+
+to ‘contains’ {left as string, right as string} returning boolean requires {
+    can_error: true
+    operator: {infix [“contains”], precedence: 542, #left, #reductionForInfixOperator}
+}
+
+to ‘is_in’ {left as string, right as string} returning boolean requires {
+    can_error: true
+    operator: {infix [“is_in”], precedence: 542, #left, #reductionForInfixOperator}
+}
+
+«=== other operators ===»
+
+to ‘&’ {left as string, right as string} returning string requires {
+    can_error: true
+    swift_function: joinValues
+    operator: {infix [“&”], precedence: 340, #left, #reductionForInfixOperator}
+}
+
+
+«== String commands ==»
+
+to uppercase {text as string} returning string requires {
+}
+
+to lowercase {text as string} returning string requires {
+}
+
+to format_code {value as optional} returning string requires {
+}
+
+

@@ -108,7 +108,7 @@
 		4FE5503824C0389400509806 /* texttemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81D23129BCC007D694C /* texttemplate.swift */; };
 		4FE5503924C0389400509806 /* gluelib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FA23109824007D694C /* gluelib_handlers.swift */; };
 		4FE5503A24C0389400509806 /* gluelib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FB23109826007D694C /* gluelib_operators.swift */; };
-		4FE5504024C06B9600509806 /* glue renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5503F24C06B9600509806 /* glue renderer.swift */; };
+		4FE5504024C06B9600509806 /* render glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5503F24C06B9600509806 /* render glue.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -257,7 +257,6 @@
 		4F29320322E25E7100BC0AD4 /* operator reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator reader.swift"; sourceTree = "<group>"; };
 		4F2B0C6524C0CC4F00664ABB /* formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = formatter.swift; sourceTree = "<group>"; };
 		4F2B81BE22CCD63E00FD1EB8 /* record coercion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record coercion.swift"; sourceTree = "<group>"; };
-		4F2BA06F24C7805F006CAF22 /* stdlib.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "stdlib.iris-glue"; sourceTree = "<group>"; };
 		4F2BAC3824B6017800107A87 /* block stack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "block stack.swift"; sourceTree = "<group>"; };
 		4F2C4D1624C863420058749A /* pattern value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "pattern value.swift"; sourceTree = "<group>"; };
 		4F2C4D2024C86BD30058749A /* patterns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = patterns.swift; sourceTree = "<group>"; };
@@ -265,6 +264,12 @@
 		4F2C4D2824C8DC910058749A /* gluelib_constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gluelib_constants.swift; sourceTree = "<group>"; };
 		4F2C4D2A24C8F5CB0058749A /* stdlib_operators.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = stdlib_operators.swift; sourceTree = "<group>"; };
 		4F2C4D2B24C8F5CC0058749A /* stdlib_handlers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = stdlib_handlers.swift; sourceTree = "<group>"; };
+		4F2C4D3024C977C00058749A /* std state.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "std state.iris-glue"; sourceTree = "<group>"; };
+		4F2C4D3124C977C00058749A /* std control.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "std control.iris-glue"; sourceTree = "<group>"; };
+		4F2C4D3224C977C00058749A /* std text.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "std text.iris-glue"; sourceTree = "<group>"; };
+		4F2C4D3324C977C00058749A /* std general.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "std general.iris-glue"; sourceTree = "<group>"; };
+		4F2C4D3424C977C00058749A /* std math.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "std math.iris-glue"; sourceTree = "<group>"; };
+		4F2C4D3724C97BAA0058749A /* ae chunk.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "ae chunk.iris-glue"; sourceTree = "<group>"; };
 		4F2D2ADE245AFDCE005F3709 /* parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = parser.swift; sourceTree = "<group>"; };
 		4F345E9F24C38C7900532054 /* quote reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "quote reader.swift"; sourceTree = "<group>"; };
 		4F409193231876E600045E85 /* range clause.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "range clause.swift"; sourceTree = "<group>"; };
@@ -315,7 +320,7 @@
 		4FDAE7B1232B9F31005197DE /* reference coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reference coercions.swift"; sourceTree = "<group>"; };
 		4FE5502424C035D500509806 /* iris-glue */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "iris-glue"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FE5502624C035D500509806 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		4FE5503F24C06B9600509806 /* glue renderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "glue renderer.swift"; sourceTree = "<group>"; };
+		4FE5503F24C06B9600509806 /* render glue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "render glue.swift"; sourceTree = "<group>"; };
 		4FE5504224C06EFC00509806 /* opaque value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "opaque value.swift"; sourceTree = "<group>"; };
 		4FE5504624C080EE00509806 /* stdlib stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib stubs.swift"; sourceTree = "<group>"; };
 		4FE78455246AB15E006AC859 /* pattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pattern.swift; sourceTree = "<group>"; };
@@ -419,7 +424,7 @@
 		4F25FB8822B6AC57007EE7AE /* stdlib */ = {
 			isa = PBXGroup;
 			children = (
-				4F2BA06F24C7805F006CAF22 /* stdlib.iris-glue */,
+				4F2C4D2F24C977C00058749A /* stdlib.iris-glue */,
 				4F282D5424AE55A80027D6DE /* handlers */,
 				4F5B24D623171E55001C1941 /* glues */,
 			);
@@ -554,6 +559,19 @@
 			name = handlers;
 			sourceTree = "<group>";
 		};
+		4F2C4D2F24C977C00058749A /* stdlib.iris-glue */ = {
+			isa = PBXGroup;
+			children = (
+				4F2C4D3324C977C00058749A /* std general.iris-glue */,
+				4F2C4D3424C977C00058749A /* std math.iris-glue */,
+				4F2C4D3224C977C00058749A /* std text.iris-glue */,
+				4F2C4D3124C977C00058749A /* std control.iris-glue */,
+				4F2C4D3024C977C00058749A /* std state.iris-glue */,
+				4F2C4D3724C97BAA0058749A /* ae chunk.iris-glue */,
+			);
+			path = "stdlib.iris-glue";
+			sourceTree = "<group>";
+		};
 		4F2D2ADD245AFDA7005F3709 /* parser */ = {
 			isa = PBXGroup;
 			children = (
@@ -685,7 +703,7 @@
 			isa = PBXGroup;
 			children = (
 				4F2C4D2224C8C0A40058749A /* handler glue.swift */,
-				4FE5503F24C06B9600509806 /* glue renderer.swift */,
+				4FE5503F24C06B9600509806 /* render glue.swift */,
 				4F2C4D1624C863420058749A /* pattern value.swift */,
 				4FE5503B24C0396900509806 /* templates */,
 				4F2C4D1F24C8690A0058749A /* handlers */,
@@ -1049,7 +1067,7 @@
 				4FE5503424C0389400509806 /* define glue.swift in Sources */,
 				4F2C4D2924C8DC910058749A /* gluelib_constants.swift in Sources */,
 				4F2C4D2124C86BD30058749A /* patterns.swift in Sources */,
-				4FE5504024C06B9600509806 /* glue renderer.swift in Sources */,
+				4FE5504024C06B9600509806 /* render glue.swift in Sources */,
 				4F2C4D2324C8C0A40058749A /* handler glue.swift in Sources */,
 				4F2C4D1E24C864CE0058749A /* pattern value.swift in Sources */,
 				4FE5503524C0389400509806 /* handler stub template.swift in Sources */,

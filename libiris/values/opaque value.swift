@@ -10,7 +10,8 @@ import Foundation
 
 
 open class OpaqueValue<SwiftType>: BoxedSwiftValue {
-        
+    
+    // TO DO: static var can't be overridden in subclass
     public static var nominalType: Coercion { return asValue } // TO DO: what should this return? (there’s no standard asOpaqueValue coercion as OpaqueValue<SwiftType> is a generic; thus any coercions are custom-defined as needed as AsComplex<SwiftType>; however, we could define a native-only Coercion for purposes of self-description: since the value’s content is already opaque to the native runtime there’s no need to distinguish any further)
     
     open var description: String { return "«opaque_value»" }
@@ -34,3 +35,23 @@ open class OpaqueValue<SwiftType>: BoxedSwiftValue {
     }
 }
 
+
+// shim needed by e.g. `returning` command to avoid infinite recursion upon evaling (current [kludgy] swiftEval behavior for a Command is to invoke it then coerce the result, but that re-evals the returned command); TO DO: need to give more thought to this (e.g. capture command as expression, which is effectively thunk? how else can commands self-describe as first-class values?)
+
+public class BoxedCommand: OpaqueValue<Command> {
+    
+    
+    open override var description: String { return self.data.description }
+
+    
+    public override func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
+        // TO DO: if coercion isn't expression or similar, throw coercion error
+        return self.data
+    }
+    
+    public override func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        // TO DO: if coercion isn't expression or similar, throw coercion error
+        if let result = self.data as? T.SwiftType { return result }
+        throw UnsupportedCoercionError(value: self.data, coercion: coercion)
+    }
+}

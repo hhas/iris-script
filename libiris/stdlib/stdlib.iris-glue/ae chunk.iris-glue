@@ -1,0 +1,113 @@
+
+
+to ‘app’ {bundle_identifier as string} returning value requires {
+    can_error: true «TODO: errors (e.g. app not found) should only occur upon use, not creation»
+    swift_function: Application
+}
+
+
+«=== Element selectors ===»
+
+to ‘at’ {element_type as name, selector_data as expression} returning expression requires {
+    can_error: true
+    use_scopes: [#command, #handler] «`elements at expr thru expr` will eval exprs in handler’s scope, delegating to command scope»
+    swift_function: atSelector {elementType, selectorData}
+    operator: {infix [“at”, “index”], 1110, #right, #reductionForInfixOperator}
+}
+
+to ‘named’ {element_type as name, selector_data as expression} returning expression requires {
+    can_error: true
+    use_scopes: #command
+    swift_function: nameSelector {elementType, selectorData}
+    operator: {infix “named”, 1110, #right, #reductionForInfixOperator}
+}
+
+to ‘id’ {element_type as name, selector_data as expression} returning expression requires { «TODO: what about ‘id’ properties? (easiest is to define id as .atom operator as well as .infix, with multimethod despatching on 0/2 operands; while operators could in principle fall back to commands when the operands found don’t match any of the known operator definitions, it would be hard to distinguish an intended command from an operator with missing arguments [i.e. syntax error])»
+    can_error: true
+    use_scopes: #command
+    swift_function: idSelector {elementType, selectorData}
+    operator: {infix “id”, 1110, #right, #reductionForInfixOperator}
+}
+
+to ‘from’ {element_type as name, selector_data as expression} returning expression requires { «TO DO: use `at` for both index and range specifiers?»
+    can_error: true
+    use_scopes: [#command, #handler]
+    swift_function: rangeSelector {elementType, selectorData}
+    operator: {infix “from”, 1110, #right, #reductionForInfixOperator}
+}
+
+to ‘whose’ {element_type as name, selector_data as expression} returning expression requires {
+    can_error: true
+    use_scopes: [#command, #handler] «`elements where expr` will eval expr in handler’s scope, delegating to command scope, allowing expr to refer to properties and elements without requiring an explicit `its`»
+    swift_function: testSelector {elementType, selectorData}
+    operator: {infix [“whose”, “where”], 1110, #right, #reductionForInfixOperator}
+}
+
+«=== element range ===»
+
+to ‘thru’ {start_selector as expression, stop_selector as expression} returning expression requires {
+    swift_function: ElementRange {‘from’, ‘to’}
+    operator: {infix [“thru”, “through”], 1120, #right, #reductionForInfixOperator}
+}
+
+«=== absolute ordinal ===»
+
+to ‘first’ {element_type as name} returning expression requires {
+    swift_function: firstElement
+    operator: {prefix “first”, precedence: 1130, #right, #reductionForPrefixOperator}
+}
+
+to ‘middle’ {element_type as name} returning expression requires {
+    swift_function: middleElement
+    operator: {prefix “middle”, precedence: 1130, #right, #reductionForPrefixOperator}
+}
+
+to ‘last’ {element_type as name} returning expression requires {
+    swift_function: lastElement
+    operator: {prefix “last”, precedence: 1130, #right, #reductionForPrefixOperator}
+}
+
+to ‘any’ {element_type as name} returning expression requires { «TODO: what to call this? ‘any’? ‘some’? ‘random’?»
+    swift_function: randomElement
+    operator: {prefix [“any”, “some”], precedence: 1130, #right, #reductionForPrefixOperator}
+}
+
+to ‘every’ {element_type as name} returning expression requires {
+    swift_function: allElements
+    operator: {prefix [“every”, “all”], precedence: 1130, #right, #reductionForPrefixOperator}
+}
+
+«=== relative ordinal ===»
+
+to ‘before’ {element_type as name, expression as expression} returning expression requires {
+    swift_function: beforeElement
+    operator: {infix [“before”], precedence: 1126, #right, #reductionForInfixOperator}
+}
+
+to ‘after’ {element_type as name, expression as expression} returning expression requires {
+    swift_function: afterElement
+    operator: {infix [“after”], precedence: 1126, #right, #reductionForInfixOperator}
+}
+
+«=== insertion location ====»
+
+to ‘before’ {expression as expression} returning expression requires {
+    swift_function: insertBefore
+    operator: {prefix [“before”], precedence: 1106, #right, #reductionForAtomOperator}
+}
+
+to ‘after’ {expression as expression} returning expression requires {
+    swift_function: insertAfter
+    operator: {prefix [“after”], precedence: 1106, #right, #reductionForAtomOperator}
+}
+
+to ‘beginning’ returning expression requires {
+    swift_function: insertAtBeginning
+    operator: {atom [“beginning”], precedence: 1106, #right, #reductionForAtomOperator}
+}
+
+to ‘end’ returning expression requires {
+    swift_function: insertAtEnd
+    operator: {atom [“end”], precedence: 1106, #right, #reductionForAtomOperator}
+}
+

@@ -56,7 +56,7 @@ let asOperatorSyntax = AsRecord([ // TO DO: given a native record/enum coercion,
 
 
 func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEnv: Scope, handlerEnv: Scope) throws {
-    print("making glue for", interface)
+    print("Making glue for:", interface)
     guard let handlerGlues = handlerEnv.get(handlerGluesKey) as? OpaqueHandlerGlues else {
         throw UnknownNameError(name: handlerGluesKey, in: handlerEnv)
     }
@@ -85,8 +85,13 @@ func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEn
     } else {
         operatorSyntax = nil
     }
-    handlerGlues.data.append(HandlerGlue(interface: interface, canError: canError, useScopes: useScopes,
-                                         swiftFunction: swiftFunction, operatorSyntax: operatorSyntax))
+    let name = interface.name
+    if handlerGlues.data[name] == nil {
+        handlerGlues.data[name] = HandlerGlue(interface: interface, canError: canError, useScopes: useScopes,
+                                              swiftFunction: swiftFunction, operatorSyntax: operatorSyntax)
+    } else {
+        print("Error: ignoring duplicate definition for: \(interface)")
+    }
 }
 
 func unpackOperatorDefinition(_ record: Record, in commandEnv: Scope) throws -> HandlerGlue.OperatorSyntax {

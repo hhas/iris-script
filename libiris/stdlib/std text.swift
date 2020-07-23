@@ -17,19 +17,6 @@ func isAfter(left: String, right: String) throws -> Bool { return left.lowercase
 func isNotBefore(left: String, right: String) throws -> Bool { return left.lowercased() >= right.lowercased() }
 
 
-
-func uppercase(text: String) -> String { return text.uppercased() }
-func lowercase(text: String) -> String { return text.lowercased() }
-
-
-
-func formatCode(value: Value) -> String {
-    return value.description
-}
-
-
-
-
 func beginsWith(left: String, right: String) throws -> Bool {
     return left.lowercased().hasPrefix(right.lowercased())
 }
@@ -44,4 +31,24 @@ func contains(left: String, right: String) throws -> Bool {
 
 func isIn(left: String, right: String) throws -> Bool {
     return right.lowercased().contains(left.lowercased())
+}
+
+
+/******************************************************************************/
+// concatenation (currently text only but should support collections too)
+
+// TO DO: what if mixed types (e.g. text+list) are given?
+
+func joinValues(left: String, right: String) throws -> String { return left + right }
+
+
+/******************************************************************************/
+
+func uppercase(text: String) -> String { return text.uppercased() }
+func lowercase(text: String) -> String { return text.lowercased() }
+
+
+
+func formatCode(value: Value) -> String {
+    return value.description // TO DO: use literalDescription/PP (needs [command?] env)
 }

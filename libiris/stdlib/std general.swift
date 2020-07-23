@@ -39,14 +39,6 @@ func isA(value: Value, coercion: Coercion, commandEnv: Scope) -> Bool { // TO DO
 // TO DO: what about comparing object identities? (how often is that really needed? ideally it shouldn't be included as it doesn't fit with native "say what you need" [coerce before consuming] and "if it looks right, it is" [structural, not nominal, typing] idioms)
 
 
-/******************************************************************************/
-// concatenation (currently text only but should support collections too)
-
-// TO DO: what if mixed types (e.g. text+list) are given?
-
-func joinValues(left: String, right: String) throws -> String { return left + right }
-
-
 
 /******************************************************************************/
 // I/O
@@ -60,13 +52,3 @@ func write(value: Value) { // primitive library function // TO DO: this needs to
     print(value)
 }
 
-
-/******************************************************************************/
-
-
-func defineHandler(interface: HandlerInterface, action: Block, commandEnv: Scope) throws { // TO DO: need to check what, if any, command scopes are not Environment instances (e.g. `tell` block's target scope)
-    guard let commandEnv = commandEnv as? Environment else {
-        throw InternalError(description: "Can't define handler on non-Environment scope.")
-    }
-    try commandEnv.define(interface, action)
-}

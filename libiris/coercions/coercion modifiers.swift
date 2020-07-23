@@ -344,3 +344,30 @@ public struct AsSwiftPrecis<T: SwiftCoercion>: SwiftCoercion { // allows a compl
     }
 }
 
+
+
+
+
+public struct AsItself: SwiftCoercion { // placeholder return type used in glues; indicates that command should evaluate to itself, e.g. `a returning b` -> `a returning b`
+    
+    public var swiftLiteralDescription: String { return "asItself" }
+    
+    public let name: Symbol = "itself"
+    
+    public typealias SwiftType = Command
+    
+    public func coerce(value: Value, in scope: Scope) throws -> Value {
+        throw InternalError(description: "‘itself’ coercion is placeholder only") // TO DO: should this return value if is Command?
+    }
+    
+    public func box(value: SwiftType, in scope: Scope) -> Value {
+        return value
+    }
+    
+    public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+        throw InternalError(description: "‘itself’ coercion is placeholder only") // TO DO: ditto
+    }
+}
+
+public let asItself = AsItself()
+

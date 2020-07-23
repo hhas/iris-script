@@ -1,0 +1,122 @@
+
+«= stdlib glue definition =»
+
+«== Arithmetic operators ==»
+
+«TODO: should symbolic operators have word-based aliases? (these would provide speakable support automatically; alternative is to match spoken phrases to the symbols’ Unicode names)»
+
+to ‘^’ {left as number, right as number} returning number requires {
+    can_error: true
+    swift_function: exponent
+    operator: {[expr, keyword [“^”, “to_the_power_of”], expr], precedence: 1300, associate: #right, #reductionForInfixOperator}
+}
+
+
+«TO DO: unary positive/negative should be defined as ‘+’ and ‘-’ (primary names), and loaded into env as multimethods that dispatch on argument fields (for now, we define "+"/"-" as secondary alias names)»
+
+«TO DO: what about plain text names (“add”, “subtract”, “multiply”, etc)? what about speakable names, e.g. “plus”, “minus”, “multiplied_by”? defining as aliases pollutes the global namespace; OTOH, these names are probably specific enough that they won’t often collide with scripts’ own namings»
+
+
+«TO DO: rename these ‘+’ and ‘-’ once handler overloading [matching argument labels] is implemented; i.e. canonical names will appear in pretty printed code»
+
+to ‘positive’ {right as number} returning number requires {
+    can_error: true
+    swift_function: positive
+    operator: {[keyword [“positive”, “+”, 0uFF0B], expr "right"], precedence: 1298, #left, #reductionForPositiveOperator}
+}
+
+to ‘negative’ {right as number} returning number requires {
+    can_error: true
+    swift_function: negative
+    operator: {[keyword [“negative”, “-”, 0uFF0D, 0u2212, 0uFE63], expr "right"], precedence: 1298, #left, #reductionForNegativeOperator}
+}
+
+
+to ‘*’ {left as number, right as number} returning number requires {
+    can_error: true
+    swift_function: multiply
+    operator: {infix [“*”, “×”], precedence: 1296, #left, #reductionForInfixOperator}
+}
+
+to ‘/’ {left as number, right as number} returning number requires {
+    can_error: true
+    swift_function: divide
+    operator: {infix [“/”, “÷”], precedence: 1296, #left, #reductionForInfixOperator}
+}
+
+to ‘div’ {left as real, right as real} returning real requires {
+    can_error: true
+    operator: {infix [“div”], precedence: 1296, #left, #reductionForInfixOperator}
+}
+
+to ‘mod’ {left as real, right as real} returning real requires {
+    can_error: true
+    operator: {infix [“mod”], precedence: 1296, #left, #reductionForInfixOperator}
+}
+
+
+
+to ‘+’ {left as Number, right as Number} returning Number requires {
+    can_error: true
+    swift_function: add
+    operator: {infix [“+”, 0uFF0B], precedence: 1290, #left, #reductionForInfixOperator}
+}
+
+to ‘-’ {left as Number, right as Number} returning Number requires {
+    can_error: true
+    swift_function: subtract
+    operator: {infix [“-”, 0uFF0D, 0u2212, 0uFE63], precedence: 1290, #left, #reductionForInfixOperator}
+}
+
+
+
+to ‘<’ {left as real, right as real} returning boolean requires {
+    swift_function: isLess
+    operator: {infix [“<”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+to ‘≤’ {left as real, right as real} returning boolean requires {
+    swift_function: isLessOrEqual
+    operator: {infix [“≤”, “<=”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+to ‘=’ {left as real, right as real} returning boolean requires {  «equality test, c.f. APL»
+    swift_function: isEqual
+    operator: {infix [“=”, “==”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+to ‘≠’ {left as real, right as real} returning boolean requires {
+    swift_function: isNotEqual
+    operator: {infix [“≠”, “<>”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+to ‘>’ {left as real, right as real} returning boolean requires {
+    swift_function: isGreater
+    operator: {infix [“>”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+to ‘≥’ {left as real, right as real} returning boolean requires {
+    swift_function: isGreaterOrEqual
+    operator: {infix [“≥”, “>=”], precedence: 540, #left, #reductionForInfixOperator}
+}
+
+
+«== Boolean operators ==»
+
+to ‘NOT’ {right as boolean} returning boolean requires {
+    operator: {prefix [“NOT”], precedence: 400, #left, #reductionForPrefixOperator}
+}
+
+to ‘AND’ {left as boolean, right as boolean} returning boolean requires {
+    operator: {infix [“AND”], precedence: 398, #left, #reductionForInfixOperator}
+}
+
+to ‘OR’ {left as boolean, right as boolean} returning boolean requires {
+    operator: {infix [“OR”], precedence: 396, #left, #reductionForInfixOperator}
+
+}
+
+to ‘XOR’ {left as boolean, right as boolean} returning boolean requires {
+    operator: {infix [“XOR”], precedence: 394, #left, #reductionForInfixOperator}
+}
+

@@ -1,0 +1,50 @@
+
+«= stdlib glue definition =»
+
+to ‘as’ {value as anything, coercion as coercion} returning anything requires {
+    can_error: true
+    use_scopes: #command
+    swift_function: coerce
+    operator: {infix [“as”], 350, #left, #reductionForInfixOperator}
+}
+
+to ‘returning’ {interface as handler_interface, coercion as coercion} returning itself requires {
+    operator: {infix “returning”, 300, #left, #reductionForInfixOperator}
+}
+
+
+to ‘to’ {interface as handler_interface, action as expression} returning procedure requires {
+    can_error: true
+    use_scopes: #command
+    swift_function: defineCommandHandler {interface, action}
+    operator: {[keyword “to”, expr “interface”, keyword “run”, expr “action”], 80, #left, #reductionForPrefixOperatorWithConjunction}
+}
+
+to ‘when’ {interface as handler_interface, action as expression} returning procedure requires {
+    can_error: true
+    use_scopes: #command
+    swift_function: defineEventHandler {interface, action}
+    operator: {[keyword “when”, expr “interface”, keyword “run”, expr “action”], 80, #left, #reductionForPrefixOperatorWithConjunction}
+}
+
+
+to ‘set’ {name as name, to: value as anything} returning anything requires { «assignment; TODO: ‘name’ argument should be name or chunk expression»
+    can_error: true
+    use_scopes: #command
+    operator: {[keyword “set”, expr “name”, keyword “to”, expr “value”], 80, #left, #reductionForInfixOperator}
+}
+
+
+to ‘tell’ {target as value, action as expression} returning anything requires {
+    can_error: true
+    use_scopes: #command
+    swift_function: tell {target, action}
+    operator: {[keyword “tell”, expr “target”, keyword “to”, expr “action”], 101, #left, #reductionForPrefixOperatorWithConjunction}
+}
+
+to ‘of’ {attribute as expression, value as value} returning expression requires { «TODO: is left operand always a command?»
+    can_error: true «TODO: throw immediately, or wait until query if fully constructed?»
+    use_scopes: [#command, #handler]
+    swift_function: ofClause {attribute, target}
+    operator: {infix “of”, 1100, #right, #reductionForInfixOperator} «binds tighter than commands»
+}

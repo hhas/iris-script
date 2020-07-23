@@ -8,6 +8,7 @@
 import Foundation
 import iris
 
+// TO DO: should `itself` validate command args? (currently returns Command as-is with no checking)
 
 // TO DO: would be simpler if type def's parameter tuple could be passed directly to interface params, but Swift doesn't want to downcast it ("Cannot express tuple conversion…")
 
@@ -46,6 +47,7 @@ private let interface_««signature»» = HandlerInterface(
     result: type_««signature»».result
 )
 private func procedure_««signature»»(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    ««+body»»
     ««+procedureParameters»»
     var index = 0
     ««+unboxArguments»»
@@ -74,6 +76,7 @@ private func procedure_««signature»»(command: Command, commandEnv: Scope, ha
     ««+returnIfNoResult»»
     return nullValue
     ««-returnIfNoResult»»
+    ««-body»»
 }
 ««-defineHandler»»
 
@@ -113,30 +116,35 @@ let handlersTemplate = TextTemplate(templateSource) {
             node.signature.set(glue.signature)
             node.count.set(item.count)
         }
-        if glue.parameters.isEmpty {
-            node.procedureParameters.delete()
+        if glue.interface.result is AsItself {
+            node.body.set("\n\treturn BoxedCommand(command)")
         } else {
-            node.checkForUnexpectedArguments.delete()
-            node.procedureParameters.unboxArguments.map(0..<glue.parameters.count) {
-                (node: Node, count: Int) -> Void in
-                node.signature.set(glue.signature)
-                node.count.set(count)
+            let node = node.body
+            if glue.parameters.isEmpty {
+                node.procedureParameters.delete()
+            } else {
+                node.checkForUnexpectedArguments.delete()
+                node.procedureParameters.unboxArguments.map(0..<glue.parameters.count) {
+                    (node: Node, count: Int) -> Void in
+                    node.signature.set(glue.signature)
+                    node.count.set(count)
+                }
+                if glue.interface.isEventHandler { node.procedureParameters.checkForUnexpectedArguments.delete() }
             }
-            if glue.interface.isEventHandler { node.procedureParameters.checkForUnexpectedArguments.delete() }
-        }
-        if glue.interface.result is AsNothing {
-            node.resultAssignment.set("\n\t")
-            node.returnIfResult.delete()
-        } else {
-            node.returnIfNoResult.delete()
-            node.returnIfResult.signature.set(glue.signature)
-        }
-        if !glue.canError { node.tryKeyword.delete() }
-        node.functionName.set(glue.swiftName)
-        node.functionArguments.map(glue.swiftArguments) {
-            (node: Node, item: (label: String, param: String)) -> Void in
-            node.label.set(item.label)
-            node.argument.set(item.param)
+            if glue.interface.result is AsNothing {
+                node.resultAssignment.set("\n\t")
+                node.returnIfResult.delete()
+            } else {
+                node.returnIfNoResult.delete()
+                node.returnIfResult.signature.set(glue.signature)
+            }
+            if !glue.canError { node.tryKeyword.delete() }
+            node.functionName.set(glue.swiftName)
+            node.functionArguments.map(glue.swiftArguments) {
+                (node: Node, item: (label: String, param: String)) -> Void in
+                node.label.set(item.label)
+                node.argument.set(item.param)
+            }
         }
     }
     tpl.loadHandlers.map(args.handlerGlues) {

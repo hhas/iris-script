@@ -11,7 +11,7 @@ import iris
 // TO DO: changing line readers to return .eof rather than .linebreak when exhausted appears to cause infinite loop somewhere prior to parser's main loop (should use .endOfCode as it's agnostic on full-script vs per-line parsing)
 
 
-func test() {
+func test_() {
     
     //print(PatternValue(Pattern.keyword("test")))
     
@@ -52,8 +52,8 @@ func test() {
 }
 
 
-func test_() {
-    runScript("  a of b of c ")
+func test() {
+    runScript("  a returning c ")
     
    // runScript(" to foo run write “bar” \n foo ") // TO DO: FIX: using optional/default coercion modifiers is still buggy: handler throws error on return (it should return `nothing` instead)
     

@@ -20,9 +20,10 @@ public func stdlib_loadConstants(into env: Environment) {
         //registry.atom("did_nothing") // TO DO: get rid of this if a satisfactory solution to `…else…` operator can’t be found
         registry.atom("true")
         registry.atom("false")
+        registry.atom("π") // TO DO: alias `pi`?
         
         // used in procedure interface
-        registry.infix("returning", 300)
+        //registry.infix("returning", 300)
         
         // keyword-based block
         registry.prefix("do", suffix: "done")

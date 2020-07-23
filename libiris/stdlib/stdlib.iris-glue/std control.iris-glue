@@ -1,0 +1,30 @@
+
+«= stdlib glue definition =»
+
+«== Flow control ==»
+
+to ‘if’ {test: condition as boolean, then: action as expression, else: alternative_action as expression} returning anything requires {
+    can_error: true «TODO: would be better to distinguish errors thrown by arguments from errors thrown by handler itself»
+    use_scopes: #command
+    swift_function: ifTest {condition, action, alternativeAction}
+    operator: {[keyword “if”, expr “condition”,
+    							keyword “then”, expr “action”,
+    							option sequence [keyword “else”, expr “alternative_action”]], 101, #left, #reductionForPrefixOperatorWithConjunctionAndAlternate}
+}
+
+«TODO: how to express return type? e.g. `returning result of action`?»
+to ‘while’ {condition as boolean, action as expression} returning anything requires {
+    can_error: true
+    use_scopes: #command
+    swift_function: whileRepeat {condition, action}
+    operator: {[keyword “while”, expr “condition”, keyword “repeat”, expr “action”], 101, #left, #reductionForPrefixOperatorWithConjunction}
+}
+
+to ‘repeat’ {action as expression, condition as boolean} returning anything requires {
+    can_error: true
+    use_scopes: #command
+    swift_function: repeatWhile {action, condition}
+    operator: {[keyword “repeat”, expr “condition”, keyword “while”, expr “action”], 101, #left, #reductionForPrefixOperatorWithConjunction}
+}
+
+«TODO: repeatTimes»

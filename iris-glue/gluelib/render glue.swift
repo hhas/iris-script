@@ -21,11 +21,12 @@ public struct GlueError: Error, CustomStringConvertible {
 }
 
 
-typealias OpaqueHandlerGlues = OpaqueValue<[HandlerGlue]>
+typealias OpaqueHandlerGlues = OpaqueValue<[Symbol:HandlerGlue]>
 
 let asHandlerGlues = AsComplex<OpaqueHandlerGlues>(name: "opaque_handler_glues")
 
 let handlerGluesKey = Symbol(".handler_glues")
+
 
 
 public struct GlueRenderer {
@@ -44,7 +45,7 @@ public struct GlueRenderer {
         gluelib_loadConstants(into: parser.env)
         stdlib_loadConstants(into: parser.env) // mostly needed for coercions
         self.parser = parser
-        let handlerGlues = OpaqueHandlerGlues([])
+        let handlerGlues = OpaqueHandlerGlues([:])
         parser.env.define(handlerGluesKey, handlerGlues)
         self.handlerGlues = handlerGlues
     }
@@ -64,11 +65,12 @@ public struct GlueRenderer {
         let handlersGlueFile = outDir.appendingPathComponent("\(self.libraryName)_handlers.swift")
         let operatorsGlueFile = outDir.appendingPathComponent("\(self.libraryName)_operators.swift")
         let handlersStubFile = outDir.appendingPathComponent("\(self.libraryName) stubs.swift")
-        try handlersTemplate.render((self.libraryName, handlerGlues.data))
+        let glues = handlerGlues.data.values.sorted{$0.name < $1.name}
+        try handlersTemplate.render((self.libraryName, glues))
             .write(to: handlersGlueFile, atomically: true, encoding: .utf8)
-        try operatorsTemplate.render((self.libraryName, handlerGlues.data))
+        try operatorsTemplate.render((self.libraryName, glues))
             .write(to: operatorsGlueFile, atomically: true, encoding: .utf8)
-        try handlerStubsTemplate.render((self.libraryName, handlerGlues.data))
+        try handlerStubsTemplate.render((self.libraryName, glues))
             .write(to: handlersStubFile, atomically: true, encoding: .utf8)
     }
 }
@@ -76,18 +78,48 @@ public struct GlueRenderer {
 
 // convenience function for converting a single glue file
 
+extension URL {
+    var isGlueFile: Bool { return self.lastPathComponent.lowercased().hasSuffix(".iris-glue") }
+}
+
+extension GlueRenderer {
+    
+    func read(_ url: URL, _count: Int = 0) throws -> Int {
+        var count = _count
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
+            throw GlueError(description: "Glue file not found: \(url.path)")
+        }
+        if isDirectory.boolValue {
+            for url in try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: .skipsHiddenFiles).sorted(by: {$0.lastPathComponent < $1.lastPathComponent}) {
+                if url.isGlueFile { count += try self.read(url) }
+            }
+        } else if url.isGlueFile {
+            print("Reading glue file: \(url.lastPathComponent)")
+            try self.read(file: url)
+            count += 1
+        }
+        return count
+    }
+}
+
 public func renderGlue(glueFile: URL, outDir: URL) throws {
-    // TO DO: validate library name
-    let glueName = glueFile.lastPathComponent
-    guard let offset = glueName.lastIndex(of: ".") else { throw GlueError(description: "Bad glue file name.") }
-    let name = String(glueName.prefix(upTo: offset))
-    let renderer = try GlueRenderer(libraryName: name)
-    try renderer.read(file: glueFile)
     var isDirectory: ObjCBool = false
     if !FileManager.default.fileExists(atPath: outDir.path, isDirectory: &isDirectory) {
         try FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: false)
     } else if !isDirectory.boolValue {
         throw GlueError(description: "Output path is not a directory: \(glueFile.path)")
+    }
+    // TO DO: validate library name
+    let glueName = glueFile.lastPathComponent
+    guard let offset = glueName.lastIndex(of: ".") else { throw GlueError(description: "Bad glue file name (expected `LIBNAME.iris-glue`): \(glueFile.lastPathComponent)") }
+    let name = String(glueName.prefix(upTo: offset))
+    let renderer = try GlueRenderer(libraryName: name)
+    let count = try renderer.read(glueFile)
+    if count == 0 {
+        throw GlueError(description: "No glue files found in \(glueFile)")
+    } else {
+        print("Read \(count) glue file[s].")
     }
     try renderer.write(to: outDir)
     print("Wrote glue files to:", outDir.path)
