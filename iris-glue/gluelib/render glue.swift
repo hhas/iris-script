@@ -27,6 +27,9 @@ let asHandlerGlues = AsComplex<OpaqueHandlerGlues>(name: "opaque_handler_glues")
 
 let handlerGluesKey = Symbol(".handler_glues")
 
+typealias OpaqueHandlerInterface = OpaqueValue<HandlerInterface?>
+
+let currentHandlerInterfaceKey = Symbol(".handler_interface")
 
 
 public struct GlueRenderer {
@@ -47,6 +50,8 @@ public struct GlueRenderer {
         self.parser = parser
         let handlerGlues = OpaqueHandlerGlues([:])
         parser.env.define(handlerGluesKey, handlerGlues)
+        let handlerInterface = OpaqueHandlerInterface(nil)
+        parser.env.define(currentHandlerInterfaceKey, handlerInterface)
         self.handlerGlues = handlerGlues
     }
     

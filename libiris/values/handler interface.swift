@@ -94,3 +94,13 @@ public struct HandlerInterface: ComplexValue { // native representation is a rec
 }
 
 
+
+public extension HandlerInterface {
+    
+    func labelForBinding(_ name: Symbol) -> Symbol? {
+        for (label, binding, _) in self.parameters {
+            if name == binding { return label }
+        }
+        return nil
+    }
+}

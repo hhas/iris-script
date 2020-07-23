@@ -8,12 +8,6 @@ import iris
 
 
 
-// TO DO: get rid of these
-let leftOperand   = Symbol("left")
-let middleOperand = Symbol("middle")
-let rightOperand  = Symbol("right")
-
-
 /*
 
 
@@ -119,6 +113,10 @@ func test2() {
 
 func add(left: Number, right: Number) throws -> Number { return try left + right }
 
+
+let leftOperand   = Symbol("left")
+let middleOperand = Symbol("middle")
+let rightOperand  = Symbol("right")
 
 
 struct AddHandler: Handler { // 5x faster than standard implementation (which is to say, still dog-slow)

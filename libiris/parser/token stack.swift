@@ -165,8 +165,7 @@ extension Array where Element == Parser.TokenInfo {
         var foundIDs = Set<Int>() // if a pattern has >1 match, ignore the shorter matches (iterating backwards encounters the longest match first, so we just store that full match’s ID and ignore subsequent matches with the same ID)
         var result = [Token.Form]()
         // given well formed code, this loop should iterate once then exit
-        while index < stopIndex { // this loop will repeat for any unmatched token sequences (syntax errors)
-            // TO DO: when reporting syntax error, should we reduce as much as possible and return that, or return the original unreduced token sequence? (attempting remaining reductions may infer user’s intent incorrectly whereas not reducing at all offers no help in guessing that intent)
+        while index < stopIndex { // if code is well-formed this loop should execute once and exit, having reduced the entire expression to a single value; if any unmatched token sequences (syntax errors) are found it will repeat to collect them all and return as a single syntax error instance // TO DO: when reporting syntax error, should we reduce as much as possible and return that, or return the original unreduced token sequence? (attempting remaining reductions may infer user’s intent incorrectly whereas not reducing at all offers no help in guessing that intent)
             if let (leftMatch, commonIndex) = self.nextFullMatch(from: index, stopIndex: stopIndex, found: &foundIDs) { // check comparison
                 do {
                     let (form, newRightIndex) = try self.reduce(leftMatch: leftMatch, from: index, onto: commonIndex, stopIndex: stopIndex, found: &foundIDs)

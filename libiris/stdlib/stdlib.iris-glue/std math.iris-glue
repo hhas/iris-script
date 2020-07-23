@@ -8,7 +8,7 @@
 to ‘^’ {left as number, right as number} returning number requires {
     can_error: true
     swift_function: exponent
-    operator: {[expr, keyword [“^”, “to_the_power_of”], expr], precedence: 1300, associate: #right, #reductionForInfixOperator}
+    operator: {[expression, keyword [“^”, “to_the_power_of”], expression], precedence: 1300, associate: #right}
 }
 
 
@@ -22,36 +22,36 @@ to ‘^’ {left as number, right as number} returning number requires {
 to ‘positive’ {right as number} returning number requires {
     can_error: true
     swift_function: positive
-    operator: {[keyword [“positive”, “+”, 0uFF0B], expr "right"], precedence: 1298, #left, #reductionForPositiveOperator}
+    operator: {[keyword [“positive”, “+”, 0uFF0B], expression "right"], precedence: 1298, #left, #reductionForPositiveOperator}
 }
 
 to ‘negative’ {right as number} returning number requires {
     can_error: true
     swift_function: negative
-    operator: {[keyword [“negative”, “-”, 0uFF0D, 0u2212, 0uFE63], expr "right"], precedence: 1298, #left, #reductionForNegativeOperator}
+    operator: {[keyword [“negative”, “-”, 0uFF0D, 0u2212, 0uFE63], expression "right"], precedence: 1298, #left, #reductionForNegativeOperator}
 }
 
 
 to ‘*’ {left as number, right as number} returning number requires {
     can_error: true
     swift_function: multiply
-    operator: {infix [“*”, “×”], precedence: 1296, #left, #reductionForInfixOperator}
+    operator: {infix [“*”, “×”], precedence: 1296}
 }
 
 to ‘/’ {left as number, right as number} returning number requires {
     can_error: true
     swift_function: divide
-    operator: {infix [“/”, “÷”], precedence: 1296, #left, #reductionForInfixOperator}
+    operator: {infix [“/”, “÷”], precedence: 1296}
 }
 
 to ‘div’ {left as real, right as real} returning real requires {
     can_error: true
-    operator: {infix [“div”], precedence: 1296, #left, #reductionForInfixOperator}
+    operator: {infix [“div”], precedence: 1296}
 }
 
 to ‘mod’ {left as real, right as real} returning real requires {
     can_error: true
-    operator: {infix [“mod”], precedence: 1296, #left, #reductionForInfixOperator}
+    operator: {infix [“mod”], precedence: 1296}
 }
 
 
@@ -59,64 +59,64 @@ to ‘mod’ {left as real, right as real} returning real requires {
 to ‘+’ {left as Number, right as Number} returning Number requires {
     can_error: true
     swift_function: add
-    operator: {infix [“+”, 0uFF0B], precedence: 1290, #left, #reductionForInfixOperator}
+    operator: {infix [“+”, 0uFF0B], precedence: 1290}
 }
 
 to ‘-’ {left as Number, right as Number} returning Number requires {
     can_error: true
     swift_function: subtract
-    operator: {infix [“-”, 0uFF0D, 0u2212, 0uFE63], precedence: 1290, #left, #reductionForInfixOperator}
+    operator: {infix [“-”, 0uFF0D, 0u2212, 0uFE63], precedence: 1290}
 }
 
 
 
 to ‘<’ {left as real, right as real} returning boolean requires {
     swift_function: isLess
-    operator: {infix [“<”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“<”], precedence: 540}
 }
 
 to ‘≤’ {left as real, right as real} returning boolean requires {
     swift_function: isLessOrEqual
-    operator: {infix [“≤”, “<=”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“≤”, “<=”], precedence: 540}
 }
 
 to ‘=’ {left as real, right as real} returning boolean requires {  «equality test, c.f. APL»
     swift_function: isEqual
-    operator: {infix [“=”, “==”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“=”, “==”], precedence: 540}
 }
 
 to ‘≠’ {left as real, right as real} returning boolean requires {
     swift_function: isNotEqual
-    operator: {infix [“≠”, “<>”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“≠”, “<>”], precedence: 540}
 }
 
 to ‘>’ {left as real, right as real} returning boolean requires {
     swift_function: isGreater
-    operator: {infix [“>”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“>”], precedence: 540}
 }
 
 to ‘≥’ {left as real, right as real} returning boolean requires {
     swift_function: isGreaterOrEqual
-    operator: {infix [“≥”, “>=”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“≥”, “>=”], precedence: 540}
 }
 
 
 «== Boolean operators ==»
 
 to ‘NOT’ {right as boolean} returning boolean requires {
-    operator: {prefix [“NOT”], precedence: 400, #left, #reductionForPrefixOperator}
+    operator: {prefix [“NOT”], precedence: 400}
 }
 
 to ‘AND’ {left as boolean, right as boolean} returning boolean requires {
-    operator: {infix [“AND”], precedence: 398, #left, #reductionForInfixOperator}
+    operator: {infix [“AND”], precedence: 398}
 }
 
 to ‘OR’ {left as boolean, right as boolean} returning boolean requires {
-    operator: {infix [“OR”], precedence: 396, #left, #reductionForInfixOperator}
+    operator: {infix [“OR”], precedence: 396}
 
 }
 
 to ‘XOR’ {left as boolean, right as boolean} returning boolean requires {
-    operator: {infix [“XOR”], precedence: 394, #left, #reductionForInfixOperator}
+    operator: {infix [“XOR”], precedence: 394}
 }
 

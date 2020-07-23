@@ -11,50 +11,10 @@ import iris
 // TO DO: changing line readers to return .eof rather than .linebreak when exhausted appears to cause infinite loop somewhere prior to parser's main loop (should use .endOfCode as it's agnostic on full-script vs per-line parsing)
 
 
-func test_() {
-    
-    //print(PatternValue(Pattern.keyword("test")))
-    
-    // TO DO: sort out operand labels (and get rid of left/middle/right), and re-add keyword alias support to patterns
-    /*
-    var s: String
-    
-    s = "3/4 = true. [1,2]. if this then do,foo bar: baz,done"
-    
-    s = "true and true "
-    
-    s = " “helo” "
-    
-    
-    let parser = IncrementalParser()
-    
-    parser.read(" “abc ")
-
-    parser.read(" def” ")
-
-    //parser.read(s)
-    
-    if let script = parser.ast() {
-        
-        let f = BasicFormatter()
-        
-        //print(script, type(of:script))
-        
-        f.walk(script)
-        
-        print(f.result)
-    } else {
-        print("Couldn't parse script.")
-    }
-    let _ = s
- */
-    
-}
-
 
 func test() {
-    runScript("  a returning c ")
-    
+  //  runScript(" set a to 4. write a. write if true then false. write if false then false else true.")
+   // runScript(" optional text ")
    // runScript(" to foo run write “bar” \n foo ") // TO DO: FIX: using optional/default coercion modifiers is still buggy: handler throws error on return (it should return `nothing` instead)
     
     //runScript("do,done")
@@ -575,3 +535,44 @@ func test() {
 
 
 
+
+
+func test_() {
+    
+    //print(PatternValue(Pattern.keyword("test")))
+    
+    // TO DO: sort out operand labels (and get rid of left/middle/right), and re-add keyword alias support to patterns
+    /*
+    var s: String
+    
+    s = "3/4 = true. [1,2]. if this then do,foo bar: baz,done"
+    
+    s = "true and true "
+    
+    s = " “helo” "
+    
+    
+    let parser = IncrementalParser()
+    
+    parser.read(" “abc ")
+
+    parser.read(" def” ")
+
+    //parser.read(s)
+    
+    if let script = parser.ast() {
+        
+        let f = BasicFormatter()
+        
+        //print(script, type(of:script))
+        
+        f.walk(script)
+        
+        print(f.result)
+    } else {
+        print("Couldn't parse script.")
+    }
+    let _ = s
+ */
+    
+}

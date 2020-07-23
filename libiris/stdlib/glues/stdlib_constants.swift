@@ -32,8 +32,8 @@ public func stdlib_loadConstants(into env: Environment) {
         registry.prefix("optional", 320)
         registry.prefix("editable", 320)
         
-        // TO DO: confirm atomic and prefix forms of same operator parse correctly
-        registry.atom("optional")
+        // TO DO: FIX: defining both atomic and prefix forms of `optional` operator doesn’t parse correctly (the latter definition appears to mask the former)
+     //   registry.atom("optional")
         registry.atom("editable")
         registry.infix("with_default", 500)
 

@@ -8,6 +8,8 @@
 import Foundation
 import iris
 
+// TO DO: colorization doesn't offset corectly if entered code produces parse error
+
 
 // REPL support
 

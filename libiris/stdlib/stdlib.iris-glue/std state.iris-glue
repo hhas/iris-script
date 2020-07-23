@@ -5,11 +5,11 @@ to ‘as’ {value as anything, coercion as coercion} returning anything require
     can_error: true
     use_scopes: #command
     swift_function: coerce
-    operator: {infix [“as”], 350, #left, #reductionForInfixOperator}
+    operator: {infix [“as”], 350}
 }
 
 to ‘returning’ {interface as handler_interface, coercion as coercion} returning itself requires {
-    operator: {infix “returning”, 300, #left, #reductionForInfixOperator}
+    operator: {infix “returning”, 300}
 }
 
 
@@ -17,21 +17,21 @@ to ‘to’ {interface as handler_interface, action as expression} returning pro
     can_error: true
     use_scopes: #command
     swift_function: defineCommandHandler {interface, action}
-    operator: {[keyword “to”, expr “interface”, keyword “run”, expr “action”], 80, #left, #reductionForPrefixOperatorWithConjunction}
+    operator: {[keyword “to”, expression “interface”, keyword “run”, expression “action”], 80}
 }
 
 to ‘when’ {interface as handler_interface, action as expression} returning procedure requires {
     can_error: true
     use_scopes: #command
     swift_function: defineEventHandler {interface, action}
-    operator: {[keyword “when”, expr “interface”, keyword “run”, expr “action”], 80, #left, #reductionForPrefixOperatorWithConjunction}
+    operator: {[keyword “when”, expression “interface”, keyword “run”, expression “action”], 80}
 }
 
 
 to ‘set’ {name as name, to: value as anything} returning anything requires { «assignment; TODO: ‘name’ argument should be name or chunk expression»
     can_error: true
     use_scopes: #command
-    operator: {[keyword “set”, expr “name”, keyword “to”, expr “value”], 80, #left, #reductionForInfixOperator}
+    operator: {[keyword “set”, expression “name”, keyword “to”, expression “value”], 80}
 }
 
 
@@ -39,12 +39,12 @@ to ‘tell’ {target as value, action as expression} returning anything require
     can_error: true
     use_scopes: #command
     swift_function: tell {target, action}
-    operator: {[keyword “tell”, expr “target”, keyword “to”, expr “action”], 101, #left, #reductionForPrefixOperatorWithConjunction}
+    operator: {[keyword “tell”, expression “target”, keyword “to”, expression “action”], 101}
 }
 
 to ‘of’ {attribute as expression, value as value} returning expression requires { «TODO: is left operand always a command?»
     can_error: true «TODO: throw immediately, or wait until query if fully constructed?»
     use_scopes: [#command, #handler]
     swift_function: ofClause {attribute, target}
-    operator: {infix “of”, 1100, #right, #reductionForInfixOperator} «binds tighter than commands»
+    operator: {infix “of”, 1100, #right} «binds tighter than commands»
 }

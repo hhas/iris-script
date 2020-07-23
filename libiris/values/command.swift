@@ -194,10 +194,14 @@ public extension Command {
         self.init(match.name, operatorPattern: match)
     }
     
+    convenience init(_ match: PatternMatch, _ arguments: [Argument]) {
+        self.init(match.name, arguments, operatorPattern: match)
+    }
+        
     convenience init(_ match: PatternMatch, _ arguments: Value...) {
         assert(arguments.count == match.argumentLabels.count) // these should _always_ be the same (any optional operands omitted in script will not appear in the final exact match); anything else is a bug
         // caution: this assumes operands will always have same ordering as parameters // TO DO: are there any use cases where operands may appear in different order to parameters? if so, reducefunc will also need HandlerInterface to reorder the arguments correctly
-        self.init(match.name, [(Symbol, Value)](zip(match.argumentLabels, arguments)), operatorPattern: match)
+        self.init(match, [(Symbol, Value)](zip(match.argumentLabels, arguments)))
     }
 }
 

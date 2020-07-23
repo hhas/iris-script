@@ -17,7 +17,7 @@ public struct HandlerGlue: Value {
     // TO DO: also extract user documentation (from annotations); Q. where should user docs go? may be an idea to put them in separate data file that is loaded as needed (or just use the native glue def itself, assuming it isn't too slow to parse)
     typealias Parameter = (name: String, binding: String, coercion: String)
     typealias SwiftFunction = (name: String, params: [String])
-    typealias OperatorSyntax = (pattern: [iris.Pattern], precedence: Int, associate: Associativity, reducefunc: String)
+    typealias OperatorSyntax = (pattern: [iris.Pattern], precedence: Int, associate: Associativity, reducefunc: String?)
     
     let interface: HandlerInterface
     

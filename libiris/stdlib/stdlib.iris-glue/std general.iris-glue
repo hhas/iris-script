@@ -1,13 +1,12 @@
 
 «= stdlib glue definition =»
 
-
-
 «== IO commands ==»
 
-to write {value as anything} returning nothing requires {
-«TODO: ‘to’ argument field for specifying the external resource to write to (for now, primitive func is hardcoded to print() value’s description to stdout)»
+«TODO: `write` command needs optional ‘to’ argument for specifying the external resource to write to (for now, primitive func is hardcoded to print() value’s description to stdout); probably best to leave this until @namespace is implemented as file[-like] objects should generally be mounted in that and referred to there»
 «TODO: what about error handling? e.g. if writing to locked/missing file; we want to keep read and write commands as generic as possible; OTOH, not all writers will throw [e.g. Swift’s standard print() never throws]»
+
+to write {value as anything} returning nothing requires {
 }
 
 
@@ -15,6 +14,6 @@ to write {value as anything} returning nothing requires {
 
 to ‘is_a’ {value as anything, coercion as coercion} returning boolean requires {
     use_scopes: #command
-    operator: {infix [“is_a”], 540, #left, #reductionForInfixOperator}
+    operator: {infix [“is_a”], 540}
 }
 

@@ -11,32 +11,32 @@
 
 to ‘is_before’ {left as string, right as string} returning boolean requires {
     can_error: true
-    operator: {infix [“is_before”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“is_before”], precedence: 540}
 }
 
 to ‘is_not_after’ {left as string, right as string} returning boolean requires {
     can_error: true
-    operator: {infix [“is_not_after”, “is_before_or_same_as”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“is_not_after”, “is_before_or_same_as”], precedence: 540}
 }
 
 to ‘is_same_as’ {left as string, right as string} returning boolean requires {
     can_error: true
-    operator: {infix [“is_same_as”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“is_same_as”], precedence: 540}
 }
 
 to ‘is_not_same_as’ {left as string, right as string} returning boolean requires {
     can_error: true
-    operator: {infix [“is_not_same_as”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“is_not_same_as”], precedence: 540}
 }
 
 to ‘is_after’ {left as string, right as string} returning boolean requires {
     can_error: true
-    operator: {infix [“is_after”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“is_after”], precedence: 540}
 }
 
 to ‘is_not_before’ {left as string, right as string} returning boolean requires {
     can_error: true
-    operator: {infix [“is_not_before”, “is_same_as_or_after”], precedence: 540, #left, #reductionForInfixOperator}
+    operator: {infix [“is_not_before”, “is_same_as_or_after”], precedence: 540}
 }
 
 «=== containment operators ===»
@@ -45,22 +45,22 @@ to ‘is_not_before’ {left as string, right as string} returning boolean requi
 
 to ‘begins_with’ {left as string, right as string} returning boolean requires {
     can_error: true
-    operator: {infix [“begins_with”], precedence: 542, #left, #reductionForInfixOperator}
+    operator: {infix [“begins_with”], precedence: 542}
 }
 
 to ‘ends_with’ {left as string, right as string} returning boolean requires {
     can_error: true
-    operator: {infix [“ends_with”], precedence: 542, #left, #reductionForInfixOperator}
+    operator: {infix [“ends_with”], precedence: 542}
 }
 
 to ‘contains’ {left as string, right as string} returning boolean requires {
     can_error: true
-    operator: {infix [“contains”], precedence: 542, #left, #reductionForInfixOperator}
+    operator: {infix [“contains”], precedence: 542}
 }
 
 to ‘is_in’ {left as string, right as string} returning boolean requires {
     can_error: true
-    operator: {infix [“is_in”], precedence: 542, #left, #reductionForInfixOperator}
+    operator: {infix [“is_in”], precedence: 542}
 }
 
 «=== other operators ===»
@@ -68,7 +68,7 @@ to ‘is_in’ {left as string, right as string} returning boolean requires {
 to ‘&’ {left as string, right as string} returning string requires {
     can_error: true
     swift_function: joinValues
-    operator: {infix [“&”], precedence: 340, #left, #reductionForInfixOperator}
+    operator: {infix [“&”], precedence: 340}
 }
 
 

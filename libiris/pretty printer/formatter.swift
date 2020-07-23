@@ -214,7 +214,7 @@ extension Pattern {
         //case .name:                 return "NAME"
         //case .label:                return "LABEL"
         case .expression:           formatter.walk(operands.removeFirst())
-        case .expressionNamed:      fatalError("labeled expressions not yet supported")
+        case .expressionLabeled:      fatalError("labeled expressions not yet supported")
         //case .token(let t):         return ".\(t)"
         case .testValue(_):         formatter.walk(operands.removeFirst())
         //case .delimiter:            return ", "
@@ -277,7 +277,7 @@ public class VT100Formatter {
             result.append(self.faintUnderscores(token.content, self.nameStyle))
         case .label:
             result.append(self.faintUnderscores(token.content, self.labelStyle))
-        case .operatorName: // TO DO: this currently applies to `nothing`, `true`/`false`, `π` as these are defined as atomic operators and the standard reductionForAtomOperator() reduces down to command rather than to constant; see also TODO on reductionForAtomOperator (TBH, library glues should probably specify when to reduce operator directly to constant, although it does leave the question of whether `nothing`, `true`, and `false` should be treated as core syntax rather than operators given they are [effectively] core features; keeping them as operators does allow more flexibility wrt DSLs and localization though)
+        case .operatorName: // note: this currently applies to `nothing`, `true`/`false`, `π` as these are defined as atomic operators and the standard reductionForMatchedPattern() reduces down to command rather than to constant; see also TODO on `standard reducers.swift`
             result.append(self.faintUnderscores(token.content, self.operatorStyle))
         default:
             let code: String

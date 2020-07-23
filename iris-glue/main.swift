@@ -30,7 +30,7 @@ let args = CommandLine.arguments
 
 if args.count != 3 {
     print("Usage: iris-glue GLUEFILE DESTDIR\n")
-    print("Glue file must be named `LIBNAME.iris-glue`.\n") // TO DO: naming convention
+    print("Glue file/directory must be named `LIBNAME.iris-glue`.\n") // TO DO: naming convention
     print("")
     exit(0)
 }

@@ -7,9 +7,10 @@ to ‘if’ {test: condition as boolean, then: action as expression, else: alter
     can_error: true «TODO: would be better to distinguish errors thrown by arguments from errors thrown by handler itself»
     use_scopes: #command
     swift_function: ifTest {condition, action, alternativeAction}
-    operator: {[keyword “if”, expr “condition”,
-    							keyword “then”, expr “action”,
-    							option sequence [keyword “else”, expr “alternative_action”]], 101, #left, #reductionForPrefixOperatorWithConjunctionAndAlternate}
+    operator: {[keyword “if”, expression “condition”,
+                keyword “then”, expression “action”,
+    			is_optional sequence [keyword “else”, expression “alternative_action”]],
+               precedence: 101}
 }
 
 «TODO: how to express return type? e.g. `returning result of action`?»
@@ -17,14 +18,14 @@ to ‘while’ {condition as boolean, action as expression} returning anything r
     can_error: true
     use_scopes: #command
     swift_function: whileRepeat {condition, action}
-    operator: {[keyword “while”, expr “condition”, keyword “repeat”, expr “action”], 101, #left, #reductionForPrefixOperatorWithConjunction}
+    operator: {[keyword “while”, expression “condition”, keyword “repeat”, expression “action”], 101}
 }
 
 to ‘repeat’ {action as expression, condition as boolean} returning anything requires {
     can_error: true
     use_scopes: #command
     swift_function: repeatWhile {action, condition}
-    operator: {[keyword “repeat”, expr “condition”, keyword “while”, expr “action”], 101, #left, #reductionForPrefixOperatorWithConjunction}
+    operator: {[keyword “repeat”, expression “condition”, keyword “while”, expression “action”], 101}
 }
 
 «TODO: repeatTimes»

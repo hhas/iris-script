@@ -60,6 +60,10 @@ func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEn
     guard let handlerGlues = handlerEnv.get(handlerGluesKey) as? OpaqueHandlerGlues else {
         throw UnknownNameError(name: handlerGluesKey, in: handlerEnv)
     }
+    guard let currentHandlerInterface = handlerEnv.get(currentHandlerInterfaceKey) as? OpaqueHandlerInterface else {
+        throw UnknownNameError(name: currentHandlerInterfaceKey, in: handlerEnv)
+    }
+    currentHandlerInterface.data = interface // kludge; needed in newExpression to remap operand binding name to argument label name
     guard let body = attributes as? Record else { // TO DO: glue currently uses asIs to pass record without any evaluation, leaving defineHandlerGlue to extract its fields below; eventually handler_glue record should be defined as a SwiftCoercion with named+typed fields, allowing it to unbox directly to HandlerGlue
         print("bad attributes (not record):", attributes)
         throw BadSyntax.missingExpression
@@ -78,10 +82,10 @@ func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEn
         swiftFunction = nil
     }
     let useScopes = try unpackOption(options, "use_scopes", in: commandEnv, as: AsSwiftDefault(AsArray(asSymbol), default: [])).map{"\($0.key)Env"}
-    
     let operatorSyntax: HandlerGlue.OperatorSyntax?
-    if let record = try unboxOption(options, "operator", in: commandEnv, as: AsOptional(asOperatorSyntax)) as? Record {
-        operatorSyntax = try unpackOperatorDefinition(record, in: commandEnv)
+    let patternScope = PatternDialect(parent: commandEnv)
+    if let record = try unboxOption(options, "operator", in: patternScope, as: AsOptional(asOperatorSyntax)) as? Record {
+        operatorSyntax = try unpackOperatorDefinition(record, in: patternScope)
     } else {
         operatorSyntax = nil
     }
@@ -94,7 +98,9 @@ func defineHandlerGlue(interface: HandlerInterface, attributes: Value, commandEn
     }
 }
 
+
 func unpackOperatorDefinition(_ record: Record, in commandEnv: Scope) throws -> HandlerGlue.OperatorSyntax {
+    // since main Env’s `expression` and `optional` slots already hold Coercions, create a subenv in which to lookup pattern commands; TO DO: this is kludgy: it creates a new instance for each definition, reloading and rebinding handlers each time; need to give scoping more thought
     let patterns = try! asPatternValues.unbox(value: record.data[0].value, in: commandEnv).map{$0.data}
     let patternSeq: [iris.Pattern]
     if patterns.count == 1, case .sequence(let seq) = patterns[0] {
@@ -105,7 +111,7 @@ func unpackOperatorDefinition(_ record: Record, in commandEnv: Scope) throws -> 
     let precedence = try! asInt.unbox(value: record.data[1].value, in: commandEnv) // native coercion may return Number
     let associativity: Associativity
     switch record.data[2].value as! Symbol {
-    case "left":
+    case "left", "none": // TO DO: Associativity doesn't currently support `none`
         associativity = .left
     case "right":
         associativity = .right
@@ -113,9 +119,8 @@ func unpackOperatorDefinition(_ record: Record, in commandEnv: Scope) throws -> 
         print("malformed operator record", record)
         throw BadSyntax.missingExpression
     }
-    let reducefunc = try! AsSwiftOptional(asSymbol).unbox(value: record.data[3].value, in: commandEnv)!.label
+    let reducefunc = try! AsSwiftOptional(asSymbol).unbox(value: record.data[3].value, in: commandEnv)?.label
     return (patternSeq, precedence, associativity, reducefunc)
-
 }
 
 

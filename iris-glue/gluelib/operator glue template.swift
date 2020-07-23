@@ -34,10 +34,9 @@ let operatorsTemplate = TextTemplate(templateSource) { (tpl: Node, args: (librar
     tpl.libraryName.set(args.libraryName)
     tpl.loadOperators.map(args.handlerGlues.filter{$0.operatorSyntax != nil}.map{$0.operatorSyntax!}) {
         (node: Node, syntax: HandlerGlue.OperatorSyntax) -> Void in
-        node.args.set(
-            "\(syntax.pattern.swiftLiteralDescription), \(syntax.precedence), .\(syntax.associate), \(syntax.reducefunc)")
+        let reducefunc: String
+        if let reducer = syntax.reducefunc { reducefunc = ", \(reducer)" } else { reducefunc = "" }
+        node.args.set("\(syntax.pattern.swiftLiteralDescription), \(syntax.precedence), .\(syntax.associate)\(reducefunc)")
     }
 }
-
-
 

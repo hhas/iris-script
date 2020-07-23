@@ -88,14 +88,18 @@ Separate operators for performing math vs non-math comparisons (similar to Perl 
 
 Coercion-based native⬌Swift bridging API for implementing primitive library functions, ensuring clean separation between Swift implementation and automatically generated native-to-Swift bridging glue code. Glue definitions are written in iris and evaluated via the `gluelib` library. e.g. The `if…then…else…` handler’s glue definition, including custom operator syntax:
 
-    to ‘if’ {left:   condition as boolean, 
-             middle: action as expression, 
-             right:  alternative_action as expression} returning anything requires {
+    to ‘if’ {test: condition as boolean, 
+             then: action as expression, 
+             else: alternative_action as expression} returning anything requires {
         can_error: true
         use_scopes: #command
         swift_function: ifTest {condition, action, alternativeAction}
-        operator: {#prefix_with_two_conjunctions, 101, #left, [#if, #then, #else]}
+        operator: {[keyword “if”, expr “condition”,
+                    keyword “then”, expr “action”,
+                    is_optional sequence [keyword “else”, expr “alternative_action”]],
+                   precedence: 101}
     }
+
     
 and its underlying Swift implementation:
     
