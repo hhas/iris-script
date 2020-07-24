@@ -66,7 +66,8 @@ let symbolCharacters   = CharacterSet.punctuationCharacters.union(CharacterSet.s
 // TO DO: should wordCharacters be defined as CharacterSet.letters (L* + M*)? i.e. opt-in rather than opt-out?
 let wordCharacters     = _coreCharacters.inverted.subtracting(symbolCharacters).subtracting(_invalidCharacters) // undifferentiated text; downstream tokenizers and parsers may consume as-is, decompose and output as new tokenstreams, halt on as unrecoverable 'syntax error' (not recommended for editing mode, but may be preferable when parsing for execution only), or some combination
 
-let nameCharacters = wordCharacters.union(CharacterSet(charactersIn: "_")) // operator names (these do not include digits)
+let underscoreCharacters = CharacterSet(charactersIn: "_")
+let nameCharacters = wordCharacters.union(underscoreCharacters) // operator names (these do not include digits)
 
 // -/+ aren't part of core syntax, but do need to be recognized when processing numeric literals so define matchable symbols here
 // TO DO: should pretty printer replace ASCII +/- chars with true Unicode symbols?

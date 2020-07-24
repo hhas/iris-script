@@ -18,6 +18,8 @@ import iris
 // the previous line’s result will be stored under the name `_`
 let previousValue = EditableValue(nullValue, as: asAnything)
 
+var previousInput: Value = nullValue
+
 // TO DO: REPL session should probably run in subscope, with a write barrier between session env and the top-level environment containing stdlib (will give this more thought when implementing library loader, as libraries should by default share a single read-only env instance containing stdlib as their parent to avoid unnecessary overheads)
 
 
@@ -27,7 +29,7 @@ func runREPL() {
     let parser = IncrementalParser()
     loadREPLHandlers(parser.env)
     try! parser.env.set("_", to: previousValue)
-    let formatter = VT100Formatter()
+    let formatter = VT100TokenFormatter()
     parser.adapterHook = { VT100Reader($0, formatter) } // install extra lexer stage
     var block = "" // captures multi-line input for use in history
     while isRunning {
@@ -52,11 +54,13 @@ func runREPL() {
                     } else if !(ignoreNullResult && result is NullValue) {
                         writeResult(result)
                     }
+                    previousInput = ast
                     EL_writeHistory(block)
                     block = ""
                     parser.clear() // once the expression is evaluated, clear it so parser can start reading next one
                 } // else the expression is incomplete, e.g. if first line is `[[1]`, will continue reading lines until the closing "]" is received
             } catch {
+                previousInput = nullValue
                 EL_writeHistory(block)
                 block = ""
                 writeError(error)

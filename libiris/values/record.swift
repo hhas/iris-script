@@ -13,11 +13,22 @@
 import Foundation
 
 
-// TO DO: should record be BoxedCollectionValue/BoxedComplexValue? the problem is that fields require unique labels, which Swift type system can't enforce so we rely on runtime checking with throws, but the boxed protocol requires a non-throwing init, which record can't provide
+// TO DO: should record be BoxedCollectionValue/BoxedComplexValue? the problem is that labeled fields require unique labels, which Swift type system can't enforce, so we rely on runtime checking with throws, but the boxed protocol requires a non-throwing init, which record can't provide (there is `Record(uniqueLabelsWithValues:)` but that has a different signature)
+
+public extension Record.Fields { // also used as Command.Arguments
+    var swiftLiteralDescription: String {
+        // TO DO: is it safe to omit `Symbol` constructor on argument labels?
+        return "[\(self.map{ "(\($0.isEmpty ? "nullSymbol" : $0.swiftLiteralDescription), \($1.swiftLiteralDescription))" }.joined(separator: ", "))]"
+    }
+}
+
 
 public struct Record: ComplexValue, Accessor, Sequence {
-
-    public var swiftLiteralDescription: String { return "(try! Record([\(self.data.map{ "(\($0.swiftLiteralDescription), \($1.swiftLiteralDescription))" }.joined(separator: ", "))])" }
+    
+    public var swiftLiteralDescription: String {
+        // TO DO: what about including constrainedType?
+        return "Record(uniqueLabelsWithValues: \(self.data.swiftLiteralDescription))"
+    }
     
     // TO DO: `description` should return Swift representation (we need a separate visitor-style API for pretty-printing native values, as formatting needs to be customizable [e.g. when reformatting script's code, where line-wrapping and reindentation is automatic, command arguments can omit record punctuation for low-noise AS-like appearance, and commands can be formatted with or without using custom operator syntax; plus, of course, literate formatting where visual emphasis is assigned to high-level structures rather than low-level token types]; TBH generating Swift representations should probably also be done using same PP API, e.g. for use by cross-compiler when generating [human-readable] Swift code, with `description` invoking that with default formatting options when displaying values for debugging/troubleshooting)
     
@@ -59,6 +70,10 @@ public struct Record: ComplexValue, Accessor, Sequence {
     
     public init() {
         self.init([], as: asRecord)
+    }
+    
+    public init(uniqueLabelsWithValues fields: Fields) {
+        try! self.init(fields)
     }
     
     internal init(_ fields: Fields, as coercion: RecordCoercion) {

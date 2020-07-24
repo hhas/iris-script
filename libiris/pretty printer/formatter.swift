@@ -7,6 +7,9 @@
 
 import Foundation
 
+// TO DO: lexer-based formatting should apply on entering whitespace/delimiters for basic styling-as-you-type; parser should, on completing reductions, yield pretty printed representation of that reduction (PP may use same basic styling as per-token formatting, or it may provide more sophisticated analysis, e.g. `tell TARGET to ACTION` operator’s action block may style commands whose handlers are defined in TARGET differently to those whose handlers come from script context, although that requires side-effect-free partial evaluation of target expression outside of run-time, which in turn requires machine-readable annotations to operator description and/or command/handler)
+
+
 // TO DO: also consider using lexer chain to provide basic keyword highlighting: that has the advantage that it can color code as user types as it only needs to recognize single tokens, not entire structures; thus lexer can provide pretty printer with a quick first-pass stage highlighting keyword/name/string/number/annotation semantics only, with further formatting (e.g. whitespace normalization, indentation, structural analysis) being applied as parser completes the larger structural units (lines, blocks)
 
 // TO DO: implement a lexer-only PP for applying VT100 color codes in iris-shell (ideally this should be inserted into the live lexer chain right just before the parser stage; it may even be possible to run lexer stage as soon as certain characters are typed, e.g. space, allowing coloring-as-you-type, although that will need to have some external knowledge of quoting characters as words within annotations and string literals shouldn't be colored as keywords/identifiers, obvs)
@@ -26,37 +29,25 @@ import Foundation
 // TO DO: language really needs annotation support before pretty printing can be implemented (otherwise PP will “disappear” comments, etc); also need to decide default layout rules, and how to annotate elective formatting (e.g. lists and records laid out vertically using LF separators instead of horizontally using commas; blocks laid out horizontally instead of vertically, non-essential parens)
 
 
-let delimitingChars = linebreakCharacters.union(whitespaceCharacters).union(punctuationCharacters)
-
-
-func isUnquotedName(_ string: String) -> Bool {
-    // the easiest way to determine if a given name needs single-quoted is to see if it lexes as a single .unquotedName
-    // TO DO: this assumes a standard lexer chain (c.f. IncrementalParser); eventually this should reuse [the relevant portion of] whatever lexer chain was actually used to parse the given code
-    guard let lexer = BaseLexer(string) else { return false }
-    let reader = NameReader(lexer)
-    let (token, nextReader) = reader.next()
-    if case .unquotedName(_) = token.form, case .endOfCode = nextReader.next().0.form { return true }
-    return false
-}
+private let delimitingChars = linebreakCharacters.union(whitespaceCharacters).union(punctuationCharacters)
+private let startOfIdentifier = wordCharacters.union(underscoreCharacters)
+private let restOfIdentifier = startOfIdentifier.union(digitCharacters)
 
 
 
 open class BasicFormatter {
 
     private var indentation = ""
-    
-    private(set) public var result = ""
-    
-    func append(_ string: String) {
-        // TO DO: this is inserting extra chars into multi-line string literal, which is wrong
-        if let first = string.first, let last = self.result.last {
+        
+    func append(_ string: String, to result: inout String) {
+        if let first = string.first, let last = result.last {
             if !delimitingChars.contains(first) && !delimitingChars.contains(last) {
-                self.result += " "
+                result += " "
             } else if linebreakCharacters.contains(last) {
-                self.result += self.indentation
+                result += self.indentation
             }
         }
-        self.result += string.replacingOccurrences(of: "\n", with: "\n\(self.indentation)")
+        result += string.replacingOccurrences(of: "\n", with: "\n\(self.indentation)") // TO DO: this is inserting extra chars into multi-line string literal, which is wrong
     }
     
     public init() { }
@@ -70,78 +61,82 @@ open class BasicFormatter {
         self.indentation.removeLast()
     }
     
-    public func name(_ name: Symbol) {
-        self.append(isUnquotedName(name.label) ? name.label : "‘\(name.label)’")
-    }
-    
-    public func elements(_ items: [Value], _ separator: String) {
-        self.walk(items[0])
+    public func elements(_ items: [Value], _ separator: String, to result: inout String) {
+        result += self.format(items[0])
         for item in items.dropFirst() {
-            self.append(separator)
-            self.walk(item)
+            result += separator
+            result += self.format(item)
         }
     }
     
     //
 
-    public func opaque(_ value: Value) {
-        self.append("«opaque_value: \(value)»")
+    public func opaque(_ value: Value) -> String {
+        return "«opaque_value: \(value)»"
     }
+    
+    public func formatOperator(_ name: Symbol) -> String {
+        return name.label
+    }
+    
+    // this is a conservative subset of wordCharacters; anything else (including symbol-based names) will be single-quoted
+    
+    func isIdentifier(_ s: String) -> Bool {
+        guard let c = s.first, startOfIdentifier.contains(c) else { return false }
+        for c in s.dropFirst() { if !restOfIdentifier.contains(c) { return false } }
+        return true
+    }
+    
+    func quoteIfNeeded(_ s: String) -> String {
+        return self.isIdentifier(s) ? s : "‘\(s)’"
+    }
+    
+    //
 
-    public func atomic(_ value: AtomicValue) {
+    public func atomic(_ value: AtomicValue) -> String {
         switch value {
-        case let v as Bool:
-            self.append(v ? "true" : "false")
-        case is NullValue:
-            self.append("nothing")
-        case let v as Symbol:
-            self.append("#\(v.label)") // TO DO: add single quotes if label is empty or contains restricted chars
-        default: self.opaque(value)
+        case let v as Symbol:               return "#\(self.quoteIfNeeded(v.label))"
+        case let v as LiteralConvertible:   return v.literalDescription
+        default:                            return self.opaque(value)
         }
     }
     
-    public func scalar(_ value: ScalarValue) {
+    public func scalar(_ value: ScalarValue) -> String {
         switch value {
-        case let v as Text:
-            self.append(v.literalDescription())
-        case let v as Number:
-            self.append(v.literalDescription())
-        case let v as Int:
-            self.append(Number(v).literalDescription())
-        case let v as Double:
-            self.append(Number(v).literalDescription())
-        case is NullValue:
-            self.append("nothing")
-        default: self.opaque(value)
+        case let v as LiteralConvertible:   return v.literalDescription
+        default:                            return self.opaque(value)
         }
     }
     
-    public func complex(_ value: ComplexValue) {
-        self.opaque(value)
+    public func complex(_ value: ComplexValue) -> String {
+        return self.opaque(value)
     }
 
     //
     
-    public func command(_ value: Command) {
+    public func command(_ value: Command) -> String {
+        var result = ""
         if let match = value.operatorPattern {
             var operands = value.arguments.map{ $0.value }
             //print(operands)
-            for p in match.exactMatch { p.format(operands: &operands, using: self) }
+            result += match.exactMatch.map{ $0.formatOperation(for: &operands, in: self) }.joined(separator: " ")
         } else {
-            self.append(value.name.label) // TO DO: single-quote if needed
+            result += self.quoteIfNeeded(value.name.label)
             // TO DO: use FP syntax for nested commands? or just parenthesize the entire command?
             // TO DO: if first argument is unlabeled and is a record, FP syntax MUST be used, e.g. `foo {{bar:1}, baz:…}`
             if !value.arguments.isEmpty {
                 for (label, value) in value.arguments {
-                    self.append(" ")
-                    if !label.isEmpty { self.append("\(label.label): ") }
-                    self.walk(value)
+                    result += " "
+                    if !label.isEmpty { result += "\(self.quoteIfNeeded(label.label)): " }
+                    result += self.format(value)
                 }
             }
         }
+        return result
     }
     
-    public func block(_ value: Block) {
+    public func block(_ value: Block) -> String {
+        var result = ""
         let begin: String, ended: String, separator: String, isMultiLine: Bool
         if let (beginSymbol, endedSymbol) = value.operatorDefinition?.blockKeywords() {
             (begin, ended) = (beginSymbol.label, endedSymbol.label)
@@ -152,74 +147,81 @@ open class BasicFormatter {
             isMultiLine = value.data.count > 1
             separator = isMultiLine ? "\n" : ", "
         }
-        self.append(begin)
+        result += begin
         if !value.data.isEmpty {
             self.indent()
-            if isMultiLine { self.append(separator) }
-            self.elements(value.data, separator)
+            if isMultiLine { result += separator }
+            self.elements(value.data, separator, to: &result)
             self.dedent()
         }
-        if isMultiLine { self.append(separator) }
-        self.append(ended)
+        if isMultiLine { result += separator }
+        result += ended
+        return result
     }
     
-    public func list(_ value: OrderedList) {
-        self.append("[")
+    public func list(_ value: OrderedList) -> String {
+        var result = "["
         if !value.data.isEmpty {
-            self.elements(value.data, ", ")
+            self.elements(value.data, ", ", to: &result)
         }
-        self.append("]")
+        result += "]"
+        return result
     }
     
-    public func dict(_ value: KeyedList) {
+    public func dict(_ value: KeyedList) -> String {
+        var result = ""
         if value.data.isEmpty {
-            self.append("[:]")
+            result += "[:]"
         } else {
-            self.append("[")
-            self.append(value.map{ "\(self.walk($0.value)): \(self.walk($1))" }.joined(separator: ", "))
-            self.append("]")
+            result += "["
+            result += value.map{ "\(self.format($0.value)): \(self.format($1))" }.joined(separator: ", ")
+            result += "]"
         }
+        return result
     }
         
-    public func record(_ value: Record) {
-        self.append("{")
-        self.append(value.map{ ($0.isEmpty ? "" : "\($0.label): ") + "\(self.walk($1))" }.joined(separator: ", "))
-        self.append("}")
+    public func record(_ value: Record) -> String {
+        var result = "{"
+        result += value.map{
+            ($0.isEmpty ? "" : "\($0.label): ") + self.format($1)
+        }.joined(separator: ", ")
+        return result + "}"
     }
     
     //
     
-    public func walk(_ value: Value) {
+    public func format(_ value: Value) -> String {
         switch value {
-        case let value as OrderedList:  self.list(value)
-        case let value as KeyedList:    self.dict(value)
-        case let value as Block:        self.block(value)
-        case let value as Command:      self.command(value)
-        case let value as Record:       self.record(value)
-        case let value as ComplexValue: self.complex(value)
-        case let value as ScalarValue:  self.scalar(value)
-        default:                        self.opaque(value)
+        case let value as OrderedList:  return self.list(value)
+        case let value as KeyedList:    return self.dict(value)
+        case let value as Block:        return self.block(value)
+        case let value as Command:      return self.command(value)
+        case let value as Record:       return self.record(value)
+        case let value as ComplexValue: return self.complex(value)
+        case let value as ScalarValue:  return self.scalar(value)
+        case let value as AtomicValue:  return self.atomic(value)
+        default:                        return self.opaque(value)
         }
     }
 }
 
 //
 
-extension Pattern {
+extension Pattern { // this is assumed to be the exact operator pattern from which Command was created
  
-    func format(operands: inout [Value], using formatter: BasicFormatter)  {
+    func formatOperation(for operands: inout [Value], in formatter: BasicFormatter) -> String {
         switch self {
-        case .keyword(let k):       formatter.append(k.name.label)
-        case .sequence(let seq):    for p in seq { p.format(operands: &operands, using: formatter) }
-        //case .name:                 return "NAME"
-        //case .label:                return "LABEL"
-        case .expression:           formatter.walk(operands.removeFirst())
-        case .expressionLabeled:      fatalError("labeled expressions not yet supported")
-        //case .token(let t):         return ".\(t)"
-        case .testValue(_):         formatter.walk(operands.removeFirst())
-        //case .delimiter:            return ", "
-        //case .lineBreak:            return "LF"
-        default: fatalError()
+        case .keyword(let k):       return formatter.formatOperator(k.name)
+        case .sequence(let seq):    return seq.map{ $0.formatOperation(for: &operands, in: formatter) }.joined(separator: " ") // shouldn’t be needed
+        //case .name:                 return "NAME"  // should only be used in command matchers
+        //case .label:                return "LABEL" // should only be used in command matchers
+        case .expression:           return formatter.format(operands.removeFirst())
+        case .expressionLabeled:    return formatter.format(operands.removeFirst()) // TO DO: confirm this works as intended
+        //case .token(let t):         return ".\(t)" // should only be used in block value matchers
+        case .testValue(_):         return formatter.format(operands.removeFirst())
+        //case .delimiter:            return ", "    // should only be used in block value matchers
+        //case .lineBreak:            return "LF"    // should only be used in block value matchers
+        default: fatalError("Can’t formatOperation() for complex/unmatched patterns.")
         }
     }
 }
@@ -231,32 +233,84 @@ extension Pattern {
 // terminal
 
 
-public class VT100Formatter {
+enum VT100: String {
     
-    enum VT100: String {
-        
-        var description: String { return self.rawValue }
-        
-        typealias RawValue = String
-        case none         = ""
-        case reset        = "\u{1b}[m"
-        case bold         = "\u{1b}[1m"
-        case faint        = "\u{1b}[2m"
-        case underline    = "\u{1b}[4m"
-        case red          = "\u{1b}[31m"
-        case green        = "\u{1b}[32m"
-        case yellow       = "\u{1b}[33m"
-        case blue         = "\u{1b}[34m"
-        case magenta      = "\u{1b}[35m"
-        case cyan         = "\u{1b}[36m"
+    var description: String { return self.rawValue }
+    
+    typealias RawValue = String
+    case none         = ""
+    case reset        = "\u{1b}[m"
+    case bold         = "\u{1b}[1m"
+    case faint        = "\u{1b}[2m"
+    case underline    = "\u{1b}[4m"
+    case red          = "\u{1b}[31m"
+    case green        = "\u{1b}[32m"
+    case yellow       = "\u{1b}[33m"
+    case blue         = "\u{1b}[34m"
+    case magenta      = "\u{1b}[35m"
+    case cyan         = "\u{1b}[36m"
+}
+
+let nameStyle     = VT100.red.rawValue + VT100.bold.rawValue
+let labelStyle    = VT100.red.rawValue
+let operatorStyle = VT100.magenta.rawValue
+let numberStyle   = VT100.blue.rawValue
+let textStyle     = VT100.blue.rawValue
+let symbolStyle   = VT100.green.rawValue
+let resetStyle    = VT100.reset.rawValue
+
+
+
+
+public class VT100ValueFormatter: BasicFormatter {
+    
+    public override func formatOperator(_ name: Symbol) -> String {
+        return "\(operatorStyle)\(name.label)\(resetStyle)"
     }
     
-    let nameStyle     = VT100.red.rawValue + VT100.bold.rawValue
-    let labelStyle    = VT100.red.rawValue
-    let operatorStyle = VT100.magenta.rawValue
-    let numberStyle   = VT100.blue.rawValue
-    let textStyle     = VT100.blue.rawValue
-    let symbolStyle   = VT100.green.rawValue
+    public override func atomic(_ value: AtomicValue) -> String {
+        return "\(value is Symbol ? symbolStyle : operatorStyle)\(super.atomic(value))\(resetStyle)"
+    }
+    
+    public override func scalar(_ value: ScalarValue) -> String {
+        return "\(value is NumericValue ? numberStyle : textStyle)\(super.scalar(value))\(resetStyle)"
+    }
+        
+    public override func record(_ value: Record) -> String {
+        var result = "{"
+        result += value.map{
+            ($0.isEmpty ? "" : "\(labelStyle)\($0.label):\(resetStyle) ") + self.format($1)
+        }.joined(separator: ", ")
+        return result + "}"
+    }
+    
+    public override func command(_ value: Command) -> String {
+        var result = "(" // options to use FP syntax (record arg) vs LP syntax (parensed as needed) vs mixed
+        if let match = value.operatorPattern {
+            // TO DO: operator formatting needs to compare precedence/associativity of adjacent operations and parenthesize as needed (ditto for LP commands, which are effectively prefix operators of commandPrecedence)
+            var operands = value.arguments.map{ $0.value }
+            //print(operands)
+            result += match.exactMatch.map{ $0.formatOperation(for: &operands, in: self) }.joined(separator: " ")
+        } else {
+            result += "\(nameStyle)\(self.quoteIfNeeded(value.name.label))\(resetStyle)"
+            // TO DO: use FP syntax for nested commands? or just parenthesize the entire command?
+            // TO DO: if first argument is unlabeled and is a record, FP syntax MUST be used, e.g. `foo {{bar:1}, baz:…}`
+            if !value.arguments.isEmpty {
+                for (label, value) in value.arguments {
+                    result += " "
+                    if !label.isEmpty { result += "\(labelStyle)\(self.quoteIfNeeded(label.label)):\(resetStyle) " }
+                    result += self.format(value)
+                }
+            }
+        }
+        return result + ")"
+    }
+    
+}
+
+
+
+public class VT100TokenFormatter { // used by VT100Reader; applies VT100 codes to token stream
     
     private var result = ""
     
@@ -274,27 +328,27 @@ public class VT100Formatter {
         if let ws = token.leadingWhitespace { result.append(String(ws)) }
         switch token.form {
         case .unquotedName:
-            result.append(self.faintUnderscores(token.content, self.nameStyle))
+            result.append(self.faintUnderscores(token.content, nameStyle))
         case .label:
-            result.append(self.faintUnderscores(token.content, self.labelStyle))
+            result.append(self.faintUnderscores(token.content, labelStyle))
         case .operatorName: // note: this currently applies to `nothing`, `true`/`false`, `π` as these are defined as atomic operators and the standard reductionForMatchedPattern() reduces down to command rather than to constant; see also TODO on `standard reducers.swift`
-            result.append(self.faintUnderscores(token.content, self.operatorStyle))
+            result.append(self.faintUnderscores(token.content, operatorStyle))
         default:
             let code: String
             switch token.form {
-            case .quotedName:                   code = self.nameStyle
+            case .quotedName:                   code = nameStyle
             case .value(let v):
                 switch v {
-                case is Text:                   code = self.textStyle
-                case is Int, is Double:         code = self.numberStyle
-                case is Number:                 code = self.numberStyle
-                case is Symbol:                 code = self.symbolStyle
-                case is Bool, is NullValue:     code = self.symbolStyle
+                case is Text:                   code = textStyle
+                case is Int, is Double:         code = numberStyle
+                case is Number:                 code = numberStyle
+                case is Symbol:                 code = symbolStyle
+                case is Bool, is NullValue:     code = symbolStyle
                 default:                        code = ""
                 }
             default:                            code = ""
             }
-            result.append("\(code)\(token.content)\(code.isEmpty ? "" : "\u{1b}[m")")
+            result.append("\(code)\(token.content)\(code.isEmpty ? "" : "\(resetStyle)")")
         }
     }
     
@@ -313,10 +367,10 @@ public struct VT100Reader: LineReader {
 
     public var code: String { return self.reader.code }
 
-    private let formatter: VT100Formatter
+    private let formatter: VT100TokenFormatter
     private let reader: LineReader
     
-    public init(_ reader: LineReader, _ formatter: VT100Formatter) {
+    public init(_ reader: LineReader, _ formatter: VT100TokenFormatter) {
         self.reader = reader
         self.formatter = formatter
         VT100Reader.count += 1

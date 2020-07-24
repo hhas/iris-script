@@ -465,8 +465,6 @@
 			children = (
 				4F1EA48422B279B500FFA4D2 /* atoms.swift */,
 				4F26065722C015A30036D904 /* symbol.swift */,
-				4F26065322BECD7B0036D904 /* record.swift */,
-				4F84D01322AE7EEA00C9FD23 /* block.swift */,
 				4FE5504224C06EFC00509806 /* opaque value.swift */,
 			);
 			name = other;
@@ -477,6 +475,8 @@
 			children = (
 				4F1EA48822B2888400FFA4D2 /* ordered list.swift */,
 				4F27087522D9E584009F40B2 /* keyed list.swift */,
+				4F26065322BECD7B0036D904 /* record.swift */,
+				4F84D01322AE7EEA00C9FD23 /* block.swift */,
 			);
 			name = collections;
 			sourceTree = "<group>";

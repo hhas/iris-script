@@ -10,11 +10,11 @@ import Foundation
 // TO DO: need a better name than Symbol (ideally we want to talk about 'symbols' as syntax, not as semantics; e.g. `≠` is the Unicode symbol meaning 'not-equal', which stdlib defines as an infix operator for performing numerical comparisons); 'Hashtag' would avoid the immediate confusion, although 'hashtag' has its own common meaning which could mislead in other ways
 // (naming convention is also confounded by internal use of Symbol for identifiers [command/argument/field names] in addition to representing type/enum names as native values ['class' and 'constant' in AS])
 
-public struct Symbol: AtomicValue, KeyConvertible, Comparable, ExpressibleByStringLiteral, SwiftLiteralConvertible { // TO DO: Identifiable
+public struct Symbol: AtomicValue, KeyConvertible, Comparable, ExpressibleByStringLiteral, LiteralConvertible { // TO DO: Identifiable
     
-    public var swiftLiteralDescription: String { return self.label.debugDescription }
+    public var literalDescription: String { return "#‘\(self.label)’" } // TO DO: pp may provide unquoted representation (in principle this could be any character that isn’t a symbolic operator or built-in punctuation, which require single-quoting)
+    public var swiftLiteralDescription: String { return "Symbol(\(self.label.debugDescription))" }
     
-    public var description: String { return "#‘\(self.label)’" } // note: pp should only quote label if it contains non-identifier chars
     public var isEmpty: Bool { return self.label.isEmpty }
     
     public typealias StringLiteralType = String

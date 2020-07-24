@@ -6,6 +6,7 @@
 
 import Foundation
 
+// caution: when transpiling KeyedList to Dictionary, keys must be unique (this won’t be a problem as long as Dictionary is created from an existing KeyedList instance, as reducefunc for keyed lists automatically overwrites duplicate entries)
 
 // TO DO: given that ScalarValue types are meant to be interchangeable (i.e. differences in underlying implementation—Int,Double,Number,Text—etc are private implementation details that weak typing is meant to hide from user code), can/should ScalarValue types that describe an integer (e.g. `-42`, `-42.0`, `“-42”`, `“-4.2e+1”`, etc) or real (e.g. `27.5`, `“27.5”`, etc) generate identical hashes and compare as equal? (not to mention case-insensitivity by default) in practice, this might be a bit tricky to pull off, requiring lots of speculative normalization of ScalarValues' data to arrive at their canonical representation); and this is before we even contemplate enabling l10n in scripts (e.g. when is `“27,5”` a number as opposed to character sequence?); plus, of course, if we normalize dictionary keys then roundtripping them becomes lossy, which is not ideal either; a possible solution is for Key to capture both the original Value and its normalized representation, and use Coercions to provide the normalization, c.f. kiwi's `case-sensitive text` (e.g. `set my_table to [:] as [real:value]`, `set my_table to [:] as [text(ignoring:#case):anything]`)
 
@@ -13,11 +14,15 @@ import Foundation
 
 public struct KeyedList: BoxedCollectionValue { // TO DO: implement ExpressibleByDictionaryLiteral? // TO DO: what should be value's native name? (currently it's referred to 'key-value list', but that's awkward to write as underscored name; however, 'dictionary' is already used to refer to application dictionaries in ae_lib and might also be used as the term for library documentation)
     
-    public var swiftLiteralDescription: String { return self.data.isEmpty ? "[:]" : "[\(self.data.map{"\($0.key): \($0.value)"}.joined(separator: ", "))]" } // TO DO: will type be inferred, or should it be explicit?
+    public var swiftLiteralDescription: String { return self.data.swiftLiteralDescription }
+
+    public var description: String { return self.swiftLiteralDescription }
     
     public typealias SwiftType = [Key: Value]
     
-    public struct Key: Hashable, CustomStringConvertible { // type-safe wrapper around AnyHashable that ensures non-Value types can't get into Record's internal storage by accident, while still allowing mixed-type keys (the alternative would be to use an enum, but that isn't extensible; TO DO: how can this decoupling facilitate records custom-normalizing hash keys, e.g. for case-sensitive vs case-insensitive storage])
+    public struct Key: Hashable, SwiftLiteralConvertible, CustomStringConvertible { // type-safe wrapper around AnyHashable that ensures non-Value types can't get into Record's internal storage by accident, while still allowing mixed-type keys (the alternative would be to use an enum, but that isn't extensible; TO DO: how can this decoupling facilitate records custom-normalizing hash keys, e.g. for case-sensitive vs case-insensitive storage])
+        
+        public var swiftLiteralDescription: String { return "AnyHashable(\(self.value.swiftLiteralDescription))" }
 
         public var description: String { return "\(self.value)" }
         
@@ -36,8 +41,6 @@ public struct KeyedList: BoxedCollectionValue { // TO DO: implement ExpressibleB
     }
     
     //
-    
-    public var description: String { return "\(self.data)" }
     
     public static let nominalType: Coercion = asList
     

@@ -10,14 +10,29 @@ public protocol SwiftLiteralConvertible {
     var swiftLiteralDescription: String { get }
 }
 
+public protocol LiteralConvertible: SwiftLiteralConvertible {
+    var literalDescription: String { get }
+}
+public extension LiteralConvertible {
+    var description: String { return self.literalDescription }
+}
+
+
 extension Array: SwiftLiteralConvertible {
-    public var swiftLiteralDescription: String { return "[\(self.map(formatSwiftLiteral).joined(separator: ", "))]" }
+    public var swiftLiteralDescription: String {
+        return "[\(self.map(formatSwiftLiteral).joined(separator: ", "))]"
+    }
 }
 extension Dictionary: SwiftLiteralConvertible {
-    public var swiftLiteralDescription: String { return "[\(self.map{"\(formatSwiftLiteral($0)): \(formatSwiftLiteral($1))"}.joined(separator: ", "))]" }
+    public var swiftLiteralDescription: String {
+        return self.isEmpty ? "[:]"
+            : "[\(self.map{"\(formatSwiftLiteral($0)): \(formatSwiftLiteral($1))"}.joined(separator: ", "))]"
+    }
 }
 extension Set: SwiftLiteralConvertible {
-    public var swiftLiteralDescription: String { return "Set<\(type(of: Element.self))>([\(self.map(formatSwiftLiteral).joined(separator: ", "))])" }
+    public var swiftLiteralDescription: String {
+        return "Set<\(type(of: Element.self))>([\(self.map(formatSwiftLiteral).joined(separator: ", "))])"
+    }
 }
 
 

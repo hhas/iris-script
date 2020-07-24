@@ -107,7 +107,7 @@ func procedure_quit(command: Command, commandEnv: Scope, handler: Handler, handl
     return Text("Goodbye.")
 }
 
-// `read` – read line input
+// `read {prompt}` – read line input
 
 private let type_read_prompt = (
     name: Symbol("read"),
@@ -131,6 +131,57 @@ func procedure_read_prompt(command: Command, commandEnv: Scope, handler: Handler
 }
 
 
+// `pp {value}` – pretty-print value/previous input
+
+private let type_pp_value = (
+    name: Symbol("pp"),
+    param_0: (Symbol("value"), Symbol("value"), AsOptional(asValue)),
+    result: asNothing
+)
+
+let interface_pp_value = HandlerInterface(
+    name: type_pp_value.name,
+    parameters: [type_pp_value.param_0],
+    result: type_pp_value.result
+)
+func procedure_pp_value(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    let formatter = VT100ValueFormatter()
+    if command.arguments.count == 0 {
+        print("  \(formatter.format(previousInput))")
+    } else {
+        var index = 0
+        let arg_0 = try command.swiftValue(at: &index, for: type_pp_value.param_0, in: commandEnv)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+        print("  \(formatter.format(arg_0))")
+    }
+    return previousValue.get(nullSymbol) ?? nullValue
+}
+// `spp {value}` – print Swift representation of value/previous input; caution this may raise exception for some types (if unsupported the fallback behavior is fatalError)
+
+private let type_spp_value = (
+    name: Symbol("spp"),
+    param_0: (Symbol("value"), Symbol("value"), AsOptional(asValue)),
+    result: asNothing
+)
+
+let interface_spp_value = HandlerInterface(
+    name: type_spp_value.name,
+    parameters: [type_spp_value.param_0],
+    result: type_spp_value.result
+)
+func procedure_spp_value(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+    if command.arguments.count == 0 {
+        print("  \(previousInput.swiftLiteralDescription)")
+    } else {
+        var index = 0
+        let arg_0 = try command.swiftValue(at: &index, for: type_spp_value.param_0, in: commandEnv)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+        print("  \(arg_0.swiftLiteralDescription)")
+    }
+    return previousValue.get(nullSymbol) ?? nullValue
+}
+
+
 
 func loadREPLHandlers(_ env: Environment) {
     env.define(interface_help, procedure_help)
@@ -138,4 +189,6 @@ func loadREPLHandlers(_ env: Environment) {
     env.define(interface_commands, procedure_commands)
     env.define(interface_quit, procedure_quit)
     env.define(interface_read_prompt, procedure_read_prompt)
+    env.define(interface_pp_value, procedure_pp_value)
+    env.define(interface_spp_value, procedure_spp_value)
 }

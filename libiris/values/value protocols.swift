@@ -37,8 +37,6 @@ import Foundation
 // TO DO: should Values adopt Accessor rather than Mutator?
 
 public protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // TO DO: Codable (Q. use Codable for AE bridging?)
-        
-    var description: String { get }
     
     static var nominalType: Coercion { get }
     var nominalType: Coercion { get }
@@ -174,7 +172,7 @@ extension BoxedSwiftValue {
     
     public var swiftLiteralDescription: String { return "\(type(of: self))(\(formatSwiftLiteral(self.data)))" }
     
-    public var description: String { return String(describing: self.data) }
+    //public var description: String { return String(describing: self.data) } // TO DO: currently unused
 }
 
 

@@ -19,11 +19,12 @@ import Darwin
 // TO DO: .nonStandard(…) case for numbers written with atypical formatting, e.g. leading zeroes (000123); alternatively, format-preserving might be handled independently by an appropriate line line reader (typically such `numbers` are found in 24-hr times, barcode numbers, etc, so using line readers to convert them to custom string-based Values that support coercion to Number (either by converting the string each time or by capturing both original string and Int/Double/Number representations) provides a general solution that covers all use cases there, and avoids the need to implement special one-off cases here)
 
 
-public protocol NumericValue: ScalarValue, HashableValue {}
+public protocol NumericValue: ScalarValue, HashableValue, LiteralConvertible {}
 
 
 extension Int: NumericValue, KeyConvertible {
     
+    public var literalDescription: String { return String(self) } // TO DO: formatter may want to override with custom representation
     public var swiftLiteralDescription: String { return String(self) }
     
     public static let nominalType: Coercion = asInt
@@ -45,6 +46,7 @@ extension Int: NumericValue, KeyConvertible {
 
 extension Double: NumericValue, KeyConvertible {
     
+    public var literalDescription: String { return String(self) }
     public var swiftLiteralDescription: String { return String(self) }
     
     public static let nominalType: Coercion = asDouble
@@ -67,12 +69,22 @@ extension Double: NumericValue, KeyConvertible {
 
 
 
-public enum Number: NumericValue, KeyConvertible { // what about fractions? (this may require `indirect` to allow nested composition; alternatively, might be best to implement as PrecisionNumber struct/class, possibly in optional library)
+public enum Number: NumericValue, KeyConvertible {
+    // what about fractions? (this may require `indirect` to allow nested composition; alternatively, might be best to implement as PrecisionNumber struct/class, possibly in optional library)
+    
+    public var literalDescription: String { // get canonical native code representation (note: this is currently implemented as a method to allow for formatting options to be passed in future // TO DO: check these representations are always correct
+        switch self {
+        case .integer(let n, _):    return String(n)
+        case .floatingPoint(let n): return String(n)
+        case .overflow(let s, _):   return s
+        case .notANumber(let s):    return s
+        }
+    }
     
     public var swiftLiteralDescription: String {
         switch self {
         case .integer(let n, radix: let r): return "Number(\(n)\(r == 10 ? "" : ", radix: \(r)"))"
-        case .floatingPoint(let n): return "Number(\(n))"
+        case .floatingPoint(let n):         return "Number(\(n))"
         default: fatalError("Number.swiftLiteralDescription not supported for \(self)")
         }
     }
@@ -90,11 +102,9 @@ public enum Number: NumericValue, KeyConvertible { // what about fractions? (thi
         case .integer(let n, radix: _): return n.hash(into: &hasher)
         case .floatingPoint(let n):     return n.hash(into: &hasher)
         case .overflow(let s, _):       return s.hash(into: &hasher)
-        case .notANumber(let s):           return s.hash(into: &hasher)
+        case .notANumber(let s):        return s.hash(into: &hasher)
         }
     }
-    
-    public var description: String { return self.literalDescription() }
     
     public static let nominalType: Coercion = asNumber
     
@@ -151,7 +161,7 @@ public enum Number: NumericValue, KeyConvertible { // what about fractions? (thi
         return try self.toDouble()
     }
     public func toString(in scope: Scope, as coercion: Coercion) throws -> String { // TO DO: coercion param's type?
-        return self.literalDescription()
+        return self.literalDescription
     }
     
     public func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
@@ -181,29 +191,16 @@ public enum Number: NumericValue, KeyConvertible { // what about fractions? (thi
     /*
     private func _toInt(_ min: Int, _ max: Int) throws -> Int {
         let n = try self.toInt()
-        if n < min || n > max { throw ConstraintError(value: self, message: "Number is not in allowed range: \(self.literalDescription())") }
+        if n < min || n > max { throw ConstraintError(value: self, message: "Number is not in allowed range: \(self.literalDescription)") }
         return n
     }
     private func _toUInt(_ max: UInt) throws -> UInt {
         let n = try self.toInt()
-        if n < 0 || UInt(n) > max { throw ConstraintError(value: self, message: "Number is not in allowed range: \(self.literalDescription())") }
+        if n < 0 || UInt(n) > max { throw ConstraintError(value: self, message: "Number is not in allowed range: \(self.literalDescription)") }
         return UInt(n)
     }
     */
     //
-    
-    func literalDescription() -> String { // get canonical native code representation (note: this is currently implemented as a method to allow for formatting options to be passed in future; TO DO: decide method name, e.g. `nativeLiteralDescription(…)`?, and add to Value protoco) // TO DO: check these representations are always correct
-        switch self {
-        case .integer(let n, _):
-            return String(n)
-        case .floatingPoint(let n):
-            return String(n)
-        case .overflow(let s, _):
-            return s
-        case .notANumber(let s):
-            return s
-        }
-    }
     
     // TO DO: implement formattedRepresentation (custom/locale-specific) here? or does that logic belong solely in formatting command? (i.e. all Values should implement API for outputting pretty-printed code representation, but not sure if that API should support all formatting operations)
 }

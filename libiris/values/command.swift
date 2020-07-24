@@ -69,17 +69,22 @@ import Foundation
 
 // TO DO: check for nullSymbol as name, duplicate argument labels?
 
-public class Command: ComplexValue {
+public class Command: ComplexValue, LiteralConvertible {
     
-    public var swiftLiteralDescription: String { return "\(type(of: self))(\(self.name.swiftLiteralDescription)\(self.arguments.isEmpty ? "" : ", [\(self.arguments.map{"(\($0.label.swiftLiteralDescription), \($0.value.swiftLiteralDescription))"}.joined(separator: ", "))]"))" }
+    public var swiftLiteralDescription: String {
+        let args = self.arguments.isEmpty ? "" : ", \(self.arguments.swiftLiteralDescription)"
+        // this ignores operatorPattern so transpiled code will use plain command syntax in error messages
+        return "\(type(of: self))(\(self.name.label.debugDescription)\(args))"
+    }
     
     public typealias Argument = Record.Field
     public typealias Arguments = [Argument]
     
-    public var description: String {
+    public var literalDescription: String {
         // TO DO: PP needs to apply operator syntax/quote name if command's name matches an existing operator (Q. how should operator definitions be scoped? per originating library, or per main script? [if we annotate command in parser, it'll presumably capture originating library's operator syntax])
         return "‘\(self.name.label)’" + (self.arguments.count == 0 ? "" : " {\(self.arguments.map{ "\($0.isEmpty ? "" : "\($0.label): ")\($1)" }.joined(separator: ", "))}")
     }
+    public var description: String { return self.literalDescription }
     
     public static let nominalType: Coercion = asCommand
     
