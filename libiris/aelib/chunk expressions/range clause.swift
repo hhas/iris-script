@@ -9,7 +9,7 @@ import Foundation
 let asRange = AsComplex<ElementRange>(name: "range")
 
 
-struct ElementRange: Value {
+struct ElementRange: StaticValue {
     
     var description: String { return "(‘thru’ {\(self.start), \(self.stop)})" }
     

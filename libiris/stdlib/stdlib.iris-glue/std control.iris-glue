@@ -3,6 +3,9 @@
 
 «== Flow control ==»
 
+«TODO: how to describe return type in terms of parameter types? e.g. `if {…} returning either [result of its action, result of its alternate_action]`?»
+
+
 to ‘if’ {test: condition as boolean, then: action as expression, else: alternative_action as expression} returning anything requires {
     can_error: true «TODO: would be better to distinguish errors thrown by arguments from errors thrown by handler itself»
     use_scopes: #command
@@ -13,7 +16,6 @@ to ‘if’ {test: condition as boolean, then: action as expression, else: alter
                precedence: 101}
 }
 
-«TODO: how to express return type? e.g. `returning result of action`?»
 to ‘while’ {condition as boolean, action as expression} returning anything requires {
     can_error: true
     use_scopes: #command

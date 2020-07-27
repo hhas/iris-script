@@ -13,7 +13,7 @@ import Foundation
 // TO DO: also need generic intersect (Q. which operand should determine returned SwiftType? probably rhs)
 
 
-// important: coercions must always be non-lossy; i.e. while a simpler representation of user data can be coerced to a more complex representation, e.g. `"foo" as list → ["foo"]`, the opposite is not allowed, so `["foo"] as string` → UnsupportedCoercionError()
+// important: coercions must always be non-lossy; i.e. while a simpler representation of user data can be coerced to a more complex representation, e.g. `"foo" as list → ["foo"]`, the opposite is not allowed, so `["foo"] as string` → TypeCoercionError()
 
 
 public protocol Coercion: Value {
@@ -61,13 +61,17 @@ extension Coercion {
 
 
 
-extension Coercion {
+public extension Coercion {
     
-    public func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T {
+    func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T {
         guard let result = try self.coerce(value: value, in: scope) as? T else {
-            throw UnsupportedCoercionError(value: value, coercion: self)
+            throw TypeCoercionError(value: value, coercion: self)
         }
         return result
+    }
+    
+    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+        return self
     }
 }
 
@@ -75,7 +79,7 @@ extension SwiftCoercion {
     
     public func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T {
         guard let result = try self.unbox(value: value, in: scope) as? T else {
-            throw UnsupportedCoercionError(value: value, coercion: self)
+            throw TypeCoercionError(value: value, coercion: self)
         }
         return result
     }
@@ -120,6 +124,7 @@ extension SwiftCoercion where SwiftType: Value { // TO DO: this doesn't work on 
 extension SwiftCoercion where SwiftType == Value {
     
     public func coerce(value: Value, in scope: Scope) throws -> Value {
+        print("\(type(of:self)).coerce(value:\(value))")
         return try self.unbox(value: value, in: scope)
     }
     

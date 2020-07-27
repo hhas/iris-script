@@ -28,7 +28,7 @@ public struct AsComplex<T: Value>: SwiftCoercion { // T must be concrete struct 
         // TO DO: this has issues
         guard let result = try asValue.unbox(value: value, in: scope) as? SwiftType else {
         //guard let result = try value.swiftEval(in: scope, as: asAnything) as? SwiftType else {
-            throw UnsupportedCoercionError(value: value, coercion: self)
+            throw TypeCoercionError(value: value, coercion: self)
         }
         return result
     }
@@ -44,7 +44,7 @@ public struct AsSymbol: SwiftCoercion {
     public init() {}
     
     public func coerce(value: Value, in scope: Scope) throws -> Value {
-        guard let result = try asValue.coerce(value: value, in: scope) as? Symbol else { throw UnsupportedCoercionError(value: value, coercion: self) }
+        guard let result = try asValue.coerce(value: value, in: scope) as? Symbol else { throw TypeCoercionError(value: value, coercion: self) }
         return result
     }
     
@@ -53,7 +53,7 @@ public struct AsSymbol: SwiftCoercion {
     }
     
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
-        guard let result = try asValue.unbox(value: value, in: scope) as? Symbol else { throw UnsupportedCoercionError(value: value, coercion: self) }
+        guard let result = try asValue.unbox(value: value, in: scope) as? Symbol else { throw TypeCoercionError(value: value, coercion: self) }
         return result
     }
 }
@@ -82,7 +82,7 @@ public struct AsHashableValue: SwiftCoercion {
     
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         guard let result = try? asAnything.coerce(value: value, in: scope) as? HashableValue else {
-            throw UnsupportedCoercionError(value: value, coercion: self)
+            throw TypeCoercionError(value: value, coercion: self)
         }
         return result
     }
@@ -136,7 +136,7 @@ public struct AsCoercion: SwiftCoercion {
     public init() {}
     
     public func coerce(value: Value, in scope: Scope) throws -> Value {
-        if !(value is Coercion) { throw UnsupportedCoercionError(value: value, coercion: self) }
+        if !(value is Coercion) { throw TypeCoercionError(value: value, coercion: self) }
         return value
     }
     
@@ -146,7 +146,7 @@ public struct AsCoercion: SwiftCoercion {
     
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         guard let result = (try? asAnything.coerce(value: value, in: scope)) as? SwiftType else {
-            throw UnsupportedCoercionError(value: value, coercion: self)
+            throw TypeCoercionError(value: value, coercion: self)
         }
         return result
     }
@@ -183,7 +183,7 @@ public struct AsError: SwiftCoercion {
   
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         guard let result = try value.swiftEval(in: scope, as: asAnything) as? SwiftType else {
-            throw UnsupportedCoercionError(value: value, coercion: self)
+            throw TypeCoercionError(value: value, coercion: self)
         }
         return result
     }

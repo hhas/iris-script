@@ -5,6 +5,9 @@
 
 import Foundation
 
+// TO DO: try multiple-dispatch eval/coercion using [(type(of:Value),(type(of:Coercion)),…] lookup table; for swift unboxing, Coercion is known and only value needs dynamic lookup
+
+
 // TO DO: inclined to standardize `Value.literalDescription` for obtaining values’ literal representation, in which case `description` can just call that and `debugDescription` can call swiftLiteralDescription; that leaves the question of how commands and collections should be formatted, and whether literalDescription should provide operator representation where available (i.e. should we pass a shared formatter instance to literalDescription [maybe], or multiple formatting flags [probably not], or should literalDescription return only default representation and leave complex types entirely to formatter? also bear in mind that we really want to use commands’ eval path to generate scripts’ literal representation, with custom environment providing formatting services as well as standard lookups)
 
 
@@ -35,6 +38,7 @@ import Foundation
 // TO DO: LiteralConvertible protocol for literalDescription var? or should all Values implement literalDescription? (A. depends on whether we want opaque values to provide an annotation-based placeholder, or if we should kick responsibility for providing a descriptive representation back to formatter at that point; also, what about JS-style 'objects' which will often provide a summary description rather than literal self-representation?)
 
 // TO DO: should Values adopt Accessor rather than Mutator?
+
 
 public protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // TO DO: Codable (Q. use Codable for AE bridging?)
     
@@ -84,6 +88,7 @@ extension Value { // default implementations
     // TO DO: rethrow errors as EvaluationError (in particular, null coercion errors must not propagate)
     
     public func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
+        print("\(type(of:self)).eval(as:\(coercion))")
         return try coercion.coerce(value: self, in: scope)
     }
     public func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
@@ -105,15 +110,15 @@ extension Value { // default implementations
     
     
     //
-    
-    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // evaluate value as its preferred type; important: concrete types that require evaluation override this as necessary // TO DO: having this as default behavior easily masks implementation bugs, move this to ScalarValue and other literal types that always return self, ensuring other types (lists, commands, etc) provide their own implementations [enforced by swiftc type checker]
-        return self
-    }
+    /*
+    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // evaluate value as its preferred type // whereas other toTYPE methods delegate, leaving this unimplemented as standard forces all Values either to adopt StaticValue protocol or implement toValue() directly; this'd be less annoying if Swift allowed protocol extensions to conform to other protocols as well, but that isn’t [yet] supported; for now, either add StaticValue conformation to concrete Values can conform to StaticValue or copy-paste the toValue function into protocol extensions (e.g. ScalarValue does this)
+        return try self.toTYPE(in: scope, as: coercion)
+    }*/
     
     // TO DO: should default implementations of toTYPE forward to one or more [@inlinable?] generic implementations? if we want to eliminate Value.eval/swiftEval then this will be easiest way to do it, as types that currently override eval can override the generic method[s] instead of every single one of the following
     
     public func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
-        throw UnsupportedCoercionError(value: self, coercion: coercion)
+        throw TypeCoercionError(value: self, coercion: coercion)
     }
     
     public func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue {
@@ -156,6 +161,15 @@ extension Value { // default implementations
     }
 }
 
+
+public protocol StaticValue: Value { } // values that return self when coerced to `value` (e.g. Int,Text) should adopt StaticValue; values that evaluate to another value (e.g. Command,Block) should implement their own toValue method
+    
+public extension StaticValue {
+    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // evaluate value as its preferred type; important: concrete types that require evaluation override this as necessary
+        return self
+    }
+}
+
 // TO DO: can/should all scalars be BoxedValues? what functionality can be defined on BoxedValue extension?
 
 public protocol BoxedSwiftValue: Value {
@@ -194,26 +208,24 @@ extension KeyConvertible {
 
 
 
-public protocol AtomicValue: Value { // e.g. nothing, true/false, Symbol
-    
-}
+public protocol AtomicValue: StaticValue { } // e.g. nothing, true/false, Symbol
 
 extension AtomicValue {
-
+    
+    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+        return self
+    }
 }
 
 
 
-public protocol ScalarValue: Value {
-}
+public protocol ScalarValue: StaticValue { } // Int, Double, Number, Text
 
-
-
-extension ScalarValue {
+public extension ScalarValue {
     
-    public var isMemoizable: Bool { return true }
+    var isMemoizable: Bool { return true }
     
-    public func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue { // TO DO: toScalar? (as long as Text can represent all scalars, we should be OK; this does mean that boolean and symbol are not scalars though)
+    func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue { // TO DO: toScalar? (as long as Text can represent all scalars, we should be OK; this does mean that boolean and symbol are not scalars though)
         return self
     }
 }
@@ -232,7 +244,7 @@ public protocol CollectionValue: Value, Sequence {
     
 }
 
-extension CollectionValue {
+public extension CollectionValue {
     
 /*
     func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
@@ -244,14 +256,17 @@ extension CollectionValue {
 public typealias BoxedCollectionValue = CollectionValue & BoxedSwiftValue
 
 
-
-public protocol ComplexValue: Value { // e.g. command, handler; presumably swiftEval doesn't reduce down to raw Swift values
+public extension BoxedSwiftValue where SwiftType: RandomAccessCollection {
     
-}
-
-extension ComplexValue {
+    var count: Int { return self.data.count }
 
 }
+
+
+public protocol ComplexValue: Value { } // e.g. command, handler; presumably swiftEval doesn't reduce down to raw Swift values
+
+
+public extension ComplexValue { }
 
 
 public typealias BoxedComplexValue = ComplexValue & BoxedSwiftValue

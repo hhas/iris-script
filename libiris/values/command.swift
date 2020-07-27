@@ -35,8 +35,9 @@ import Foundation
 // labels permit decoupling of interface from implementation in native handlers, so probably best not to use binding names as fallback when matching labeled arguments; rather, avoid unnecessary labels in primitive signatures (where label is omitted, the binding name—which is purely for documentation there—is automatically used as label); Q. should packaged native libraries require/add labels and/or coercions automatically?
 
 
-//
+// TO DO: also attach handler (or at least its interface) to command errors
 
+//
 /*
  
  syntax
@@ -105,7 +106,7 @@ public class Command: ComplexValue, LiteralConvertible {
         self.init(name, record.data, operatorPattern: operatorPattern)
     }
     
-    internal var _handler: Handler = _bindHandlerOnFirstUse
+    internal(set) public var _handler: Handler = _bindHandlerOnFirstUse // should be internal
 
     // TO DO: also capture operator? or leave that to pretty-printer? (it depends: Command.eval() needs operator info to generate decent error messages); suppose Handler might provide operator info itself
     
@@ -132,6 +133,7 @@ public class Command: ComplexValue, LiteralConvertible {
     */
     
     public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+        print("\(self).eval(as:\(coercion))")
         return try self.toTYPE(in: scope, as: coercion)
     }
     
@@ -147,46 +149,24 @@ public class Command: ComplexValue, LiteralConvertible {
 
     // TO DO: if handler is static bound, we don't need to go through all this every time; just check params once and store array of operations to perform: omitted and constant args can be evaluated once and memoized; only exprs need evaled every time, and coercions may be minimized where arg's input coercion is member of expr's output coercion (this being said, it remains to be seen how much run-time optimization is warranted; e.g. if transpiling to Swift proves to be common practice then slow interpretation is much less of a concern)
 
-    private func value(at index: inout Int, named label: Symbol) -> Value {
-        if index < self.arguments.count {
-            let arg = self.arguments[index]
-            if arg.label.isEmpty || arg.label == label {
-                index += 1
-                return arg.value
-            }
-        }
-        return nullValue
-    }
         
     internal func value(at index: inout Int, for param: (label: Symbol, binding: Symbol, coercion: Coercion), in commandEnv: Scope) throws -> Value {
         let i = index
         do {
-            return try self.value(at: &index, named: param.label).eval(in: commandEnv, as: param.coercion)
+            return try self.arguments.value(labeled: param.label, at: &index).eval(in: commandEnv, as: param.coercion)
         } catch {
             throw BadArgumentError(at: i, of: self).from(error)
         }
+    } // native eval
+    
+    public func unbox<T: SwiftCoercion>(param: (label: Symbol, binding: Symbol, coercion: T), at index: inout Int, in scope: Scope) throws -> T.SwiftType { // if field was matched, index is incremented on return (caution: if caller rethrows an unbox() error, don't use the returned index in error message)
+        // TO DO: catch and rethrow
+        // TO DO: where to memoize static arguments?
+        return try self.arguments.unbox(param: param, at: &index, in: scope)
     }
     
-    // TO DO: really need to attach handler (or at least its interface)
     public func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Symbol, binding: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
-        let i = index
-        do {
-            //print("Command.swiftValue() for:", param, "from", self.arguments)
-            return try self.value(at: &index, named: param.label).swiftEval(in: commandEnv, as: param.coercion)
-        } catch { // TO DO: this catches both label mismatches and eval/coercion errors
-            //print("Command.swiftValue() failed:", error)
-            // TO DO: fix this; error message is misleading where command args are unlabeled
-            let labels = self.arguments.map{$0.label}
-            if labels.contains(param.label) {
-                throw BadArgumentError(at: i, of: self).from(error) // TO DO: need better error description that compares expected labels to found labels, indicating mismatch
-            } else {
-                print(self)
-                print(self._handler.interface)
-                print(param)
-                print("Couldn't match the `\(self.name.label)` handler’s `\(param.label.label)` parameter to any of the `\(self.name.label)` command’s labeled arguments: \(self.arguments.map{$0.label.label}.filter{!$0.isEmpty})") // DEBUG
-                throw UnknownArgumentError(at: i, of: self).from(error) // TO DO: need better error description that compares expected labels to found labels, indicating mismatch
-            }
-        }
+        return try self.unbox(param: param, at: &index, in: commandEnv)
     }
 }
 

@@ -16,11 +16,41 @@ import Foundation
 // TO DO: should record be BoxedCollectionValue/BoxedComplexValue? the problem is that labeled fields require unique labels, which Swift type system can't enforce, so we rely on runtime checking with throws, but the boxed protocol requires a non-throwing init, which record can't provide (there is `Record(uniqueLabelsWithValues:)` but that has a different signature)
 
 public extension Record.Fields { // also used as Command.Arguments
+    
     var swiftLiteralDescription: String {
-        // TO DO: is it safe to omit `Symbol` constructor on argument labels?
         return "[\(self.map{ "(\($0.isEmpty ? "nullSymbol" : $0.swiftLiteralDescription), \($1.swiftLiteralDescription))" }.joined(separator: ", "))]"
     }
+    
+    func value(labeled label: Symbol, at index: inout Int) -> Value {
+        if index < self.count {
+            let arg = self[index]
+            // TO DO: should this skip over unrecognized labels, i.e. ignore unwanted fields? i.e. if arg is unlabeled or matches, use current field else call firstIndex{$0.label==label} to search for field in remaining record
+            if arg.label.isEmpty || arg.label == label { // always match unlabeled field, else match if label is same
+                index += 1
+                return arg.value
+            } // else field has different label so assume the requested field has been omitted from record
+        }
+        return nullValue // default value for a missing field is `nothing`; this allows coercion to decide if that field is required or not (note that this is different behavior to environment slot lookups, which always fail with NameNotFoundError if slot isn’t found; TO DO: should we unify behavior or not?)
+    }
+    
+    func unbox<T: SwiftCoercion>(param: (label: Symbol, binding: Symbol, coercion: T),
+                                 at index: inout Int, in scope: Scope) throws -> T.SwiftType {
+        // if field was matched, index is incremented on return
+        // (caution: if caller rethrows an unbox() error, don't use the returned index in error message)
+        let currentIndex = index
+        let value = self.value(labeled: param.label, at: &index)
+        do {
+            return try param.coercion.unbox(value: value, in: scope)
+        } catch { // TO DO: what to trap here? e.g. should it catch NullCoercionError directly, which can occur if field was not found or if field contains `nothing` but coercion isn't optional/default
+            if self.contains(where: {$0.label == param.label}) { // TO DO: if labeled field is in record but is in wrong order, the error message should reflect that, so use firstIndex() rather than contains() to determine its position relative to currentIndex (“expected ‘LABEL’ field at X index but found it at Y”)
+                throw BadFieldValueError(at: currentIndex, of: self).from(error)
+            } else {
+                throw UnknownFieldError(at: currentIndex, of: self).from(error)
+            }
+        }
+    }
 }
+
 
 
 public struct Record: ComplexValue, Accessor, Sequence {

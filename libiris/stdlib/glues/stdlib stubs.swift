@@ -198,10 +198,6 @@ func repeatWhile(action: Value,condition: Bool,commandEnv: Scope) throws -> Valu
     fatalError("repeatWhile of stdlib is not yet implemented.")
 }
 
-func returning(interface: HandlerInterface,coercion: Coercion) -> Command {
-    fatalError("returning of stdlib is not yet implemented.")
-}
-
 func set(name: Symbol,to value: Value,commandEnv: Scope) throws -> Value {
     fatalError("set of stdlib is not yet implemented.")
 }

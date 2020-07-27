@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F27E93724CC58BA00102572 /* internal errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27E93624CC58BA00102572 /* internal errors.swift */; };
+		4F27E93924CC591100102572 /* parser errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27E93824CC591100102572 /* parser errors.swift */; };
+		4F27E93B24CC593D00102572 /* handler errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27E93A24CC593D00102572 /* handler errors.swift */; };
+		4F27E93D24CC596C00102572 /* coercion errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27E93C24CC596C00102572 /* coercion errors.swift */; };
+		4F27E93F24CC59B900102572 /* access errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27E93E24CC59B900102572 /* access errors.swift */; };
+		4F27E94124CC59EC00102572 /* type errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27E94024CC59EC00102572 /* type errors.swift */; };
 		4F2B0C6624C0CC4F00664ABB /* formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B0C6524C0CC4F00664ABB /* formatter.swift */; };
 		4F2C4D1E24C864CE0058749A /* pattern value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D1624C863420058749A /* pattern value.swift */; };
 		4F2C4D2124C86BD30058749A /* define patterns.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2024C86BD30058749A /* define patterns.swift */; };
@@ -14,6 +20,7 @@
 		4F2C4D2924C8DC910058749A /* gluelib_constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2824C8DC910058749A /* gluelib_constants.swift */; };
 		4F2C4D2C24C8F5CC0058749A /* stdlib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2A24C8F5CB0058749A /* stdlib_operators.swift */; };
 		4F2C4D2D24C8F5CC0058749A /* stdlib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2B24C8F5CC0058749A /* stdlib_handlers.swift */; };
+		4F2DC95124CDAF6300A46503 /* record errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2DC94B24CDAF6300A46503 /* record errors.swift */; };
 		4F2F81A024C739CC00EB2F0F /* opaque value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5504224C06EFC00509806 /* opaque value.swift */; };
 		4F345EA024C38C7900532054 /* quote reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F345E9F24C38C7900532054 /* quote reader.swift */; };
 		4F877A5E24BD90A90067A463 /* libedit.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F877A5924BD90A90067A463 /* libedit.tbd */; };
@@ -21,7 +28,7 @@
 		4F877A6824BD995F0067A463 /* iris-shell.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F877A6724BD995F0067A463 /* iris-shell.c */; };
 		4F877A6B24BDBB4E0067A463 /* libiris.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988CB624BCC4D700EE66C7 /* libiris.a */; };
 		4F877A6C24BDBD7C0067A463 /* libiris.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988CB624BCC4D700EE66C7 /* libiris.a */; };
-		4F877A6F24BDC0130067A463 /* tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28B59624ACE1C2005583C7 /* tests.swift */; };
+		4F877A6F24BDC0130067A463 /* test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28B59624ACE1C2005583C7 /* test.swift */; };
 		4F877A7024BDC0150067A463 /* misc tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28B59424ACDF44005583C7 /* misc tests.swift */; };
 		4F877A7124BDC0180067A463 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00022ADA0F200C9FD23 /* main.swift */; };
 		4F8C407524BCC02200735273 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F8C407424BCC02200735273 /* main.swift */; };
@@ -77,7 +84,7 @@
 		4F988CF224BCC5A500EE66C7 /* access protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2922D7704D00D636B9 /* access protocols.swift */; };
 		4F988CF324BCC5A500EE66C7 /* environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00B22ADA1AF00C9FD23 /* environment.swift */; };
 		4F988CF424BCC5A500EE66C7 /* swift literal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24AE231405B8001C1941 /* swift literal.swift */; };
-		4F988CF524BCC5A500EE66C7 /* errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D01522AE819000C9FD23 /* errors.swift */; };
+		4F988CF524BCC5A500EE66C7 /* error protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D01522AE819000C9FD23 /* error protocols.swift */; };
 		4F988CF624BCC5CB00EE66C7 /* std general.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F25FB8922B6AC82007EE7AE /* std general.swift */; };
 		4F988CF724BCC5CB00EE66C7 /* std math.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F257CCB22BAD1FA00A51CF5 /* std math.swift */; };
 		4F988CF824BCC5CB00EE66C7 /* std text.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24B323156A8F001C1941 /* std text.swift */; };
@@ -244,12 +251,18 @@
 		4F2694D822E061AC009B8FC0 /* numeric reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "numeric reader.swift"; sourceTree = "<group>"; };
 		4F2694DA22E06D24009B8FC0 /* parser protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "parser protocols.swift"; sourceTree = "<group>"; };
 		4F27087522D9E584009F40B2 /* keyed list.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "keyed list.swift"; sourceTree = "<group>"; };
+		4F27E93624CC58BA00102572 /* internal errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "internal errors.swift"; sourceTree = "<group>"; };
+		4F27E93824CC591100102572 /* parser errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "parser errors.swift"; sourceTree = "<group>"; };
+		4F27E93A24CC593D00102572 /* handler errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler errors.swift"; sourceTree = "<group>"; };
+		4F27E93C24CC596C00102572 /* coercion errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "coercion errors.swift"; sourceTree = "<group>"; };
+		4F27E93E24CC59B900102572 /* access errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "access errors.swift"; sourceTree = "<group>"; };
+		4F27E94024CC59EC00102572 /* type errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "type errors.swift"; sourceTree = "<group>"; };
 		4F282D5524AEFF470027D6DE /* reduce expressions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reduce expressions.swift"; sourceTree = "<group>"; };
 		4F28323E2474712C004C9CE5 /* reduce commands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reduce commands.swift"; sourceTree = "<group>"; };
 		4F28388D24B8C4D80054C70E /* SwiftAutomation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SwiftAutomation.xcodeproj; path = ../SwiftAutomation/SwiftAutomation.xcodeproj; sourceTree = "<group>"; };
 		4F2876B32471A35A0012E692 /* standard patterns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "standard patterns.swift"; sourceTree = "<group>"; };
 		4F28B59424ACDF44005583C7 /* misc tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "misc tests.swift"; sourceTree = "<group>"; };
-		4F28B59624ACE1C2005583C7 /* tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tests.swift; sourceTree = "<group>"; };
+		4F28B59624ACE1C2005583C7 /* test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test.swift; sourceTree = "<group>"; };
 		4F28C40724731F750079301A /* standard reducers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "standard reducers.swift"; sourceTree = "<group>"; };
 		4F28F28E24A5F88200DA62C4 /* token stack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "token stack.swift"; sourceTree = "<group>"; };
 		4F2931FF22E2290B00BC0AD4 /* editable script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "editable script.swift"; sourceTree = "<group>"; };
@@ -271,6 +284,7 @@
 		4F2C4D3424C977C00058749A /* std math.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "std math.iris-glue"; sourceTree = "<group>"; };
 		4F2C4D3724C97BAA0058749A /* ae chunk.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "ae chunk.iris-glue"; sourceTree = "<group>"; };
 		4F2D2ADE245AFDCE005F3709 /* parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = parser.swift; sourceTree = "<group>"; };
+		4F2DC94B24CDAF6300A46503 /* record errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record errors.swift"; sourceTree = "<group>"; };
 		4F345E9F24C38C7900532054 /* quote reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "quote reader.swift"; sourceTree = "<group>"; };
 		4F409193231876E600045E85 /* range clause.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "range clause.swift"; sourceTree = "<group>"; };
 		4F409195231904C900045E85 /* handler stub template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler stub template.swift"; sourceTree = "<group>"; };
@@ -289,7 +303,7 @@
 		4F84D00F22AE7E2500C9FD23 /* command.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = command.swift; sourceTree = "<group>"; };
 		4F84D01122AE7E2C00C9FD23 /* handler protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler protocols.swift"; sourceTree = "<group>"; };
 		4F84D01322AE7EEA00C9FD23 /* block.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = block.swift; sourceTree = "<group>"; };
-		4F84D01522AE819000C9FD23 /* errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = errors.swift; sourceTree = "<group>"; };
+		4F84D01522AE819000C9FD23 /* error protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "error protocols.swift"; sourceTree = "<group>"; };
 		4F857700230C9247002B47F2 /* stdlib_constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = stdlib_constants.swift; sourceTree = "<group>"; };
 		4F857702230D34AE002B47F2 /* std state.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "std state.swift"; sourceTree = "<group>"; };
 		4F877A5924BD90A90067A463 /* libedit.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libedit.tbd; path = usr/lib/libedit.tbd; sourceTree = SDKROOT; };
@@ -481,6 +495,21 @@
 			name = collections;
 			sourceTree = "<group>";
 		};
+		4F27E93024CC587300102572 /* errors */ = {
+			isa = PBXGroup;
+			children = (
+				4F84D01522AE819000C9FD23 /* error protocols.swift */,
+				4F27E93E24CC59B900102572 /* access errors.swift */,
+				4F27E93624CC58BA00102572 /* internal errors.swift */,
+				4F27E93824CC591100102572 /* parser errors.swift */,
+				4F27E93C24CC596C00102572 /* coercion errors.swift */,
+				4F2DC94B24CDAF6300A46503 /* record errors.swift */,
+				4F27E93A24CC593D00102572 /* handler errors.swift */,
+				4F27E94024CC59EC00102572 /* type errors.swift */,
+			);
+			path = errors;
+			sourceTree = "<group>";
+		};
 		4F282D5424AE55A80027D6DE /* handlers */ = {
 			isa = PBXGroup;
 			children = (
@@ -632,9 +661,9 @@
 				4F8C405B24BB9C1400735273 /* README.md */,
 				4FC5C8232312A06C007D694C /* notes.txt */,
 				4F28388D24B8C4D80054C70E /* SwiftAutomation.xcodeproj */,
+				4F84CFFF22ADA0F200C9FD23 /* iris-test */,
 				4F8C407324BCC02200735273 /* iris-shell */,
 				4FE5502524C035D500509806 /* iris-glue */,
-				4F84CFFF22ADA0F200C9FD23 /* iris-test */,
 				4F988CB724BCC4D700EE66C7 /* libiris */,
 				4F84CFFE22ADA0F200C9FD23 /* Products */,
 				4F46A415232258E6008E0265 /* Frameworks */,
@@ -655,7 +684,7 @@
 		4F84CFFF22ADA0F200C9FD23 /* iris-test */ = {
 			isa = PBXGroup;
 			children = (
-				4F28B59624ACE1C2005583C7 /* tests.swift */,
+				4F28B59624ACE1C2005583C7 /* test.swift */,
 				4F28B59424ACDF44005583C7 /* misc tests.swift */,
 				4F84D00022ADA0F200C9FD23 /* main.swift */,
 			);
@@ -683,7 +712,7 @@
 				4F1EA48C22B4E72F00FFA4D2 /* coercions */,
 				4FFC6F2822D7703000D636B9 /* scopes */,
 				4F5B24B0231405C8001C1941 /* formatting */,
-				4F84D01522AE819000C9FD23 /* errors.swift */,
+				4F27E93024CC587300102572 /* errors */,
 				4F25FB8822B6AC57007EE7AE /* stdlib */,
 				4F46A41D23225A14008E0265 /* aelib */,
 			);
@@ -960,7 +989,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4F877A6F24BDC0130067A463 /* tests.swift in Sources */,
+				4F877A6F24BDC0130067A463 /* test.swift in Sources */,
 				4F877A7024BDC0150067A463 /* misc tests.swift in Sources */,
 				4F877A7124BDC0180067A463 /* main.swift in Sources */,
 			);
@@ -982,6 +1011,7 @@
 			files = (
 				4F2B0C6624C0CC4F00664ABB /* formatter.swift in Sources */,
 				4F988CF624BCC5CB00EE66C7 /* std general.swift in Sources */,
+				4F27E93B24CC593D00102572 /* handler errors.swift in Sources */,
 				4F988CF724BCC5CB00EE66C7 /* std math.swift in Sources */,
 				4F988CF824BCC5CB00EE66C7 /* std text.swift in Sources */,
 				4F988CF924BCC5CC00EE66C7 /* std control.swift in Sources */,
@@ -990,12 +1020,14 @@
 				4F988CFE24BCC5CC00EE66C7 /* reference.swift in Sources */,
 				4F988CFF24BCC5CC00EE66C7 /* reference selectors.swift in Sources */,
 				4F988D0024BCC5CC00EE66C7 /* range clause.swift in Sources */,
+				4F27E94124CC59EC00102572 /* type errors.swift in Sources */,
 				4F988D0124BCC5CC00EE66C7 /* test clause.swift in Sources */,
 				4F988D0224BCC5CC00EE66C7 /* test clause selectors.swift in Sources */,
 				4F988D0324BCC5CC00EE66C7 /* reference coercions.swift in Sources */,
 				4F345EA024C38C7900532054 /* quote reader.swift in Sources */,
 				4F988D0424BCC5CC00EE66C7 /* query funcs.swift in Sources */,
 				4F988D0524BCC5CC00EE66C7 /* native app data.swift in Sources */,
+				4F27E93924CC591100102572 /* parser errors.swift in Sources */,
 				4F988D0624BCC5CC00EE66C7 /* result descriptor.swift in Sources */,
 				4F988D0724BCC5CC00EE66C7 /* keyword converter.swift in Sources */,
 				4F988CC124BCC5A500EE66C7 /* parser protocols.swift in Sources */,
@@ -1008,6 +1040,8 @@
 				4F988CC824BCC5A500EE66C7 /* operator reader.swift in Sources */,
 				4F988CC924BCC5A500EE66C7 /* other line readers.swift in Sources */,
 				4F988CCA24BCC5A500EE66C7 /* token stream.swift in Sources */,
+				4F27E93F24CC59B900102572 /* access errors.swift in Sources */,
+				4F27E93724CC58BA00102572 /* internal errors.swift in Sources */,
 				4F988CCB24BCC5A500EE66C7 /* quote document reader.swift in Sources */,
 				4F988CCC24BCC5A500EE66C7 /* keyword.swift in Sources */,
 				4F988CCD24BCC5A500EE66C7 /* pattern.swift in Sources */,
@@ -1017,6 +1051,7 @@
 				4F2C4D2D24C8F5CC0058749A /* stdlib_handlers.swift in Sources */,
 				4F988CD124BCC5A500EE66C7 /* standard reducers.swift in Sources */,
 				4F988CD224BCC5A500EE66C7 /* operator definitions.swift in Sources */,
+				4F2DC95124CDAF6300A46503 /* record errors.swift in Sources */,
 				4F988CD324BCC5A500EE66C7 /* operator registry.swift in Sources */,
 				4F988CD424BCC5A500EE66C7 /* token stack.swift in Sources */,
 				4F988CD524BCC5A500EE66C7 /* block stack.swift in Sources */,
@@ -1040,6 +1075,7 @@
 				4F988CE624BCC5A500EE66C7 /* handler protocols.swift in Sources */,
 				4F988CE724BCC5A500EE66C7 /* handler interface.swift in Sources */,
 				4F988CE824BCC5A500EE66C7 /* native handler.swift in Sources */,
+				4F27E93D24CC596C00102572 /* coercion errors.swift in Sources */,
 				4FD41C1C24BE614600B56A14 /* null token stream.swift in Sources */,
 				4F988CE924BCC5A500EE66C7 /* primitive handler.swift in Sources */,
 				4F988CEA24BCC5A500EE66C7 /* value modifiers.swift in Sources */,
@@ -1054,7 +1090,7 @@
 				4F988CF224BCC5A500EE66C7 /* access protocols.swift in Sources */,
 				4F988CF324BCC5A500EE66C7 /* environment.swift in Sources */,
 				4F988CF424BCC5A500EE66C7 /* swift literal.swift in Sources */,
-				4F988CF524BCC5A500EE66C7 /* errors.swift in Sources */,
+				4F988CF524BCC5A500EE66C7 /* error protocols.swift in Sources */,
 				4F988CC024BCC57E00EE66C7 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

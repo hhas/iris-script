@@ -52,7 +52,7 @@ extension Double: NumericValue, KeyConvertible {
     public static let nominalType: Coercion = asDouble
     
     public func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
-        guard let result = Int(exactly: self) else { throw ConstraintError(value: self, coercion: coercion) }
+        guard let result = Int(exactly: self) else { throw ConstraintCoercionError(value: self, coercion: coercion) }
         return result
     }
     public func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
@@ -128,7 +128,7 @@ public enum Number: NumericValue, KeyConvertible {
     }
     public init(_ code: String) throws {
         // temporary (we really want to parse and format numbers ourselves, potentially with localization support [although we'll need access to an environment for that, as it'll be script-specific, relying on top-level syntax imports])
-        guard let d = Double(code) else { throw UnsupportedCoercionError(value: Text(code), coercion: asNumber) }
+        guard let d = Double(code) else { throw TypeCoercionError(value: Text(code), coercion: asNumber) }
         if Int(exactly: d) != nil, let n = Int(code) {
             self = .integer(n, radix: 10)
         } else {
@@ -175,14 +175,14 @@ public enum Number: NumericValue, KeyConvertible {
             if n >= Double(Int.min) && n <= Double(Int.max) { return Int(n) }
         default: ()
         }
-        throw ConstraintError(value: self, coercion: asInt)
+        throw ConstraintCoercionError(value: self, coercion: asInt)
     }
     
     public func toDouble() throws -> Double {
         switch self {
         case .integer(let n, _): return Double(n)
         case .floatingPoint(let n): return n
-        default: throw ConstraintError(value: self, coercion: asDouble)
+        default: throw ConstraintCoercionError(value: self, coercion: asDouble)
         }
     }
     
@@ -191,12 +191,12 @@ public enum Number: NumericValue, KeyConvertible {
     /*
     private func _toInt(_ min: Int, _ max: Int) throws -> Int {
         let n = try self.toInt()
-        if n < min || n > max { throw ConstraintError(value: self, message: "Number is not in allowed range: \(self.literalDescription)") }
+        if n < min || n > max { throw ConstraintCoercionError(value: self, message: "Number is not in allowed range: \(self.literalDescription)") }
         return n
     }
     private func _toUInt(_ max: UInt) throws -> UInt {
         let n = try self.toInt()
-        if n < 0 || UInt(n) > max { throw ConstraintError(value: self, message: "Number is not in allowed range: \(self.literalDescription)") }
+        if n < 0 || UInt(n) > max { throw ConstraintCoercionError(value: self, message: "Number is not in allowed range: \(self.literalDescription)") }
         return UInt(n)
     }
     */

@@ -1,6 +1,8 @@
 
 «= stdlib glue definition =»
 
+«TODO: when subdividing a large library to allow selective importing (e.g. `«include: @stdlib.general»`, `«exclude: @stdlib.control»`), how to describe subimport methods to loader? or should there be a single subimport function that takes subcomponent UTIs as argument, with iris-glue generating the corresponding switch code? also bear in mind that include/exclude doesn't prevent handlers being addressed via @namespace; to mount/omit library directories there will require external configuration at startup (there is also the question of how sandboxed interpreters load libraries, as the safe way to do that would be by calling parent process but that would require passing read-only pipes or even copying primitive libraries to the subprocess’s private read-only directory, though no idea how we’d assign a different directory to each sandboxed subprocess)»
+
 «== IO commands ==»
 
 «TODO: `write` command needs optional ‘to’ argument for specifying the external resource to write to (for now, primitive func is hardcoded to print() value’s description to stdout); probably best to leave this until @namespace is implemented as file[-like] objects should generally be mounted in that and referred to there»

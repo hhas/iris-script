@@ -7,6 +7,8 @@
 
 // TO DO: fix commandEnv, e.g. `tell` block creates thin non-env sub-scope over Env (might be best to put `environment` var on Scope)
 
+// TO DO: should `set…to…` support multiple assignment?
+
 
 func tell(target: AttributedValue, action: Value, commandEnv: Scope) throws -> Value { // `tell expr to expr`
     let env = TargetScope(target: target, parent: (commandEnv as? MutableScope) ?? MutableShim(commandEnv)) // TO DO: most/all APIs that currently require Environment should really take [Mutable]Scope
@@ -26,7 +28,7 @@ func ofClause(attribute: Value, target value: Value, commandEnv: Scope, handlerE
             } // fall thru
         }
     }
-    throw UnsupportedCoercionError(value: attribute, coercion: asHandler) // TO DO: what error?
+    throw TypeCoercionError(value: attribute, coercion: asHandler) // TO DO: what error?
 }
 
 // handlers
@@ -49,11 +51,6 @@ func defineEventHandler(interface: HandlerInterface, action: Value, commandEnv: 
     let handler = NativeHandler(interface: interface, action: action, in: env)
     try (commandEnv as! Environment).set(interface.name, to: handler)
     return handler
-}
-
-
-func returning(left: Value, right: Value) -> Value { // `returning` operator evaluates to self // TO DO: move to glue
-    return Command("returning", [(nullSymbol, left), (nullSymbol, right)]) // TO DO: how to attach operator definition if available? (and should it? bear in mind it rather depends on context where command is presented; probably best to punt representation to formatter and let it decide on command vs operator presentation)
 }
 
 // set

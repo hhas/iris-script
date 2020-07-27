@@ -9,7 +9,7 @@
 import Foundation
 
 
-open class OpaqueValue<SwiftType>: BoxedSwiftValue {
+open class OpaqueValue<SwiftType>: BoxedSwiftValue, StaticValue {
     
     // TO DO: static var can't be overridden in subclass
     public static var nominalType: Coercion { return asValue } // TO DO: what should this return? (there’s no standard asOpaqueValue coercion as OpaqueValue<SwiftType> is a generic; thus any coercions are custom-defined as needed as AsComplex<SwiftType>; however, we could define a native-only Coercion for purposes of self-description: since the value’s content is already opaque to the native runtime there’s no need to distinguish any further)
@@ -52,6 +52,6 @@ public class BoxedCommand: OpaqueValue<Command> {
     public override func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         // TO DO: if coercion isn't expression or similar, throw coercion error
         if let result = self.data as? T.SwiftType { return result }
-        throw UnsupportedCoercionError(value: self.data, coercion: coercion)
+        throw TypeCoercionError(value: self.data, coercion: coercion)
     }
 }

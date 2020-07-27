@@ -72,9 +72,9 @@ let _dynamicallyBoundHandler = DynamicallyBoundHandler()
 //
 
 
-struct BindHandlerOnFirstUse: Handler {
+public struct BindHandlerOnFirstUse: Handler {
     
-    var description: String { return "<BindHandlerOnFirstUse>" }
+public     var description: String { return "<BindHandlerOnFirstUse>" }
     
     // TO DO: not sure about this; may be cheaper to make Command._handler an enum (static/dynamic/unbound) and take the switch hit on every call vs an extra stack frame allocation for every dynamic call (switch also reduces load on Swift stack)
     
@@ -84,7 +84,7 @@ struct BindHandlerOnFirstUse: Handler {
     
     // TO DO: is it possible for coercion to change? (in theory, yes)
     
-    func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
+public     func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
         // TO DO: fix this guard (casting is separate issue; if not a handler then confirm no arguments in command and return the value)
         guard let value = scope.get(command.name) else { throw UnknownNameError(name: command.name, in: scope) }
         if let handler = value as? Handler {
@@ -105,10 +105,10 @@ struct BindHandlerOnFirstUse: Handler {
         }
     }
     
-    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+public     func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         return try coercion.unbox(value: self.call(with: command, in: scope, as: coercion), in: scope)
     }
 }
 
-let _bindHandlerOnFirstUse = BindHandlerOnFirstUse()
+public   let _bindHandlerOnFirstUse = BindHandlerOnFirstUse()
 

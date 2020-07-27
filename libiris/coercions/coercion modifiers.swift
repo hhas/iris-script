@@ -85,7 +85,7 @@ public struct AsOptional: SwiftCoercion { // this returns native Value; for Opti
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         do {
             // TO DO: there is a problem with null coercions not being intercepted correctly when value is a command invoking a native handler with default signature that returns nothing; the null coercion error is chained to handler error by the time it gets here, which bypasses the catch below (null coercion errors need to be caught close to point of origin, either to handle in the case of optional/default, or to promote to permanent coercion error; need to check how kiwi does it again)
-            
+            print("\(type(of:self)).unbox(value:\(value))")
             return try self.coercion.coerce(value: value, in: scope)
         } catch is NullCoercionError {
             return nullValue
@@ -284,7 +284,7 @@ public struct AsLiteral<T: Value>: SwiftCoercion { // caution: this only works f
             if value is NullValue { // TO DO: kludgy
                 throw NullCoercionError(value: value, coercion: self)
             }
-            throw UnsupportedCoercionError(value: value, coercion: self)
+            throw TypeCoercionError(value: value, coercion: self)
         }
         return result
     }

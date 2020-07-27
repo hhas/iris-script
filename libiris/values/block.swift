@@ -59,11 +59,12 @@ public class Block: BoxedCollectionValue { // caution: this does not capture lex
     
     
     public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+        print("\(type(of:self)).toValue(as:\(coercion))")
         return try self.toTYPE(in: scope, as: coercion)
     }
     
     public func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
-        //print("Block.toTYPE", self, "as", T.self, type(of:coercion))
+        print("Block.toTYPE", self, "as", T.self, type(of:coercion))
         var result: Value = nullValue
         for value in self.data {
             // TO DO: what should we do with result?

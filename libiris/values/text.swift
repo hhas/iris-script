@@ -50,12 +50,12 @@ public struct Text: BoxedScalarValue, ExpressibleByStringLiteral, LiteralConvert
     public func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
         guard let result = Int(self.data) else { // Int("0.0") returns nil, so need additional fallback
             if let n = Double(self.data), let result = Int(exactly: n) { return result } 
-            throw ConstraintError(value: self, coercion: coercion)
+            throw ConstraintCoercionError(value: self, coercion: coercion)
         }
         return result
     }
     public func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
-        guard let result = Double(self.data) else { throw ConstraintError(value: self, coercion: coercion) }
+        guard let result = Double(self.data) else { throw ConstraintCoercionError(value: self, coercion: coercion) }
         return result
     }
     public func toString(in scope: Scope, as coercion: Coercion) throws -> String {

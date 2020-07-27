@@ -24,6 +24,7 @@ public struct AsValue: SwiftScalarCoercion {
     public init() {}
     
     public func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+        print("\(type(of:self)).eval(value:\(value))")
         return try value.toValue(in: scope, as: self)
     }
     
@@ -93,8 +94,8 @@ public struct AsConstrainedInt: SwiftScalarCoercion {
     
     public func coerce(value: Value, in scope: Scope) throws -> Value {
         let result = try value.toInt(in: scope, as: self)
-        if let m = self.min, result < m { throw ConstraintError(value: value, coercion: self) }
-        if let m = self.max, result > m { throw ConstraintError(value: value, coercion: self) }
+        if let m = self.min, result < m { throw ConstraintCoercionError(value: value, coercion: self) }
+        if let m = self.max, result > m { throw ConstraintCoercionError(value: value, coercion: self) }
         return result
     }
     

@@ -74,7 +74,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
     
     public func toBool(in env: Scope, as coercion: Coercion) throws -> Bool {
         // TO DO: rework this (should it follow AE coercion rules or native? e.g. 0 = true or false?)
-        guard let result = try? unpackAsBool(self.desc) else { throw UnsupportedCoercionError(value: self, coercion: asBool) }
+        guard let result = try? unpackAsBool(self.desc) else { throw TypeCoercionError(value: self, coercion: asBool) }
         return result
     }
         
@@ -86,7 +86,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
         // TO DO: other integer types
         case typeIEEE64BitFloatingPoint, typeIEEE32BitFloatingPoint, type128BitFloatingPoint: // 128-bit will be coerced down (lossy)
             guard let result = try? unpackAsDouble(self.desc) else {
-                throw UnsupportedCoercionError(value: self, coercion: coercion) // message: "Can't coerce 128-bit float to double."
+                throw TypeCoercionError(value: self, coercion: coercion) // message: "Can't coerce 128-bit float to double."
             }
             return result
         case typeChar, typeIntlText, typeUTF8Text, typeUTF16ExternalRepresentation, typeStyledText, typeUnicodeText, typeVersion:
@@ -96,7 +96,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
             return Text(result)
         default:
             guard let result = try? unpackAsString(self.desc) else {
-                throw UnsupportedCoercionError(value: self, coercion: coercion)
+                throw TypeCoercionError(value: self, coercion: coercion)
             }
             return Text(result)
         }
@@ -113,7 +113,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
                     do {
                         result.append(try coercion.item.coerce(value: item, in: env))
                     } catch { // NullCoercionErrors thrown by list items must be rethrown as permanent errors
-                        throw UnsupportedCoercionError(value: item, coercion: coercion.item).from(error)
+                        throw TypeCoercionError(value: item, coercion: coercion.item).from(error)
                     }
                 }
                 return OrderedList(result)
@@ -121,7 +121,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
                 return OrderedList([try coercion.item.coerce(value: self, in: env)])
             }
         } catch {
-            throw UnsupportedCoercionError(value: self, coercion: coercion).from(error)
+            throw TypeCoercionError(value: self, coercion: coercion).from(error)
         }
     }
     
@@ -134,7 +134,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
                     do {
                         result.append(try coercion.swiftItem.unbox(value: item, in: scope))
                     } catch { // NullCoercionErrors thrown by list items must be rethrown as permanent errors
-                        throw UnsupportedCoercionError(value: item, coercion: coercion.item).from(error)
+                        throw TypeCoercionError(value: item, coercion: coercion.item).from(error)
                     }
                 }
                 return result
@@ -142,7 +142,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
                 return [try coercion.swiftItem.unbox(value: self, in: scope)]
             }
         } catch {
-            throw UnsupportedCoercionError(value: self, coercion: coercion).from(error)
+            throw TypeCoercionError(value: self, coercion: coercion).from(error)
         }
     }
     
@@ -225,7 +225,7 @@ extension Symbol: SelfPacking {
         } else if self.key.hasPrefix("0x") && self.key.count == 10, let code = UInt32(self.key.dropFirst(2), radix: 16) {
             return packAsType(code)
         } else {
-            throw UnsupportedCoercionError(value: self, coercion: asValue) // TO DO: what error?
+            throw TypeCoercionError(value: self, coercion: asValue) // TO DO: what error?
         }
     }
 }
@@ -242,7 +242,7 @@ extension Record: SelfPacking {
     public func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor { // TO DO: this is a mess
         return try packAsRecord(self.data.map{ (label: Symbol, value: Value) throws -> (AEKeyword, Value) in
             guard let desc = (appData as! NativeAppData).descriptor(for: label) else {
-                throw UnsupportedCoercionError(value: self, coercion: asValue) // TO DO: what error?
+                throw TypeCoercionError(value: self, coercion: asValue) // TO DO: what error?
             }
             return (try unpackAsFourCharCode(desc), value)
         }, using: appData.pack)

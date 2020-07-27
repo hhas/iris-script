@@ -53,6 +53,9 @@ public extension Handler {
         return try coercion.swiftCoerce(value: value, in: scope)
     }
     
+    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+        return self
+    }
 }
 
 

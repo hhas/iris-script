@@ -83,7 +83,7 @@ struct RemoteCall: Handler { // for AE commands, the command name (e.g. Symbol("
 // NativeAppData
 
 
-struct InsertionLocation: Value, SelfPacking {
+struct InsertionLocation: StaticValue, SelfPacking {
     
     var description: String { return "«\(self.desc) of \(self.appData)»" } // TO DO: implement
     
@@ -147,6 +147,10 @@ extension ReferenceProtocol {
             }
             return self.lookup(name)
         }
+    }
+    
+    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+        return self
     }
 }
 

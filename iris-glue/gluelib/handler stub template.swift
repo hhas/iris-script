@@ -35,7 +35,7 @@ func ««functionName»»(««+functionParameters»»\
 let handlerStubsTemplate = TextTemplate(templateSource) {
     (tpl: Node, args: (libraryName: String, handlerGlues: [HandlerGlue])) in
     tpl.libraryName.set(args.libraryName)
-    tpl.defineHandler.map(args.handlerGlues) {
+    tpl.defineHandler.map(args.handlerGlues.filter{ !($0.interface.result is AsItself) }) {
         (node: Node, glue: HandlerGlue) -> Void in
         node.functionName.set(glue.swiftName)
         node.libraryName.set(args.libraryName)

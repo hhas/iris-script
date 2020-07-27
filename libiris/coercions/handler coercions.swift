@@ -20,7 +20,7 @@ func unpackSignature(_ value: Value, in env: Scope) throws -> (Symbol, [HandlerI
         parameters = try unpackParameters(record.data, in: env)
     default:
         print("unpackSignature failed on", type(of:value))
-        throw UnsupportedCoercionError(value: value, coercion: asHandlerInterface)
+        throw TypeCoercionError(value: value, coercion: asHandlerInterface)
     }
     return (name, parameters)
 }
@@ -40,21 +40,21 @@ func unpackParameters(_ parameters: [Record.Field], in env: Scope) throws -> [Ha
                 // TO DO: need simpler way to convert command to identifier
                 guard args.count == 2, let name = args[0].value.asIdentifier() else {
                     print("Bad `as` operator.")
-                    throw UnsupportedCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
+                    throw TypeCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
                 }
                 binding = name
                 coercion = try args[1].value.swiftEval(in: env, as: asCoercion)
             } else {
                 guard let name = command.asIdentifier() else {
                     print("Bad name:",command)
-                    throw UnsupportedCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
+                    throw TypeCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
                 }
                 binding = name
                 coercion = asValue
             }
         default:
             print("unpackParameters failed on", type(of:value),value)
-            throw UnsupportedCoercionError(value: try Record(parameters), coercion: asHandlerInterface)
+            throw TypeCoercionError(value: try Record(parameters), coercion: asHandlerInterface)
         }
         if binding == nullSymbol { binding = label }
         if label == nullSymbol { label = binding }
@@ -65,7 +65,7 @@ func unpackParameters(_ parameters: [Record.Field], in env: Scope) throws -> [Ha
     //
     if uniqueLabels.contains(nullSymbol) || uniqueLabels.count != parameters.count || uniqueBindings.count != parameters.count {
         print("unpackParameters found bad labels")
-        throw UnsupportedCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
+        throw TypeCoercionError(value: Record(parameters, as: asRecord), coercion: asHandlerInterface)
     }
     return result
 }
@@ -85,7 +85,7 @@ func unpackHandlerInterface(_ signature: Value, in env: Scope, isEventHandler: B
             let args = command.arguments
             if args.count != 2 {
                 print("Bad `returning` operator")
-                throw UnsupportedCoercionError(value: signature, coercion: asHandlerInterface)
+                throw TypeCoercionError(value: signature, coercion: asHandlerInterface)
             }
             (name, parameters) = try unpackSignature(args[0].value, in: env)
             returnType = try unpackCoercion(args[1].value, in: env)
@@ -98,7 +98,7 @@ func unpackHandlerInterface(_ signature: Value, in env: Scope, isEventHandler: B
         returnType = asAnything
     default:
         print("unpackHandlerInterface failed on",type(of:signature), signature)
-        throw UnsupportedCoercionError(value: signature, coercion: asHandlerInterface)
+        throw TypeCoercionError(value: signature, coercion: asHandlerInterface)
     }
     return HandlerInterface(name: name, parameters: parameters, result: returnType, isEventHandler: isEventHandler)
 }
@@ -162,7 +162,7 @@ public struct AsHandler: SwiftCoercion {
             return NativeHandler(interface: nullHandlerInterface, action: block, in: env)
         default:
             print("AsHandler.unbox failed.")
-            throw UnsupportedCoercionError(value: value, coercion: self)
+            throw TypeCoercionError(value: value, coercion: self)
         }
     }
     

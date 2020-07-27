@@ -15,14 +15,14 @@ struct AsQuery: SwiftCoercion {
     
     func coerce(value: Value, in scope: Scope) throws -> Value {
         guard let result = (try? asAnything.coerce(value: value, in: scope)) as? Query else {
-            throw UnsupportedCoercionError(value: value, coercion: self)
+            throw TypeCoercionError(value: value, coercion: self)
         }
         return result
     }
     
     func unbox(value: Value, in scope: Scope) throws -> SwiftType {
         guard let result = (try? asAnything.coerce(value: value, in: scope)) as? Query else {
-            throw UnsupportedCoercionError(value: value, coercion: self)
+            throw TypeCoercionError(value: value, coercion: self)
         }
         return result.desc
     }

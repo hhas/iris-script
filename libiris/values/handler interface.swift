@@ -6,6 +6,8 @@
 import Foundation
 
 
+// TO DO: how to look up handlers by name and introspect their interface natively? (more generally, how to look up environment slots natively using symbols; e.g. define a command that returns current scope as native value? once user has that, they can query it using same/similar code as is used to access records; consider such objects can also operate as JS-style objects, should we wish to support/encourage nominal single-dispatch OOP with objects as an alternative to structural multiple-dispatch on record fields, although creating them natively would require a constructor command [presumably taking object's implementation as block argument])
+
 // TO DO: for lambdas (unnamed, unbound, handlers), use nullSymbol as handler interface's name if no explicit name is declared (e.g. `{args}:action`); Q. should we have a dedicated operator syntax for constructing lambdas, or just use a command? (for now, accept an arg-less command (literal handler name), an appropriately structured colon Pair, or plain [parenthesized?] expr, in an asHandler context)
 
 // TO DO: generalize 'isEventHandler' flag to describe any type of handler; e.g. in a `catching` block, the error handler may declare the error type(s) it is willing to accept, in which case the handler is only invoked if the error argument can be coerced to that type (presumably native errors will be represented as records, so type matching is structural, not nominal)
@@ -29,15 +31,15 @@ import Foundation
 
 
 
-public struct HandlerInterface: ComplexValue { // native representation is a record; how best to convert to/from that?
+public struct HandlerInterface: ComplexValue, StaticValue { // native representation is a record; how best to convert to/from that?
     
     public var description: String {
-        return "‘\(self.name.label)’ {\(self.parameters.map{ "\($0.label == $1.label ? "" : "\($0.label): ")\($1.label) as \($2)" }.joined(separator: ", "))} returning \(self.result)"
+        return "‘\(self.name.label)’ {\(self.parameters.map{ "\($0 == $1 ? "" : "\($0.label): ")\($1.label) as \($2)" }.joined(separator: ", "))} returning \(self.result)"
     }
     
     // TO DO: store binding names separately? primitive handlers don't need them, and native handlers should probably treat them as private (i.e. third-party code should not make any assumptions about these names - they are defined by and for the handler's own use only); in theory, code analysis tools will want to know all bound names; then again, the easiest way to do code analysis in iris it to execute the script against alternate libraries that have the same signatures but different behaviors (e.g. whereas a standard `switch` handler lazily matches conditions and only evaluates the first matched case, an analytical `switch` handler would evaluate all conditions and all cases to generate an analysis of all possible behaviors)
     
-    public typealias Parameter = (name: Symbol, binding: Symbol, coercion: Coercion) // TO DO: include docstring? // binding is only needed in native handlers when different to label (e.g. in `foo(bar:baz as TYPE)`, bar is the parameter name and baz is the name under which the parameter value is stored in the handler's stack frame)
+    public typealias Parameter = (label: Symbol, binding: Symbol, coercion: Coercion) // TO DO: include docstring? // binding is only needed in native handlers when different to label (e.g. in `foo(bar:baz as TYPE)`, bar is the parameter name and baz is the name under which the parameter value is stored in the handler's stack frame)
     
     public static let nominalType: Coercion = asHandlerInterface
     
@@ -97,10 +99,8 @@ public struct HandlerInterface: ComplexValue { // native representation is a rec
 
 public extension HandlerInterface {
     
-    func labelForBinding(_ name: Symbol) -> Symbol? {
-        for (label, binding, _) in self.parameters {
-            if name == binding { return label }
-        }
-        return nil
+    // caution: this assumes HandlerInterface always contains both label and binding name, even if identical
+    func labelForBinding(_ name: Symbol) -> Symbol? { // used by native `expression NAME` Pattern wrapper to convert an operand/binding name (used in native operator definition) to and argument label name (used in underlying Command’s argument record); this makes for more readable, less error-prone native pattern syntax
+        return self.parameters.first{ $0.binding == name }?.label
     }
 }

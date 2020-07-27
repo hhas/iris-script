@@ -56,7 +56,7 @@ public struct AsRecord: RecordCoercion {
                 }
             }
         } catch {
-            throw ConstraintError(value: record, coercion: self).from(error)
+            throw ConstraintCoercionError(value: record, coercion: self).from(error)
         }
         return Record(result, as: self)
     }

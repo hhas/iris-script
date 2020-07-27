@@ -51,7 +51,7 @@ struct TestClauseScope: Accessor {
 
 // note: this is why first-use binding is preferable to parse-time binding: operator names are the same, but the handlers they bind are contextual [caution: these handlers must match on operand type[s] and delegate when neither operand is a [literal?] [test?] reference]
 
-struct TestClause: Value {
+struct TestClause: StaticValue {
     
     var description: String {
         //print(">>>",self.desc)
