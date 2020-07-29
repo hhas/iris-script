@@ -13,7 +13,11 @@ func test() {
    // runScript(" optional text ")
    // runScript(" to foo run write “bar” \n foo ") // TO DO: FIX: using optional/default coercion modifiers is still buggy: handler throws error on return (it should return `nothing` instead)
     
-    runScript("to foo returning anything run (if false then 1). foo.")
+    runScript(" 2+2. to foo{a} run bar a. to bar {v} run 2+v. foo 6. ")
+    
+    print(asBool.name)
+    
+   // runScript("to foo returning anything run (if false then 1). foo.")
     
    // runScript(" [\n[\n] ")//{ [ (1, 3) , 2 + 4, 5 ]}")
     

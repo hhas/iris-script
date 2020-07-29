@@ -1,6 +1,6 @@
 //
 //  math funcs.swift
-//  iris-lang
+//  libiris
 //
 
 import Foundation

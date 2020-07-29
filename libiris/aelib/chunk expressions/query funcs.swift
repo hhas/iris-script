@@ -1,6 +1,6 @@
 //
 //  query values.swift
-//  iris-lang
+//  libiris
 //
 
 // TO DO: what to do with reference form operators that don't appear within a `tell` block/`of` operator, e.g. `document at 1` is legal top-level code, but currently doesn't do anything useful when evaluated (the primitive funcs below currently just abort); loathe to define twice [or more] (once as methods on Reference, then again as global handlers); at the same time, implementing selector methods in a hardcoded switch block rather than a lookup table is suboptimal for introspection

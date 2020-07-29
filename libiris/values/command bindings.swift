@@ -1,6 +1,6 @@
 //
 //  command bindings.swift
-//  iris-lang
+//  libiris
 //
 
 // conceptually a command is a right-associative unary operator with arbitrary name and fixed precedence, where operand is always a record (non-record values are coerced to single-field record upon evaluation); in practice, the current Command implementation is an atomic structure comprising a name and Array of fields, plus internal caching (while it could be implemented as a Command(Symbol,Record) struct, this does not lend itself to dynamic [run-time] optimization; the tradeoff is increased code complexity)
@@ -32,19 +32,19 @@ import Foundation
 
 
 
-struct MemoizedStaticValue: Handler { // slot contains a non-handler value; the command still invokes `call()`, but no argument processing is performed, just evaluation+coercion of the value to the requested type if not already of that type
+struct MemoizedStaticValue: Handler {
+    // slot contains a non-handler value; the command still invokes `call()`, but no argument processing is performed, just evaluation+coercion of the value to the requested type if not already of that type
     
     var description: String { return "\(self.result)" }
     
     let value: Value
-    let coercion: Coercion // constrained type of result (effectively result.constrainedType)
+    let coercion: NativeCoercion // constrained type of result (effectively result.constrainedType)
     let result: Value
     
-    func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
-        return self.coercion.isa(coercion) ? self.result : try self.value.eval(in: scope, as: coercion) // TO DO: if value is memoizable, what about caching results of eval, using coercion as cache key? e.g. if value is a non-constant expr, e.g. a block, it must be evaled every time, but if value.isMemoizable then there's no need to coerce every time [if the coercion succeeds, then it can cache and return that result every time; if coercion fails, then it can cache and rethrow that coercion error every time])
-    }
-    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        fatalError() // TO DO: this unboxes as T; how practical/useful to cache returned value
+    func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+       
+        return try coercion.coerce(self.value, in: scope)
+        //return self.coercion.isa(coercion) ? self.result : try coercion.coerce(self.value, in: scope) // TO DO: if value is memoizable, what about caching results of eval, using coercion as cache key? e.g. if value is a non-constant expr, e.g. a block, it must be evaled every time, but if value.isMemoizable then there's no need to coerce every time [if the coercion succeeds, then it can cache and return that result every time; if coercion fails, then it can cache and rethrow that coercion error every time])
     }
 }
 
@@ -56,14 +56,12 @@ struct DynamicallyBoundHandler: Handler { // e.g. when looking up a slot on a Va
     
     var description: String { return "<DynamicallyBoundHandler>" }
     
-    func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
+    func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         // TO DO: command should be able to build a cache table of preprocessed arg lists using handler.interface as key
-        guard let handler = scope.get(command.name) as? Handler else { throw UnknownNameError(name: command.name, in: scope) }
+        guard let handler = scope.get(command.name) as? Handler else {
+            throw UnknownNameError(name: command.name, in: scope)
+        }
         return try handler.call(with: command, in: scope, as: coercion)
-    }
-    
-    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        fatalError()
     }
 }
 let _dynamicallyBoundHandler = DynamicallyBoundHandler()
@@ -72,9 +70,9 @@ let _dynamicallyBoundHandler = DynamicallyBoundHandler()
 //
 
 
-public struct BindHandlerOnFirstUse: Handler {
+struct BindHandlerOnFirstUse: Handler {
     
-public     var description: String { return "<BindHandlerOnFirstUse>" }
+    var description: String { return "<BindHandlerOnFirstUse>" }
     
     // TO DO: not sure about this; may be cheaper to make Command._handler an enum (static/dynamic/unbound) and take the switch hit on every call vs an extra stack frame allocation for every dynamic call (switch also reduces load on Swift stack)
     
@@ -84,7 +82,7 @@ public     var description: String { return "<BindHandlerOnFirstUse>" }
     
     // TO DO: is it possible for coercion to change? (in theory, yes)
     
-public     func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
+    func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         // TO DO: fix this guard (casting is separate issue; if not a handler then confirm no arguments in command and return the value)
         guard let value = scope.get(command.name) else { throw UnknownNameError(name: command.name, in: scope) }
         if let handler = value as? Handler {
@@ -92,23 +90,18 @@ public     func call(with command: Command, in scope: Scope, as coercion: Coerci
             // if static bound, we can also memoize partially processed argument list, matching labels and coercing null (omitted) and literal arguments once; expr arguments may also be partially reduced by intersecting each expr-based argument's output coercion with parameter's input coercion (Q. where handlers are dynamically bound, chances are there are a relatively small number of handlers involved, in which case caching partially processed parameters against handler identity may be worth doing)
             
             // if static bound or otherwise memoizable, ask Handler for staticCall(for: Command,…); this will balance argument list, evaling arguments where possible (e.g. arguments that are literal values only need coerced once)
-            
             return try handler.call(with: command, in: scope, as: coercion)
         } else {
             // Q. if first lookup finds stored value, is it worth returning as StoredValueHandler? this might capture value (if read-only, non-maskable), or scope (if mutable, non-maskable), or dynamic lookup
             if command.arguments.count != 0 { throw UnknownArgumentError(at: 0, of: command) }
-            let result = try value.eval(in: scope, as: coercion)
+            let result = try coercion.coerce(value, in: scope)
             if value.isMemoizable {
-                command._handler = MemoizedStaticValue(value: value, coercion: coercion, result: result)
+  //              command._handler = MemoizedStaticValue(value: value, coercion: coercion, result: result) // TO DO
             }
             return result
         }
     }
-    
-public     func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        return try coercion.unbox(value: self.call(with: command, in: scope, as: coercion), in: scope)
-    }
 }
 
-public   let _bindHandlerOnFirstUse = BindHandlerOnFirstUse()
+let _bindHandlerOnFirstUse = BindHandlerOnFirstUse()
 

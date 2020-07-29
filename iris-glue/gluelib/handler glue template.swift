@@ -8,6 +8,9 @@
 import Foundation
 import iris
 
+// TO DO: coercion parameter isn't being used
+
+
 // TO DO: should `itself` validate command args? (currently returns Command as-is with no checking)
 
 // TO DO: would be simpler if type def's parameter tuple could be passed directly to interface params, but Swift doesn't want to downcast it ("Cannot express tuple conversion…")
@@ -41,17 +44,17 @@ private let interface_««signature»» = HandlerInterface(
     name: type_««signature»».name,
     parameters: [
     ««+interfaceParameters»»
-		type_««signature»».param_««count»»,
+		nativeParameter(type_««signature»».param_««count»»),
     ««-interfaceParameters»»
     ],
-    result: type_««signature»».result
+    result: type_««signature»».result.nativeCoercion
 )
-private func procedure_««signature»»(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_««signature»»(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     ««+body»»
     ««+procedureParameters»»
     var index = 0
     ««+unboxArguments»»
-    let arg_««count»» = try command.swiftValue(at: &index, for: type_««signature»».param_««count»», in: commandEnv)
+    let arg_««count»» = try command.value(for: type_««signature»».param_««count»», in: commandEnv)
     ««-unboxArguments»»
 
     ««+checkForUnexpectedArguments»»
@@ -71,7 +74,7 @@ private func procedure_««signature»»(command: Command, commandEnv: Scope, ha
     ««-functionArguments»»
     )
     ««+returnIfResult»»
-    return type_««signature»».result.box(value: result, in: handlerEnv)
+    return type_««signature»».result.wrap(result, in: handlerEnv)
     ««-returnIfResult»»
     ««+returnIfNoResult»»
     return nullValue

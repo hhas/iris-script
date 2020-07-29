@@ -12,7 +12,7 @@
 
 func tell(target: AttributedValue, action: Value, commandEnv: Scope) throws -> Value { // `tell expr to expr`
     let env = TargetScope(target: target, parent: (commandEnv as? MutableScope) ?? MutableShim(commandEnv)) // TO DO: most/all APIs that currently require Environment should really take [Mutable]Scope
-    return try action.eval(in: env, as: asAnything) // TO DO: how to get coercion info?
+    return try asAnything.coerce(action, in: env) // TO DO: how to get coercion info?
 }
 
 func ofClause(attribute: Value, target value: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value { // TO DO: see TODO on AsAnything re. limiting scope of `didNothing` result
@@ -46,9 +46,7 @@ func defineEventHandler(interface: HandlerInterface, action: Value, commandEnv: 
     guard let env = commandEnv as? Environment else {
         fatalError("\(interface.name) handler requires a full Environment but received \(commandEnv)")
     }
-    let interface = HandlerInterface(name: interface.name, parameters: interface.parameters,
-                                     result: interface.result, isEventHandler: true) // kludgy
-    let handler = NativeHandler(interface: interface, action: action, in: env)
+    let handler = NativeHandler(interface: interface.asEventHandler(), action: action, in: env)
     try (commandEnv as! Environment).set(interface.name, to: handler)
     return handler
 }
@@ -62,8 +60,8 @@ func set(name: Symbol, to value: Value, commandEnv: Scope) throws -> Value { // 
 
 // coerce
 
-func coerce(value: Value, coercion: Coercion, commandEnv: Scope) throws -> Value { // `expr as coercion`
-    return try value.eval(in: commandEnv, as: coercion) // TO DO: check this
+func coerce(value: Value, coercion: NativeCoercion, commandEnv: Scope) throws -> Value { // `expr as coercion`
+    return try coercion.coerce(value, in: commandEnv) // TO DO: check this
 }
 
 

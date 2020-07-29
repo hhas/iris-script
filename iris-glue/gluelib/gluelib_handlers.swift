@@ -1,6 +1,6 @@
 //
 //  gluelib_handlers.swift
-//  iris-lang
+//  libiris
 //
 
 // code generator
@@ -19,16 +19,16 @@ private let type_defineHandlerGlue_handler_commandEnv = (
 private let interface_defineHandlerGlue_handler_commandEnv = HandlerInterface(
     name: "to",
     parameters: [
-        type_defineHandlerGlue_handler_commandEnv.param_0,
-        type_defineHandlerGlue_handler_commandEnv.param_1,
+        nativeParameter(type_defineHandlerGlue_handler_commandEnv.param_0),
+        nativeParameter(type_defineHandlerGlue_handler_commandEnv.param_1),
         ],
-    result: type_defineHandlerGlue_handler_commandEnv.result
+    result: type_defineHandlerGlue_handler_commandEnv.result.nativeCoercion
 )
-private func procedure_defineHandlerGlue_handler_commandEnv(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_defineHandlerGlue_handler_commandEnv(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arguments = command.arguments
-    let arg_0 = try command.swiftValue(at: &index, for: type_defineHandlerGlue_handler_commandEnv.param_0, in: commandEnv)
-    let arg_1 = try command.swiftValue(at: &index, for: type_defineHandlerGlue_handler_commandEnv.param_1, in: commandEnv)
+    let arg_0 = try command.value(for: type_defineHandlerGlue_handler_commandEnv.param_0, at: &index, in: commandEnv)
+    let arg_1 = try command.value(for: type_defineHandlerGlue_handler_commandEnv.param_1, at: &index, in: commandEnv)
     if arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     try defineHandlerGlue(
         interface: arg_0,

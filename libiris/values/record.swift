@@ -1,6 +1,6 @@
 //
 //  record.swift
-//  iris-lang
+//  libiris
 //
 //  tuple/struct hybrid
 //
@@ -21,7 +21,9 @@ public extension Record.Fields { // also used as Command.Arguments
         return "[\(self.map{ "(\($0.isEmpty ? "nullSymbol" : $0.swiftLiteralDescription), \($1.swiftLiteralDescription))" }.joined(separator: ", "))]"
     }
     
-    func value(labeled label: Symbol, at index: inout Int) -> Value {
+    // TO DO: better error messages
+    
+    private func value(labeled label: Symbol, at index: inout Int) -> Value {
         if index < self.count {
             let arg = self[index]
             // TO DO: should this skip over unrecognized labels, i.e. ignore unwanted fields? i.e. if arg is unlabeled or matches, use current field else call firstIndex{$0.label==label} to search for field in remaining record
@@ -33,14 +35,15 @@ public extension Record.Fields { // also used as Command.Arguments
         return nullValue // default value for a missing field is `nothing`; this allows coercion to decide if that field is required or not (note that this is different behavior to environment slot lookups, which always fail with NameNotFoundError if slot isn’t found; TO DO: should we unify behavior or not?)
     }
     
-    func unbox<T: SwiftCoercion>(param: (label: Symbol, binding: Symbol, coercion: T),
-                                 at index: inout Int, in scope: Scope) throws -> T.SwiftType {
+    
+    func coerce<T: SwiftCoercion>(param: (label: Symbol, binding: Symbol, coercion: T),
+                                  at index: inout Int, in scope: Scope) throws -> T.SwiftType {
         // if field was matched, index is incremented on return
         // (caution: if caller rethrows an unbox() error, don't use the returned index in error message)
         let currentIndex = index
         let value = self.value(labeled: param.label, at: &index)
         do {
-            return try param.coercion.unbox(value: value, in: scope)
+            return try param.coercion.coerce(value, in: scope)
         } catch { // TO DO: what to trap here? e.g. should it catch NullCoercionError directly, which can occur if field was not found or if field contains `nothing` but coercion isn't optional/default
             if self.contains(where: {$0.label == param.label}) { // TO DO: if labeled field is in record but is in wrong order, the error message should reflect that, so use firstIndex() rather than contains() to determine its position relative to currentIndex (“expected ‘LABEL’ field at X index but found it at Y”)
                 throw BadFieldValueError(at: currentIndex, of: self).from(error)
@@ -67,11 +70,11 @@ public struct Record: ComplexValue, Accessor, Sequence {
     public typealias Field = (label: Symbol, value: Value) // nullSymbol = unnamed field
     public typealias Fields = [Field]
 
-    public static let nominalType: Coercion = asRecord
+    public static let nominalType: NativeCoercion = asRecord.nativeCoercion
     
     public let isMemoizable: Bool // true if all field names are given and all values are memoizable
 
-    public let constrainedType: RecordCoercion
+    public let constrainedType: NativeCoercion
     
     public let data: Fields // TO DO: why is this not named data as per BoxedSwiftValue?
     private var namedFields = [Symbol: Value]() // Q. any performance benefit over `first(where:…)`? (bearing in mind a typical record would have <20 slots) if not, get rid of this
@@ -95,22 +98,27 @@ public struct Record: ComplexValue, Accessor, Sequence {
             }
         }
         self.isMemoizable = isMemoizable
-        self.constrainedType = isMemoizable ? AsRecord(nominalFields) : asRecord
+        self.constrainedType = (isMemoizable ? AsRecord(nominalFields) : asRecord).nativeCoercion
     }
     
     public init() {
-        self.init([], as: asRecord)
+        self.init([], as: asRecord.nativeCoercion)
     }
     
     public init(uniqueLabelsWithValues fields: Fields) {
         try! self.init(fields)
     }
     
-    internal init(_ fields: Fields, as coercion: RecordCoercion) {
+    internal init(_ fields: Fields, as coercion: NativeCoercion) {
         self.data = fields
         self.constrainedType = coercion
         self.isMemoizable = true // TO DO: check this (e.g. what if field values are thunked?)
     }
+    
+    internal init<T: SwiftCoercion>(_ fields: Fields, as coercion: T) {
+        self.init(fields, as: coercion.nativeCoercion)
+    }
+    
     
     public __consuming func makeIterator() -> IndexingIterator<Fields> {
         return self.data.makeIterator()
@@ -120,17 +128,12 @@ public struct Record: ComplexValue, Accessor, Sequence {
         return self.namedFields[name]
     }
     
+    /*
     public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
-        return self.isMemoizable ? self : Record(try self.data.map{($0, try asAnything.coerce(value: $1, in: scope))},
+        return self.isMemoizable ? self : Record(try self.data.map{($0, try asAnything.coerce($1, in: scope))},
                                                  as: self.constrainedType)
     }
-    
-    public func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
-        return self
-    }
-    
-    // TO DO: what about mapping to Swift structs/classes? that'll require generated glue (c.f. stdlib_handlers)
-    
+    */
 }
 
 

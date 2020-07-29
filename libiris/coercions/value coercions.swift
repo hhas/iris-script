@@ -1,0 +1,128 @@
+//
+//  value coercions.swift
+//  libiris
+//
+
+import Foundation
+
+
+public struct AsAnything: SwiftCoercion { // any value or `nothing`
+    
+    public typealias SwiftType = Value
+    
+    public let name: Symbol = "anything"
+    
+    public var swiftLiteralDescription: String { return "asAnything" }
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
+        return value // TO DO: what about array and other collection types? should they also self-evaluate?
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return value
+    }
+    
+    public func defaultValue(in scope: Scope) throws -> SwiftType {
+        return nullValue
+    }
+}
+
+public let asAnything = AsAnything()
+
+
+
+public struct AsValue: SwiftCoercion { // any value except `nothing`
+    
+    public typealias SwiftType = Value
+    
+    public let name: Symbol = "value"
+    
+    public var swiftLiteralDescription: String { return "asValue" }
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
+        return value
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return value
+    }
+}
+
+public let asValue = AsValue()
+
+
+
+public struct AsNothing: SwiftCoercion, NativeCoercion { // used as return type where handler returns `nothing`
+    
+    public let name: Symbol = "nothing"
+    
+    public var swiftLiteralDescription: String { return "asNothing" }
+    
+    public typealias SwiftType = Value
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        // calling AsNothing.unbox() is [presumably] an implementation error
+        throw InternalError(description: "AsNothing.unbox() is not supported.")
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return nullValue
+    }
+    
+    public func defaultValue(in scope: Scope) throws -> SwiftType {
+        return nullValue
+    }
+}
+
+public let asNothing = AsNothing()
+
+
+
+public struct AsThunk<ElementType: SwiftCoercion>: SwiftCoercion {
+    
+    public typealias SwiftType = ElementType.SwiftType
+    
+    public let name: Symbol = "lazy"
+    
+    public var swiftLiteralDescription: String { return "AsThunk(\(self.elementType.swiftLiteralDescription))" }
+    
+    private let elementType: ElementType
+    
+    public init(_ elementType: ElementType) {
+        self.elementType = elementType
+    }
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        fatalError()
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return Thunk(value: self.elementType.wrap(value, in: scope), in: scope, as: self.elementType)
+    }
+}
+
+public let asThunk = AsThunk(asAnything)
+
+
+
+public struct AsIs: SwiftCoercion { // no evaluation
+    
+    public typealias SwiftType = Value
+    
+    public let name: Symbol = "expression" // TO DO
+    
+    public var swiftLiteralDescription: String { return "asIs" }
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        return value
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return value
+    }
+}
+
+public let asIs = AsIs()
+

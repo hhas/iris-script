@@ -14,11 +14,11 @@ import SwiftAutomation
 // TO DO: can/should SelfPacking/SelfUnpacking be reimplemented as Codable
 
 
-func unpackDescriptor(_ desc: Descriptor, in scope: Scope = nullScope, as coercion: Coercion = asAnything, appData: NativeAppData) throws -> Value {
-    return try coercion.coerce(value: NativeResultDescriptor(desc, appData: appData), in: scope)
+func unpackDescriptor(_ desc: Descriptor, in scope: Scope = nullScope, as coercion: NativeCoercion = asAnything.nativeCoercion, appData: NativeAppData) throws -> Value {
+    return try coercion.coerce(NativeResultDescriptor(desc, appData: appData), in: scope)
 }
 
-public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
+public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEvaluatingProtocol {
     
     // AppData.sendAppleEvent(…) calls this, passing result as descriptor
     public static func SwiftAutomation_unpackSelf(_ desc: Descriptor, appData: AppData) throws -> NativeResultDescriptor {
@@ -36,7 +36,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
     
     public var description: String { return "«\(self.desc)»" }
     
-    public static var nominalType: Coercion { return asAnything } // TO DO: what type?
+    public static var nominalType: NativeCoercion { return asAnything.nativeCoercion } // TO DO: what type?
     
     private let desc: Descriptor
     private let appData: NativeAppData
@@ -46,39 +46,24 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
         self.appData = appData
     }
     
-    /*
-     
-     func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T
-     
-     func toValue(in scope: Scope, as coercion: Coercion) throws -> Value // any value except `nothing`
-     func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue // text/number/date/URL
-     func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number
-     
-     func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool
-     func toInt(in scope: Scope, as coercion: Coercion) throws -> Int
-     func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double
-     func toString(in scope: Scope, as coercion: Coercion) throws -> String
-     
-     // Q. implement toArray in terms of iterator (or possibly even `toIterator`?)
-     func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList
-     func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType]
-     
-     //func toEditable(in scope: Scope, as coercion: AsEditable) throws -> EditableValue
-     
-     func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record
-     
-    */
-    // TO DO: toSymbol?
+    // TO DO: unpacking AEDescs needs to be re-implemented as eval<T> (the alternative would be to install additional coercion handlers into existing TypeMap<> instances)
+    
+    public func eval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        
+        
+        
+        fatalError("TODO")
+    }
     
     // unpack atomic types
     
-    public func toBool(in env: Scope, as coercion: Coercion) throws -> Bool {
+    public func toBool(in env: Scope, as coercion: NativeCoercion) throws -> Bool {
         // TO DO: rework this (should it follow AE coercion rules or native? e.g. 0 = true or false?)
         guard let result = try? unpackAsBool(self.desc) else { throw TypeCoercionError(value: self, coercion: asBool) }
         return result
     }
         
-    public func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue {
+    public func toScalar(in scope: Scope, as coercion: NativeCoercion) throws -> ScalarValue {
         switch self.desc.type {
         // common AE types
         case typeSInt32, typeSInt16, typeUInt16, typeSInt64, typeUInt64, typeUInt32:
@@ -103,7 +88,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
     }
     
     // unpack collections
-    
+    /*
     public func toList(in env: Scope, as coercion: AsList) throws -> OrderedList {
         do {
             if let desc = self.desc as? ListDescriptor {
@@ -111,14 +96,14 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
                 for itemDesc in desc {
                     let item = NativeResultDescriptor(itemDesc, appData: self.appData)
                     do {
-                        result.append(try coercion.item.coerce(value: item, in: env))
+                        result.append(try coercion.item.coerce(item, in: env))
                     } catch { // NullCoercionErrors thrown by list items must be rethrown as permanent errors
                         throw TypeCoercionError(value: item, coercion: coercion.item).from(error)
                     }
                 }
                 return OrderedList(result)
             } else {
-                return OrderedList([try coercion.item.coerce(value: self, in: env)])
+                return OrderedList([try coercion.item.coerce(self, in: env)])
             }
         } catch {
             throw TypeCoercionError(value: self, coercion: coercion).from(error)
@@ -132,14 +117,14 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
                 for itemDesc in desc {
                     let item = NativeResultDescriptor(itemDesc, appData: self.appData)
                     do {
-                        result.append(try coercion.swiftItem.unbox(value: item, in: scope))
+                        result.append(try coercion.swiftItem.coerce(item, in: scope))
                     } catch { // NullCoercionErrors thrown by list items must be rethrown as permanent errors
                         throw TypeCoercionError(value: item, coercion: coercion.item).from(error)
                     }
                 }
                 return result
             } else {
-                return [try coercion.swiftItem.unbox(value: self, in: scope)]
+                return [try coercion.swiftItem.coerce(self, in: scope)]
             }
         } catch {
             throw TypeCoercionError(value: self, coercion: coercion).from(error)
@@ -195,7 +180,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking {
             //if self.desc.isRecord { return try self.toRawRecord(in: env, as: asRecord) }
             return self
         }
-    }
+    }*/
 }
 
 extension Number: SelfPacking {

@@ -16,7 +16,7 @@ import iris
 
 
 // the previous line’s result will be stored under the name `_`
-let previousValue = EditableValue(nullValue, as: asAnything)
+let previousValue = EditableValue(nullValue, as: asAnything.nativeCoercion) // TO DO: another case of mixing Swift with Native coercions
 
 var previousInput: Value = nullValue
 

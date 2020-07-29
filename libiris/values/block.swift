@@ -1,13 +1,13 @@
 //
 //  block.swift
-//  iris-lang
+//  libiris
 //
 
 import Foundation
 
 
 
-public class Block: BoxedCollectionValue { // caution: this does not capture lexical scope
+public class Block: BoxedCollectionValue, SelfEvaluatingProtocol { // caution: this does not capture lexical scope
     
     // TO DO: what about preserving user's punctuation?
         
@@ -22,7 +22,7 @@ public class Block: BoxedCollectionValue { // caution: this does not capture lex
     }
     
     public typealias ArrayLiteralElement = Value
-    public static let nominalType: Coercion = asBlock
+    public static let nominalType: NativeCoercion = asBlock.nativeCoercion
     
     let operatorDefinition: PatternMatch? // TO DO: make this part of optional annotation metadata and standardize annotation API and types across Blocks and Commands (Q. what about lists and records?)
     
@@ -40,46 +40,18 @@ public class Block: BoxedCollectionValue { // caution: this does not capture lex
         return self.data.makeIterator()
     }
     
-    /*
-    func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
-        // TO DO: how to customize evaluation behavior when `?`/`!` modifiers are used
-        var result: Value = nullValue
-        for value in self.data {
-            // TO DO: what should we do with result?
-            // TO DO: what about early return? (simplest is to chuck an error containing the return value, then catch that error outside this eval loop and unwrap the return value) although there are arguments for keeping the language strictly structured (i.e. no 'goto'-like behaviors: break/continue/return/etc) as it's easier to reason and manipulate a program as data if its structure describes flow
-            result = try value.eval(in: scope, as: asAnything) // TO DO: `return VALUE` would throw a recoverable exception [and be caught here? or further up in HandlerProtocol? Q. what about `let foo = {some block}` idiom? should block be callable for this?]
+    public func eval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+       // print("Block.eval", self, "as", T.self)
+        //var result: Value = nullValue
+        for value in self.data.dropLast() { // self.data is zero or more exprs to evaluate; note that the result of each expr is normally discarded
+            if let expr = value as? SelfEvaluatingProtocol {
+                // TO DO: what about early return? (simplest is for `return EXPR?` to throw an EarlyReturn error containing the EXPR to be evaluated, then catch it here and eval that expr with coercion T; problem is that only breaks us out of the current block, not the handler’s block; if we want to break out of the current handler then the early return error must be trapped by the handler itself)
+                let _ = try expr.eval(in: scope, as: asAnything)
+            }
         }
-        return try coercion.coerce(value: result, in: scope)
+        return try coercion.coerce(self.data.last ?? nullValue, in: scope)
     }
-    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        // bit clumsy (also unnecessary if we enforce structured programming, as we can just process the last expression in self.data separately
-        return try coercion.unbox(value: self.eval(in: scope, as: coercion), in: scope)
-    }
-    */
-    
-    
-    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
-        print("\(type(of:self)).toValue(as:\(coercion))")
-        return try self.toTYPE(in: scope, as: coercion)
-    }
-    
-    public func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
-        print("Block.toTYPE", self, "as", T.self, type(of:coercion))
-        var result: Value = nullValue
-        for value in self.data {
-            // TO DO: what should we do with result?
-            // TO DO: what about early return? (simplest is to chuck an error containing the return value, then catch that error outside this eval loop and unwrap the return value) although there are arguments for keeping the language strictly structured (i.e. no 'goto'-like behaviors: break/continue/return/etc) as it's easier to reason and manipulate a program as data if its structure describes flow
-            result = try value.eval(in: scope, as: asAnything) // TO DO: `return VALUE` would throw a recoverable exception [and be caught here? or further up in HandlerProtocol? Q. what about `let foo = {some block}` idiom? should block be callable for this?]
-        }
 
-        
-        if T.self is Value {
-            return try coercion.coerce(value: result, in: scope) as! T
-        } else {
-            return try coercion.swiftCoerce(value: result, in: scope)
-        }
-    }
-    
 }
 
 public typealias AbstractSyntaxTree = Block

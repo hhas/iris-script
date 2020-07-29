@@ -1,12 +1,16 @@
 //
 //  native handler.swift
-//  iris-lang
+//  libiris
 //
 
 import Foundation
 
 
 // weak, latent typing (strictly speaking, code is untyped and latent typing is implemented as a library-defined behavior on top of untyped code; performs runtime type-checking by default but should also support compile-time type checking/inference given alternate primitive libraries)
+
+@inlinable public func nativeParameter<T: SwiftCoercion>(_ param: (Symbol, Symbol, T)) -> HandlerInterface.Parameter {
+    return (param.0, param.1, param.2.nativeCoercion)
+}
 
 
 struct NativeHandler: Handler {
@@ -29,22 +33,25 @@ struct NativeHandler: Handler {
         self.lexicalScope = lexicalScope
     }
     
-    func call(with command: Command, in commandScope: Scope, as coercion: Coercion) throws -> Value {
+    func call<T: SwiftCoercion>(with command: Command, in commandScope: Scope, as coercion: T) throws -> T.SwiftType {
         // if this handler defines and returns another handler (closure), the child handler may want to modify this scope so make it fully editable (write barriers are mostly for libraries to use)
         guard let handlerScope = self.lexicalScope?.subscope() as? Environment else { fatalError("BUG: dead scope.") }
-        let result: Value
+        let result: T.SwiftType
         do {
             var index = 0
             for (label, binding, coercion) in self.interface.parameters {
-                let argument = try command.value(at: &index, for: (label, binding, coercion), in: commandScope)
+                let argument = try command.value(for: (label, binding, PrimitivizedCoercion(coercion)), at: &index, in: commandScope)
                 handlerScope.bind(name: binding, to: argument)
             }
             if command.arguments.count > index && !self.interface.isEventHandler { // too many arguments
                 throw UnknownArgumentError(at: index, of: command)
             }
-            result = try self.action.eval(in: handlerScope, as: self.interface.result.intersect(with: coercion)) // TO DO: any reason to go through eval here? (if we restrict body type to Block then in principle no…)
+            result = try coercion.coerce(self.action, in: handlerScope) // TO DO: intersect coercions
             
-            //result = try self.interface.result.coerce(value: self.action, in: handlerScope) // (…in which case use this to reduce stack pressure) … except that Block implements eval, not toTYPE methods
+            // TO DO: sort this out:
+            //result = try self.action.eval(in: handlerScope, as: self.interface.result.intersect(with: coercion)) // TO DO: any reason to go through eval here? (if we restrict body type to Block then in principle no…)
+            
+            //result = try self.interface.result.coerce(self.action, in: handlerScope) // (…in which case use this to reduce stack pressure) … except that Block implements eval, not toTYPE methods
             // note: the result coercion only applies to returned value (e.g. if return type is Thunk, it won't actually do anything as the Block's eval loop has already forced the result of each expr)
         } catch {
             throw HandlerError(handler: self, command: command).from(error)
@@ -53,23 +60,15 @@ struct NativeHandler: Handler {
         return result
     }
     
-    func swiftCall<T: SwiftCoercion>(with command: Command, in dynamicScope: Scope, as coercion: T) throws -> T.SwiftType {
-        return try coercion.unbox(value: self.call(with: command, in: dynamicScope, as: coercion), in: dynamicScope) // ick
-    }
-    
     //
     
-    func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
+    // TO DO: FIX: previously used in `some_command_name as handler` so the handler object can be passed around as a closure // TO DO: this is now wrong (it'll infinitely recurse); need a toClosure() method instead
+    func eval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         var handler = self
         handler._lexicalScope_strong = self.lexicalScope // this assignment is purely to keep self.lexicalScope alive; use self.lexicalScope! to access it (worth noting: in entoli Environment, slots store handlers as either .unbound(Procedure) or .bound(Closure) - since slots are already enums anyway, the extra case avoids consuming an extra stack frame when calling the closure as the switch unwraps it first; Environment.call() then passes the lexical scope to Handler.call(), avoiding Handler having to capture it itself; whether this is any cheaper than accessing weakref'd NativeHandler.lexicalScope every time is another question)
         // TO DO: how best to break strong refcycle if handler is stored into same scope? (obvious option is for set to compare scopes for equal identity; this won't protect against more convoluted cycles, but it's the most common case); also consider slot assignment if using entoli 'everything is a command' semantics, in which case stored values are a separate enum case to stored handlers
-        return try coercion.coerce(value: handler, in: scope)
+        return try coercion.coerce(handler, in: scope)
     }
-    
-    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        return try coercion.unbox(value: self, in: scope)
-    }
-    
 }
 
 

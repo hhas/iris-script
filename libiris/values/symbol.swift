@@ -1,6 +1,6 @@
 //
 //  symbol.swift
-//  iris-lang
+//  libiris
 //
 
 import Foundation
@@ -19,7 +19,7 @@ public struct Symbol: AtomicValue, KeyConvertible, Comparable, ExpressibleByStri
     
     public typealias StringLiteralType = String
     
-    public static let nominalType: Coercion = asSymbol
+    public static let nominalType: NativeCoercion = asSymbol.nativeCoercion
     
     public let label: String
     public let key: String // interning symbols would enable more efficient key representation, but for now it's sufficient to use case-normalized string

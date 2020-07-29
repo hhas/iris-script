@@ -1,136 +1,134 @@
 //
-//  coercion.swift
-//  iris-lang
+//  coercion protocols.swift
+//  libiris
 //
 
 import Foundation
 
-// TO DO: how to apply AND/OR/NOT to Coercion operands
+// TO DO: rather than have all Coercions conform to Value, only native coercions (SwiftType isa Value) should be Value themselves, while primitive coercions provide method for obtaining their native equivalent (the fallback implementation being to call `self.box(self.unbox())`)
 
-// TO DO: worth interning all/some coercions? (might have performance benefits when evaling lists and records, as membership tests/intersects for any pair of [class-based] Coercions can be calculated once and hashed by instance identity, reducing subsequent tests to hash lookup + null check [although this is still slower than compile-time type-checking])
-
-
-// TO DO: also need generic intersect (Q. which operand should determine returned SwiftType? probably rhs)
+// TO DO: Coercion.hasConforming(value:Value)->Bool method; e.g. Int and Double should conform to Text (and String) as well as Number; natively this would be `value is_a coercion`; `as` _might_ use this to skip conversion where value types are natively interchangeable (although we need to be careful about that, as bridges to external systems such as Apple events and ObjC which do rely on nominal type-checking of arguments may require such values to be explicitly cast before being passed to those systems)
 
 
-// important: coercions must always be non-lossy; i.e. while a simpler representation of user data can be coerced to a more complex representation, e.g. `"foo" as list → ["foo"]`, the opposite is not allowed, so `["foo"] as string` → TypeCoercionError()
-
-
-public protocol Coercion: Value {
+public protocol Coercion: LiteralConvertible {
     
-    var name: Symbol { get } // TO DO: canonical vs reified name? // TO DO: how to support localization?
+    var name: Symbol { get }
     
-    // TO DO: how best to restrict/validate these? (i.e. generated code must be legal Swift syntax, and restricted to stated purpose [i.e. we need to avoid accidental/deliberate injection of arbitrary logic for obvious reasons])
+    var literalDescription: String { get }
     var swiftLiteralDescription: String { get }
     
-    var swiftTypeDescription: String { get }
-
-    func coerce(value: Value, in scope: Scope) throws -> Value
-    
-    func isa(_ coercion: Coercion) -> Bool
-    
-    func intersect(with coercion: Coercion) -> Coercion
-    
-    func swiftIntersect<T: SwiftCoercion>(with coercion: T) -> T
-    
-    func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T
 }
-
-extension Coercion {
-    
-    public var swiftLiteralDescription: String { return "\(type(of:self))()" } // TO DO: need to generate Swift source for instantiating a Coercion (also, how to handle Coercions that don't declare SwiftCoercion conformance? presumably these'll need to go in an AsValue-like wrapper, or else be rejected outright)
-    
-    public var swiftTypeDescription: String { return "Value" }
-    
-    public var description: String { return "\(self.name.label)" } // TO DO: decide what description/debugDescription should show, versus pretty printing; description should include any constraints (constraints aren't included in canonical name)
-    
-    public static var nominalType: Coercion { return asCoercion }
-    
-    public func isa(_ coercion: Coercion) -> Bool {
-        return self.name == coercion.name // TO DO: implement (same or subset)
-    }
-    
-    public func intersect(with coercion: Coercion) -> Coercion {
-        return coercion // TO DO: implement
-    }
-    
-    public func swiftIntersect<T: SwiftCoercion>(with coercion: T) -> T {
-        return coercion // TO DO: implement
-    }
-}
-
-
 
 public extension Coercion {
+    var literalDescription: String { return self.name.label }
+    //TO DO: `var swiftLiteralDescription: String { return "\(type(of:self))()" }` as default implementation? or is that too likely to mask bugs?
+}
+
+
+public protocol NativeCoercion: Value, Coercion {
     
-    func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T {
-        guard let result = try self.coerce(value: value, in: scope) as? T else {
-            throw TypeCoercionError(value: value, coercion: self)
-        }
-        return result
+    // we can't define NativeType as associated type as this protocol needs to be concrete (e.g. NativeCoercion is used as argument+slot type in coercion errors); we could define a var/let that returns the native Value.Type, e.g. `Text.self`, if needed
+    
+    func wrap(_ value: Value, in scope: Scope) -> Value // TO DO: redundant; can/should we get rid of this?
+    func coerce(_ value: Value, in scope: Scope) throws -> Value
+    func defaultValue(in scope: Scope) throws -> Value
+}
+
+public extension NativeCoercion {
+    
+    static var nominalType: NativeCoercion { return asCoercion.nativeCoercion }
+    
+    @inlinable func wrap(_ value: Value, in scope: Scope) -> Value {
+        return value
     }
     
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
-        return self
+    func defaultValue(in scope: Scope) throws -> Value {
+        throw TypeCoercionError(value: nullValue, coercion: self)
     }
 }
 
-extension SwiftCoercion {
-    
-    public func swiftCoerce<T>(value: Value, in scope: Scope) throws -> T {
-        guard let result = try self.unbox(value: value, in: scope) as? T else {
-            throw TypeCoercionError(value: value, coercion: self)
-        }
-        return result
-    }
-}
 
+//
 
 public protocol SwiftCoercion: Coercion {
-
+    
+    //var swiftLiteralDescription: String { get }
+    
     associatedtype SwiftType
     
-    func box(value: SwiftType, in scope: Scope) -> Value
+    typealias CoerceFunc = (Value, Scope) throws -> SwiftType
+    typealias Coercions  = [(t: Value.Type, fn: CoerceFunc)]
+    typealias WrapFunc   = (_ value: SwiftType, _ scope: Scope) -> Value
+
+    func coerce(_ value: Value, in scope: Scope) throws -> SwiftType
     
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType
+    func wrap(_ value: SwiftType, in scope: Scope) -> Value
+    
+    func coerceFunc(for valueType: Value.Type) -> CoerceFunc // used by AsArray to reduce overheads when unpacking arrays of [mostly/all] same element type
+    
+    func defaultValue(in scope: Scope) throws -> SwiftType // TO DO: is there any use-case where scope is needed? (i.e. this implies a default value that requires evaluation/thunking; is that necessary and/or desirable)
+    
+     // // TO DO: or should we make SwiftCoercion conform to NativeCoercion protocol? i.e. default coerce() can be implemented as wrap(coerce()) -- the question hinges on Value APIs: we really want a single eval path instead of old eval+swiftEval
 }
 
-extension SwiftCoercion {
 
-    public var swiftTypeDescription: String { return String(describing: SwiftType.self) }
-}
-
-
-
-/*
-protocol NativeCoercion: SwiftCoercion where SwiftType == Value { // TO DO: stupid type checker still insists NativeCoercion can only be used in generic methods, even though associatedtype SwiftType is fixed as Value
-}*/
-
-
-
-// bridging coercions whose swift type is also a native value only need to implement unbox()
-
-extension SwiftCoercion where SwiftType: Value { // TO DO: this doesn't work on AsValue; why? (we can work around it with `extension SwiftCoercion where SwiftType == Value` below, but that's kinda kludgy)
-        
-    public func coerce(value: Value, in scope: Scope) throws -> Value {
-        return try self.unbox(value: value, in: scope)
+public extension SwiftCoercion {
+    
+    // except for optional/default modifiers, most coercions should throw null coercion error if value is `nothing`
+    func defaultValue(in scope: Scope) throws -> SwiftType {
+        throw TypeCoercionError(value: nullValue, coercion: self)
+    }
+    // default coerceFunc() implementation
+    @inlinable func coerceFunc(for valueType: Value.Type) -> CoerceFunc {
+        return self.coerce
     }
     
-    public func box(value: SwiftType, in scope: Scope) -> Value {
+    var nativeCoercion: NativeCoercion { // default implementation; this just wraps the primitive coercion
+        return NativizedCoercion(self)
+    }
+}
+
+
+//
+
+public extension SwiftCoercion where SwiftType: Value {
+    
+    func coerce(_ value: Value, in scope: Scope) throws -> Value {
+        return try self.coerce(value, in: scope) as SwiftType
+    }
+    @inlinable func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return value
     }
 }
 
-extension SwiftCoercion where SwiftType == Value {
+public extension SwiftCoercion where SwiftType == Value {
     
-    public func coerce(value: Value, in scope: Scope) throws -> Value {
-        print("\(type(of:self)).coerce(value:\(value))")
-        return try self.unbox(value: value, in: scope)
-    }
-    
-    public func box(value: SwiftType, in scope: Scope) -> Value {
+    @inlinable func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return value
     }
 }
 
+// [Swift]CollectionCoercion
+
+
+public protocol SelfEvaluatingProtocol {
+
+    func eval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType
+}
+
+
+
+public protocol CollectionCoercion: NativeCoercion {
+    var item: NativeCoercion { get } // rename elementType
+}
+
+
+// TO DO: what should AsDictionary's SwiftType be? (c.f. Dictionary.Element, which is a `(key:Key,value:Value)` tuple)
+
+public protocol SwiftCollectionCoercion: SwiftCoercion, CollectionCoercion {
+    
+    associatedtype ElementCoercion: SwiftCoercion
+    
+    var swiftItem: ElementCoercion { get } // rename elementType
+}
 

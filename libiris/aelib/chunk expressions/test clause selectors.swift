@@ -36,8 +36,9 @@ struct ComparisonSelector: TestSelector {
     
     var interface: HandlerInterface {
         return HandlerInterface(name: self.name,
-                                parameters: [("left", "reference", asReference), ("right", "value", asValue)], // TO DO: right is test clause, although we don't yet have a coercion for that (can't use AsComplex as it's protocol-based)
-            result: asTestClause)
+                                parameters: [("left", "reference", asReference.nativeCoercion),
+                                             ("right", "value", asValue.nativeCoercion)], // TO DO: right is test clause, although we don't yet have a coercion for that (can't use AsComplex as it's protocol-based)
+            result: asTestClause.nativeCoercion)
     }
     
     enum Selector {
@@ -57,11 +58,11 @@ struct ComparisonSelector: TestSelector {
     let form: Selector
     let isNumeric: Bool
     
-    func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
+    func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         if command.arguments.count != 2 { throw BadSelectorError() }
-        let left = try asReference.unbox(value: command.arguments[0].value, in: scope).desc as! ObjectSpecifierDescriptor
-        let operandType: Coercion = self.isNumeric ? asNumber : asValue
-        let right = try self.appData.pack(operandType.coerce(value: command.arguments[1].value, in: scope))
+        let left = try asReference.coerce(command.arguments[0].value, in: scope).desc as! ObjectSpecifierDescriptor
+        let operandType: NativeCoercion = self.isNumeric ? asNumber.nativeCoercion : asValue.nativeCoercion
+        let right = try self.appData.pack(operandType.coerce(command.arguments[1].value, in: scope))
         let result: TestDescriptor
         switch self.form {
         case .lt: result = left <  right
@@ -75,11 +76,7 @@ struct ComparisonSelector: TestSelector {
         case .contains:    result = left.contains(right)
         case .isIn:        result = left.isIn(right)
         }
-        return TestClause(appData: self.appData, desc: result)
-    }
-    
-    func swiftCall<T>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType where T : SwiftCoercion {
-        fatalError()
+        return TestClause(appData: self.appData, desc: result) as! T.SwiftType
     }
 }
 
@@ -89,20 +86,16 @@ struct UnaryLogicalSelector: TestSelector {
     
     var interface: HandlerInterface {
         return HandlerInterface(name: "NOT",
-                                parameters: [("right", "", asTestClause)],
-                                result: asTestClause)
+                                parameters: [("right", "", asTestClause.nativeCoercion)],
+                                result: asTestClause.nativeCoercion)
     }
     
     let appData: NativeAppData
     
-    func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
+    func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         if command.arguments.count != 1 { throw BadSelectorError() }
-        let right = try asTestClause.unbox(value: command.arguments[0].value, in: scope).desc
-        return TestClause(appData: self.appData, desc: LogicalDescriptor(NOT: right))
-    }
-    
-    func swiftCall<T>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType where T : SwiftCoercion {
-        fatalError()
+        let right = try asTestClause.coerce(command.arguments[0].value, in: scope).desc
+        return TestClause(appData: self.appData, desc: LogicalDescriptor(NOT: right)) as! T.SwiftType
     }
 }
 
@@ -112,8 +105,9 @@ struct BinaryLogicalSelector: TestSelector {
     
     var interface: HandlerInterface {
         return HandlerInterface(name: self.form.rawValue,
-                                parameters: [("left", "", asTestClause), ("right", "", asTestClause)],
-                                result: asTestClause)
+                                parameters: [("left", "", asTestClause.nativeCoercion),
+                                             ("right", "", asTestClause.nativeCoercion)],
+                                result: asTestClause.nativeCoercion)
     }
     
     enum Selector: Symbol {
@@ -124,17 +118,13 @@ struct BinaryLogicalSelector: TestSelector {
     let appData: NativeAppData
     let form: Selector
     
-    func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
+    func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         if command.arguments.count < 2 { throw BadSelectorError() }
-        let operands = try command.arguments.map { try asTestClause.unbox(value: $0.value, in: scope).desc }
+        let operands = try command.arguments.map { try asTestClause.coerce($0.value, in: scope).desc }
         switch self.form {
-        case .AND: return TestClause(appData: self.appData, desc: LogicalDescriptor(AND: operands))
-        case .OR:  return TestClause(appData: self.appData, desc: LogicalDescriptor(OR: operands))
+        case .AND: return TestClause(appData: self.appData, desc: LogicalDescriptor(AND: operands)) as! T.SwiftType
+        case .OR:  return TestClause(appData: self.appData, desc: LogicalDescriptor(OR: operands)) as! T.SwiftType
         }
-    }
-    
-    func swiftCall<T>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType where T : SwiftCoercion {
-        fatalError()
     }
 }
 

@@ -47,7 +47,7 @@ let handlerStubsTemplate = TextTemplate(templateSource) {
             node.type.set(item.type)
         }
         if !glue.canError { node.canThrow.delete() }
-        let returnType = glue.interface.result.swiftTypeDescription
+        let returnType = glue.interface.result.swiftLiteralDescription
         if returnType.isEmpty {
             node.hasReturnType.delete()
         } else {
@@ -61,7 +61,7 @@ extension HandlerGlue {
     
     var swiftParameters: [(label: String, binding: String?, type: String)] { // used in primitive handler function stubs; label may include binding name (TO DO: we should probably split binding name into separate String?)
         let params: [(String, String, String)]
-        let nativeParameters = self.interface.parameters.map{(camelCase($0.name.label), camelCase($0.binding.label), $0.coercion.swiftTypeDescription)}
+        let nativeParameters = self.interface.parameters.map{(camelCase($0.label.label), camelCase($0.binding.label), $0.coercion.swiftLiteralDescription)}
         if let swiftParams = self.swiftFunction?.params, swiftParams.count == nativeParameters.count {
             params = zip(swiftParams, nativeParameters).map{($0, $1.1, $1.2)}
         } else {

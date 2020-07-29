@@ -23,7 +23,7 @@ public struct GlueError: Error, CustomStringConvertible {
 
 typealias OpaqueHandlerGlues = OpaqueValue<[Symbol:HandlerGlue]>
 
-let asHandlerGlues = AsComplex<OpaqueHandlerGlues>(name: "opaque_handler_glues")
+let asHandlerGlues = TypeMap<OpaqueHandlerGlues>("opaque_handler_glues", "asHandlerGlues")
 
 let handlerGluesKey = Symbol(".handler_glues")
 

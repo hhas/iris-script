@@ -74,13 +74,6 @@
 		4F988CE824BCC5A500EE66C7 /* native handler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065C22C0161D0036D904 /* native handler.swift */; };
 		4F988CE924BCC5A500EE66C7 /* primitive handler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065E22C016570036D904 /* primitive handler.swift */; };
 		4F988CEA24BCC5A500EE66C7 /* value modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065522C0158C0036D904 /* value modifiers.swift */; };
-		4F988CEB24BCC5A500EE66C7 /* coercion protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00922ADA13700C9FD23 /* coercion protocols.swift */; };
-		4F988CEC24BCC5A500EE66C7 /* scalar coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F1EA48022B2793800FFA4D2 /* scalar coercions.swift */; };
-		4F988CED24BCC5A500EE66C7 /* collection coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F1EA48222B2794400FFA4D2 /* collection coercions.swift */; };
-		4F988CEE24BCC5A500EE66C7 /* record coercion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B81BE22CCD63E00FD1EB8 /* record coercion.swift */; };
-		4F988CEF24BCC5A500EE66C7 /* complex coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F1EA48F22B4E8D700FFA4D2 /* complex coercions.swift */; };
-		4F988CF024BCC5A500EE66C7 /* handler coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7F7230F380E007D694C /* handler coercions.swift */; };
-		4F988CF124BCC5A500EE66C7 /* coercion modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F1EA48D22B4E7C200FFA4D2 /* coercion modifiers.swift */; };
 		4F988CF224BCC5A500EE66C7 /* access protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC6F2922D7704D00D636B9 /* access protocols.swift */; };
 		4F988CF324BCC5A500EE66C7 /* environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00B22ADA1AF00C9FD23 /* environment.swift */; };
 		4F988CF424BCC5A500EE66C7 /* swift literal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B24AE231405B8001C1941 /* swift literal.swift */; };
@@ -104,6 +97,19 @@
 		4F988D0924BCC62C00EE66C7 /* libAppleEvents.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988D0824BCC62C00EE66C7 /* libAppleEvents.a */; };
 		4F988D0A24BCC62C00EE66C7 /* libSwiftAutomation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F28389A24B8C4D80054C70E /* libSwiftAutomation.a */; };
 		4F988D1124BCEA5C00EE66C7 /* commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F988D1024BCEA5C00EE66C7 /* commands.swift */; };
+		4FC82CF824CEC0BC00EEC170 /* thunk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF724CEC0BC00EEC170 /* thunk.swift */; };
+		4FC82CF924CEC2F900EEC170 /* coercion protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF224CEBEAE00EEC170 /* coercion protocols.swift */; };
+		4FC82CFA24CEC2F900EEC170 /* type map.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF424CEBEAE00EEC170 /* type map.swift */; };
+		4FC82CFB24CEC2F900EEC170 /* value coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF324CEBEAE00EEC170 /* value coercions.swift */; };
+		4FC82CFC24CEC2F900EEC170 /* numeric coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF124CEBEAE00EEC170 /* numeric coercions.swift */; };
+		4FC82CFD24CEC2F900EEC170 /* text coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF024CEBEAE00EEC170 /* text coercions.swift */; };
+		4FC82CFE24CEC2F900EEC170 /* array coercion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF624CEBEAF00EEC170 /* array coercion.swift */; };
+		4FC82D0024CEC2F900EEC170 /* record coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CEF24CEBEAE00EEC170 /* record coercions.swift */; };
+		4FC82D0124CEC2F900EEC170 /* coercion modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF524CEBEAF00EEC170 /* coercion modifiers.swift */; };
+		4FC82D0324CF069800EEC170 /* native coercion wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82D0224CF069800EEC170 /* native coercion wrapper.swift */; };
+		4FC82D0724D0A0E100EEC170 /* handler coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82D0624D0A0E100EEC170 /* handler coercions.swift */; };
+		4FC82D0924D0A2CC00EEC170 /* dictionary coercion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82D0824D0A2CC00EEC170 /* dictionary coercion.swift */; };
+		4FC82D0B24D1C75100EEC170 /* literal coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82D0A24D1C75100EEC170 /* literal coercions.swift */; };
 		4FD41C1524BE487D00B56A14 /* incremental parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FD41C1424BE487D00B56A14 /* incremental parser.swift */; };
 		4FD41C1C24BE614600B56A14 /* null token stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FD41C1B24BE614600B56A14 /* null token stream.swift */; };
 		4FE5502724C035D500509806 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5502624C035D500509806 /* main.swift */; };
@@ -223,13 +229,9 @@
 
 /* Begin PBXFileReference section */
 		4F08503923229BC600F0BEAB /* AppleEvents.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppleEvents.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		4F1EA48022B2793800FFA4D2 /* scalar coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "scalar coercions.swift"; sourceTree = "<group>"; };
-		4F1EA48222B2794400FFA4D2 /* collection coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "collection coercions.swift"; sourceTree = "<group>"; };
 		4F1EA48422B279B500FFA4D2 /* atoms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = atoms.swift; sourceTree = "<group>"; };
 		4F1EA48622B27B8D00FFA4D2 /* text.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = text.swift; sourceTree = "<group>"; };
 		4F1EA48822B2888400FFA4D2 /* ordered list.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ordered list.swift"; sourceTree = "<group>"; };
-		4F1EA48D22B4E7C200FFA4D2 /* coercion modifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "coercion modifiers.swift"; sourceTree = "<group>"; };
-		4F1EA48F22B4E8D700FFA4D2 /* complex coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "complex coercions.swift"; sourceTree = "<group>"; };
 		4F2503DF232BF8A700C8BDD0 /* test clause.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "test clause.swift"; sourceTree = "<group>"; };
 		4F2503E6232BF96800C8BDD0 /* test clause selectors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "test clause selectors.swift"; sourceTree = "<group>"; };
 		4F25506422EA38F500B7034F /* token stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "token stream.swift"; sourceTree = "<group>"; };
@@ -269,7 +271,6 @@
 		4F29320122E23AD700BC0AD4 /* other line readers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "other line readers.swift"; sourceTree = "<group>"; };
 		4F29320322E25E7100BC0AD4 /* operator reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator reader.swift"; sourceTree = "<group>"; };
 		4F2B0C6524C0CC4F00664ABB /* formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = formatter.swift; sourceTree = "<group>"; };
-		4F2B81BE22CCD63E00FD1EB8 /* record coercion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record coercion.swift"; sourceTree = "<group>"; };
 		4F2BAC3824B6017800107A87 /* block stack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "block stack.swift"; sourceTree = "<group>"; };
 		4F2C4D1624C863420058749A /* pattern value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "pattern value.swift"; sourceTree = "<group>"; };
 		4F2C4D2024C86BD30058749A /* define patterns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "define patterns.swift"; sourceTree = "<group>"; };
@@ -298,7 +299,6 @@
 		4F84CFFD22ADA0F200C9FD23 /* iris-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "iris-test"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F84D00022ADA0F200C9FD23 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4F84D00722ADA12A00C9FD23 /* value protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "value protocols.swift"; sourceTree = "<group>"; };
-		4F84D00922ADA13700C9FD23 /* coercion protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "coercion protocols.swift"; sourceTree = "<group>"; };
 		4F84D00B22ADA1AF00C9FD23 /* environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = environment.swift; sourceTree = "<group>"; };
 		4F84D00F22AE7E2500C9FD23 /* command.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = command.swift; sourceTree = "<group>"; };
 		4F84D01122AE7E2C00C9FD23 /* handler protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler protocols.swift"; sourceTree = "<group>"; };
@@ -319,7 +319,6 @@
 		4FAF5F44231E817A0082FB6F /* reference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = reference.swift; sourceTree = "<group>"; };
 		4FB53941246FF69B0040B520 /* pattern match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "pattern match.swift"; sourceTree = "<group>"; };
 		4FB53943246FF6DF0040B520 /* operator definitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator definitions.swift"; sourceTree = "<group>"; };
-		4FC5C7F7230F380E007D694C /* handler coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler coercions.swift"; sourceTree = "<group>"; };
 		4FC5C7FA23109824007D694C /* gluelib_handlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gluelib_handlers.swift; sourceTree = "<group>"; };
 		4FC5C7FB23109826007D694C /* gluelib_operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gluelib_operators.swift; sourceTree = "<group>"; };
 		4FC5C7FC23110B1F007D694C /* quote document reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "quote document reader.swift"; sourceTree = "<group>"; };
@@ -329,6 +328,19 @@
 		4FC5C81D23129BCC007D694C /* texttemplate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = texttemplate.swift; sourceTree = "<group>"; };
 		4FC5C8232312A06C007D694C /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		4FC5C825231316D9007D694C /* unicode reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "unicode reader.swift"; sourceTree = "<group>"; };
+		4FC82CEF24CEBEAE00EEC170 /* record coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record coercions.swift"; sourceTree = "<group>"; };
+		4FC82CF024CEBEAE00EEC170 /* text coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "text coercions.swift"; sourceTree = "<group>"; };
+		4FC82CF124CEBEAE00EEC170 /* numeric coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "numeric coercions.swift"; sourceTree = "<group>"; };
+		4FC82CF224CEBEAE00EEC170 /* coercion protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "coercion protocols.swift"; sourceTree = "<group>"; };
+		4FC82CF324CEBEAE00EEC170 /* value coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "value coercions.swift"; sourceTree = "<group>"; };
+		4FC82CF424CEBEAE00EEC170 /* type map.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "type map.swift"; sourceTree = "<group>"; };
+		4FC82CF524CEBEAF00EEC170 /* coercion modifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "coercion modifiers.swift"; sourceTree = "<group>"; };
+		4FC82CF624CEBEAF00EEC170 /* array coercion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "array coercion.swift"; sourceTree = "<group>"; };
+		4FC82CF724CEC0BC00EEC170 /* thunk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = thunk.swift; sourceTree = "<group>"; };
+		4FC82D0224CF069800EEC170 /* native coercion wrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "native coercion wrapper.swift"; sourceTree = "<group>"; };
+		4FC82D0624D0A0E100EEC170 /* handler coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler coercions.swift"; sourceTree = "<group>"; };
+		4FC82D0824D0A2CC00EEC170 /* dictionary coercion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "dictionary coercion.swift"; sourceTree = "<group>"; };
+		4FC82D0A24D1C75100EEC170 /* literal coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "literal coercions.swift"; sourceTree = "<group>"; };
 		4FD41C1424BE487D00B56A14 /* incremental parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "incremental parser.swift"; sourceTree = "<group>"; };
 		4FD41C1B24BE614600B56A14 /* null token stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "null token stream.swift"; sourceTree = "<group>"; };
 		4FDAE7B1232B9F31005197DE /* reference coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reference coercions.swift"; sourceTree = "<group>"; };
@@ -395,20 +407,6 @@
 				4F26065522C0158C0036D904 /* value modifiers.swift */,
 			);
 			path = values;
-			sourceTree = "<group>";
-		};
-		4F1EA48C22B4E72F00FFA4D2 /* coercions */ = {
-			isa = PBXGroup;
-			children = (
-				4F84D00922ADA13700C9FD23 /* coercion protocols.swift */,
-				4F1EA48022B2793800FFA4D2 /* scalar coercions.swift */,
-				4F1EA48222B2794400FFA4D2 /* collection coercions.swift */,
-				4F2B81BE22CCD63E00FD1EB8 /* record coercion.swift */,
-				4F1EA48F22B4E8D700FFA4D2 /* complex coercions.swift */,
-				4FC5C7F7230F380E007D694C /* handler coercions.swift */,
-				4F1EA48D22B4E7C200FFA4D2 /* coercion modifiers.swift */,
-			);
-			path = coercions;
 			sourceTree = "<group>";
 		};
 		4F25506022EA384F00B7034F /* lexer */ = {
@@ -480,6 +478,7 @@
 				4F1EA48422B279B500FFA4D2 /* atoms.swift */,
 				4F26065722C015A30036D904 /* symbol.swift */,
 				4FE5504224C06EFC00509806 /* opaque value.swift */,
+				4FC82CF724CEC0BC00EEC170 /* thunk.swift */,
 			);
 			name = other;
 			sourceTree = "<group>";
@@ -709,7 +708,7 @@
 				4F2B0C5F24C0CC3800664ABB /* pretty printer */,
 				4FFC6F2322D6816F00D636B9 /* parser */,
 				4F1EA48B22B4E71300FFA4D2 /* values */,
-				4F1EA48C22B4E72F00FFA4D2 /* coercions */,
+				4FC82CED24CEBE8C00EEC170 /* coercions */,
 				4FFC6F2822D7703000D636B9 /* scopes */,
 				4F5B24B0231405C8001C1941 /* formatting */,
 				4F27E93024CC587300102572 /* errors */,
@@ -748,6 +747,25 @@
 				4FC5C81D23129BCC007D694C /* texttemplate.swift */,
 			);
 			name = support;
+			sourceTree = "<group>";
+		};
+		4FC82CED24CEBE8C00EEC170 /* coercions */ = {
+			isa = PBXGroup;
+			children = (
+				4FC82CF224CEBEAE00EEC170 /* coercion protocols.swift */,
+				4FC82CF424CEBEAE00EEC170 /* type map.swift */,
+				4FC82D0224CF069800EEC170 /* native coercion wrapper.swift */,
+				4FC82CF324CEBEAE00EEC170 /* value coercions.swift */,
+				4FC82CF124CEBEAE00EEC170 /* numeric coercions.swift */,
+				4FC82CF024CEBEAE00EEC170 /* text coercions.swift */,
+				4FC82CF624CEBEAF00EEC170 /* array coercion.swift */,
+				4FC82D0824D0A2CC00EEC170 /* dictionary coercion.swift */,
+				4FC82CEF24CEBEAE00EEC170 /* record coercions.swift */,
+				4FC82D0624D0A0E100EEC170 /* handler coercions.swift */,
+				4FC82CF524CEBEAF00EEC170 /* coercion modifiers.swift */,
+				4FC82D0A24D1C75100EEC170 /* literal coercions.swift */,
+			);
+			path = coercions;
 			sourceTree = "<group>";
 		};
 		4FE5502524C035D500509806 /* iris-glue */ = {
@@ -1009,6 +1027,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4FC82CF924CEC2F900EEC170 /* coercion protocols.swift in Sources */,
+				4FC82CFA24CEC2F900EEC170 /* type map.swift in Sources */,
+				4FC82CFB24CEC2F900EEC170 /* value coercions.swift in Sources */,
+				4FC82CFC24CEC2F900EEC170 /* numeric coercions.swift in Sources */,
+				4FC82CFD24CEC2F900EEC170 /* text coercions.swift in Sources */,
+				4FC82CFE24CEC2F900EEC170 /* array coercion.swift in Sources */,
+				4FC82D0024CEC2F900EEC170 /* record coercions.swift in Sources */,
+				4FC82D0124CEC2F900EEC170 /* coercion modifiers.swift in Sources */,
 				4F2B0C6624C0CC4F00664ABB /* formatter.swift in Sources */,
 				4F988CF624BCC5CB00EE66C7 /* std general.swift in Sources */,
 				4F27E93B24CC593D00102572 /* handler errors.swift in Sources */,
@@ -1025,6 +1051,7 @@
 				4F988D0224BCC5CC00EE66C7 /* test clause selectors.swift in Sources */,
 				4F988D0324BCC5CC00EE66C7 /* reference coercions.swift in Sources */,
 				4F345EA024C38C7900532054 /* quote reader.swift in Sources */,
+				4FC82D0924D0A2CC00EEC170 /* dictionary coercion.swift in Sources */,
 				4F988D0424BCC5CC00EE66C7 /* query funcs.swift in Sources */,
 				4F988D0524BCC5CC00EE66C7 /* native app data.swift in Sources */,
 				4F27E93924CC591100102572 /* parser errors.swift in Sources */,
@@ -1043,6 +1070,7 @@
 				4F27E93F24CC59B900102572 /* access errors.swift in Sources */,
 				4F27E93724CC58BA00102572 /* internal errors.swift in Sources */,
 				4F988CCB24BCC5A500EE66C7 /* quote document reader.swift in Sources */,
+				4FC82D0B24D1C75100EEC170 /* literal coercions.swift in Sources */,
 				4F988CCC24BCC5A500EE66C7 /* keyword.swift in Sources */,
 				4F988CCD24BCC5A500EE66C7 /* pattern.swift in Sources */,
 				4F988CCE24BCC5A500EE66C7 /* pattern match.swift in Sources */,
@@ -1050,6 +1078,7 @@
 				4F988CD024BCC5A500EE66C7 /* standard patterns.swift in Sources */,
 				4F2C4D2D24C8F5CC0058749A /* stdlib_handlers.swift in Sources */,
 				4F988CD124BCC5A500EE66C7 /* standard reducers.swift in Sources */,
+				4FC82D0724D0A0E100EEC170 /* handler coercions.swift in Sources */,
 				4F988CD224BCC5A500EE66C7 /* operator definitions.swift in Sources */,
 				4F2DC95124CDAF6300A46503 /* record errors.swift in Sources */,
 				4F988CD324BCC5A500EE66C7 /* operator registry.swift in Sources */,
@@ -1058,6 +1087,7 @@
 				4F988CD624BCC5A500EE66C7 /* reduce commands.swift in Sources */,
 				4F988CD724BCC5A500EE66C7 /* reduce expressions.swift in Sources */,
 				4F988CD824BCC5A500EE66C7 /* parser.swift in Sources */,
+				4FC82D0324CF069800EEC170 /* native coercion wrapper.swift in Sources */,
 				4F988CD924BCC5A500EE66C7 /* editable script.swift in Sources */,
 				4F2F81A024C739CC00EB2F0F /* opaque value.swift in Sources */,
 				4F988CDA24BCC5A500EE66C7 /* value protocols.swift in Sources */,
@@ -1071,6 +1101,7 @@
 				4F988CE224BCC5A500EE66C7 /* record.swift in Sources */,
 				4F988CE324BCC5A500EE66C7 /* block.swift in Sources */,
 				4F988CE424BCC5A500EE66C7 /* command.swift in Sources */,
+				4FC82CF824CEC0BC00EEC170 /* thunk.swift in Sources */,
 				4F988CE524BCC5A500EE66C7 /* command bindings.swift in Sources */,
 				4F988CE624BCC5A500EE66C7 /* handler protocols.swift in Sources */,
 				4F988CE724BCC5A500EE66C7 /* handler interface.swift in Sources */,
@@ -1079,13 +1110,6 @@
 				4FD41C1C24BE614600B56A14 /* null token stream.swift in Sources */,
 				4F988CE924BCC5A500EE66C7 /* primitive handler.swift in Sources */,
 				4F988CEA24BCC5A500EE66C7 /* value modifiers.swift in Sources */,
-				4F988CEB24BCC5A500EE66C7 /* coercion protocols.swift in Sources */,
-				4F988CEC24BCC5A500EE66C7 /* scalar coercions.swift in Sources */,
-				4F988CED24BCC5A500EE66C7 /* collection coercions.swift in Sources */,
-				4F988CEE24BCC5A500EE66C7 /* record coercion.swift in Sources */,
-				4F988CEF24BCC5A500EE66C7 /* complex coercions.swift in Sources */,
-				4F988CF024BCC5A500EE66C7 /* handler coercions.swift in Sources */,
-				4F988CF124BCC5A500EE66C7 /* coercion modifiers.swift in Sources */,
 				4FD41C1524BE487D00B56A14 /* incremental parser.swift in Sources */,
 				4F988CF224BCC5A500EE66C7 /* access protocols.swift in Sources */,
 				4F988CF324BCC5A500EE66C7 /* environment.swift in Sources */,

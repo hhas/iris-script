@@ -1,6 +1,6 @@
 //
 //  value modifiers.swift
-//  iris-lang
+//  libiris
 //
 
 import Foundation
@@ -29,14 +29,14 @@ public class EditableValue: Handler, Mutator {
     
     // get() and call() behaviors are pass-thrus to the underlying Value; set() replaces the current Value with a new Value
     
-    public static let nominalType: Coercion = asEditable
+    public static let nominalType: NativeCoercion = asEditable.nativeCoercion
     
     public var description: String { return "editable \(self.data)" }
     
     private(set) var data: Value
-    public let coercion: Coercion // the type of the underlying value
+    public let coercion: NativeCoercion // the type of the underlying value
     
-    public init(_ data: Value, as coercion: Coercion) { // called by AsEditable
+    public init(_ data: Value, as coercion: NativeCoercion) { // called by AsEditable
         self.data = data
         self.coercion = coercion
     }
@@ -46,36 +46,27 @@ public class EditableValue: Handler, Mutator {
     public var immutableValue: Value { return self.data } // this is kinda tricky: if self.data is, say, a OrderedList of editable values, those values also need to be made immutable (ideally, collections should never contain EditableValue items; only the topmost value should be boxed, but we need to give more thought to that)
     
     
-    public func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
-        let result = try self.data.eval(in: scope, as: coercion) // TO DO: this needs to intersect the given coercion with self.coercion and pass the resulting coercion to self.data.eval(…); Q. how should intersecting [e.g.] AsScalar with AsList work out?
+    public func eval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        let result = try coercion.coerce(self.data, in: scope) // TO DO: this needs to intersect the given coercion with self.coercion and pass the resulting coercion to self.data.eval(…); Q. how should intersecting [e.g.] AsScalar with AsList work out?
         //        self.data = result // this is wrong; only mutator operations should modify editable box's content [in the case of editable parameters to a command, the handler should eval and update the box's content when binding it to the handler's scope] // Q. what if coercion is AsEditable? we don't want to create a second box
         return result
-    }
-    
-    public func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        let result = try self.eval(in: scope, as: coercion)
-        return try coercion.unbox(value: result, in: scope)
     }
     
     // func toEditable(in scope: Scope, as coercion: AsEditable) throws -> EditableValue {
     //      return self
     //  }
     
-    public func call(with command: Command, in commandScope: Scope, as coercion: Coercion) throws -> Value {
+    public func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         // iris follows entoli's 'everything is a command' UX philosophy, but doesn't implement separate Identifier and Command classes underneath (although it maybe should for efficiency/clarity/robustness);
 
         // if not a handler, it's stored value; we already looked it up by name, so check
         if let handler = self.data as? Handler { // handler; Q. what are correct semantics when slot contains a replaceable handler? calling the handler won't update the slot's value; only way to change behavior is to replace the handler with another value; Q. what if handler is replaced with non-handler? should we forbid that? (or limit box to AsOptional(asHandler)?)
-            return try handler.call(with: command, in: commandScope, as: coercion)
+            return try handler.call(with: command, in: scope, as: coercion)
         } else if command.arguments.count == 0 { // stored value
-            return try self.data.eval(in: commandScope, as: coercion) // problem: this discards original editable box, so changes made by handler won't propagate back; are we sure that's what we want?
+            return try coercion.coerce(self.data, in: scope) // problem: this discards original editable box, so changes made by handler won't propagate back; are we sure that's what we want?
         } else {
             throw UnknownArgumentError(at: 0, of: command)
         }
-    }
-    
-    public func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        fatalError()
     }
     
     
@@ -103,8 +94,8 @@ public struct ScopeLockedValue: Handler, Mutator { // experimental
     
     // Handler and Accessor behaviors are pass-thrus to the underlying Value
     
-    public static let nominalType: Coercion = asValue
-    public let nominalType: Coercion
+    public static let nominalType: NativeCoercion = asValue.nativeCoercion
+    public let nominalType: NativeCoercion
     
     public var description: String { return "editable \(self.data)" }
     
@@ -118,7 +109,7 @@ public struct ScopeLockedValue: Handler, Mutator { // experimental
     }
     
     //
-    
+    /*
     public func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
         return try self.data.eval(in: scope, as: coercion)
     }
@@ -131,20 +122,17 @@ public struct ScopeLockedValue: Handler, Mutator { // experimental
     //      return self
     //  }
     
-    public func call(with command: Command, in commandScope: Scope, as coercion: Coercion) throws -> Value {
+     */
+    
+    public func call<T: SwiftCoercion>(with command: Command, in commandScope: Scope, as coercion: T) throws -> T.SwiftType {
         if let handler = self.data as? Handler { // handler; Q. what are correct semantics when slot contains a replaceable handler? calling the handler won't update the slot's value; only way to change behavior is to replace the handler with another value; Q. what if handler is replaced with non-handler? should we forbid that? (or limit box to AsOptional(asHandler)?)
             return try handler.call(with: command, in: commandScope, as: coercion)
         } else if command.arguments.count == 0 { // stored value
-            return try self.data.eval(in: commandScope, as: coercion) // problem: this discards original editable box, so changes made by handler won't propagate back; are we sure that's what we want?
+            return try coercion.coerce(self.data, in: commandScope) // problem: this discards original editable box, so changes made by handler won't propagate back; are we sure that's what we want?
         } else {
             throw UnknownArgumentError(at: 0, of: command)
         }
     }
-    
-    public func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        fatalError()
-    }
-    
     
     public func set(_ name: Symbol, to value: Value) throws {
         throw ImmutableScopeError(name: name, in: self.scope)

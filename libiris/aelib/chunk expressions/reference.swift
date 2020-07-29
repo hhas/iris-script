@@ -25,7 +25,9 @@ let asDescriptor = asValue // TO DO: this won't work as NativeAppData is require
 
 
 
-struct RemoteCall: Handler { // for AE commands, the command name (e.g. Symbol("get")) needs to be looked up in glue; Q. should glue return HandlerInterface, or dedicated data structure (in which case `interface` will be calculated var); note that HI provides no argument processing support,
+struct RemoteCall: Handler {
+    
+    // for AE commands, the command name (e.g. Symbol("get")) needs to be looked up in glue; Q. should glue return HandlerInterface, or dedicated data structure (in which case `interface` will be calculated var); note that HI provides no argument processing support,
     
     var interface: HandlerInterface { return self.appData.interfaceForCommand(term: self.term) }
     let term: CommandTerm
@@ -35,7 +37,7 @@ struct RemoteCall: Handler { // for AE commands, the command name (e.g. Symbol("
     
     let isStaticBindable = false // TO DO: need to decide policy for methods
     
-    func call(with command: Command, in scope: Scope, as coercion: Coercion) throws -> Value {
+    func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         //print("Calling", command)
         let directParameter: Any
         var keywordParameters = [KeywordParameter]()
@@ -43,12 +45,12 @@ struct RemoteCall: Handler { // for AE commands, the command name (e.g. Symbol("
             directParameter = noParameter
         } else {
             if command.arguments[0].label == nullSymbol {
-                directParameter = try asValue.unbox(value: command.arguments[0].value, in: scope)
+                directParameter = try asValue.coerce(command.arguments[0].value, in: scope)
                 for argument in command.arguments.dropFirst() {
                     guard let param = self.term.parameter(for: argument.label.key) else {
                         throw InternalError(description: "Bad parameter")
                     }
-                    keywordParameters.append((param.name, param.code, try asValue.unbox(value: argument.value, in: scope)))
+                    keywordParameters.append((param.name, param.code, try asValue.coerce(argument.value, in: scope)))
                 }
             } else {
                 directParameter = noParameter
@@ -56,7 +58,7 @@ struct RemoteCall: Handler { // for AE commands, the command name (e.g. Symbol("
                     guard let param = self.term.parameter(for: argument.label.key) else {
                         throw InternalError(description: "Bad parameter")
                     }
-                    keywordParameters.append((param.name, param.code, try asValue.unbox(value: argument.value, in: scope)))
+                    keywordParameters.append((param.name, param.code, try asValue.coerce(argument.value, in: scope)))
                 }
             }
         }
@@ -67,15 +69,7 @@ struct RemoteCall: Handler { // for AE commands, the command name (e.g. Symbol("
                                                          parentSpecifier: parentSpecifier, // TO DO
             directParameter: directParameter, // the first (unnamed) parameter to the command method; see special-case packing logic below
             keywordParameters: keywordParameters) as NativeResultDescriptor
-        return try coercion.coerce(value: resultDesc, in: scope)
-    }
-    
-    
-    func swiftCall<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        throw NotYetImplementedError()
-    }
-    func swiftCallAs<T>(with command: Command, in scope: Scope, as coercion: Coercion) throws -> T {
-        throw NotYetImplementedError()
+        return try coercion.coerce(resultDesc, in: scope)
     }
 }
 
@@ -87,7 +81,7 @@ struct InsertionLocation: StaticValue, SelfPacking {
     
     var description: String { return "«\(self.desc) of \(self.appData)»" } // TO DO: implement
     
-    static let nominalType: Coercion = asReference
+    static let nominalType: NativeCoercion = asReference.nativeCoercion
     
     let appData: NativeAppData
     let desc: InsertionLocationDescriptor
@@ -149,7 +143,7 @@ extension ReferenceProtocol {
         }
     }
     
-    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+    public func toValue(in scope: Scope, as coercion: NativeCoercion) throws -> Value {
         return self
     }
 }
@@ -158,7 +152,7 @@ extension ReferenceProtocol {
 
 struct Reference: ReferenceProtocol {
     
-    static let nominalType: Coercion = asReference
+    static let nominalType: NativeCoercion = asReference.nativeCoercion
     
     let appData: NativeAppData
     let desc: SpecifierDescriptor // TO DO: ObjectSpecifierDescriptor
@@ -260,7 +254,7 @@ typealias MultipleReference = Reference
 
 struct Application: ReferenceProtocol {
     
-    static let nominalType: Coercion = asReference // TO DO: what type? asApplication?
+    static let nominalType: NativeCoercion = asReference.nativeCoercion // TO DO: what type? asApplication?
     
     var description: String { return "Application(\(self.appData)" }
 

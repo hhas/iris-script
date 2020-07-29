@@ -134,9 +134,9 @@ Swift functions:
 Generated Swift code, obviating the unnecessary `String➞Text➞String` bridging coercions between the `uppercase` and `&` (concatenation) commands:
 
     let native_value  = try env.get("my_name")
-    let swift_value   = try asString.unbox(value: native_value, in: env)
+    let swift_value   = try asString.coerce(native_value, in: env)
     let swift_result  = try joinValues(left: "HELLO, ", right: uppercase(text: swift_value))
-    let native_result = asString.box(value: swift_result, in: env)
+    let native_result = asString.wrap(swift_result, in: env)
 
 Additional transpiling optimizations might include storing values directly in Swift variables rather than native `Environment` slots and replacing simple function calls with template-based Swift code:
 

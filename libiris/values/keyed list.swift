@@ -42,11 +42,11 @@ public struct KeyedList: BoxedCollectionValue { // TO DO: implement ExpressibleB
     
     //
     
-    public static let nominalType: Coercion = asList
+    public static let nominalType: NativeCoercion = asList
     
     // TO DO: rename `constrainedType` to `structuralType`/`reifiedType`? make it public on Value?
     
-    private var constrainedType: Coercion = asList // TO DO: how/when is best to specialize this (bear in mind that list may contain commands and other exprs that are not guaranteed to eval to same type/value every time)
+    private var constrainedType: NativeCoercion = asList // TO DO: how/when is best to specialize this (bear in mind that list may contain commands and other exprs that are not guaranteed to eval to same type/value every time)
     
     public var isMemoizable: Bool { return false } // TO DO: lists are memoizable only if all elements are; how/when should we determine this? (we want to avoid iterating long lists more than is necessary); should we also take opportunity to determine minimally constrained type? (e.g. if all items are numbers, constrained type could be inferred as AsArray(asNumber), although whether we want to enforce this when editing list is another question)
     
@@ -60,6 +60,7 @@ public struct KeyedList: BoxedCollectionValue { // TO DO: implement ExpressibleB
         return self.data.makeIterator()
     }
     
+    /*
     public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // TO DO: is coercion argument appropriate here?
         //return try self.toList(in: scope, as: asList)
         return try self.toKeyedList(in: scope, as: asList)
@@ -68,7 +69,7 @@ public struct KeyedList: BoxedCollectionValue { // TO DO: implement ExpressibleB
     public func toKeyedList(in scope: Scope, as coercion: CollectionCoercion) throws -> KeyedList {
         return try KeyedList([Key:Value](uniqueKeysWithValues: self.data.map{ ($0, try $1.eval(in: scope, as: coercion.item)) }))
     }
-    
+    */
     /*
     func toDictionary<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
         return try self.map{ try $0.swiftEval(in: scope, as: coercion.item) }

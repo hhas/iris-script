@@ -27,21 +27,7 @@ extension Int: NumericValue, KeyConvertible {
     public var literalDescription: String { return String(self) } // TO DO: formatter may want to override with custom representation
     public var swiftLiteralDescription: String { return String(self) }
     
-    public static let nominalType: Coercion = asInt
-    
-    public func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
-        return self
-    }
-    public func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
-        return Double(self)
-    }
-    public func toString(in scope: Scope, as coercion: Coercion) throws -> String { // TO DO: coercion param's type?
-        return String(self)
-    }
-    
-    public func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
-        return Number(self)
-    }
+    public static let nominalType: NativeCoercion = asInt.nativeCoercion
 }
 
 extension Double: NumericValue, KeyConvertible {
@@ -49,22 +35,7 @@ extension Double: NumericValue, KeyConvertible {
     public var literalDescription: String { return String(self) }
     public var swiftLiteralDescription: String { return String(self) }
     
-    public static let nominalType: Coercion = asDouble
-    
-    public func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
-        guard let result = Int(exactly: self) else { throw ConstraintCoercionError(value: self, coercion: coercion) }
-        return result
-    }
-    public func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
-        return self
-    }
-    public func toString(in scope: Scope, as coercion: Coercion) throws -> String { // TO DO: coercion param's type?
-        return String(self)
-    }
-    
-    public func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
-        return Number(self)
-    }
+    public static let nominalType: NativeCoercion = asDouble.nativeCoercion
 }
 
 
@@ -106,7 +77,7 @@ public enum Number: NumericValue, KeyConvertible {
         }
     }
     
-    public static let nominalType: Coercion = asNumber
+    public static let nominalType: NativeCoercion = asNumber.nativeCoercion
     
     // represents a whole or fractional number (as Swift Int or Double); numbers that are valid but too large to represent using standard Swift types are held as strings
     
@@ -128,7 +99,7 @@ public enum Number: NumericValue, KeyConvertible {
     }
     public init(_ code: String) throws {
         // temporary (we really want to parse and format numbers ourselves, potentially with localization support [although we'll need access to an environment for that, as it'll be script-specific, relying on top-level syntax imports])
-        guard let d = Double(code) else { throw TypeCoercionError(value: Text(code), coercion: asNumber) }
+        guard let d = Double(code) else { throw TypeCoercionError(value: Text(code), coercion: Number.nominalType) }
         if Int(exactly: d) != nil, let n = Int(code) {
             self = .integer(n, radix: 10)
         } else {
@@ -152,22 +123,6 @@ public enum Number: NumericValue, KeyConvertible {
     
     // unwrap Swift primitives
     
-    
-    
-    public func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
-        return try self.toInt()
-    }
-    public func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
-        return try self.toDouble()
-    }
-    public func toString(in scope: Scope, as coercion: Coercion) throws -> String { // TO DO: coercion param's type?
-        return self.literalDescription
-    }
-    
-    public func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
-        return self
-    }
-    
     public func toInt() throws -> Int {
         switch self {
         case .integer(let n, _): return n
@@ -175,14 +130,14 @@ public enum Number: NumericValue, KeyConvertible {
             if n >= Double(Int.min) && n <= Double(Int.max) { return Int(n) }
         default: ()
         }
-        throw ConstraintCoercionError(value: self, coercion: asInt)
+        throw ConstraintCoercionError(value: self, coercion: Int.nominalType)
     }
     
     public func toDouble() throws -> Double {
         switch self {
         case .integer(let n, _): return Double(n)
         case .floatingPoint(let n): return n
-        default: throw ConstraintCoercionError(value: self, coercion: asDouble)
+        default: throw ConstraintCoercionError(value: self, coercion: Double.nominalType)
         }
     }
     

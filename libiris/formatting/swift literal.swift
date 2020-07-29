@@ -14,7 +14,7 @@ public protocol LiteralConvertible: SwiftLiteralConvertible {
     var literalDescription: String { get }
 }
 public extension LiteralConvertible {
-    var description: String { return self.literalDescription }
+    //var description: String { return self.literalDescription }
 }
 
 

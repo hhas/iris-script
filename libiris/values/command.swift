@@ -1,6 +1,6 @@
 //
 //  command.swift
-//  iris-lang
+//  libiris
 //
 
 import Foundation
@@ -70,7 +70,7 @@ import Foundation
 
 // TO DO: check for nullSymbol as name, duplicate argument labels?
 
-public class Command: ComplexValue, LiteralConvertible {
+public class Command: ComplexValue, LiteralConvertible, SelfEvaluatingProtocol {
     
     public var swiftLiteralDescription: String {
         let args = self.arguments.isEmpty ? "" : ", \(self.arguments.swiftLiteralDescription)"
@@ -87,7 +87,7 @@ public class Command: ComplexValue, LiteralConvertible {
     }
     public var description: String { return self.literalDescription }
     
-    public static let nominalType: Coercion = asCommand
+    public static let nominalType: NativeCoercion = asCommand.nativeCoercion
     
     // TO DO: what about a slot for storing optional operator definition? (or general 'annotations' slot?) we also need to indicate when pp should wrap a command in elective parens (as opposed to required parens, which pp should add automatically as operator precedence dictates)
     
@@ -117,9 +117,9 @@ public class Command: ComplexValue, LiteralConvertible {
     /*
     func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
         print("Command.eval:", self, "as", coercion)
-        return try coercion.coerce(value: self, in: scope)
+        return try coercion.coerce(self, in: scope)
         //return try self._handler.call(with: self, in: scope, as: coercion) // updates self._handler on first call
-        //return try coercion.coerce(value: self, in: scope)
+        //return try coercion.coerce(self, in: scope)
     }
     
     // TO DO: SwiftCoercion can only be used in generic methods, which is no use for native run-time coercions, where return type must always be Value
@@ -127,11 +127,11 @@ public class Command: ComplexValue, LiteralConvertible {
     // Q. what about monadic-like behavior, where swiftEval passes an object whose APIs guarantee to return a value of T
     
     func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        //return try self._handler.swiftCall(with: self, in: scope, as: coercion) // updates self._handler on first call
-        return try coercion.unbox(value: self, in: scope)
+        //return try self._handler.call(with: self, in: scope, as: coercion) // updates self._handler on first call
+        return try coercion.coerce(self, in: scope)
     }
     */
-    
+    /*
     public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
         print("\(self).eval(as:\(coercion))")
         return try self.toTYPE(in: scope, as: coercion)
@@ -145,11 +145,17 @@ public class Command: ComplexValue, LiteralConvertible {
             return try self._handler.swiftCallAs(with: self, in: scope, as: coercion)
 //            fatalError("TODO")
         }
+    }*/
+    
+    
+    
+    public func eval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        return try self._handler.call(with: self, in: scope, as: coercion)
     }
 
     // TO DO: if handler is static bound, we don't need to go through all this every time; just check params once and store array of operations to perform: omitted and constant args can be evaluated once and memoized; only exprs need evaled every time, and coercions may be minimized where arg's input coercion is member of expr's output coercion (this being said, it remains to be seen how much run-time optimization is warranted; e.g. if transpiling to Swift proves to be common practice then slow interpretation is much less of a concern)
 
-        
+        /*
     internal func value(at index: inout Int, for param: (label: Symbol, binding: Symbol, coercion: Coercion), in commandEnv: Scope) throws -> Value {
         let i = index
         do {
@@ -159,14 +165,16 @@ public class Command: ComplexValue, LiteralConvertible {
         }
     } // native eval
     
-    public func unbox<T: SwiftCoercion>(param: (label: Symbol, binding: Symbol, coercion: T), at index: inout Int, in scope: Scope) throws -> T.SwiftType { // if field was matched, index is incremented on return (caution: if caller rethrows an unbox() error, don't use the returned index in error message)
+    public func coerce<T: SwiftCoercion>(param: (label: Symbol, binding: Symbol, coercion: T), at index: inout Int, in scope: Scope) throws -> T.SwiftType { // if field was matched, index is incremented on return (caution: if caller rethrows an unbox() error, don't use the returned index in error message)
         // TO DO: catch and rethrow
         // TO DO: where to memoize static arguments?
         return try self.arguments.unbox(param: param, at: &index, in: scope)
     }
+
+     */
     
-    public func swiftValue<T: SwiftCoercion>(at index: inout Int, for param: (label: Symbol, binding: Symbol, coercion: T), in commandEnv: Scope) throws -> T.SwiftType {
-        return try self.unbox(param: param, at: &index, in: commandEnv)
+    public func value<T: SwiftCoercion>(for param: (label: Symbol, binding: Symbol, coercion: T), at index: inout Int, in commandEnv: Scope) throws -> T.SwiftType {
+        return try self.arguments.coerce(param: param, at: &index, in: commandEnv)
     }
 }
 

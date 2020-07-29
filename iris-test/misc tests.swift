@@ -111,58 +111,6 @@ func test2() {
 }
 
 
-func add(left: Number, right: Number) throws -> Number { return try left + right }
-
-
-let leftOperand   = Symbol("left")
-let middleOperand = Symbol("middle")
-let rightOperand  = Symbol("right")
-
-
-struct AddHandler: Handler { // 5x faster than standard implementation (which is to say, still dog-slow)
-    
-    var isStaticBindable: Bool { return true }
-    
-    let interface = HandlerInterface(name: "add", parameters: [
-        (name: leftOperand, binding: nullSymbol, coercion: asNumber),
-        (name: rightOperand, binding: nullSymbol, coercion: asNumber)],
-                                     result: asNumber)
-    
-    func call(with command: Command, in commandScope: Scope, as coercion: Coercion) throws -> Value {
-        // caution: this ignores argument labels
-        if command.arguments.count != 2 { throw BadArgumentError(at: 0, of: command) }
-        let a = command.arguments[0].1
-        let b = command.arguments[1].1
-        switch (a,b) {
-        case (let a as Int, let b as Int):
-            let (r, o) = a.addingReportingOverflow(b)
-            return o ? Double(a) + Double(b) : r
-        case (let a as Int, let b as Double): return Double(a) + b
-        case (let a as Double, let b as Int): return a + Double(b)
-        case (let a as Double, let b as Double): return a + b
-        default:()
-        }
-        let arg_0 = try a.swiftEval(in: commandScope, as: asNumber)
-        let arg_1 = try b.swiftEval(in: commandScope, as: asNumber)
-        return try add(left: arg_0, right: arg_1)
-    }
-    
-    func swiftCall<T: SwiftCoercion>(with command: Command, in dynamicScope: Scope, as coercion: T) throws -> T.SwiftType {
-        throw NotYetImplementedError()
-    }
-    
-    //
-    
-    func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
-        return try coercion.coerce(value: self, in: scope)
-    }
-    
-    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        return try coercion.unbox(value: self, in: scope)
-    }
-}
-
-
 
 func test3() {
     

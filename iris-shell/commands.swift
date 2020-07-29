@@ -32,9 +32,9 @@ func writeHelp(_ string: String) {
 let interface_help = HandlerInterface(
     name: "help",
     parameters: [],
-    result: asNothing
+    result: asNothing.nativeCoercion
 )
-func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command) }
     writeHelp("""
     # iris help
@@ -66,9 +66,9 @@ func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handl
 let interface_clear = HandlerInterface(
     name: "clear",
     parameters: [],
-    result: asNothing
+    result: asNothing.nativeCoercion
 )
-func procedure_clear(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+func procedure_clear(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command) }
     fputs("\u{1b}[H\u{1b}[2J", stdout)
     return nullValue
@@ -78,9 +78,9 @@ func procedure_clear(command: Command, commandEnv: Scope, handler: Handler, hand
 let interface_commands = HandlerInterface(
     name: "commands",
     parameters: [],
-    result: asNothing
+    result: asNothing.nativeCoercion
 )
-func procedure_commands(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+func procedure_commands(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command) }
     for (name, value) in (commandEnv as! Environment).frame.sorted(by: {$0.key < $1.key}) {
         if let handler = value as? Handler {
@@ -99,9 +99,9 @@ var isRunning = true
 let interface_quit = HandlerInterface(
     name: "quit",
     parameters: [],
-    result: asNothing
+    result: asNothing.nativeCoercion
 )
-func procedure_quit(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+func procedure_quit(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command) }
     isRunning = false
     return Text("Goodbye.")
@@ -111,23 +111,25 @@ func procedure_quit(command: Command, commandEnv: Scope, handler: Handler, handl
 
 private let type_read_prompt = (
     name: Symbol("read"),
-    param_0: (Symbol("prompt"), Symbol("prompt"), AsSwiftDefault(asString, default: "?")),
+    param_0: (Symbol("prompt"), Symbol("prompt"), AsSwiftDefault(asString, "?")),
     result: asString
 )
 
 let interface_read_prompt = HandlerInterface(
     name: type_read_prompt.name,
-    parameters: [type_read_prompt.param_0],
-    result: type_read_prompt.result
+    parameters: [
+        nativeParameter(type_read_prompt.param_0),
+    ],
+    result: type_read_prompt.result.nativeCoercion
 )
-func procedure_read_prompt(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+func procedure_read_prompt(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_read_prompt.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_read_prompt.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     fputs("\(arg_0) ", stdout)
     let rawInput = String(data: FileHandle.standardInput.availableData, encoding: .utf8) ?? ""
     let input = rawInput.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-    return type_read_prompt.result.box(value: input, in: commandEnv)
+    return type_read_prompt.result.wrap(input, in: commandEnv)
 }
 
 
@@ -135,24 +137,26 @@ func procedure_read_prompt(command: Command, commandEnv: Scope, handler: Handler
 
 private let type_pp_value = (
     name: Symbol("pp"),
-    param_0: (Symbol("value"), Symbol("value"), AsOptional(asValue)),
+    param_0: (Symbol("value"), Symbol("value"), AsSwiftOptional(asValue)), // TO DO: this is a bit problematic: the proc below really wants Value, with nullValue rather than nil, but AsOptional doesn't compose with asValue and is in any case not a SwiftCoercion which is what's needed to unpack arguments
     result: asNothing
 )
 
 let interface_pp_value = HandlerInterface(
     name: type_pp_value.name,
-    parameters: [type_pp_value.param_0],
-    result: type_pp_value.result
+    parameters: [
+        nativeParameter(type_pp_value.param_0),
+    ],
+    result: type_pp_value.result.nativeCoercion
 )
-func procedure_pp_value(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+func procedure_pp_value(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     let formatter = VT100ValueFormatter()
     if command.arguments.count == 0 {
         print("  \(formatter.format(previousInput))")
     } else {
         var index = 0
-        let arg_0 = try command.swiftValue(at: &index, for: type_pp_value.param_0, in: commandEnv)
+        let arg_0 = try command.value(for: type_pp_value.param_0, at: &index, in: commandEnv)
         if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
-        print("  \(formatter.format(arg_0))")
+        print("  \(formatter.format(arg_0 ?? nullValue))")
     }
     return previousValue.get(nullSymbol) ?? nullValue
 }
@@ -160,23 +164,25 @@ func procedure_pp_value(command: Command, commandEnv: Scope, handler: Handler, h
 
 private let type_spp_value = (
     name: Symbol("spp"),
-    param_0: (Symbol("value"), Symbol("value"), AsOptional(asValue)),
+    param_0: (Symbol("value"), Symbol("value"), AsSwiftOptional(asValue)),
     result: asNothing
 )
 
 let interface_spp_value = HandlerInterface(
     name: type_spp_value.name,
-    parameters: [type_spp_value.param_0],
-    result: type_spp_value.result
+    parameters: [
+        nativeParameter(type_spp_value.param_0),
+    ],
+    result: type_spp_value.result.nativeCoercion
 )
-func procedure_spp_value(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+func procedure_spp_value(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     if command.arguments.count == 0 {
         print("  \(previousInput.swiftLiteralDescription)")
     } else {
         var index = 0
-        let arg_0 = try command.swiftValue(at: &index, for: type_spp_value.param_0, in: commandEnv)
+        let arg_0 = try command.value(for: type_spp_value.param_0, at: &index, in: commandEnv)
         if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
-        print("  \(arg_0.swiftLiteralDescription)")
+        print("  \((arg_0 ?? nullValue).swiftLiteralDescription)")
     }
     return previousValue.get(nullSymbol) ?? nullValue
 }

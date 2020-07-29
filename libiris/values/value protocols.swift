@@ -1,6 +1,6 @@
 //
 //  value protocols.swift
-//  iris-lang
+//  libiris
 //
 
 import Foundation
@@ -42,60 +42,43 @@ import Foundation
 
 public protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // TO DO: Codable (Q. use Codable for AE bridging?)
     
-    static var nominalType: Coercion { get }
-    var nominalType: Coercion { get }
+    static var nominalType: NativeCoercion { get }
+    var nominalType: NativeCoercion { get }
     
     var isMemoizable: Bool { get }
     
     var immutableValue: Value { get } // experimental
-    
-    
-    func eval(in scope: Scope, as coercion: Coercion) throws -> Value
-    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType
-    
-    func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T
-    
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value // any value except `nothing`
-    func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue // text/number/date/URL
-    func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number
-    
-    func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool
-    func toInt(in scope: Scope, as coercion: Coercion) throws -> Int
-    func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double
-    func toString(in scope: Scope, as coercion: Coercion) throws -> String
-    
-    // Q. implement toArray in terms of iterator (or possibly even `toIterator`?)
-    func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList
-    func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType]
-
-    //func toEditable(in scope: Scope, as coercion: AsEditable) throws -> EditableValue
-    
-    func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record // record fields will be evaluated by RecordCoercion upon return
-    
 }
 
+extension Value where Self:LiteralConvertible {
+    public var description: String { return self.literalDescription }
+}
 
 extension Value { // default implementations
-
+    
+    //public var description: String { return "«TODO: \(type(of:self))»" } // TO DO: temporary
+    
+   // public static var nominalType: Coercion { return asValue.nativeCoercion } // TO DO: temporary 
+    
     public var swiftLiteralDescription: String { fatalError("\(type(of: self)).swiftLiteralDescription is not supported.") } // TO DO: get rid of this and use SwiftLiteralConvertible protocol
     
-    public var nominalType: Coercion { return type(of: self).nominalType }
+    public var nominalType: NativeCoercion { return type(of: self).nominalType }
     
     public var isMemoizable: Bool { return false }
     
     public var immutableValue: Value { return self } // default implementation as most Value types are inherently immutable; caution: mutable values MUST override this; TO DO: move this to ScalarValue, forcing collection and complex values to provide their own implementation?
     
     // TO DO: rethrow errors as EvaluationError (in particular, null coercion errors must not propagate)
-    
+    /*
     public func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
         print("\(type(of:self)).eval(as:\(coercion))")
-        return try coercion.coerce(value: self, in: scope)
+        return try coercion.coerce(self, in: scope)
     }
     public func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         //print("Value.swiftEval()", self, coercion, T.self)
-        return try coercion.unbox(value: self, in: scope)
+        return try coercion.coerce(self, in: scope)
     }
-    
+    */
     // accessors
     
     public func get(_ name: Symbol) -> Value? {
@@ -106,69 +89,18 @@ extension Value { // default implementations
         throw ImmutableValueError(name: name, in: self) // TO DO: check if/where name can be nullSymbol (e.g. when setting an environment slot, ideally we want the error message to give the slot name)
     }
     
-    // TO DO: also implement default `call`/`swiftCall` for non-callable values?
-    
-    
-    //
-    /*
-    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // evaluate value as its preferred type // whereas other toTYPE methods delegate, leaving this unimplemented as standard forces all Values either to adopt StaticValue protocol or implement toValue() directly; this'd be less annoying if Swift allowed protocol extensions to conform to other protocols as well, but that isn’t [yet] supported; for now, either add StaticValue conformation to concrete Values can conform to StaticValue or copy-paste the toValue function into protocol extensions (e.g. ScalarValue does this)
-        return try self.toTYPE(in: scope, as: coercion)
-    }*/
-    
-    // TO DO: should default implementations of toTYPE forward to one or more [@inlinable?] generic implementations? if we want to eliminate Value.eval/swiftEval then this will be easiest way to do it, as types that currently override eval can override the generic method[s] instead of every single one of the following
-    
-    public func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
-        throw TypeCoercionError(value: self, coercion: coercion)
-    }
-    
-    public func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue {
-        return try self.toTYPE(in: scope, as: coercion)
-    }
-    public func toNumber(in scope: Scope, as coercion: Coercion) throws -> Number {
-        return try self.toTYPE(in: scope, as: coercion)
-    }
-    
-    public func toBool(in scope: Scope, as coercion: Coercion) throws -> Bool { // TBC
-        return try self.toTYPE(in: scope, as: coercion)
-    }
-    public func toInt(in scope: Scope, as coercion: Coercion) throws -> Int {
-        return try self.toTYPE(in: scope, as: coercion)
-    }
-    public func toDouble(in scope: Scope, as coercion: Coercion) throws -> Double {
-        return try self.toTYPE(in: scope, as: coercion)
-    }
-    public func toString(in scope: Scope, as coercion: Coercion) throws -> String {
-        return try self.toTYPE(in: scope, as: coercion)
-    }
-    
-    // Q. implement toArray in terms of iterator (or possibly even `toIterator`?); A. best not to, as cached/memoized values can be returned as-is
-    
-    // note that these should be overridden in OrderedList, and possibly in KeyedList+UniqueList too; anywhere else?
-    public func toList(in scope: Scope, as coercion: CollectionCoercion) throws -> OrderedList {
-        return OrderedList([try self.eval(in: scope, as: coercion.item)])
-    }
-    public func toArray<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
-        return try [self.swiftEval(in: scope, as: coercion.swiftItem)]
-    }
+    // TO DO: also implement default `call` for non-callable values?
     
     //func toEditable(in scope: Scope, as coercion: AsEditable) throws -> EditableValue {
-    //    return EditableValue(try coercion.coercion.coerce(value: self, in: scope))
+    //    return EditableValue(try coercion.coercion.coerce(self, in: scope))
     //}
     
     // TO DO: is this appropriate? (probably, c.f. Value->OrderedList(Value), but need to check corner cases for command args/handler sigs - may need to distinguish record literals, as `foo`, `foo {}`, `foo nothing`, and `foo {nothing}` have different meanings) // as with toList/toArray, this implementation isn't suitable for commands/blocks; Q. what about pair?
-    public func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
-        return try Record([(nullSymbol, self.eval(in: scope, as: asAnything))]) // TO DO: need to eval self; TO DO: this is also wrong for commands (move to ScalarValue extension?)
-    }
 }
 
 
-public protocol StaticValue: Value { } // values that return self when coerced to `value` (e.g. Int,Text) should adopt StaticValue; values that evaluate to another value (e.g. Command,Block) should implement their own toValue method
+public protocol StaticValue: Value { } // values that return self when coerced to `value` (e.g. Int,Text) should adopt StaticValue; values that evaluate to another value (e.g. Command,Block) should implement their own eval method
     
-public extension StaticValue {
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // evaluate value as its preferred type; important: concrete types that require evaluation override this as necessary
-        return self
-    }
-}
 
 // TO DO: can/should all scalars be BoxedValues? what functionality can be defined on BoxedValue extension?
 
@@ -212,7 +144,7 @@ public protocol AtomicValue: StaticValue { } // e.g. nothing, true/false, Symbol
 
 extension AtomicValue {
     
-    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+    public func toValue(in scope: Scope, as coercion: NativeCoercion) throws -> Value {
         return self
     }
 }
@@ -225,7 +157,7 @@ public extension ScalarValue {
     
     var isMemoizable: Bool { return true }
     
-    func toScalar(in scope: Scope, as coercion: Coercion) throws -> ScalarValue { // TO DO: toScalar? (as long as Text can represent all scalars, we should be OK; this does mean that boolean and symbol are not scalars though)
+    func toScalar(in scope: Scope, as coercion: NativeCoercion) throws -> ScalarValue { // TO DO: toScalar? (as long as Text can represent all scalars, we should be OK; this does mean that boolean and symbol are not scalars though)
         return self
     }
 }

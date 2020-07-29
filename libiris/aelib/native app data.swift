@@ -68,8 +68,8 @@ class NativeAppData: AppData {
     func interfaceForCommand(term: CommandTerm) -> HandlerInterface {
         if let interface = self.commandInterfaces[term.name] { return interface }
         let interface = HandlerInterface(name: Symbol(term.name),
-                                         parameters: term.parameters.map{ (Symbol($0.name), nullSymbol, asValue) },
-                                         result: asIs)
+                                         parameters: term.parameters.map{ (Symbol($0.name), nullSymbol, asValue.nativeCoercion) },
+                                         result: asIs.nativeCoercion)
         commandInterfaces[term.name] = interface
         return interface
     }

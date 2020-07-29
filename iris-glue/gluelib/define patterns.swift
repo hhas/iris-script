@@ -77,18 +77,18 @@ name: Symbol("sequence"),
 private let interface_sequence = HandlerInterface(
     name: type_sequence.name,
     parameters: [
-        type_sequence.param_0,
+        nativeParameter(type_sequence.param_0),
     ],
-    result: type_sequence.result
+    result: type_sequence.result.nativeCoercion
 )
-private func procedure_sequence(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_sequence(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_sequence.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_sequence.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = newSequencePattern(
         for: arg_0
     )
-    return type_sequence.result.box(value: result, in: handlerEnv)
+    return type_sequence.result.wrap(result, in: handlerEnv)
 }
 
 // any {…}
@@ -100,18 +100,18 @@ private let type_any = (
 private let interface_any = HandlerInterface(
     name: type_any.name,
     parameters: [
-        type_any.param_0,
+        nativeParameter(type_any.param_0),
     ],
-    result: type_any.result
+    result: type_any.result.nativeCoercion
 )
-private func procedure_any(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_any(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_any.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_any.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = newAnyOfPattern(
         for: arg_0
     )
-    return type_any.result.box(value: result, in: handlerEnv)
+    return type_any.result.wrap(result, in: handlerEnv)
 }
 
 // keyword {…}
@@ -123,18 +123,18 @@ private let type_keyword = (
 private let interface_keyword = HandlerInterface(
     name: type_keyword.name,
     parameters: [
-        type_keyword.param_0,
+        nativeParameter(type_keyword.param_0),
     ],
-    result: type_keyword.result
+    result: type_keyword.result.nativeCoercion
 )
-private func procedure_keyword(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_keyword(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_keyword.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_keyword.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = newKeywordPattern(
         for: arg_0
     )
-    return type_keyword.result.box(value: result, in: handlerEnv)
+    return type_keyword.result.wrap(result, in: handlerEnv)
 }
 
 // expr {…}
@@ -146,19 +146,19 @@ private let type_expression = (
 private let interface_expression = HandlerInterface(
     name: type_expression.name,
     parameters: [
-        type_expression.param_0,
+        nativeParameter(type_expression.param_0),
     ],
-    result: type_expression.result
+    result: type_expression.result.nativeCoercion
 )
-private func procedure_expression(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_expression(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_expression.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_expression.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = newExpressionPattern(
         binding: arg_0,
         handlerEnv: handlerEnv
     )
-    return type_expression.result.box(value: result, in: handlerEnv)
+    return type_expression.result.wrap(result, in: handlerEnv)
 }
 
 // optional {…}
@@ -170,18 +170,18 @@ private let type_optional = (
 private let interface_optional = HandlerInterface(
     name: type_optional.name,
     parameters: [
-        type_optional.param_0
+        nativeParameter(type_optional.param_0),
     ],
-    result: type_optional.result
+    result: type_optional.result.nativeCoercion
 )
-private func procedure_optional(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_optional(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_optional.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_optional.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = newOptionalPattern(
         pattern: arg_0
     )
-    return type_optional.result.box(value: result, in: handlerEnv)
+    return type_optional.result.wrap(result, in: handlerEnv)
 }
 
 // zero_or_more {…}
@@ -193,18 +193,18 @@ private let type_zero_or_more = (
 private let interface_zero_or_more = HandlerInterface(
     name: type_zero_or_more.name,
     parameters: [
-        type_zero_or_more.param_0
+        nativeParameter(type_zero_or_more.param_0),
     ],
-    result: type_zero_or_more.result
+    result: type_zero_or_more.result.nativeCoercion
 )
-private func procedure_zero_or_more(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_zero_or_more(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_zero_or_more.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_zero_or_more.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = newZeroOrMorePattern(
         pattern: arg_0
     )
-    return type_zero_or_more.result.box(value: result, in: handlerEnv)
+    return type_zero_or_more.result.wrap(result, in: handlerEnv)
 }
 
 // one_or_more {…}
@@ -216,18 +216,18 @@ private let type_one_or_more = (
 private let interface_one_or_more = HandlerInterface(
     name: type_one_or_more.name,
     parameters: [
-        type_one_or_more.param_0
+        nativeParameter(type_one_or_more.param_0),
     ],
-    result: type_one_or_more.result
+    result: type_one_or_more.result.nativeCoercion
 )
-private func procedure_one_or_more(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_one_or_more(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_one_or_more.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_one_or_more.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = newOneOrMorePattern(
         pattern: arg_0
     )
-    return type_one_or_more.result.box(value: result, in: handlerEnv)
+    return type_one_or_more.result.wrap(result, in: handlerEnv)
 }
 
 
@@ -241,18 +241,18 @@ private let type_atom = (
 private let interface_atom = HandlerInterface(
     name: type_atom.name,
     parameters: [
-        type_atom.param_0
+        nativeParameter(type_atom.param_0),
     ],
-    result: type_atom.result
+    result: type_atom.result.nativeCoercion
 )
-private func procedure_atom(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_atom(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_atom.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_atom.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = newAtomPattern(
         named: arg_0
     )
-    return type_atom.result.box(value: result, in: handlerEnv)
+    return type_atom.result.wrap(result, in: handlerEnv)
 }
 
 // prefix {…}
@@ -264,18 +264,18 @@ private let type_prefix = (
 private let interface_prefix = HandlerInterface(
     name: type_prefix.name,
     parameters: [
-        type_prefix.param_0
+        nativeParameter(type_prefix.param_0),
     ],
-    result: type_prefix.result
+    result: type_prefix.result.nativeCoercion
 )
-private func procedure_prefix(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_prefix(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_prefix.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_prefix.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = newPrefixPattern(
         named: arg_0
     )
-    return type_prefix.result.box(value: result, in: handlerEnv)
+    return type_prefix.result.wrap(result, in: handlerEnv)
 }
 
 // infix {…}
@@ -287,18 +287,18 @@ private let type_infix = (
 private let interface_infix = HandlerInterface(
     name: type_infix.name,
     parameters: [
-        type_infix.param_0
+        nativeParameter(type_infix.param_0),
     ],
-    result: type_infix.result
+    result: type_infix.result.nativeCoercion
 )
-private func procedure_infix(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_infix(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_infix.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_infix.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = newInfixPattern(
         named: arg_0
     )
-    return type_infix.result.box(value: result, in: handlerEnv)
+    return type_infix.result.wrap(result, in: handlerEnv)
 }
 
 // postfix {…}
@@ -310,18 +310,18 @@ private let type_postfix = (
 private let interface_postfix = HandlerInterface(
     name: type_postfix.name,
     parameters: [
-        type_postfix.param_0
+        nativeParameter(type_postfix.param_0),
     ],
-    result: type_postfix.result
+    result: type_postfix.result.nativeCoercion
 )
-private func procedure_postfix(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: Coercion) throws -> Value {
+private func procedure_postfix(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.swiftValue(at: &index, for: type_postfix.param_0, in: commandEnv)
+    let arg_0 = try command.value(for: type_postfix.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
     let result = newPostfixPattern(
         named: arg_0
     )
-    return type_postfix.result.box(value: result, in: handlerEnv)
+    return type_postfix.result.wrap(result, in: handlerEnv)
 }
 
 

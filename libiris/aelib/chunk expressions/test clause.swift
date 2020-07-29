@@ -100,7 +100,7 @@ struct TestClause: StaticValue {
         return "«TestClause \(self.desc)»"
     }
     
-    static let nominalType: Coercion = asTestClause
+    static let nominalType: NativeCoercion = asTestClause.nativeCoercion
     
     let appData: NativeAppData
     let desc: TestDescriptor

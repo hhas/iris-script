@@ -1,6 +1,6 @@
 //
 //  errors.swift
-//  iris-lang
+//  libiris
 //
 
 // TO DO: localization
@@ -18,13 +18,13 @@ public protocol NativeError: Value, Error {
 
 public extension NativeError {
     
-    static var nominalType: Coercion { return asError }
+    static var nominalType: NativeCoercion { return asError.nativeCoercion }
 
     func from(_ parent: Error) -> Error {
         return ChainedError(error: self, parent: parent)
     }
     
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
+    func toValue(in scope: Scope, as coercion: NativeCoercion) throws -> Value {
         return self
     }
 }

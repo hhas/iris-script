@@ -6,14 +6,14 @@
 import Foundation
 
 
-let asRange = AsComplex<ElementRange>(name: "range")
+let asRange = TypeMap<ElementRange>("range", "asRange")
 
 
 struct ElementRange: StaticValue {
     
     var description: String { return "(‘thru’ {\(self.start), \(self.stop)})" }
     
-    static let nominalType: Coercion = asRange 
+    static let nominalType: NativeCoercion = asRange.nativeCoercion
     
     let start: Value
     let stop: Value

@@ -1,6 +1,6 @@
 //
 //  environment.swift
-//  iris-lang
+//  libiris
 //
 
 // TO DO: when `«include:…»` annotations are used, how to lazily inject individual handlers into script's [global] scope on first lookup? (one option is to pass specialized Environment subclass as parent, or else hide `frame`'s exact implementation behind a dictionary-like protocol, so that when initial lookup fails to find handler in script's own scope, all included scopes are searched and the returned handler[s] are composed into multimethods if needed and added to scope)
@@ -119,8 +119,11 @@ extension Environment {
     public func define(_ name: Symbol, _ value: Value) {
         self.bind(name: name, to: value)
     }
-    public func define(coercion: Coercion) {
+    public func define(coercion: NativeCoercion) {
         self.bind(name: coercion.name, to: coercion)
+    }
+    public func define<T: SwiftCoercion>(coercion: T) {
+        self.define(coercion: coercion.nativeCoercion)
     }
     
     public func define(_ interface: HandlerInterface, _ action: @escaping PrimitiveHandler.Call) { // called by library glues

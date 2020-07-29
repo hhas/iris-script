@@ -21,7 +21,7 @@ public class PatternValue: OpaqueValue<iris.Pattern> {
 
 // TO DO: need to support coercing list of pattern values to PatternValue(Pattern.sequence(…))
 
-let asPatternValue = AsComplex<PatternValue>(name: "pattern")
+let asPatternValue = TypeMap<PatternValue>("pattern", "asPatternValue")
 
 
 /*
@@ -33,15 +33,15 @@ struct AsScope: SwiftCoercion { // for now, this is purely to enable Swift func 
     
     typealias SwiftType = Scope
     
-    func coerce(value: Value, in scope: Scope) throws -> Value {
+    func coerce(_ value: Value, in scope: Scope) throws -> Value {
         fatalError("Not yet implemented.")
     }
     
-    func box(value: Scope, in scope: Scope) -> Value {
+    func wrap(_ value: Scope, in scope: Scope) -> Value {
         fatalError("Not yet implemented.")
     }
     
-    func unbox(value: Value, in scope: Scope) throws -> SwiftType {
+    func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         fatalError("Not yet implemented.")
     }
 }
