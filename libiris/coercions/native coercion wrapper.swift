@@ -17,7 +17,7 @@ public struct NativizedCoercion<ElementType: SwiftCoercion>: NativeCoercion {
     // TO DO: the returned Swift code may or may not be appropriate to context
     public var swiftLiteralDescription: String { return self.elementType.swiftLiteralDescription }
     
-    private let elementType: ElementType
+    public let elementType: ElementType
     
     public init(_ elementType: ElementType) {
         self.elementType = elementType
@@ -44,7 +44,7 @@ public struct PrimitivizedCoercion: SwiftCoercion {
     // TO DO: the returned Swift code may or may not be appropriate to context
     public var swiftLiteralDescription: String { return self.elementType.swiftLiteralDescription }
     
-    private let elementType: NativeCoercion
+    public let elementType: NativeCoercion
     
     public init(_ elementType: NativeCoercion) {
         self.elementType = elementType

@@ -5,8 +5,6 @@
 
 import Foundation
 
-// TO DO: rather than have all Coercions conform to Value, only native coercions (SwiftType isa Value) should be Value themselves, while primitive coercions provide method for obtaining their native equivalent (the fallback implementation being to call `self.box(self.unbox())`)
-
 // TO DO: Coercion.hasConforming(value:Value)->Bool method; e.g. Int and Double should conform to Text (and String) as well as Number; natively this would be `value is_a coercion`; `as` _might_ use this to skip conversion where value types are natively interchangeable (although we need to be careful about that, as bridges to external systems such as Apple events and ObjC which do rely on nominal type-checking of arguments may require such values to be explicitly cast before being passed to those systems)
 
 
@@ -52,8 +50,6 @@ public extension NativeCoercion {
 
 public protocol SwiftCoercion: Coercion {
     
-    //var swiftLiteralDescription: String { get }
-    
     associatedtype SwiftType
     
     typealias CoerceFunc = (Value, Scope) throws -> SwiftType
@@ -67,8 +63,6 @@ public protocol SwiftCoercion: Coercion {
     func coerceFunc(for valueType: Value.Type) -> CoerceFunc // used by AsArray to reduce overheads when unpacking arrays of [mostly/all] same element type
     
     func defaultValue(in scope: Scope) throws -> SwiftType // TO DO: is there any use-case where scope is needed? (i.e. this implies a default value that requires evaluation/thunking; is that necessary and/or desirable)
-    
-     // // TO DO: or should we make SwiftCoercion conform to NativeCoercion protocol? i.e. default coerce() can be implemented as wrap(coerce()) -- the question hinges on Value APIs: we really want a single eval path instead of old eval+swiftEval
 }
 
 
@@ -78,6 +72,7 @@ public extension SwiftCoercion {
     func defaultValue(in scope: Scope) throws -> SwiftType {
         throw TypeCoercionError(value: nullValue, coercion: self)
     }
+    
     // default coerceFunc() implementation
     @inlinable func coerceFunc(for valueType: Value.Type) -> CoerceFunc {
         return self.coerce
@@ -108,7 +103,6 @@ public extension SwiftCoercion where SwiftType == Value {
     }
 }
 
-// [Swift]CollectionCoercion
 
 
 public protocol SelfEvaluatingProtocol {
@@ -116,19 +110,4 @@ public protocol SelfEvaluatingProtocol {
     func eval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType
 }
 
-
-
-public protocol CollectionCoercion: NativeCoercion {
-    var item: NativeCoercion { get } // rename elementType
-}
-
-
-// TO DO: what should AsDictionary's SwiftType be? (c.f. Dictionary.Element, which is a `(key:Key,value:Value)` tuple)
-
-public protocol SwiftCollectionCoercion: SwiftCoercion, CollectionCoercion {
-    
-    associatedtype ElementCoercion: SwiftCoercion
-    
-    var swiftItem: ElementCoercion { get } // rename elementType
-}
 

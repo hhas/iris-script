@@ -15,7 +15,7 @@ public struct AsArray<ElementType: SwiftCoercion>: SwiftCoercion {
     
     public var swiftLiteralDescription: String { return "AsArray(\(self.elementType.swiftLiteralDescription))" }
     
-    private let elementType: ElementType
+    public let elementType: ElementType
     
     public init(_ elementType: ElementType) {
         self.elementType = elementType
@@ -83,7 +83,7 @@ public struct AsList: NativeCoercion {
     
     public var swiftLiteralDescription: String { return "AsArray(\(self.elementType.swiftLiteralDescription))" }
     
-    private let elementType: NativeCoercion
+    public let elementType: NativeCoercion
     
     public init(_ elementType: NativeCoercion = asAnything.nativeCoercion) {
         self.elementType = elementType

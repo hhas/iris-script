@@ -81,6 +81,8 @@ struct InsertionLocation: StaticValue, SelfPacking {
     
     var description: String { return "«\(self.desc) of \(self.appData)»" } // TO DO: implement
     
+    public var swiftLiteralDescription: String { return self.description } // TO DO: implement
+    
     static let nominalType: NativeCoercion = asReference.nativeCoercion
     
     let appData: NativeAppData
@@ -110,6 +112,8 @@ extension ReferenceProtocol {
     }
     
     var description: String { return "«\(self.desc) of \(self.appData)»" }
+    
+    public var swiftLiteralDescription: String { return self.description } // TO DO: implement
     
     public func get(_ name: Symbol) -> Value? { // TO DO: can/should get+call be folded into single call()?
         //print("get \(name) slot of \(self)")
@@ -193,8 +197,9 @@ struct Reference: ReferenceProtocol {
                 fatalError("not yet implemented")
             default: () // element refs are formatted below
             }
+            // TO DO: this is a kludge
             if let names = self.appData.glueTable.elementsByCode[desc.want],
-                let seld = try? unpackDescriptor(desc.seld, appData: appData) { // kludge
+                let seld = try? NativeResultDescriptor(desc.seld, appData: appData).eval(in: nullScope, as: asAnything) {
                 switch desc.form {
                 case .absolutePosition:
                     if let symbol = seld as? Symbol, ["first", "middle", "last", "any", "every"].contains(symbol) {
@@ -257,6 +262,8 @@ struct Application: ReferenceProtocol {
     static let nominalType: NativeCoercion = asReference.nativeCoercion // TO DO: what type? asApplication?
     
     var description: String { return "Application(\(self.appData)" }
+    
+    public var swiftLiteralDescription: String { return self.description } // TO DO: implement
 
     let appData: NativeAppData
     let desc: SpecifierDescriptor = RootSpecifierDescriptor.app

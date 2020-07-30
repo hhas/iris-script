@@ -104,7 +104,7 @@ Coercion-based native⬌Swift bridging API for implementing primitive library fu
 and its underlying Swift implementation:
     
     func ifTest(condition: Bool, action: Value, alternativeAction: Value, commandEnv: Scope) throws -> Value {
-        return try (condition ? action : alternativeAction).eval(in: commandEnv, as: asAnything)
+        return try asAnything.coerce(condition ? action : alternativeAction, in: commandEnv)
     }
 
 (Contrast the complexity and coupling of Python/Ruby’s C bridging APIs.)

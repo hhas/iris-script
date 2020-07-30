@@ -50,7 +50,7 @@ public protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible
     var immutableValue: Value { get } // experimental
 }
 
-extension Value where Self:LiteralConvertible {
+extension Value where Self: LiteralConvertible {
     public var description: String { return self.literalDescription }
 }
 
@@ -60,7 +60,7 @@ extension Value { // default implementations
     
    // public static var nominalType: Coercion { return asValue.nativeCoercion } // TO DO: temporary 
     
-    public var swiftLiteralDescription: String { fatalError("\(type(of: self)).swiftLiteralDescription is not supported.") } // TO DO: get rid of this and use SwiftLiteralConvertible protocol
+    public var swiftLiteralDescription: String { fatalError("\(type(of: self)).swiftLiteralDescription is not supported.") } // TO DO: get rid of this and use SwiftLiteralConvertible protocol (Q. what should be returned if Value can't provide a valid Swift representation? e.g. Thunk)
     
     public var nominalType: NativeCoercion { return type(of: self).nominalType }
     
@@ -68,17 +68,6 @@ extension Value { // default implementations
     
     public var immutableValue: Value { return self } // default implementation as most Value types are inherently immutable; caution: mutable values MUST override this; TO DO: move this to ScalarValue, forcing collection and complex values to provide their own implementation?
     
-    // TO DO: rethrow errors as EvaluationError (in particular, null coercion errors must not propagate)
-    /*
-    public func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
-        print("\(type(of:self)).eval(as:\(coercion))")
-        return try coercion.coerce(self, in: scope)
-    }
-    public func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        //print("Value.swiftEval()", self, coercion, T.self)
-        return try coercion.coerce(self, in: scope)
-    }
-    */
     // accessors
     
     public func get(_ name: Symbol) -> Value? {

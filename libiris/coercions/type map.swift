@@ -5,6 +5,8 @@
 
 // TO DO: regarding rountripping, should there be one rule for implicit coercions and another for explicit casts; e.g. `false as string` could cast to “false”; or should we use separate conversion command? part of the problem is how to convert values to string representation, e.g. `"the value of foo is: " & foo`; however, we could argue that unless *all* values will coerce to string in this use case then there is no benefit to having only some of them coerce (and a big negative, since the behavior will be inconsistent, meaning the same code may succeed or fail entirely due to the type of value being passed—which is the sort of unpredictability we *really* want to avoid); best to use a `format` command to convert any value to its literal representation string (the converse being `parse`, which takes a literal representation string and converts it to a value; c.f. kiwi), with the option to pass a string into which the value[s] can be interpolated
 
+// TO DO: if we stick with coercion tables (which are currently global), they will need to move into Scope
+
 import Foundation
 
 // TO DO: problem here is that we need to be able to parameterize coercions with constraints (e.g. min/max)

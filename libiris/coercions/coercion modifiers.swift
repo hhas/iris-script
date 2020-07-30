@@ -14,7 +14,7 @@ public struct AsSwiftOptional<ElementType: SwiftCoercion>: SwiftCoercion {
     
     public var swiftLiteralDescription: String { return "AsSwiftOptional(\(self.elementType.swiftLiteralDescription))" }
     
-    private let elementType: ElementType
+    public let elementType: ElementType
     
     public init(_ elementType: ElementType) {
         self.elementType = elementType
@@ -48,7 +48,7 @@ public struct AsSwiftDefault<ElementType: SwiftCoercion>: SwiftCoercion {
         return "AsSwiftDefault(\(self.elementType.swiftLiteralDescription), \(formatSwiftLiteral(self._defaultValue)))"
     }
     
-    private let elementType: ElementType
+    public let elementType: ElementType
     private let _defaultValue: ElementType.SwiftType
     
     public init(_ elementType: ElementType, _ defaultValue: ElementType.SwiftType) {
@@ -83,7 +83,7 @@ public struct AsSwiftPrecis<ElementType: SwiftCoercion>: SwiftCoercion {
         return "AsSwiftDefault(\(self.elementType.swiftLiteralDescription), \(self._description.debugDescription))"
     }
     
-    private let elementType: ElementType
+    public let elementType: ElementType
     private let _description: String
     
     public init(_ elementType: ElementType, _ description: String) {
@@ -111,7 +111,7 @@ public struct AsOptional: NativeCoercion {
     
     public let name: Symbol = "optional" // TO DO: that's nominal name; what about parameterized name?
     
-    private let elementType: NativeCoercion
+    public let elementType: NativeCoercion
     
     public init(_ elementType: NativeCoercion) {
         self.elementType = elementType
