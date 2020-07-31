@@ -29,7 +29,7 @@ private func procedure_defineHandlerGlue_handler_commandEnv(command: Command, co
     let arguments = command.arguments
     let arg_0 = try command.value(for: type_defineHandlerGlue_handler_commandEnv.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_defineHandlerGlue_handler_commandEnv.param_1, at: &index, in: commandEnv)
-    if arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     try defineHandlerGlue(
         interface: arg_0,
         attributes: arg_1,

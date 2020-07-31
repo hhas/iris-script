@@ -6,38 +6,48 @@
 import Foundation
 
 
+// TO DO: calling a non-handler results in rather confusing error message, e.g. ‘nothing’ {4} -> “Can’t match argument field 1 of ‘nothing’ {1} for handler: ‘’ {} returning anything”
 
 
-public protocol ArgumentError: NativeError {
+public protocol ArgumentError: NativeError { // TO DO: would it be better to have a single ArgumentError that uses an enum to describe the exact issue? or should we rely more on error chaining?
     
     var index: Int { get }
     var command: Command { get }
+    var handlerInterface: HandlerInterface { get } // for now, only the handler's interface is held here (to capture the full Handler in usable form we'd need to copy it into a closure; however, with the Swift stack unwinding on returning errors there’s no easy way to support interactive correct-and-resume, so that’d only be wasted effort)
 }
 
 
 public struct UnknownArgumentError: ArgumentError {
     
-    public var description: String { return "Can’t match argument field \(self.index+1) in `\(self.command)`" }
+    public var description: String {
+        return "Can’t match argument field \(self.index+1) of \(self.command) to handler: \(self.handlerInterface)"
+    }
     
     public let index: Int
     public let command: Command
+    public let handlerInterface: HandlerInterface
     
-    public init(at index: Int, of command: Command) {
+    public init(at index: Int, of command: Command, to handler: Handler) {
         self.index = index
         self.command = command
+        self.handlerInterface = handler.interface
     }
 }
 
 public struct BadArgumentError: ArgumentError {
-    
-    public var description: String { return "Can’t evaluate argument field \(self.index+1) in `\(self.command)`" } // TO DO: change message to "is missing" if index >= command.arguments.count
+     // TO DO: change message to "is missing" if index >= command.arguments.count
+    public var description: String {
+        return "Can’t evaluate argument field \(self.index+1) of \(self.command) for handler: \(self.handlerInterface)"
+    }
     
     public let index: Int
     public let command: Command
+    public let handlerInterface: HandlerInterface
     
-    public init(at index: Int, of command: Command) {
+    public init(at index: Int, of command: Command, to handler: Handler) {
         self.index = index
         self.command = command
+        self.handlerInterface = handler.interface
     }
 }
 

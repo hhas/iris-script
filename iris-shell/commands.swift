@@ -35,7 +35,7 @@ let interface_help = HandlerInterface(
     result: asNothing.nativeCoercion
 )
 func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command) }
+    if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command, to: handler) }
     writeHelp("""
     # iris help
 
@@ -69,7 +69,7 @@ let interface_clear = HandlerInterface(
     result: asNothing.nativeCoercion
 )
 func procedure_clear(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command) }
+    if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command, to: handler) }
     fputs("\u{1b}[H\u{1b}[2J", stdout)
     return nullValue
 }
@@ -81,7 +81,7 @@ let interface_commands = HandlerInterface(
     result: asNothing.nativeCoercion
 )
 func procedure_commands(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command) }
+    if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command, to: handler) }
     for (name, value) in (commandEnv as! Environment).frame.sorted(by: {$0.key < $1.key}) {
         if let handler = value as? Handler {
             writeHelp("\(handler.interface)\n")
@@ -102,7 +102,7 @@ let interface_quit = HandlerInterface(
     result: asNothing.nativeCoercion
 )
 func procedure_quit(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command) }
+    if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command, to: handler) }
     isRunning = false
     return Text("Goodbye.")
 }
@@ -125,7 +125,7 @@ let interface_read_prompt = HandlerInterface(
 func procedure_read_prompt(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_read_prompt.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     fputs("\(arg_0) ", stdout)
     let rawInput = String(data: FileHandle.standardInput.availableData, encoding: .utf8) ?? ""
     let input = rawInput.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
@@ -155,7 +155,7 @@ func procedure_pp_value(command: Command, commandEnv: Scope, handler: Handler, h
     } else {
         var index = 0
         let arg_0 = try command.value(for: type_pp_value.param_0, at: &index, in: commandEnv)
-        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
         print("  \(formatter.format(arg_0 ?? nullValue))")
     }
     return previousValue.get(nullSymbol) ?? nullValue
@@ -181,7 +181,7 @@ func procedure_spp_value(command: Command, commandEnv: Scope, handler: Handler, 
     } else {
         var index = 0
         let arg_0 = try command.value(for: type_spp_value.param_0, at: &index, in: commandEnv)
-        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
         print("  \((arg_0 ?? nullValue).swiftLiteralDescription)")
     }
     return previousValue.get(nullSymbol) ?? nullValue

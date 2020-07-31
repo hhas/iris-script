@@ -11,7 +11,7 @@ import iris
 func test() {
   //  runScript(" set a to 4. write a. write if true then false. write if false then false else true.")
    // runScript(" optional text ")
-   // runScript(" to foo run write “bar” \n foo ") // TO DO: FIX: using optional/default coercion modifiers is still buggy: handler throws error on return (it should return `nothing` instead)
+    runScript(" to foo run write “bar” \n foo ") // TO DO: FIX: using optional/default coercion modifiers is still buggy: handler throws error on return (it should return `nothing` instead)
     
    // runScript(" 2+2. to foo{a} run bar a. to bar {v} run 2+v. foo 6. ")
     

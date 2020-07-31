@@ -29,9 +29,6 @@ public struct NativizedCoercion<ElementType: SwiftCoercion>: NativeCoercion {
     public func wrap(_ value: Value, in scope: Scope) -> Value {
         return value
     }
-    public func defaultValue(in scope: Scope) throws -> Value {
-        return try self.elementType.wrap(self.elementType.defaultValue(in: scope), in: scope)
-    }
 }
 
 
@@ -55,9 +52,6 @@ public struct PrimitivizedCoercion: SwiftCoercion {
     }
     public func wrap(_ value: Value, in scope: Scope) -> Value {
         return value
-    }
-    public func defaultValue(in scope: Scope) throws -> Value {
-        return try self.elementType.defaultValue(in: scope)
     }
 }
 

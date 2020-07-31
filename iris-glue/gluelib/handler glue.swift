@@ -6,6 +6,9 @@
 import Foundation
 import iris
 
+// TO DO: how should native coercions generate swiftLiteralDescription for use in glues? (note that most coercions currently added to env are wrapped SwiftCoercions, which is probably not what we want going forward)
+
+// TO DO: how should
 
 
 public struct HandlerGlue {

@@ -3,7 +3,7 @@
 //  iris-shell
 //
 
-// TO DO: how to handle multi-line strings? (currently typing LF within a string literal breaks input)
+// TO DO: debug `print()` calls in libiris that write to console between read and print steps will screw up backtracking when applying color formatting to the previously read line (TBH there’s no easy solution to this given limitations of terminal; we'd have to hook stdout and stderr… and pretty soon we’d end up rewriting curses)
 
 // TO DO: given multi-expression group `(1 LF + 2)`, how to clarify that this means `(1, +2)`, not `(1 + 2)` (i.e. the `1` is evaled and discarded, and the `2` is returned as the group expr’s result; in principle, PP could discard side-effect-free exprs whose results are unused, though automatically rewriting code to that extent should only be done after advising/asking the author as they may simply have mistyped in which case correction, not deletion, is required)
 

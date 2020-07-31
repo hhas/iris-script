@@ -21,11 +21,11 @@ public struct Keyword: CustomDebugStringConvertible, ExpressibleByStringLiteral,
     public typealias ArrayLiteralElement = Symbol
     // each operator keyword has a canonical (preferred) name and zero or more aliases, e.g. the division operator has the canonical name `÷` but can also be referred to by aliases `/` and `divided_by` (`/` is for convenience when entering code via ASCII keyboard while `divided_by` facilitates entering code via dictation; the PP will rewrite user's code to use the canonical name except when instructed otherwise)
     
-    public var swiftLiteralDescription: String {
+    public var swiftLiteralDescription: String { // TODO: this assumes context is typed as Keyword, which is probably a bad idea
         if self.aliases.isEmpty {
-            return self.name.swiftLiteralDescription
+            return self.name.label.debugDescription
         } else {
-            return "[\(self.name.swiftLiteralDescription)\(self.aliases.map{", \($0.swiftLiteralDescription)"}.joined(separator: ""))]"
+            return "[\(self.name.label.debugDescription)\(self.aliases.map{", \($0.label.debugDescription)"}.joined(separator: ""))]"
         }
     }
     

@@ -55,7 +55,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
         case .name:                     return ".name"
         case .label:                    return ".label"
         case .expression:               return ".expression"
-        case .expressionLabeled(let k): return ".expressionLabeled(\(k.swiftLiteralDescription))"
+        case .expressionLabeled(let k): return ".expressionLabeled(\(k.label.debugDescription))"
         case .token(let t):             fatalError("TODO: .token(\(t))")
         case .testValue(let f):         fatalError("TODO: .testValue(\(String(describing: f)))")
         case .delimiter:                return ".delimiter"

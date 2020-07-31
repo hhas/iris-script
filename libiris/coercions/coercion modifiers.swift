@@ -5,6 +5,8 @@
 
 import Foundation
 
+// AsSwiftOptional(asAnything, "anything")
+
 
 public struct AsSwiftOptional<ElementType: SwiftCoercion>: SwiftCoercion {
     
@@ -22,17 +24,17 @@ public struct AsSwiftOptional<ElementType: SwiftCoercion>: SwiftCoercion {
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         // NullValue self-evaluates by calling AsSwiftOptional.defaultValue(in:) and returning the result
-        if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
-        return try self.elementType.coerce(value, in: scope)
+       // if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
+        do {
+            return try self.elementType.coerce(value, in: scope)
+        } catch is NullCoercionError {
+            return nil
+        }
     }
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         if let v = value { return self.elementType.wrap(v, in: scope) }
         return nullValue
-    }
-    
-    public func defaultValue(in scope: Scope) throws -> SwiftType {
-        return nil
     }
 }
 
@@ -45,29 +47,30 @@ public struct AsSwiftDefault<ElementType: SwiftCoercion>: SwiftCoercion {
     public let name: Symbol = "default" // TO DO
     
     public var swiftLiteralDescription: String {
-        return "AsSwiftDefault(\(self.elementType.swiftLiteralDescription), \(formatSwiftLiteral(self._defaultValue)))"
+        return "AsSwiftDefault(\(self.elementType.swiftLiteralDescription), \(formatSwiftLiteral(self.defaultValue)))"
     }
     
     public let elementType: ElementType
-    private let _defaultValue: ElementType.SwiftType
+    public let defaultValue: ElementType.SwiftType
     
     public init(_ elementType: ElementType, _ defaultValue: ElementType.SwiftType) {
         self.elementType = elementType
-        self._defaultValue = defaultValue
+        self.defaultValue = defaultValue
     }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         // NullValue self-evaluates by calling AsSwiftDefault.defaultValue(in:) and returning the result
-        if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
-        return try self.elementType.coerce(value, in: scope)
+        //if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
+        do {
+            return try self.elementType.coerce(value, in: scope)
+        } catch is NullCoercionError {
+            return self.defaultValue
+        }
     }
     
+    // caution: wrap() doesn't caller to pass nil; it's assumed they will pass the default value itself
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return self.elementType.wrap(value, in: scope)
-    }
-    
-    public func defaultValue(in scope: Scope) throws -> SwiftType {
-        return self._defaultValue
     }
 }
 
@@ -80,7 +83,7 @@ public struct AsSwiftPrecis<ElementType: SwiftCoercion>: SwiftCoercion {
     public var name: Symbol { return Symbol(self._description) }
     
     public var swiftLiteralDescription: String {
-        return "AsSwiftDefault(\(self.elementType.swiftLiteralDescription), \(self._description.debugDescription))"
+        return "AsSwiftPrecis(\(self.elementType.swiftLiteralDescription), \(self._description.debugDescription))"
     }
     
     public let elementType: ElementType
@@ -97,10 +100,6 @@ public struct AsSwiftPrecis<ElementType: SwiftCoercion>: SwiftCoercion {
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return self.elementType.wrap(value, in: scope)
-    }
-    
-    public func defaultValue(in scope: Scope) throws -> SwiftType {
-        return try self.elementType.defaultValue(in: scope)
     }
 }
 
@@ -119,18 +118,16 @@ public struct AsOptional: NativeCoercion {
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         // NullValue self-evaluates by calling AsSwiftOptional.defaultValue(in:) and returning the result
-        if let v = value as? SelfEvaluatingProtocol {
-            return try v.eval(in: scope, as: PrimitivizedCoercion(self)) // TO DO:
+        //if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: PrimitivizedCoercion(self)) }
+        do {
+            return try self.elementType.coerce(value, in: scope)
+        } catch is NullCoercionError {
+            return nullValue
         }
-        return try self.elementType.coerce(value, in: scope)
     }
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return value
-    }
-    
-    public func defaultValue(in scope: Scope) throws -> SwiftType {
-        return nullValue
     }
 }
 

@@ -65,7 +65,7 @@ public class EditableValue: Handler, Mutator {
         } else if command.arguments.count == 0 { // stored value
             return try coercion.coerce(self.data, in: scope) // problem: this discards original editable box, so changes made by handler won't propagate back; are we sure that's what we want?
         } else {
-            throw UnknownArgumentError(at: 0, of: command)
+            throw UnknownArgumentError(at: 0, of: command, to: self)
         }
     }
     
@@ -130,7 +130,7 @@ public struct ScopeLockedValue: Handler, Mutator { // experimental
         } else if command.arguments.count == 0 { // stored value
             return try coercion.coerce(self.data, in: commandScope) // problem: this discards original editable box, so changes made by handler won't propagate back; are we sure that's what we want?
         } else {
-            throw UnknownArgumentError(at: 0, of: command)
+            throw UnknownArgumentError(at: 0, of: command, to: self)
         }
     }
     

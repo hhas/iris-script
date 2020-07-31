@@ -15,16 +15,16 @@ public struct AsAnything: SwiftCoercion { // any value or `nothing`
     public var swiftLiteralDescription: String { return "asAnything" }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
-        if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
-        return value // TO DO: what about array and other collection types? should they also self-evaluate?
+        do {
+            if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
+            return value // TO DO: what about array and other collection types? should they also self-evaluate?
+        } catch is NullCoercionError {
+            return nullValue
+        }
     }
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return value
-    }
-    
-    public func defaultValue(in scope: Scope) throws -> SwiftType {
-        return nullValue
     }
 }
 
@@ -51,32 +51,6 @@ public struct AsValue: SwiftCoercion { // any value except `nothing`
 }
 
 public let asValue = AsValue()
-
-
-
-public struct AsNothing: SwiftCoercion, NativeCoercion { // used as return type where handler returns `nothing`
-    
-    public let name: Symbol = "nothing"
-    
-    public var swiftLiteralDescription: String { return "asNothing" }
-    
-    public typealias SwiftType = Value
-    
-    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
-        // calling AsNothing.unbox() is [presumably] an implementation error
-        throw InternalError(description: "AsNothing.unbox() is not supported.")
-    }
-    
-    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
-        return nullValue
-    }
-    
-    public func defaultValue(in scope: Scope) throws -> SwiftType {
-        return nullValue
-    }
-}
-
-public let asNothing = AsNothing()
 
 
 

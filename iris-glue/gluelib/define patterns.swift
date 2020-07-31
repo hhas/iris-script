@@ -6,6 +6,7 @@
 import Foundation
 import iris
 
+let currentHandlerInterfaceKey = Symbol(".handler_interface")
 
 
     
@@ -28,7 +29,7 @@ func newKeywordPattern(for names: [String]) -> PatternValue {
 
 func newExpressionPattern(binding: String?, handlerEnv: Scope) -> PatternValue {
     if let binding = binding {
-        let interface = (handlerEnv.get(currentHandlerInterfaceKey) as! OpaqueHandlerInterface).data!
+        let interface = handlerEnv.get(currentHandlerInterfaceKey) as! HandlerInterface
         guard let label = interface.labelForBinding(Symbol(binding)) else {
             fatalError("TODO: Can’t find argument label for \(binding) operand in \(handlerEnv)")
         }
@@ -84,7 +85,7 @@ private let interface_sequence = HandlerInterface(
 private func procedure_sequence(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_sequence.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = newSequencePattern(
         for: arg_0
     )
@@ -107,7 +108,7 @@ private let interface_any = HandlerInterface(
 private func procedure_any(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_any.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = newAnyOfPattern(
         for: arg_0
     )
@@ -130,7 +131,7 @@ private let interface_keyword = HandlerInterface(
 private func procedure_keyword(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_keyword.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = newKeywordPattern(
         for: arg_0
     )
@@ -153,7 +154,7 @@ private let interface_expression = HandlerInterface(
 private func procedure_expression(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_expression.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = newExpressionPattern(
         binding: arg_0,
         handlerEnv: handlerEnv
@@ -177,7 +178,7 @@ private let interface_optional = HandlerInterface(
 private func procedure_optional(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_optional.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = newOptionalPattern(
         pattern: arg_0
     )
@@ -200,7 +201,7 @@ private let interface_zero_or_more = HandlerInterface(
 private func procedure_zero_or_more(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_zero_or_more.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = newZeroOrMorePattern(
         pattern: arg_0
     )
@@ -223,7 +224,7 @@ private let interface_one_or_more = HandlerInterface(
 private func procedure_one_or_more(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_one_or_more.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = newOneOrMorePattern(
         pattern: arg_0
     )
@@ -248,7 +249,7 @@ private let interface_atom = HandlerInterface(
 private func procedure_atom(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_atom.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = newAtomPattern(
         named: arg_0
     )
@@ -271,7 +272,7 @@ private let interface_prefix = HandlerInterface(
 private func procedure_prefix(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_prefix.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = newPrefixPattern(
         named: arg_0
     )
@@ -294,7 +295,7 @@ private let interface_infix = HandlerInterface(
 private func procedure_infix(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_infix.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = newInfixPattern(
         named: arg_0
     )
@@ -317,7 +318,7 @@ private let interface_postfix = HandlerInterface(
 private func procedure_postfix(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_postfix.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = newPostfixPattern(
         named: arg_0
     )
@@ -332,8 +333,9 @@ class PatternDialect: Scope {
     private let parent: Scope
     private var frame = [Symbol: Value]()
     
-    init(parent: Scope) {
+    init(parent: Scope, for handlerInterface: HandlerInterface) { // the handler interface is used by `expression BINDING_NAME` to remap the operand’s binding name to the underlying Command’s argument label (it would be neater to implement `expression` as a closure that captures this value directly, but this is good enough); e.g. `set…to…` is defined as native pattern [keyword “set”, expression “name”, keyword “to”, expression “value”], which outputs Swift pattern: [.keyword("set"), .expressionLabeled(Symbol("name")), .keyword("to"), .expressionLabeled(Symbol("to"))], remapping the “name” and “value” name bindings to argument labels `{name:,to:}`
         self.parent = parent
+        self.frame[currentHandlerInterfaceKey] = handlerInterface
         for (interface, action) in [
             // primitive pattern constructors
             (interface_sequence, procedure_sequence),

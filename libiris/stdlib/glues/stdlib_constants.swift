@@ -32,8 +32,8 @@ public func stdlib_loadConstants(into env: Environment) {
         registry.prefix("optional", 320)
         registry.prefix("editable", 320)
         
-        // TO DO: FIX: defining both atomic and prefix forms of `optional` operator doesn’t parse correctly (the latter definition appears to mask the former)
-     //   registry.atom("optional")
+        // TO DO: FIX: defining both atomic and prefix forms of `optional` operator doesn’t parse correctly (the latter definition appears to mask the former; thus, in this case, `foo as editable` parses but `foo as editable value` does not); a workaround for now would be to define `optional EXPR?` as a single pattern with optional EXPR, however, it'd be best to fix the bug at source (presumably in OperatorRegistry)
+        registry.atom("optional")
         registry.atom("editable")
         registry.infix("with_default", 500)
 
@@ -70,8 +70,8 @@ public func stdlib_loadConstants(into env: Environment) {
 
     env.define(coercion: asEditable)
 
-    env.define(coercion: AsSwiftPrecis(asAnything, "anything")) // `anything` = `optional value` (i.e. accepts anything, including `nothing`)
-    env.define(coercion: AsSwiftPrecis(asAnything, "optional")) // TO DO: decide on `optional` vs `anything`; stdlib glue currently uses `optional` rather than `anything` (`anything` may be more easily confused with `value`)
+    env.define(coercion: asAnything) // `anything` = `optional value` (i.e. accepts anything, including `nothing`)
+    env.define(coercion: AsSwiftOptional(asValue)) // TO DO: decide on `optional` vs `anything`; stdlib glue currently uses `optional` rather than `anything` (`anything` may be more easily confused with `value`)
 
 }
 

@@ -4,7 +4,6 @@
 //  Bridging code for primitive handlers. This file is auto-generated; do not edit directly.
 //
 
-
 import Foundation
 
 // & {left, right}
@@ -17,7 +16,7 @@ private let type_joinValues_left_right = (
 private let interface_joinValues_left_right = HandlerInterface(
     name: type_joinValues_left_right.name,
     parameters: [
-		nativeParameter(type_joinValues_left_right.param_0),
+        nativeParameter(type_joinValues_left_right.param_0),
         nativeParameter(type_joinValues_left_right.param_1),
     ],
     result: type_joinValues_left_right.result.nativeCoercion
@@ -26,7 +25,7 @@ private func procedure_joinValues_left_right(command: Command, commandEnv: Scope
     var index = 0
     let arg_0 = try command.value(for: type_joinValues_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_joinValues_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try joinValues(
     	left: arg_0,
     	right: arg_1
@@ -53,7 +52,7 @@ private func procedure_multiply_left_right(command: Command, commandEnv: Scope, 
     var index = 0
     let arg_0 = try command.value(for: type_multiply_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_multiply_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try multiply(
     	left: arg_0,
     	right: arg_1
@@ -80,7 +79,7 @@ private func procedure_add_left_right(command: Command, commandEnv: Scope, handl
     var index = 0
     let arg_0 = try command.value(for: type_add_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_add_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try add(
     	left: arg_0,
     	right: arg_1
@@ -107,7 +106,7 @@ private func procedure_subtract_left_right(command: Command, commandEnv: Scope, 
     var index = 0
     let arg_0 = try command.value(for: type_subtract_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_subtract_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try subtract(
     	left: arg_0,
     	right: arg_1
@@ -134,7 +133,7 @@ private func procedure_divide_left_right(command: Command, commandEnv: Scope, ha
     var index = 0
     let arg_0 = try command.value(for: type_divide_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_divide_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try divide(
     	left: arg_0,
     	right: arg_1
@@ -161,7 +160,7 @@ private func procedure_isLess_left_right(command: Command, commandEnv: Scope, ha
     var index = 0
     let arg_0 = try command.value(for: type_isLess_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isLess_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = isLess(
     	left: arg_0,
     	right: arg_1
@@ -188,7 +187,7 @@ private func procedure_isEqual_left_right(command: Command, commandEnv: Scope, h
     var index = 0
     let arg_0 = try command.value(for: type_isEqual_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isEqual_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = isEqual(
     	left: arg_0,
     	right: arg_1
@@ -215,7 +214,7 @@ private func procedure_isGreater_left_right(command: Command, commandEnv: Scope,
     var index = 0
     let arg_0 = try command.value(for: type_isGreater_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isGreater_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = isGreater(
     	left: arg_0,
     	right: arg_1
@@ -242,7 +241,7 @@ private func procedure_AND_left_right(command: Command, commandEnv: Scope, handl
     var index = 0
     let arg_0 = try command.value(for: type_AND_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_AND_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = AND(
     	left: arg_0,
     	right: arg_1
@@ -266,7 +265,7 @@ private let interface_NOT_right = HandlerInterface(
 private func procedure_NOT_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_NOT_right.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = NOT(
     	right: arg_0
     )
@@ -292,7 +291,7 @@ private func procedure_OR_left_right(command: Command, commandEnv: Scope, handle
     var index = 0
     let arg_0 = try command.value(for: type_OR_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_OR_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = OR(
     	left: arg_0,
     	right: arg_1
@@ -319,7 +318,7 @@ private func procedure_XOR_left_right(command: Command, commandEnv: Scope, handl
     var index = 0
     let arg_0 = try command.value(for: type_XOR_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_XOR_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = XOR(
     	left: arg_0,
     	right: arg_1
@@ -346,7 +345,7 @@ private func procedure_exponent_left_right(command: Command, commandEnv: Scope, 
     var index = 0
     let arg_0 = try command.value(for: type_exponent_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_exponent_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try exponent(
     	left: arg_0,
     	right: arg_1
@@ -373,7 +372,7 @@ private func procedure_afterElement_elementType_expression(command: Command, com
     var index = 0
     let arg_0 = try command.value(for: type_afterElement_elementType_expression.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_afterElement_elementType_expression.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = afterElement(
     	elementType: arg_0,
     	expression: arg_1
@@ -397,7 +396,7 @@ private let interface_randomElement_elementType = HandlerInterface(
 private func procedure_randomElement_elementType(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_randomElement_elementType.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = randomElement(
     	elementType: arg_0
     )
@@ -408,7 +407,7 @@ private func procedure_randomElement_elementType(command: Command, commandEnv: S
 private let type_Application_bundleIdentifier = (
     name: Symbol("app"),
     param_0: (Symbol("bundle_identifier"), Symbol("bundle_identifier"), asString),
-    result: AsValue()
+    result: asValue
 )
 private let interface_Application_bundleIdentifier = HandlerInterface(
     name: type_Application_bundleIdentifier.name,
@@ -420,7 +419,7 @@ private let interface_Application_bundleIdentifier = HandlerInterface(
 private func procedure_Application_bundleIdentifier(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_Application_bundleIdentifier.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try Application(
     	bundleIdentifier: arg_0
     )
@@ -446,7 +445,7 @@ private func procedure_coerce_value_coercion(command: Command, commandEnv: Scope
     var index = 0
     let arg_0 = try command.value(for: type_coerce_value_coercion.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_coerce_value_coercion.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try coerce(
     	value: arg_0,
     	coercion: arg_1,
@@ -474,7 +473,7 @@ private func procedure_atSelector_elementType_selectorData(command: Command, com
     var index = 0
     let arg_0 = try command.value(for: type_atSelector_elementType_selectorData.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_atSelector_elementType_selectorData.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try atSelector(
     	elementType: arg_0,
     	selectorData: arg_1,
@@ -503,7 +502,7 @@ private func procedure_beforeElement_elementType_expression(command: Command, co
     var index = 0
     let arg_0 = try command.value(for: type_beforeElement_elementType_expression.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_beforeElement_elementType_expression.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = beforeElement(
     	elementType: arg_0,
     	expression: arg_1
@@ -524,7 +523,7 @@ private let interface_insertAtBeginning_ = HandlerInterface(
     result: type_insertAtBeginning_.result.nativeCoercion
 )
 private func procedure_insertAtBeginning_(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    if !command.arguments.isEmpty { throw UnknownArgumentError(at: 0, of: command) }
+    if !command.arguments.isEmpty { throw UnknownArgumentError(at: 0, of: command, to: handler) }
     let result = insertAtBeginning(
     )
     return type_insertAtBeginning_.result.wrap(result, in: handlerEnv)
@@ -549,7 +548,7 @@ private func procedure_beginsWith_left_right(command: Command, commandEnv: Scope
     var index = 0
     let arg_0 = try command.value(for: type_beginsWith_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_beginsWith_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try beginsWith(
     	left: arg_0,
     	right: arg_1
@@ -576,7 +575,7 @@ private func procedure_contains_left_right(command: Command, commandEnv: Scope, 
     var index = 0
     let arg_0 = try command.value(for: type_contains_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_contains_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try contains(
     	left: arg_0,
     	right: arg_1
@@ -603,7 +602,7 @@ private func procedure_div_left_right(command: Command, commandEnv: Scope, handl
     var index = 0
     let arg_0 = try command.value(for: type_div_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_div_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try div(
     	left: arg_0,
     	right: arg_1
@@ -624,7 +623,7 @@ private let interface_insertAtEnd_ = HandlerInterface(
     result: type_insertAtEnd_.result.nativeCoercion
 )
 private func procedure_insertAtEnd_(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    if !command.arguments.isEmpty { throw UnknownArgumentError(at: 0, of: command) }
+    if !command.arguments.isEmpty { throw UnknownArgumentError(at: 0, of: command, to: handler) }
     let result = insertAtEnd(
     )
     return type_insertAtEnd_.result.wrap(result, in: handlerEnv)
@@ -649,7 +648,7 @@ private func procedure_endsWith_left_right(command: Command, commandEnv: Scope, 
     var index = 0
     let arg_0 = try command.value(for: type_endsWith_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_endsWith_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try endsWith(
     	left: arg_0,
     	right: arg_1
@@ -673,7 +672,7 @@ private let interface_allElements_elementType = HandlerInterface(
 private func procedure_allElements_elementType(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_allElements_elementType.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = allElements(
     	elementType: arg_0
     )
@@ -696,7 +695,7 @@ private let interface_firstElement_elementType = HandlerInterface(
 private func procedure_firstElement_elementType(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_firstElement_elementType.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = firstElement(
     	elementType: arg_0
     )
@@ -719,7 +718,7 @@ private let interface_formatCode_value = HandlerInterface(
 private func procedure_formatCode_value(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_formatCode_value.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = formatCode(
     	value: arg_0
     )
@@ -745,7 +744,7 @@ private func procedure_rangeSelector_elementType_selectorData(command: Command, 
     var index = 0
     let arg_0 = try command.value(for: type_rangeSelector_elementType_selectorData.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_rangeSelector_elementType_selectorData.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try rangeSelector(
     	elementType: arg_0,
     	selectorData: arg_1,
@@ -774,7 +773,7 @@ private func procedure_idSelector_elementType_selectorData(command: Command, com
     var index = 0
     let arg_0 = try command.value(for: type_idSelector_elementType_selectorData.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_idSelector_elementType_selectorData.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try idSelector(
     	elementType: arg_0,
     	selectorData: arg_1,
@@ -805,7 +804,7 @@ private func procedure_ifTest_condition_action_alternativeAction(command: Comman
     let arg_0 = try command.value(for: type_ifTest_condition_action_alternativeAction.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_ifTest_condition_action_alternativeAction.param_1, at: &index, in: commandEnv)
     let arg_2 = try command.value(for: type_ifTest_condition_action_alternativeAction.param_2, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try ifTest(
     	condition: arg_0,
     	action: arg_1,
@@ -834,7 +833,7 @@ private func procedure_isA_value_coercion(command: Command, commandEnv: Scope, h
     var index = 0
     let arg_0 = try command.value(for: type_isA_value_coercion.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isA_value_coercion.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = isA(
     	value: arg_0,
     	coercion: arg_1,
@@ -862,7 +861,7 @@ private func procedure_isAfter_left_right(command: Command, commandEnv: Scope, h
     var index = 0
     let arg_0 = try command.value(for: type_isAfter_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isAfter_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try isAfter(
     	left: arg_0,
     	right: arg_1
@@ -889,7 +888,7 @@ private func procedure_isBefore_left_right(command: Command, commandEnv: Scope, 
     var index = 0
     let arg_0 = try command.value(for: type_isBefore_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isBefore_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try isBefore(
     	left: arg_0,
     	right: arg_1
@@ -916,7 +915,7 @@ private func procedure_isIn_left_right(command: Command, commandEnv: Scope, hand
     var index = 0
     let arg_0 = try command.value(for: type_isIn_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isIn_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try isIn(
     	left: arg_0,
     	right: arg_1
@@ -943,7 +942,7 @@ private func procedure_isNotAfter_left_right(command: Command, commandEnv: Scope
     var index = 0
     let arg_0 = try command.value(for: type_isNotAfter_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isNotAfter_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try isNotAfter(
     	left: arg_0,
     	right: arg_1
@@ -970,7 +969,7 @@ private func procedure_isNotBefore_left_right(command: Command, commandEnv: Scop
     var index = 0
     let arg_0 = try command.value(for: type_isNotBefore_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isNotBefore_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try isNotBefore(
     	left: arg_0,
     	right: arg_1
@@ -997,7 +996,7 @@ private func procedure_isNotSameAs_left_right(command: Command, commandEnv: Scop
     var index = 0
     let arg_0 = try command.value(for: type_isNotSameAs_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isNotSameAs_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try isNotSameAs(
     	left: arg_0,
     	right: arg_1
@@ -1024,7 +1023,7 @@ private func procedure_isSameAs_left_right(command: Command, commandEnv: Scope, 
     var index = 0
     let arg_0 = try command.value(for: type_isSameAs_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isSameAs_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try isSameAs(
     	left: arg_0,
     	right: arg_1
@@ -1048,7 +1047,7 @@ private let interface_lastElement_elementType = HandlerInterface(
 private func procedure_lastElement_elementType(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_lastElement_elementType.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = lastElement(
     	elementType: arg_0
     )
@@ -1071,7 +1070,7 @@ private let interface_lowercase_text = HandlerInterface(
 private func procedure_lowercase_text(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_lowercase_text.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = lowercase(
     	text: arg_0
     )
@@ -1094,7 +1093,7 @@ private let interface_middleElement_elementType = HandlerInterface(
 private func procedure_middleElement_elementType(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_middleElement_elementType.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = middleElement(
     	elementType: arg_0
     )
@@ -1120,7 +1119,7 @@ private func procedure_mod_left_right(command: Command, commandEnv: Scope, handl
     var index = 0
     let arg_0 = try command.value(for: type_mod_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_mod_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try mod(
     	left: arg_0,
     	right: arg_1
@@ -1147,7 +1146,7 @@ private func procedure_nameSelector_elementType_selectorData(command: Command, c
     var index = 0
     let arg_0 = try command.value(for: type_nameSelector_elementType_selectorData.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_nameSelector_elementType_selectorData.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try nameSelector(
     	elementType: arg_0,
     	selectorData: arg_1,
@@ -1172,7 +1171,7 @@ private let interface_negative_right = HandlerInterface(
 private func procedure_negative_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_negative_right.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try negative(
     	right: arg_0
     )
@@ -1183,7 +1182,7 @@ private func procedure_negative_right(command: Command, commandEnv: Scope, handl
 private let type_ofClause_attribute_target = (
     name: Symbol("of"),
     param_0: (Symbol("attribute"), Symbol("attribute"), asIs),
-    param_1: (Symbol("value"), Symbol("value"), AsValue()),
+    param_1: (Symbol("value"), Symbol("value"), asValue),
     result: asIs
 )
 private let interface_ofClause_attribute_target = HandlerInterface(
@@ -1198,7 +1197,7 @@ private func procedure_ofClause_attribute_target(command: Command, commandEnv: S
     var index = 0
     let arg_0 = try command.value(for: type_ofClause_attribute_target.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_ofClause_attribute_target.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try ofClause(
     	attribute: arg_0,
     	target: arg_1,
@@ -1224,7 +1223,7 @@ private let interface_positive_right = HandlerInterface(
 private func procedure_positive_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_positive_right.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try positive(
     	right: arg_0
     )
@@ -1250,7 +1249,7 @@ private func procedure_repeatWhile_action_condition(command: Command, commandEnv
     var index = 0
     let arg_0 = try command.value(for: type_repeatWhile_action_condition.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_repeatWhile_action_condition.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try repeatWhile(
     	action: arg_0,
     	condition: arg_1,
@@ -1297,7 +1296,7 @@ private func procedure_set_name_to(command: Command, commandEnv: Scope, handler:
     var index = 0
     let arg_0 = try command.value(for: type_set_name_to.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_set_name_to.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try set(
     	name: arg_0,
     	to: arg_1,
@@ -1309,7 +1308,7 @@ private func procedure_set_name_to(command: Command, commandEnv: Scope, handler:
 // tell {target, action}
 private let type_tell_target_action = (
     name: Symbol("tell"),
-    param_0: (Symbol("target"), Symbol("target"), AsValue()),
+    param_0: (Symbol("target"), Symbol("target"), asValue),
     param_1: (Symbol("action"), Symbol("action"), asIs),
     result: asAnything
 )
@@ -1325,7 +1324,7 @@ private func procedure_tell_target_action(command: Command, commandEnv: Scope, h
     var index = 0
     let arg_0 = try command.value(for: type_tell_target_action.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_tell_target_action.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try tell(
     	target: arg_0,
     	action: arg_1,
@@ -1353,7 +1352,7 @@ private func procedure_ElementRange_from_to(command: Command, commandEnv: Scope,
     var index = 0
     let arg_0 = try command.value(for: type_ElementRange_from_to.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_ElementRange_from_to.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = ElementRange(
     	from: arg_0,
     	to: arg_1
@@ -1366,7 +1365,7 @@ private let type_defineCommandHandler_interface_action = (
     name: Symbol("to"),
     param_0: (Symbol("interface"), Symbol("interface"), asHandlerInterface),
     param_1: (Symbol("action"), Symbol("action"), asIs),
-    result: AsHandler()
+    result: asHandler
 )
 private let interface_defineCommandHandler_interface_action = HandlerInterface(
     name: type_defineCommandHandler_interface_action.name,
@@ -1380,7 +1379,7 @@ private func procedure_defineCommandHandler_interface_action(command: Command, c
     var index = 0
     let arg_0 = try command.value(for: type_defineCommandHandler_interface_action.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_defineCommandHandler_interface_action.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try defineCommandHandler(
     	interface: arg_0,
     	action: arg_1,
@@ -1405,7 +1404,7 @@ private let interface_uppercase_text = HandlerInterface(
 private func procedure_uppercase_text(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_uppercase_text.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = uppercase(
     	text: arg_0
     )
@@ -1417,7 +1416,7 @@ private let type_defineEventHandler_interface_action = (
     name: Symbol("when"),
     param_0: (Symbol("interface"), Symbol("interface"), asHandlerInterface),
     param_1: (Symbol("action"), Symbol("action"), asIs),
-    result: AsHandler()
+    result: asHandler
 )
 private let interface_defineEventHandler_interface_action = HandlerInterface(
     name: type_defineEventHandler_interface_action.name,
@@ -1431,7 +1430,7 @@ private func procedure_defineEventHandler_interface_action(command: Command, com
     var index = 0
     let arg_0 = try command.value(for: type_defineEventHandler_interface_action.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_defineEventHandler_interface_action.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try defineEventHandler(
     	interface: arg_0,
     	action: arg_1,
@@ -1459,7 +1458,7 @@ private func procedure_whileRepeat_condition_action(command: Command, commandEnv
     var index = 0
     let arg_0 = try command.value(for: type_whileRepeat_condition_action.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_whileRepeat_condition_action.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try whileRepeat(
     	condition: arg_0,
     	action: arg_1,
@@ -1487,7 +1486,7 @@ private func procedure_testSelector_elementType_selectorData(command: Command, c
     var index = 0
     let arg_0 = try command.value(for: type_testSelector_elementType_selectorData.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_testSelector_elementType_selectorData.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try testSelector(
     	elementType: arg_0,
     	selectorData: arg_1,
@@ -1501,7 +1500,7 @@ private func procedure_testSelector_elementType_selectorData(command: Command, c
 private let type_write_value = (
     name: Symbol("write"),
     param_0: (Symbol("value"), Symbol("value"), asAnything),
-    result: AsNothing()
+    result: nullValue
 )
 private let interface_write_value = HandlerInterface(
     name: type_write_value.name,
@@ -1513,7 +1512,7 @@ private let interface_write_value = HandlerInterface(
 private func procedure_write_value(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
     let arg_0 = try command.value(for: type_write_value.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
 	 write(
     	value: arg_0
     )
@@ -1539,7 +1538,7 @@ private func procedure_isNotEqual_left_right(command: Command, commandEnv: Scope
     var index = 0
     let arg_0 = try command.value(for: type_isNotEqual_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isNotEqual_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = isNotEqual(
     	left: arg_0,
     	right: arg_1
@@ -1566,7 +1565,7 @@ private func procedure_isLessOrEqual_left_right(command: Command, commandEnv: Sc
     var index = 0
     let arg_0 = try command.value(for: type_isLessOrEqual_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isLessOrEqual_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = isLessOrEqual(
     	left: arg_0,
     	right: arg_1
@@ -1593,7 +1592,7 @@ private func procedure_isGreaterOrEqual_left_right(command: Command, commandEnv:
     var index = 0
     let arg_0 = try command.value(for: type_isGreaterOrEqual_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_isGreaterOrEqual_left_right.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = isGreaterOrEqual(
     	left: arg_0,
     	right: arg_1

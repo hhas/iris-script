@@ -44,15 +44,9 @@ struct NativeHandler: Handler {
                 handlerScope.bind(name: binding, to: argument)
             }
             if command.arguments.count > index && !self.interface.isEventHandler { // too many arguments
-                throw UnknownArgumentError(at: index, of: command)
+                throw UnknownArgumentError(at: index, of: command, to: self)
             }
-            result = try coercion.coerce(self.action, in: handlerScope) // TO DO: intersect coercions
-            
-            // TO DO: sort this out:
-            //result = try self.action.eval(in: handlerScope, as: self.interface.result.intersect(with: coercion)) // TO DO: any reason to go through eval here? (if we restrict body type to Block then in principle no…)
-            
-            //result = try self.interface.result.coerce(self.action, in: handlerScope) // (…in which case use this to reduce stack pressure) … except that Block implements eval, not toTYPE methods
-            // note: the result coercion only applies to returned value (e.g. if return type is Thunk, it won't actually do anything as the Block's eval loop has already forced the result of each expr)
+            result = try coercion.coerce(self.interface.result.coerce(self.action, in: handlerScope), in: handlerScope) // TO DO: intersect coercions: self.interface.result.intersect(with: coercion) - one of the problems we have with intersecting coercions is that interface.result is a NativeCoercion, which may be a wrapper around primitive coercion (at least in primitive handlers); meanwhile, T may be just about anything, depending on its evaluation context // TO DO: what scope should caller-supplied use?
         } catch {
             throw HandlerError(handler: self, command: command).from(error)
         }

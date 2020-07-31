@@ -93,7 +93,7 @@ struct BindHandlerOnFirstUse: Handler {
             return try handler.call(with: command, in: scope, as: coercion)
         } else {
             // Q. if first lookup finds stored value, is it worth returning as StoredValueHandler? this might capture value (if read-only, non-maskable), or scope (if mutable, non-maskable), or dynamic lookup
-            if command.arguments.count != 0 { throw UnknownArgumentError(at: 0, of: command) }
+            if command.arguments.count != 0 { throw UnknownArgumentError(at: 0, of: command, to: self) }
             let result = try coercion.coerce(value, in: scope)
             if value.isMemoizable {
   //              command._handler = MemoizedStaticValue(value: value, coercion: coercion, result: result) // TO DO

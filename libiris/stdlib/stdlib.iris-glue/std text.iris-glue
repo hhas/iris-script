@@ -80,7 +80,7 @@ to uppercase {text as string} returning string requires {
 to lowercase {text as string} returning string requires {
 }
 
-to format_code {value as optional} returning string requires {
+to format_code {value as anything} returning string requires {
 }
 
 

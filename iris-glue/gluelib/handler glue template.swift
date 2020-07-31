@@ -44,7 +44,7 @@ private let interface_««signature»» = HandlerInterface(
     name: type_««signature»».name,
     parameters: [
     ««+interfaceParameters»»
-		nativeParameter(type_««signature»».param_««count»»),
+        nativeParameter(type_««signature»».param_««count»»),
     ««-interfaceParameters»»
     ],
     result: type_««signature»».result.nativeCoercion
@@ -54,16 +54,16 @@ private func procedure_««signature»»(command: Command, commandEnv: Scope, ha
     ««+procedureParameters»»
     var index = 0
     ««+unboxArguments»»
-    let arg_««count»» = try command.value(for: type_««signature»».param_««count»», in: commandEnv)
+    let arg_««count»» = try command.value(for: type_««signature»».param_««count»», at: &index, in: commandEnv)
     ««-unboxArguments»»
 
     ««+checkForUnexpectedArguments»»
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command) }
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     ««-checkForUnexpectedArguments»»
     ««-procedureParameters»»
 
     ««+checkForUnexpectedArguments»»
-    if !command.arguments.isEmpty { throw UnknownArgumentError(at: 0, of: command) }
+    if !command.arguments.isEmpty { throw UnknownArgumentError(at: 0, of: command, to: handler) }
     ««-checkForUnexpectedArguments»»
 
     ««+resultAssignment»»

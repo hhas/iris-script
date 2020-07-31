@@ -129,7 +129,7 @@ extension KeyConvertible {
 
 
 
-public protocol AtomicValue: StaticValue { } // e.g. nothing, true/false, Symbol
+public protocol AtomicValue: StaticValue, LiteralConvertible { } // e.g. nothing, true/false, Symbol
 
 extension AtomicValue {
     

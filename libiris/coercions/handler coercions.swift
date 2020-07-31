@@ -56,9 +56,13 @@ public struct AsCoercion: SwiftCoercion {
     public var swiftLiteralDescription: String { return "asCoercion" }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
-        if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
-        if let v = value as? NativeCoercion { return v }
-        throw TypeCoercionError(value: value, coercion: self)
+        do {
+            if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
+            if let v = value as? NativeCoercion { return v }
+            throw TypeCoercionError(value: value, coercion: self)
+        } catch is NullCoercionError {
+            return nullValue
+        }
     }
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {

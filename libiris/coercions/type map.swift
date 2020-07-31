@@ -105,13 +105,31 @@ public let asSymbol = AsSymbol("symbol", "asSymbol") // TO DO: should we support
 
 
 
-public struct _AsItself: Value, Coercion {
+public struct AsItself: Value, SwiftCoercion, NativeCoercion {
+    
+    // “magical” coercion type; may be used as a handler return type to indicate that the handler should return the calling command (after boxing it so it can be passed around safely), e.g. defining a handler for the `returning` operator avoids confusing errors if `foo returning bar` is executed outside of a handler interface definition; compare `nothing`
+    
+    public typealias SwiftType = Value
     
     public static var nominalType: NativeCoercion = asCoercion.nativeCoercion
     
     public let name: Symbol = "itself"
+    
+    public let swiftLiteralDescription: String = "asItself"
+    
+    public let literalDescription: String = "itself"
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> Value {
+        throw NotYetImplementedError()
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return nullValue
+    }
+    
+    var nativeCoercion: NativeCoercion { // caution: glue generator filters by `HandlerInterface.result is AsItself`, so make sure handler interface hasn't wrapped it in NativizedCoercion or that test will fail
+        return self
+    }
 }
 
-public typealias AsItself = TypeMap<_AsItself>
-
-public let asItself = AsItself("itself", "asItself")
+public let asItself = AsItself()

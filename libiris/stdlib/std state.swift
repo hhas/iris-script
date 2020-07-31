@@ -65,3 +65,8 @@ func coerce(value: Value, coercion: NativeCoercion, commandEnv: Scope) throws ->
 }
 
 
+
+
+func returning(interface: HandlerInterface, coercion: Coercion) -> Value {
+    fatalError()
+}

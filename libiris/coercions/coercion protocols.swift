@@ -29,7 +29,6 @@ public protocol NativeCoercion: Value, Coercion {
     
     func wrap(_ value: Value, in scope: Scope) -> Value // TO DO: redundant; can/should we get rid of this?
     func coerce(_ value: Value, in scope: Scope) throws -> Value
-    func defaultValue(in scope: Scope) throws -> Value
 }
 
 public extension NativeCoercion {
@@ -38,10 +37,6 @@ public extension NativeCoercion {
     
     @inlinable func wrap(_ value: Value, in scope: Scope) -> Value {
         return value
-    }
-    
-    func defaultValue(in scope: Scope) throws -> Value {
-        throw TypeCoercionError(value: nullValue, coercion: self)
     }
 }
 
@@ -61,17 +56,10 @@ public protocol SwiftCoercion: Coercion {
     func wrap(_ value: SwiftType, in scope: Scope) -> Value
     
     func coerceFunc(for valueType: Value.Type) -> CoerceFunc // used by AsArray to reduce overheads when unpacking arrays of [mostly/all] same element type
-    
-    func defaultValue(in scope: Scope) throws -> SwiftType // TO DO: is there any use-case where scope is needed? (i.e. this implies a default value that requires evaluation/thunking; is that necessary and/or desirable)
 }
 
 
 public extension SwiftCoercion {
-    
-    // except for optional/default modifiers, most coercions should throw null coercion error if value is `nothing`
-    func defaultValue(in scope: Scope) throws -> SwiftType {
-        throw TypeCoercionError(value: nullValue, coercion: self)
-    }
     
     // default coerceFunc() implementation
     @inlinable func coerceFunc(for valueType: Value.Type) -> CoerceFunc {

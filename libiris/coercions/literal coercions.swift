@@ -24,7 +24,11 @@ public struct AsLiteral<T: Value>: SwiftCoercion { // caution: this only works f
     public func coerce(_ value: Value, in env: Scope) throws -> SwiftType {
         // important: this type checks then returns the value as-is, without evaluation; e.g. used to get a literal command
         if let result = value as? SwiftType { return result }
-        throw TypeCoercionError(value: value, coercion: self)
+        if value is NullValue { // TO DO: this smells
+            throw NullCoercionError(value: value, coercion: self.nativeCoercion)
+        } else {
+            throw TypeCoercionError(value: value, coercion: self)
+        }
     }
 }
 
@@ -42,9 +46,39 @@ public struct AsLiteralName: SwiftCoercion {
     
     public func coerce(_ value: Value, in env: Scope) throws -> SwiftType {
         if let result = value.asIdentifier() { return result }
-        throw TypeCoercionError(value: value, coercion: self)
+        if value is NullValue {
+            throw NullCoercionError(value: value, coercion: self.nativeCoercion)
+        } else {
+            throw TypeCoercionError(value: value, coercion: self)
+        }
     }
 }
 
 
 public let asLiteralName = AsLiteralName()
+
+
+
+
+extension NullValue: SwiftCoercion, NativeCoercion { // used as return type where handler returns `nothing`
+    
+    public var name: Symbol { return "nothing" }
+    
+    //public var swiftLiteralDescription: String { return "asNothing" }
+    
+    public typealias SwiftType = Value
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        // calling AsNothing.unbox() is [presumably] an implementation error // TO DO: should it return nullValue instead? or is it best to have explicit error, assuming calling this method is always a bug?
+        throw InternalError(description: "AsNothing.unbox() is not supported.")
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return nullValue
+    }
+}
+
+public typealias AsNothing = NullValue
+
+public let asNothing = nullValue //AsNothing()
+
