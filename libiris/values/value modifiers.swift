@@ -47,7 +47,7 @@ public class EditableValue: Handler, Mutator { // TO DO: Handler or Callable?
     
     
     public func eval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        let result = try coercion.coerce(self.data, in: scope) // TO DO: this needs to intersect the given coercion with self.coercion and pass the resulting coercion to self.data.eval(…); Q. how should intersecting [e.g.] AsScalar with AsList work out?
+        let result = try coercion.coerce(self.data, in: scope) // TO DO: this needs to intersect the given coercion with self.coercion and pass the resulting coercion to self.data.eval(…); Q. how should intersecting [e.g.] AsScalar with AsOrderedList work out?
         //        self.data = result // this is wrong; only mutator operations should modify editable box's content [in the case of editable parameters to a command, the handler should eval and update the box's content when binding it to the handler's scope] // Q. what if coercion is AsEditable? we don't want to create a second box
         return result
     }

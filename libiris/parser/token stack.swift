@@ -180,10 +180,11 @@ extension Array where Element == Parser.TokenInfo {
                 result.append(self[index].form)
                 index += 1
             } else {
-                self.show()
-                //print("Missing last match in reduceOperatorExpression: \(index..<stopIndex), \(self[index])")
-                //self.show(index, stopIndex)
-                result.append(.value(SyntaxErrorDescription("Missing last match in reduceOperatorExpression: \(index..<stopIndex)"))) // TO DO: better error message; the problem is that the expr ends in one or more extra tokens, which could be the result of a missing separator, or a misspelled infix operator, or some stray keyboard crud
+                //self.show()
+                print("reduceOperatorExpression couldn’t match tokens \(index...stopIndex-1):")
+                self.show(index, stopIndex); print()
+                // TO DO: better error message
+                result.append(.value(SyntaxErrorDescription("reduceOperatorExpression couldn’t match tokens \(index...stopIndex-1)."))) // TO DO: better error message; the problem is that the expr ends in one or more extra tokens, which could be the result of a missing separator, or a misspelled infix operator, or some stray keyboard crud
                 index += 1 //
             }
         }
@@ -191,9 +192,10 @@ extension Array where Element == Parser.TokenInfo {
         if result.count == 1 {
             form = result[0]
         } else {
-            //print("Couldn’t reduce \(startIndex..<stopIndex): \(result)") // TO DO: reduce as SyntaxErrorDescription
-            //self.show(startIndex, stopIndex); print()
-            form = .value(SyntaxErrorDescription("Couldn’t fully reduce expression \(startIndex..<stopIndex): \(result)\n\n\(self.dump(startIndex, stopIndex))"))
+            print("Couldn’t reduce \(startIndex..<stopIndex):")
+           // self.show(startIndex, stopIndex); print()
+            // TO DO: better error message
+            form = .value(SyntaxErrorDescription("Couldn’t fully reduce expression \(startIndex...stopIndex-1): \(result)"))
         }
         self.replace(from: startIndex, to: stopIndex, withReduction: form)
         stopIndex = startIndex + 1

@@ -56,7 +56,7 @@ public func stdlib_loadConstants(into env: Environment) {
     
     env.define(coercion: asInt.nativeCoercion)
     env.define(coercion: asDouble.nativeCoercion)
-    env.define(coercion: asList)
+    env.define(coercion: asOrderedList)
     env.define(coercion: asRecord.nativeCoercion)
     
     env.define(coercion: asCoercion)

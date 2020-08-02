@@ -1,5 +1,5 @@
 //
-//  dictionary coercion.swift
+//  dictionary coercions.swift
 //  libiris
 //
 
@@ -101,3 +101,5 @@ public struct AsDictionary<KeyType: SwiftCoercion, ValueType: SwiftCoercion>: Sw
     }
 }
 
+
+// TO DO: AsKeyedList

@@ -6,7 +6,7 @@
 import Foundation
 
 
-public struct AsAnything: SwiftCoercion { // any value or `nothing`
+public struct AsAnything: SwiftCoercion { // any value or `nothing`; equivalent to `AsOptional(asValue)`
     
     public typealias SwiftType = Value
     

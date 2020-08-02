@@ -61,7 +61,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEva
             return try coercion.coerce(v, in: scope)
         }
         switch coercion {
-        case let c as AsList:
+        case let c as AsOrderedList:
             return try coercion.coerce(self.toList(in: scope, as: c), in: scope)
         case let c as AsRecord:
             return try coercion.coerce(self.toRawRecord(in: scope, as: c), in: scope)
@@ -96,7 +96,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEva
     
     // unpack collections
     
-    public func toList(in env: Scope, as coercion: AsList) throws -> OrderedList {
+    public func toList(in env: Scope, as coercion: AsOrderedList) throws -> OrderedList {
         do {
             if let desc = self.desc as? ListDescriptor {
                 var result = [Value]()
@@ -169,7 +169,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEva
              typeChar, typeIntlText, typeUTF8Text, typeUTF16ExternalRepresentation, typeStyledText, typeUnicodeText, typeVersion:
             return try self.toScalar(in: scope, as: coercion)
         case typeAEList:
-            return try self.toList(in: scope, as: asList)
+            return try self.toList(in: scope, as: asOrderedList)
         case typeAERecord:
             return try self.toRawRecord(in: scope, as: asRecord)
         case typeType where (try? unpackAsType(self.desc)) == 0x6D736E67: // cMissingValue

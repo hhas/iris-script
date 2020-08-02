@@ -23,7 +23,7 @@ struct ElementRange: StaticValue {
         self.stop = stop
     }
     
-    // TO DO: implement asList() which returns numeric sequence if start and stop are integers (eventually want to implement Value.asIterable that returns a generator, which is more efficient than building a new list object when iterating)
+    // TO DO: implement asOrderedList() which returns numeric sequence if start and stop are integers (eventually want to implement Value.asIterable that returns a generator, which is more efficient than building a new list object when iterating)
 }
 
 

@@ -36,8 +36,6 @@ public protocol Callable: ComplexValue {
 
 public extension Callable {
     
-    var description: String { return "«handler: \(self.interface)»" }
-    
     var interface: HandlerInterface { return HandlerInterface() } // null interface
     
     var isStaticBindable: Bool { return false } // TO DO: module-defined handlers are normally instantiated at startup, permanently bound to a single scope, stored in a read-only slot, and cannot be masked in sub-scopes, so only need looked up on first call, after which they can be captured by command for reuse (Q. since any slot can, in principle, be explicitly masked in subscope, how do we ensure this? [one reason we want to avoid masking library handlers is that the library may also define operator syntax for those handlers, and replacing one without the other is likely to cause confusion/errors]); caution: rebinding a module handler to a writable slot requires dynamic binding (although it should be okay to capture the environment as long as it's non-maskable, which at least reduces it to single dictionary lookup)
@@ -50,6 +48,8 @@ public protocol Handler: Callable {
 }
 
 public extension Handler {
+    
+    var description: String { return "«\(self.nominalType): \(self.interface)»" } // TO DO: how should handlers self-represent? (they can't show body or scope, so it has to be an abstract description, not a literal one)
     
     static var nominalType: NativeCoercion { return asHandler.nativeCoercion }
 }

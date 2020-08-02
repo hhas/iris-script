@@ -1,5 +1,5 @@
 //
-//  array coercion.swift
+//  array coercions.swift
 //  libiris
 //
 
@@ -75,13 +75,19 @@ extension AsArray {
 
 
 
-//public typealias AsList = TypeMap<OrderedList>
-
-public struct AsList: NativeCoercion {
+public struct AsOrderedList: CallableNativeCoercion {
     
     public var name: Symbol = "list" // TO DO: parameterize
     
     public var swiftLiteralDescription: String { return "AsArray(\(self.elementType.swiftLiteralDescription))" }
+    
+    public var literalDescription: String {
+        if self.elementType is NativizedCoercion<AsAnything> {
+            return self.name.label
+        } else {
+            return "\(self.name.label) {of: \(self.elementType.literalDescription)}" // TO DO: also min/max (how/where should value constraints be defined?)
+        }
+    }
     
     public let elementType: NativeCoercion
     
@@ -116,6 +122,28 @@ public struct AsList: NativeCoercion {
         }
         return OrderedList(result)
     }
+    
+    private static let type_list = (
+        name: Symbol("list"),
+        param_0: (Symbol("of"), Symbol("type"), asCoercion),
+        result: asCoercion
+    )
+    
+    private static let interface_list = HandlerInterface(
+        name: type_list.name,
+        parameters: [
+            nativeParameter(type_list.param_0),
+        ],
+        result: type_list.result.nativeCoercion
+    )
+    
+    public func call<T>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType where T : SwiftCoercion {
+        var index = 0
+        let arg_0 = try command.value(for: AsOrderedList.type_list.param_0, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        let result = try coercion.coerce(AsOrderedList(arg_0), in: scope)
+        return result
+    }
 }
 
-public let asList = AsList() // TO DO: implement as struct
+public let asOrderedList = AsOrderedList() // TO DO: implement as struct

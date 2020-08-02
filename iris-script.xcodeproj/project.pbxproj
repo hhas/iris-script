@@ -103,12 +103,12 @@
 		4FC82CFB24CEC2F900EEC170 /* value coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF324CEBEAE00EEC170 /* value coercions.swift */; };
 		4FC82CFC24CEC2F900EEC170 /* numeric coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF124CEBEAE00EEC170 /* numeric coercions.swift */; };
 		4FC82CFD24CEC2F900EEC170 /* text coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF024CEBEAE00EEC170 /* text coercions.swift */; };
-		4FC82CFE24CEC2F900EEC170 /* array coercion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF624CEBEAF00EEC170 /* array coercion.swift */; };
+		4FC82CFE24CEC2F900EEC170 /* array coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF624CEBEAF00EEC170 /* array coercions.swift */; };
 		4FC82D0024CEC2F900EEC170 /* record coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CEF24CEBEAE00EEC170 /* record coercions.swift */; };
 		4FC82D0124CEC2F900EEC170 /* coercion modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF524CEBEAF00EEC170 /* coercion modifiers.swift */; };
 		4FC82D0324CF069800EEC170 /* native coercion wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82D0224CF069800EEC170 /* native coercion wrapper.swift */; };
 		4FC82D0724D0A0E100EEC170 /* handler coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82D0624D0A0E100EEC170 /* handler coercions.swift */; };
-		4FC82D0924D0A2CC00EEC170 /* dictionary coercion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82D0824D0A2CC00EEC170 /* dictionary coercion.swift */; };
+		4FC82D0924D0A2CC00EEC170 /* dictionary coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82D0824D0A2CC00EEC170 /* dictionary coercions.swift */; };
 		4FC82D0B24D1C75100EEC170 /* literal coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82D0A24D1C75100EEC170 /* literal coercions.swift */; };
 		4FD41C1524BE487D00B56A14 /* incremental parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FD41C1424BE487D00B56A14 /* incremental parser.swift */; };
 		4FD41C1C24BE614600B56A14 /* null token stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FD41C1B24BE614600B56A14 /* null token stream.swift */; };
@@ -335,11 +335,11 @@
 		4FC82CF324CEBEAE00EEC170 /* value coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "value coercions.swift"; sourceTree = "<group>"; };
 		4FC82CF424CEBEAE00EEC170 /* type map.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "type map.swift"; sourceTree = "<group>"; };
 		4FC82CF524CEBEAF00EEC170 /* coercion modifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "coercion modifiers.swift"; sourceTree = "<group>"; };
-		4FC82CF624CEBEAF00EEC170 /* array coercion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "array coercion.swift"; sourceTree = "<group>"; };
+		4FC82CF624CEBEAF00EEC170 /* array coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "array coercions.swift"; sourceTree = "<group>"; };
 		4FC82CF724CEC0BC00EEC170 /* thunk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = thunk.swift; sourceTree = "<group>"; };
 		4FC82D0224CF069800EEC170 /* native coercion wrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "native coercion wrapper.swift"; sourceTree = "<group>"; };
 		4FC82D0624D0A0E100EEC170 /* handler coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler coercions.swift"; sourceTree = "<group>"; };
-		4FC82D0824D0A2CC00EEC170 /* dictionary coercion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "dictionary coercion.swift"; sourceTree = "<group>"; };
+		4FC82D0824D0A2CC00EEC170 /* dictionary coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "dictionary coercions.swift"; sourceTree = "<group>"; };
 		4FC82D0A24D1C75100EEC170 /* literal coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "literal coercions.swift"; sourceTree = "<group>"; };
 		4FD41C1424BE487D00B56A14 /* incremental parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "incremental parser.swift"; sourceTree = "<group>"; };
 		4FD41C1B24BE614600B56A14 /* null token stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "null token stream.swift"; sourceTree = "<group>"; };
@@ -758,8 +758,8 @@
 				4FC82CF324CEBEAE00EEC170 /* value coercions.swift */,
 				4FC82CF124CEBEAE00EEC170 /* numeric coercions.swift */,
 				4FC82CF024CEBEAE00EEC170 /* text coercions.swift */,
-				4FC82CF624CEBEAF00EEC170 /* array coercion.swift */,
-				4FC82D0824D0A2CC00EEC170 /* dictionary coercion.swift */,
+				4FC82CF624CEBEAF00EEC170 /* array coercions.swift */,
+				4FC82D0824D0A2CC00EEC170 /* dictionary coercions.swift */,
 				4FC82CEF24CEBEAE00EEC170 /* record coercions.swift */,
 				4FC82D0624D0A0E100EEC170 /* handler coercions.swift */,
 				4FC82CF524CEBEAF00EEC170 /* coercion modifiers.swift */,
@@ -1032,7 +1032,7 @@
 				4FC82CFB24CEC2F900EEC170 /* value coercions.swift in Sources */,
 				4FC82CFC24CEC2F900EEC170 /* numeric coercions.swift in Sources */,
 				4FC82CFD24CEC2F900EEC170 /* text coercions.swift in Sources */,
-				4FC82CFE24CEC2F900EEC170 /* array coercion.swift in Sources */,
+				4FC82CFE24CEC2F900EEC170 /* array coercions.swift in Sources */,
 				4FC82D0024CEC2F900EEC170 /* record coercions.swift in Sources */,
 				4FC82D0124CEC2F900EEC170 /* coercion modifiers.swift in Sources */,
 				4F2B0C6624C0CC4F00664ABB /* formatter.swift in Sources */,
@@ -1051,7 +1051,7 @@
 				4F988D0224BCC5CC00EE66C7 /* test clause selectors.swift in Sources */,
 				4F988D0324BCC5CC00EE66C7 /* reference coercions.swift in Sources */,
 				4F345EA024C38C7900532054 /* quote reader.swift in Sources */,
-				4FC82D0924D0A2CC00EEC170 /* dictionary coercion.swift in Sources */,
+				4FC82D0924D0A2CC00EEC170 /* dictionary coercions.swift in Sources */,
 				4F988D0424BCC5CC00EE66C7 /* query funcs.swift in Sources */,
 				4F988D0524BCC5CC00EE66C7 /* native app data.swift in Sources */,
 				4F27E93924CC591100102572 /* parser errors.swift in Sources */,

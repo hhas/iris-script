@@ -109,7 +109,7 @@ public struct AsSwiftPrecis<ElementType: SwiftCoercion>: SwiftCoercion {
 }
 
 
-public struct AsOptional: ConstrainableNativeCoercion {
+public struct AsOptional: CallableNativeCoercion {
     
     public var description: String { return "optional \(literal(for: self.elementType))" }
     

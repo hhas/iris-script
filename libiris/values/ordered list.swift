@@ -18,11 +18,11 @@ public struct OrderedList: BoxedCollectionValue { // ExpressibleByArrayLiteral?
 
     public var description: String { return self.swiftLiteralDescription }
     
-    public static let nominalType: NativeCoercion = asList
+    public static let nominalType: NativeCoercion = asOrderedList
     
     // TO DO: rename `constrainedType` to `structuralType`/`reifiedType`? make it public on Value?
     
-    private var constrainedType: NativeCoercion = asList // TO DO: how/when is best to specialize this (bear in mind that list may contain commands and other exprs that are not guaranteed to eval to same type/value every time)
+    private var constrainedType: NativeCoercion = asOrderedList // TO DO: how/when is best to specialize this (bear in mind that list may contain commands and other exprs that are not guaranteed to eval to same type/value every time)
     
     public var isMemoizable: Bool { return false } // TO DO: lists are memoizable only if all elements are; how/when should we determine this? (we want to avoid iterating long lists more than is necessary); should we also take opportunity to determine minimally constrained type? (e.g. if all items are numbers, constrained type could be inferred as AsArray(asNumber), although whether we want to enforce this when editing list is another question)
     

@@ -18,6 +18,8 @@ public protocol Coercion: LiteralConvertible {
 }
 
 public extension Coercion {
+    
+    // default implementation for literalDescription returns coercion’s name (this is also used as slot name when adding coercions to environment); coercions that can be parameterized (e.g. `list {of: integer {min: 1, max: 10}}`) should implement their own literalDescription property that provides full description, using name-only short form when all parameters are default values; thus `optional` formats as `optional` but `optional number` formats as `optional number` (or `optional {number}` if operator syntax isn’t available)
     var literalDescription: String { return self.name.label }
     //TO DO: `var swiftLiteralDescription: String { return "\(type(of:self))()" }` as default implementation? or is that too likely to mask bugs?
 }
@@ -102,9 +104,9 @@ public protocol SelfEvaluatingProtocol {
 
 
 
-public protocol ConstrainableNativeCoercion: NativeCoercion, Callable {
+public protocol CallableNativeCoercion: NativeCoercion, Callable {
 
 }
 
-public extension ConstrainableNativeCoercion {
+public extension CallableNativeCoercion {
 }
