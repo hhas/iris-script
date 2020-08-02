@@ -180,9 +180,10 @@ extension Array where Element == Parser.TokenInfo {
                 result.append(self[index].form)
                 index += 1
             } else {
-                print("Missing last match in reduceOperatorExpression: \(index..<stopIndex), \(self[index])")
-                self.show(index, stopIndex)
-                result.append(.value(SyntaxErrorDescription("Missing last match in reduceOperatorExpression: \(index..<stopIndex)"))) // TO DO: better error message
+                self.show()
+                //print("Missing last match in reduceOperatorExpression: \(index..<stopIndex), \(self[index])")
+                //self.show(index, stopIndex)
+                result.append(.value(SyntaxErrorDescription("Missing last match in reduceOperatorExpression: \(index..<stopIndex)"))) // TO DO: better error message; the problem is that the expr ends in one or more extra tokens, which could be the result of a missing separator, or a misspelled infix operator, or some stray keyboard crud
                 index += 1 //
             }
         }

@@ -56,6 +56,8 @@ public protocol SwiftCoercion: Coercion {
     func wrap(_ value: SwiftType, in scope: Scope) -> Value
     
     func coerceFunc(for valueType: Value.Type) -> CoerceFunc // used by AsArray to reduce overheads when unpacking arrays of [mostly/all] same element type
+    
+    var nativeCoercion: NativeCoercion { get }
 }
 
 
@@ -99,3 +101,10 @@ public protocol SelfEvaluatingProtocol {
 }
 
 
+
+public protocol ConstrainableNativeCoercion: NativeCoercion, Callable {
+
+}
+
+public extension ConstrainableNativeCoercion {
+}

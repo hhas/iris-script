@@ -9,6 +9,11 @@ import AppleEvents
 
 protocol TestSelector: Handler { }
 
+extension TestSelector {
+ 
+    static var nominalType: NativeCoercion { return asHandler.nativeCoercion }
+}
+
 
 
 struct ComparisonSelector: TestSelector {

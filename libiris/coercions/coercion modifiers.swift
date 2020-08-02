@@ -8,6 +8,7 @@ import Foundation
 // AsSwiftOptional(asAnything, "anything")
 
 
+
 public struct AsSwiftOptional<ElementType: SwiftCoercion>: SwiftCoercion {
     
     public typealias SwiftType = ElementType.SwiftType?
@@ -35,6 +36,10 @@ public struct AsSwiftOptional<ElementType: SwiftCoercion>: SwiftCoercion {
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         if let v = value { return self.elementType.wrap(v, in: scope) }
         return nullValue
+    }
+    
+    public var nativeCoercion: NativeCoercion { // TO DO: why is SwiftCoercion's extension being called? (probably because of how it’s typed in NativizedCoercion: as <T:SwiftCoercion>)
+        return AsOptional(self.elementType.nativeCoercion)
     }
 }
 
@@ -104,7 +109,9 @@ public struct AsSwiftPrecis<ElementType: SwiftCoercion>: SwiftCoercion {
 }
 
 
-public struct AsOptional: NativeCoercion {
+public struct AsOptional: ConstrainableNativeCoercion {
+    
+    public var description: String { return "optional \(literal(for: self.elementType))" }
     
     public typealias SwiftType = Value
     
@@ -117,9 +124,7 @@ public struct AsOptional: NativeCoercion {
     }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
-        // NullValue self-evaluates by calling AsSwiftOptional.defaultValue(in:) and returning the result
-        //if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: PrimitivizedCoercion(self)) }
-        do {
+        do { // NullValue will self-evaluate by throwing a NullCoercionError which is intercepted here
             return try self.elementType.coerce(value, in: scope)
         } catch is NullCoercionError {
             return nullValue
@@ -129,6 +134,30 @@ public struct AsOptional: NativeCoercion {
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return value
     }
+    
+    private static let type_optional = (
+        name: Symbol("optional"),
+        param_0: (Symbol("type"), Symbol("type"), asCoercion),
+        result: asCoercion
+    )
+    
+    private static let interface_optional = HandlerInterface(
+        name: type_optional.name,
+        parameters: [
+            nativeParameter(type_optional.param_0),
+        ],
+        result: type_optional.result.nativeCoercion
+    )
+    
+    public func call<T>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType where T : SwiftCoercion {
+        var index = 0
+        let arg_0 = try command.value(for: AsOptional.type_optional.param_0, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        let result = try coercion.coerce(AsOptional(arg_0), in: scope)
+        print(result)
+        return result
+    }
+    
 }
 
 

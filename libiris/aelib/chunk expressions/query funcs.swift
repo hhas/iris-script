@@ -2,6 +2,8 @@
 //  query values.swift
 //  libiris
 //
+//  these are stubs
+//
 
 // TO DO: what to do with reference form operators that don't appear within a `tell` block/`of` operator, e.g. `document at 1` is legal top-level code, but currently doesn't do anything useful when evaluated (the primitive funcs below currently just abort); loathe to define twice [or more] (once as methods on Reference, then again as global handlers); at the same time, implementing selector methods in a hardcoded switch block rather than a lookup table is suboptimal for introspection
 
@@ -61,6 +63,8 @@ func rangeSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, 
 func testSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value {
     throw InternalError(description: "Can’t create a reference to `\(elementType) whose \(selectorData)` of \(commandEnv) as it is not selectable.")
 }
+
+// TO DO: the following functions don't throw directly so either return a reference or return an encapsulated error that throws when evaled
 
 func firstElement(elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")

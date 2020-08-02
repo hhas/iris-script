@@ -155,8 +155,6 @@ public class Parser {
                 fullMatches.append(match)
             }
         }
-        // when auto-reducing blocks, we don’t want to overshoot, e.g. given `[[…]]`, both list literal patterns will match the first `]` but only the second should be allowed (requiring a full, not provisional, match would also exclude the first, but this is simpler)
-        fullMatches.removeAll{ $0.startIndex(from: stopIndex) < startIndex }
         if !newConjunctionMatches.isEmpty {
             //print("newConjunctionMatches =", newConjunctionMatches)
             self.blockStack.beginConjunction(for: newConjunctionMatches, at: stopIndex)
@@ -166,6 +164,14 @@ public class Parser {
         //print("SHIFT matched", form, "to", currentMatches, "with completions", fullMatches)
                 
        // automatically reduce fully matched atomic operators and list/record/group/block literals (i.e. anything that starts and ends with a static token, not an expr, so is not subject to precedence or association rules)
+        
+        //
+        // (note: being able to reduce a short match within a longer match is necessary, e.g. `atom infix …`, but in those cases the short match is an operator name whereas the long match matches the short match as an operand expression; in this case, however, both matches start on the same operator name, thus the short match cannot be immediately reduced but must wait to see if the longer match fails)
+        
+        // when auto-reducing blocks, we don’t want to overshoot, e.g. given `[[…]]`, both list literal patterns will match the first `]` but only the second should be allowed (requiring a full, not provisional, match would also exclude the first, but this is simpler)
+        // we also need to check if a full [atomic] match here can be reduced immediately, or if there is a longer match in progress, e.g. `optional` is registered as two separate operators, `optional` and `optional EXPR`, so `optional integer` needs to be matched by the second; OTOH, in `end of documents` the `end` keyword (atomic operator) must be reduced before the `…of…` operator can be reduced; plus lists and records will always be auto-reduced here
+        let partialIDs = currentMatches.map{$0.groupID}
+        fullMatches.removeAll{ $0.startIndex(from: stopIndex) < startIndex || partialIDs.contains($0.groupID) }
         if let longestMatch = fullMatches.max(by: { $0.count < $1.count }) {
   //          print("\nAUTO-REDUCE:", longestMatch.definition.name.label)
  //           print(fullMatches)
@@ -206,7 +212,7 @@ public class Parser {
     public func parseScript() {
         loop: while true { // loop exits below on .endOfCode
             let form = self.current.token.form
-           // print("READ", form)
+          //  print("READ", form)
             switch form {
             case .endOfCode: break loop
             case .annotation(_): () // discard annotations for now

@@ -83,7 +83,7 @@ let interface_commands = HandlerInterface(
 func procedure_commands(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command, to: handler) }
     for (name, value) in (commandEnv as! Environment).frame.sorted(by: {$0.key < $1.key}) {
-        if let handler = value as? Handler {
+        if let handler = value as? Callable {
             writeHelp("\(handler.interface)\n")
         } else {
             writeHelp("`\(name.label)` – \(value)\n")

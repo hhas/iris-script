@@ -127,7 +127,7 @@ public struct AsItself: Value, SwiftCoercion, NativeCoercion {
         return nullValue
     }
     
-    var nativeCoercion: NativeCoercion { // caution: glue generator filters by `HandlerInterface.result is AsItself`, so make sure handler interface hasn't wrapped it in NativizedCoercion or that test will fail
+    public var nativeCoercion: NativeCoercion { // caution: glue generator filters by `HandlerInterface.result is AsItself`, so make sure handler interface hasn't wrapped it in NativizedCoercion or that test will fail
         return self
     }
 }

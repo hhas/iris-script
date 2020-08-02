@@ -35,7 +35,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEva
     
     public static var nominalType: NativeCoercion { return asAnything.nativeCoercion } // TO DO: what type?
     
-    private let desc: Descriptor
+    public let desc: Descriptor
     private let appData: NativeAppData
     
     init(_ desc: Descriptor, appData: NativeAppData) {
@@ -56,7 +56,9 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEva
         default: ()
         }
         if T.SwiftType.self == Value.self {
-            return try coercion.coerce(self.toValue(in: scope, as: coercion.nativeCoercion), in: scope)
+            let v = try self.toValue(in: scope, as: coercion.nativeCoercion)
+            if v is NativeResultDescriptor { return v as! T.SwiftType } // kludge, otherwise coerce() infinitely recurses when toValue returns wrapped descriptor as-is
+            return try coercion.coerce(v, in: scope)
         }
         switch coercion {
         case let c as AsList:

@@ -7,28 +7,17 @@ import Foundation
 
 // operators reduce to commands with pre-bound handler from same library as operator syntax
 
-// should environment slots be bind-once? (if mutability is provided by EditableValue class wrapper around immutable Value struct, there's no reason for it not to be; furthermore, the EditableValue may use the underlying value's nominalType as default if no type specified)
-
-
 // set foo to: [] as editable list of: text
 
 // set foo to: make new: editable list of: text
 
 // set {foo, to: make {new: editable {list {of: text}}}}
 
-
-// implement `if` as plain command, `e.g. `if…then:do…done`? avoids an operator definition and reads fairly naturally using low-punctuation command syntax, which aides memorization (if so, we need to make sure that `else` operator has lower precedence than low-punctuation command); Q. what about `to`/`when`/`repeat`/etc? (problem with those is that the natural preposition is `do:`/`doing:`, which rules out `do…done` for denoting a block)
-
 // Q. what about `catching` operator? right now this doesn't allow for binding the thrown error to a specific name, nor does it allow for filtering the error type[s] to catch; we could deal with this much as Swift does, binding the error to a predefined name (`error`); or maybe allowing the right operand to be a single-parameter closure, relying on the parameter's optional `as` clause for filtering by error type (if the thrown error can be coerced to the specified error type[s], the error is passed to the closure to process, otherwise it's propagaged); need to give more thought to error management in general (e.g. being able to catch an error, correct the problem, then resume execution from the point it was thrown, all without permanently unrolling the call stack is an especially powerful continuation-style capability; or being able to suspend execution and immediately switch to interactive debugging mode at the initial failure point, regardless of a script's existing error-handling logic [and, bearing in mind, that the debugging console will be running in a separate process to the script itself, requiring IPC to to connect the two])
 
-
-// commands are effectively right-associative prefix [unary]  operators (use record to pass multiple values); argument is optional (Q. how to distinguish `foo {nothing}` from `foo nothing`/`foo`); if all identifiers are commands, how to distinguish e.g. `foo - 1` from `foo -1`? (if foo can be inspected at parse-time, provide user feedback either by flagging or by rewriting latter as `foo {-1}` for clarity)
-
-// TO DO: should commands capture their lexical scope (c.f. kiwi)? or leave thunking to explicit coercion (e.g. `foo(x) as expression` -> bound `foo(x)` value)
+// commands are effectively right-associative prefix [unary]  operators (use record to pass multiple values); argument is optional (Q. how to distinguish `foo {nothing}` from `foo nothing`/`foo`)
 
 // Q. when populating handler scope with arguments, should they be weakref'd? (@. *can* they be weakref'd, given that structs aren't refcounted, only the backing store; TBH, it's more a question for primitive handlers, where unboxing a native value that is going to be discarded anyway should avoid unnecessary copy-on-writes when manipulating the unboxed primitive)
-
-// tell app "Finder" { get document_file at 1 of home } // Q. if {…} is record, need to decide if blocks can be expressed as records or if they should have distinct syntax (could use parens, as those are for grouping and we can't change that as arithmetic requires it)
 
 // handlers with operator syntax should be non-maskable and non-mutable by default
 
@@ -63,23 +52,16 @@ import Foundation
  */
 
 
-
-// TO DO: Identifier, aka argument-less command; performs lookup; if handler, calls it, else returns as-is; Q. what if it gets a block?
-
-// Q. mutability? if implementing `editable` as class wrapper with var
-
-// TO DO: check for nullSymbol as name, duplicate argument labels?
-
 public class Command: ComplexValue, LiteralConvertible, SelfEvaluatingProtocol {
+    
+    public typealias Argument = Record.Field
+    public typealias Arguments = [Argument]
     
     public var swiftLiteralDescription: String {
         let args = self.arguments.isEmpty ? "" : ", \(self.arguments.swiftLiteralDescription)"
         // this ignores operatorPattern so transpiled code will use plain command syntax in error messages
         return "\(type(of: self))(\(self.name.label.debugDescription)\(args))"
     }
-    
-    public typealias Argument = Record.Field
-    public typealias Arguments = [Argument]
     
     public var literalDescription: String {
         // TO DO: PP needs to apply operator syntax/quote name if command's name matches an existing operator (Q. how should operator definitions be scoped? per originating library, or per main script? [if we annotate command in parser, it'll presumably capture originating library's operator syntax])
@@ -89,99 +71,38 @@ public class Command: ComplexValue, LiteralConvertible, SelfEvaluatingProtocol {
     
     public static let nominalType: NativeCoercion = asCommand.nativeCoercion
     
-    // TO DO: what about a slot for storing optional operator definition? (or general 'annotations' slot?) we also need to indicate when pp should wrap a command in elective parens (as opposed to required parens, which pp should add automatically as operator precedence dictates)
-    
     public let name: Symbol
     public let arguments: Arguments // TO DO: single, optional argument which is coerced to record and pattern-matched against HandlerInterface.Parameter
-    
-    let operatorPattern: PatternMatch?
+    let operatorPattern: PatternMatch? // if the command was constructed from a matched operator, store that operator pattern for PP’s use // TO DO: what about using operator syntax in error messages? (note: error messages also require command to capture its position in source code [caveat relying on source string character offsets is suboptimal as those will change when code is pretty-printed; better to uniquely identify the AST node, perhaps with AST maintaining a lookup table from which to locate every Command node in tree without requiring a full recursive search; this all ties in with IDE support and queryable AST])
     
     public init(_ name: Symbol, _ arguments: Arguments = [], operatorPattern: PatternMatch? = nil) {
+        // TO DO: check for nullSymbol as name, duplicate argument labels?
         self.name = name
         self.arguments = arguments
         self.operatorPattern = operatorPattern
     }
     
-    public convenience init(_ name: Symbol, _ record: Record, operatorPattern: PatternMatch? = nil) {
-        self.init(name, record.data, operatorPattern: operatorPattern)
+    public convenience init(_ name: Symbol, _ arguments: Record, operatorPattern: PatternMatch? = nil) {
+        self.init(name, arguments.data, operatorPattern: operatorPattern)
     }
     
-    internal(set) public var _handler: Handler = _bindHandlerOnFirstUse // should be internal
-
-    // TO DO: also capture operator? or leave that to pretty-printer? (it depends: Command.eval() needs operator info to generate decent error messages); suppose Handler might provide operator info itself
+    internal var _handler: Callable = _bindHandlerOnFirstUse
     
     // TO DO: this caching won't work if Environment is responsible for call handling; the alternative is for Environment to return stored values wrapped in ValueAccessorHandler struct (that adds a bit of cost: extra call + extra stack frame)
-    
-    // TO DO: problem: making the eval func mutating doesn't match Value protocol's eval; only solutions are to make Command a class, or for Command struct to use a class-based backing store as its cache
-    // one possibility is for Environment.call() to return first call's result plus some sort of closure that can be cached by Command for making subsequent calls more efficiently (e.g. for a non-maskable read-only slot, it can return either handler's call method or a simple closure around constant value; for a non-maskable editable slot, it'd wrap Environment instance containing the slot and forward to that; for maskable slot, it'd return original Environment chain)
-    /*
-    func eval(in scope: Scope, as coercion: Coercion) throws -> Value {
-        print("Command.eval:", self, "as", coercion)
-        return try coercion.coerce(self, in: scope)
-        //return try self._handler.call(with: self, in: scope, as: coercion) // updates self._handler on first call
-        //return try coercion.coerce(self, in: scope)
-    }
-    
-    // TO DO: SwiftCoercion can only be used in generic methods, which is no use for native run-time coercions, where return type must always be Value
-    
-    // Q. what about monadic-like behavior, where swiftEval passes an object whose APIs guarantee to return a value of T
-    
-    func swiftEval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        //return try self._handler.call(with: self, in: scope, as: coercion) // updates self._handler on first call
-        return try coercion.coerce(self, in: scope)
-    }
-    */
-    /*
-    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
-        print("\(self).eval(as:\(coercion))")
-        return try self.toTYPE(in: scope, as: coercion)
-    }
-    
-    public func toTYPE<T>(in scope: Scope, as coercion: Coercion) throws -> T {
-        //print("Command.toTYPE", self, "as", T.self, type(of:coercion))
-        if T.self is Value {
-            return try self._handler.call(with: self, in: scope, as: coercion) as! T
-        } else {
-            return try self._handler.swiftCallAs(with: self, in: scope, as: coercion)
-//            fatalError("TODO")
-        }
-    }*/
-    
-    
     
     public func eval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
         return try self._handler.call(with: self, in: scope, as: coercion)
     }
 
     // TO DO: if handler is static bound, we don't need to go through all this every time; just check params once and store array of operations to perform: omitted and constant args can be evaluated once and memoized; only exprs need evaled every time, and coercions may be minimized where arg's input coercion is member of expr's output coercion (this being said, it remains to be seen how much run-time optimization is warranted; e.g. if transpiling to Swift proves to be common practice then slow interpretation is much less of a concern)
-
-        /*
-    internal func value(at index: inout Int, for param: (label: Symbol, binding: Symbol, coercion: Coercion), in commandEnv: Scope) throws -> Value {
-        let i = index
-        do {
-            return try self.arguments.value(labeled: param.label, at: &index).eval(in: commandEnv, as: param.coercion)
-        } catch {
-            throw BadArgumentError(at: i, of: self).from(error)
-        }
-    } // native eval
     
-    public func coerce<T: SwiftCoercion>(param: (label: Symbol, binding: Symbol, coercion: T), at index: inout Int, in scope: Scope) throws -> T.SwiftType { // if field was matched, index is incremented on return (caution: if caller rethrows an unbox() error, don't use the returned index in error message)
-        // TO DO: catch and rethrow
-        // TO DO: where to memoize static arguments?
-        return try self.arguments.unbox(param: param, at: &index, in: scope)
-    }
-
-     */
-    
-    public func value<T: SwiftCoercion>(for param: (label: Symbol, binding: Symbol, coercion: T), at index: inout Int, in commandEnv: Scope) throws -> T.SwiftType {
+    public func value<T: SwiftCoercion>(for param: (label: Symbol, binding: Symbol, coercion: T), at index: inout Int, in commandEnv: Scope) throws -> T.SwiftType { // used by handler to unpack command’s arguments
         return try self.arguments.coerce(param: param, at: &index, in: commandEnv)
     }
 }
 
 
 public extension Command {
-    
-    // TO DO: also annotate Command instance with operator definition for use in error messages/pp
     
     convenience init(_ match: PatternMatch) {
         self.init(match.name, operatorPattern: match)

@@ -20,7 +20,7 @@ func ofClause(attribute: Value, target value: Value, commandEnv: Scope, handlerE
     //print("ofClause looking up", attribute, "on", value)
     if let command = attribute as? Command {
         if let selector = value.get(command.name) ?? commandEnv.get(command.name) { // TO DO: what lookup chain (e.g. reference form operators are defined in global namespace); or will target value always end up delegating lookups to that itself [e.g. document -> tell target, which extends global namespace]?
-            if let handler = selector as? Handler {
+            if let handler = selector as? Callable {
                 // command's arguments are evaled in commandEnv as normal (the Handler already contains a [strong]ref to its owner, )
                 return try handler.call(with: command, in: commandEnv, as: asAnything) // TO DO: what env?
             } else if command.arguments.isEmpty {

@@ -167,6 +167,7 @@ struct Reference: ReferenceProtocol {
         if let rootDesc = parentDesc as? RootSpecifierDescriptor {
             switch rootDesc.type {
             case typeNull:
+                // TO DO: app constructor currently takes bundle ID; to specify by full path presumably requires full disk access; to specify by name only is problematic as NSWorkspace.fullPath(forApplication:) is deprecated (only LSCopyApplicationURLsForBundleIdentifier()/NSWorkspace.urlForApplication(withBundleIdentifier:) remain); this may be less of an issue if we habitually use @NAMESPACE to target apps, e.g. `tell @com.apple.Finder to…`
                 switch self.appData.target {
                 case .name(let name):                    parent = " of app \(name.debugDescription)" // TO DO: may want to avoid using name only, and require full path/bundle ID/pid/eppc URL/nil
                 case .url(let url):
@@ -202,11 +203,18 @@ struct Reference: ReferenceProtocol {
                 let seld = try? NativeResultDescriptor(desc.seld, appData: appData).eval(in: nullScope, as: asAnything) {
                 switch desc.form {
                 case .absolutePosition:
-                    if let symbol = seld as? Symbol, ["first", "middle", "last", "any", "every"].contains(symbol) {
-                        return "\(symbol.label) \(names.singular)\(parent)"
-                    } else {
-                        return "\(names.singular) at \(seld)\(parent)"
+                    // ordinals aren’t unpacked
+                    if let seld = seld as? NativeResultDescriptor, seld.desc.type == typeAbsoluteOrdinal {
+                        switch try! decodeFixedWidthInteger(seld.desc.data) as OSType {
+                        case OSType(AppleEvents.kAEFirst):  return "first \(names.singular)\(parent)"
+                        case OSType(AppleEvents.kAEMiddle): return "middle \(names.singular)\(parent)"
+                        case OSType(AppleEvents.kAELast):   return "last \(names.singular)\(parent)"
+                        case OSType(AppleEvents.kAEAny):    return "any \(names.singular)\(parent)"
+                        case OSType(AppleEvents.kAEAll):    return "\(names.plural)\(parent)"
+                        default: ()
+                        }
                     }
+                    return "\(names.singular) at \(seld)\(parent)"
                 case .name:
                     return "\(names.singular) named \(seld)\(parent)"
                 case .uniqueID:

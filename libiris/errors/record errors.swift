@@ -19,7 +19,7 @@ public protocol FieldError: NativeError {
 
 public struct UnknownFieldError: FieldError {
     
-    public var description: String { return "Can’t match field \(self.index+1) in `\(self.fields)`" }
+    public var description: String { return "Can’t match field \(self.index+1) in `\(self.fields.literalDescription)`" }
     
     public let index: Int
     public let fields: Record.Fields
@@ -32,7 +32,7 @@ public struct UnknownFieldError: FieldError {
 
 public struct BadFieldValueError: FieldError {
     
-    public var description: String { return "Can’t evaluate field \(self.index+1) in `\(self.fields)`" } // TO DO: change message to "is missing" if index >= command.arguments.count
+    public var description: String { return "Can’t evaluate field \(self.index+1) in `\(self.fields.literalDescription)`" } // TO DO: change message to "is missing" if index >= command.arguments.count
     
     public let index: Int
     public let fields: Record.Fields

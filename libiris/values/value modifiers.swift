@@ -23,7 +23,7 @@ import Foundation
 // TO DO: beware cases where an [e.g.] immutable List could contain EditableValue items; might want to enforce item [im]mutability solely at the scope slot level; thus `set x to 3 as editable value, set y to [] as editable list, set end of y to x` would automatically de-box the 3 upon inserting it into the list
 
 
-public class EditableValue: Handler, Mutator {
+public class EditableValue: Handler, Mutator { // TO DO: Handler or Callable?
     
     public var swiftLiteralDescription: String { return "\(type(of: self))(\(self.data.swiftLiteralDescription), as: \(self.coercion.swiftLiteralDescription))" }
     
@@ -60,7 +60,7 @@ public class EditableValue: Handler, Mutator {
         // iris follows entoli's 'everything is a command' UX philosophy, but doesn't implement separate Identifier and Command classes underneath (although it maybe should for efficiency/clarity/robustness);
 
         // if not a handler, it's stored value; we already looked it up by name, so check
-        if let handler = self.data as? Handler { // handler; Q. what are correct semantics when slot contains a replaceable handler? calling the handler won't update the slot's value; only way to change behavior is to replace the handler with another value; Q. what if handler is replaced with non-handler? should we forbid that? (or limit box to AsOptional(asHandler)?)
+        if let handler = self.data as? Callable { // handler; Q. what are correct semantics when slot contains a replaceable handler? calling the handler won't update the slot's value; only way to change behavior is to replace the handler with another value; Q. what if handler is replaced with non-handler? should we forbid that? (or limit box to AsOptional(asHandler)?)
             return try handler.call(with: command, in: scope, as: coercion)
         } else if command.arguments.count == 0 { // stored value
             return try coercion.coerce(self.data, in: scope) // problem: this discards original editable box, so changes made by handler won't propagate back; are we sure that's what we want?
@@ -125,7 +125,7 @@ public struct ScopeLockedValue: Handler, Mutator { // experimental
      */
     
     public func call<T: SwiftCoercion>(with command: Command, in commandScope: Scope, as coercion: T) throws -> T.SwiftType {
-        if let handler = self.data as? Handler { // handler; Q. what are correct semantics when slot contains a replaceable handler? calling the handler won't update the slot's value; only way to change behavior is to replace the handler with another value; Q. what if handler is replaced with non-handler? should we forbid that? (or limit box to AsOptional(asHandler)?)
+        if let handler = self.data as? Callable { // handler; Q. what are correct semantics when slot contains a replaceable handler? calling the handler won't update the slot's value; only way to change behavior is to replace the handler with another value; Q. what if handler is replaced with non-handler? should we forbid that? (or limit box to AsOptional(asHandler)?)
             return try handler.call(with: command, in: commandScope, as: coercion)
         } else if command.arguments.count == 0 { // stored value
             return try coercion.coerce(self.data, in: commandScope) // problem: this discards original editable box, so changes made by handler won't propagate back; are we sure that's what we want?

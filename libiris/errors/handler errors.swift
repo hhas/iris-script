@@ -27,7 +27,7 @@ public struct UnknownArgumentError: ArgumentError {
     public let command: Command
     public let handlerInterface: HandlerInterface
     
-    public init(at index: Int, of command: Command, to handler: Handler) {
+    public init(at index: Int, of command: Command, to handler: Callable) {
         self.index = index
         self.command = command
         self.handlerInterface = handler.interface
@@ -44,7 +44,7 @@ public struct BadArgumentError: ArgumentError {
     public let command: Command
     public let handlerInterface: HandlerInterface
     
-    public init(at index: Int, of command: Command, to handler: Handler) {
+    public init(at index: Int, of command: Command, to handler: Callable) {
         self.index = index
         self.command = command
         self.handlerInterface = handler.interface
@@ -64,5 +64,19 @@ public struct HandlerError: NativeError {
     public init(handler: Handler, command: Command) {
         self.handler = handler
         self.command = command
+    }
+}
+
+
+public struct NotAHandlerError: NativeError {
+    
+    public var description: String { return "The \(self.command) command could not be handled by \(self.value.nominalType): \(self.value)" }
+    
+    let command: Command
+    let value: Value
+    
+    public init(command: Command, value: Value) {
+        self.command = command
+        self.value = value
     }
 }

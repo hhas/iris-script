@@ -15,10 +15,22 @@ import Foundation
 
 // TO DO: should record be BoxedCollectionValue/BoxedComplexValue? the problem is that labeled fields require unique labels, which Swift type system can't enforce, so we rely on runtime checking with throws, but the boxed protocol requires a non-throwing init, which record can't provide (there is `Record(uniqueLabelsWithValues:)` but that has a different signature)
 
+func literal(for value: Value) -> String { // TO DO: temporary; see also formatting
+    if let v = value as? LiteralConvertible {
+        return v.literalDescription
+    } else {
+        return "«object: \(value)»"
+    }
+}
+
 public extension Record.Fields { // also used as Command.Arguments
     
     var swiftLiteralDescription: String {
         return "[\(self.map{ "(\($0.isEmpty ? "nullSymbol" : $0.swiftLiteralDescription), \($1.swiftLiteralDescription))" }.joined(separator: ", "))]"
+    }
+    
+    var literalDescription: String {
+        return "{\(self.map{ "\($0.isEmpty ? "" : "\($0.label): ")\(literal(for: $1))" }.joined(separator: ", "))}"
     }
     
     // TO DO: better error messages
@@ -45,7 +57,8 @@ public extension Record.Fields { // also used as Command.Arguments
         do {
             return try param.coercion.coerce(value, in: scope)
         } catch { // TO DO: what to trap here? e.g. should it catch NullCoercionError directly, which can occur if field was not found or if field contains `nothing` but coercion isn't optional/default
-            if self.contains(where: {$0.label == param.label}) { // TO DO: if labeled field is in record but is in wrong order, the error message should reflect that, so use firstIndex() rather than contains() to determine its position relative to currentIndex (“expected ‘LABEL’ field at X index but found it at Y”)
+            if self.contains(where: {$0.label == param.label})
+                || (currentIndex < self.count && self[currentIndex].label == nullSymbol) { // TO DO: if labeled field is in record but is in wrong order, the error message should reflect that, so use firstIndex() rather than contains() to determine its position relative to currentIndex (“expected ‘LABEL’ field at X index but found it at Y”)
                 throw BadFieldValueError(at: currentIndex, of: self).from(error)
             } else {
                 throw UnknownFieldError(at: currentIndex, of: self).from(error)

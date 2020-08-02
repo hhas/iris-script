@@ -9,7 +9,7 @@ import Foundation
 
 public struct AsHandler: SwiftCoercion {
     
-    public typealias SwiftType = Handler
+    public typealias SwiftType = Callable
     
     public let name: Symbol = "handler"
     
@@ -17,7 +17,7 @@ public struct AsHandler: SwiftCoercion {
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
-        if let v = value as? Handler { return v }
+        if let v = value as? Callable { return v }
         throw TypeCoercionError(value: value, coercion: self)
     }
     

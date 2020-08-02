@@ -58,7 +58,7 @@ struct DynamicallyBoundHandler: Handler { // e.g. when looking up a slot on a Va
     
     func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         // TO DO: command should be able to build a cache table of preprocessed arg lists using handler.interface as key
-        guard let handler = scope.get(command.name) as? Handler else {
+        guard let handler = scope.get(command.name) as? Callable else {
             throw UnknownNameError(name: command.name, in: scope)
         }
         return try handler.call(with: command, in: scope, as: coercion)
@@ -85,7 +85,7 @@ struct BindHandlerOnFirstUse: Handler {
     func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         // TO DO: fix this guard (casting is separate issue; if not a handler then confirm no arguments in command and return the value)
         guard let value = scope.get(command.name) else { throw UnknownNameError(name: command.name, in: scope) }
-        if let handler = value as? Handler {
+        if let handler = value as? Callable {
             command._handler = handler.isStaticBindable ? handler : _dynamicallyBoundHandler // dynamic lookup adds ~20%
             // if static bound, we can also memoize partially processed argument list, matching labels and coercing null (omitted) and literal arguments once; expr arguments may also be partially reduced by intersecting each expr-based argument's output coercion with parameter's input coercion (Q. where handlers are dynamically bound, chances are there are a relatively small number of handlers involved, in which case caching partially processed parameters against handler identity may be worth doing)
             
@@ -93,7 +93,7 @@ struct BindHandlerOnFirstUse: Handler {
             return try handler.call(with: command, in: scope, as: coercion)
         } else {
             // Q. if first lookup finds stored value, is it worth returning as StoredValueHandler? this might capture value (if read-only, non-maskable), or scope (if mutable, non-maskable), or dynamic lookup
-            if command.arguments.count != 0 { throw UnknownArgumentError(at: 0, of: command, to: self) }
+            if command.arguments.count != 0 { throw NotAHandlerError(command: command, value: value) }
             let result = try coercion.coerce(value, in: scope)
             if value.isMemoizable {
   //              command._handler = MemoizedStaticValue(value: value, coercion: coercion, result: result) // TO DO

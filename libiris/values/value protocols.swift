@@ -42,8 +42,9 @@ import Foundation
 
 public protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible { // TO DO: Codable (Q. use Codable for AE bridging?)
     
-    static var nominalType: NativeCoercion { get }
-    var nominalType: NativeCoercion { get }
+    static var nominalType: NativeCoercion { get } // each concrete Value type must implement nominalType on the type itself
+    
+    var nominalType: NativeCoercion { get } // for convenience, each Value type’s nominalType property appears as instance property as well // TO DO: should the instance var be constrainedType? (i.e. is there any situation where caller would want to ignore the additional type info, e.g. `list {of: integer}`, and—if it does—can't just use `type(of:value).nominalType` to get it?)
     
     var isMemoizable: Bool { get }
     
