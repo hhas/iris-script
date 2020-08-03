@@ -21,7 +21,7 @@ public struct AsHashableValue: SwiftCoercion {
     public init() {}
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
-        if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
+        if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
         guard let result = try? asAnything.coerce(value, in: scope) as? HashableValue else {
             throw TypeCoercionError(value: value, coercion: self)
         }
@@ -61,7 +61,7 @@ public struct AsDictionary<KeyType: SwiftCoercion, ValueType: SwiftCoercion>: Sw
         // TO DO: how/where to support constraint checking?
         var result: SwiftType
         switch value {
-        case let v as SelfEvaluatingProtocol:
+        case let v as SelfEvaluatingValue:
             result = try v.eval(in: scope, as: self)
         case let val as KeyedList:
             if val.data.isEmpty {

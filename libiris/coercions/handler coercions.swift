@@ -16,8 +16,9 @@ public struct AsHandler: SwiftCoercion {
     public var swiftLiteralDescription: String { return "asHandler" }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
-        if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
-        if let v = value as? Callable { return v }
+        // TO DO: is this appropriate? should the order of tests be reversed? (i.e. if value is Callable, don't eval it? but if we don't eval it, how can we ensure it strongly binds its lexical scope to form closure? we probably need to eval it, and trust eval to do the right thing in case of, e.g., callable coercions which should remain in callable form if coercion is asHandler, but discard the callable wrapper if not)
+        if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
+        if let v = value as? SwiftType { return v }
         throw TypeCoercionError(value: value, coercion: self)
     }
     
@@ -36,8 +37,8 @@ public struct AsError: SwiftCoercion {
     public var swiftLiteralDescription: String { return "asError" }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
-        if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
-        if let v = value as? NativeError { return v }
+        if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
+        if let v = value as? SwiftType { return v }
         throw TypeCoercionError(value: value, coercion: self)
     }
     
@@ -57,11 +58,11 @@ public struct AsCoercion: SwiftCoercion {
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         do {
-            if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
-            if let v = value as? NativeCoercion { return v }
+            if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
+            if let v = value as? SwiftType { return v }
             throw TypeCoercionError(value: value, coercion: self)
         } catch is NullCoercionError {
-            return nullValue
+            return nullValue // TO DO: not entirely sure about this: NullValue is a NativeCoercion, but only intended for use as return type to indicate that nothing is returned (since native handlers that do not declare an explicit return type will automatically return the result of the last expression evaluated, i.e. their return type is `anything`); used anywhere else, however, `nothing` is intended to indicate an omitted value (i.e. throw NullCoercionError and leave it to parent coercion, if any, to substitute with default value or else rethrow as a permanent TypeCoercionError)
         }
     }
     
@@ -75,24 +76,6 @@ public let asHandler = AsHandler()
 public let asError = AsError()
 public let asCoercion = AsCoercion()
 
-//
-
-
-func unpackSignature(_ value: Value, in env: Scope) throws -> (Symbol, [HandlerInterface.Parameter]) {
-    let name: Symbol, parameters: [HandlerInterface.Parameter]
-    switch value {
-    case let command as Command: // name with optional params
-        name = command.name
-        parameters = try unpackParameters(command.arguments, in: env)
-    case let record as Record: // params only
-        name = nullSymbol
-        parameters = try unpackParameters(record.data, in: env)
-    default:
-        print("unpackSignature failed on", type(of:value))
-        throw TypeCoercionError(value: value, coercion: asHandlerInterface)
-    }
-    return (name, parameters)
-}
 
 // TO DO: sort out errors; this should throw simple, descriptive errors indicating type of error; caller should raise full coercion error with complete signature
 
@@ -139,52 +122,37 @@ func unpackParameters(_ parameters: [Record.Field], in env: Scope) throws -> [Ha
     return result
 }
 
-func unpackCoercion(_ value: Value, in env: Scope) throws -> NativeCoercion {
-    // value may be Coercion, Command, or Record
-    return try asCoercion.coerce(value, in: env)
-}
 
-
-
-func unpackHandlerInterface(_ signature: Value, in env: Scope, isEventHandler: Bool = false) throws -> HandlerInterface {
-    let name: Symbol, parameters: [HandlerInterface.Parameter], returnType: NativeCoercion
-    switch signature {
-    case let command as Command:
-        if command.name == "returning" {
-            let args = command.arguments
-            if args.count != 2 {
-                print("Bad `returning` operator")
-                throw TypeCoercionError(value: signature, coercion: asHandlerInterface)
-            }
-            (name, parameters) = try unpackSignature(args[0].value, in: env)
-            returnType = try unpackCoercion(args[1].value, in: env)
-        } else {
-            (name, parameters) = try unpackSignature(command, in: env)
-            returnType = asAnything.nativeCoercion
-        }
-    case let record as Record: // TO DO: how to distinguish parameters-only record, e.g. `{p1,p2}:action` from full HandlerInterface record {name:…,input:…,output:…,handler_type:#command}
-        (name, parameters) = try unpackSignature(record, in: env)
-        returnType = asAnything.nativeCoercion
+func unpackSignature(_ value: Value, in env: Scope) throws -> (Symbol, [HandlerInterface.Parameter]) {
+    let name: Symbol, parameters: [HandlerInterface.Parameter]
+    switch value {
+    case let command as Command: // name with optional params
+        name = command.name
+        parameters = try unpackParameters(command.arguments, in: env)
+    case let record as Record: // params only
+        name = nullSymbol
+        parameters = try unpackParameters(record.data, in: env)
     default:
-        print("unpackHandlerInterface failed on",type(of:signature), signature)
-        throw TypeCoercionError(value: signature, coercion: asHandlerInterface)
+        print("unpackSignature failed on", type(of:value))
+        throw TypeCoercionError(value: value, coercion: asHandlerInterface)
     }
-    return HandlerInterface(name: name, parameters: parameters, result: returnType, isEventHandler: isEventHandler)
+    return (name, parameters)
 }
 
-
-func commandToHandlerInterface(value: Command, in scope: Scope) throws -> HandlerInterface {
+// TO DO: for metaprogramming, may be better to provide a separate constructor handler that takes name, parameters, etc as arguments, avoiding need to compose out of literal commands (which, being literals, can’t be parameterized at run-time)
+func handlerInterface(for command: Command, in scope: Scope) throws -> HandlerInterface {
     let name: Symbol, parameters: [HandlerInterface.Parameter], returnType: NativeCoercion
-    if value.name == "returning" {
-        let args = value.arguments
+    if command.name == "returning" {
+        let args = command.arguments
         if args.count != 2 {
             print("Bad `returning` operator")
-            throw TypeCoercionError(value: value, coercion: asHandlerInterface)
+            throw TypeCoercionError(value: command, coercion: asHandlerInterface)
         }
+        // TO DO: should really use standard argument match+unpack method here for consistency of behavior throughout
         (name, parameters) = try unpackSignature(args[0].value, in: scope)
-        returnType = try unpackCoercion(args[1].value, in: scope)
+        returnType = try asCoercion.coerce(args[1].value, in: scope)
     } else {
-        (name, parameters) = try unpackSignature(value, in: scope)
+        (name, parameters) = try unpackSignature(command, in: scope)
         returnType = asAnything.nativeCoercion
     }
     return HandlerInterface(name: name, parameters: parameters, result: returnType, isEventHandler: false)
@@ -201,7 +169,7 @@ public struct AsHandlerInterface: SwiftCoercion {
     public var swiftLiteralDescription: String { return "asHandlerInterface" }
 
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
-        if let v = value as? Command { return try commandToHandlerInterface(value: v, in: scope) }
+        if let v = value as? Command { return try handlerInterface(for: v, in: scope) }
         throw TypeCoercionError(value: value, coercion: self)
     }
 }

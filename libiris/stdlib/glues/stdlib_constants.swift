@@ -46,32 +46,6 @@ public func stdlib_loadConstants(into env: Environment) {
     env.define("true", true)
     env.define("false", false)
     
-    
-    env.define(coercion: asValue.nativeCoercion) // `value` (i.e. accepts anything except `nothing`)
-    env.define(coercion: asString.nativeCoercion)
-    env.define(coercion: asBool.nativeCoercion)   // TO DO: need to decide if native Boolean representation should be `true`/`false` constants or non-empty/empty values (probably best with traditional constants for pedagogical purposes, although “emptiness” does have its advantages as does Icon-style result/failure)
-    
-    env.define(coercion: asNumber.nativeCoercion)
-    env.define(coercion: asSymbol.nativeCoercion)
-    
-    env.define(coercion: asInt.nativeCoercion)
-    env.define(coercion: asDouble.nativeCoercion)
-    env.define(coercion: asOrderedList)
-    env.define(coercion: asRecord.nativeCoercion)
-    
-    env.define(coercion: asCoercion)
-    env.define(coercion: asHandler.nativeCoercion)
-    env.define(coercion: asBlock.nativeCoercion) // TO DO: asBlockLiteral? (this'd need to accept single values too)
-    
-    
-    env.define(coercion: asNothing) // by default, a native handler will return the result of the last expression evaluated; use `…returning no_result` to suppress that so that it always returns `nothing` (note that while using `return nothing` would give same the runtime result, declaring it via signature makes it clear and informs introspection and documentation tools as well)
-    
-    env.define(coercion: AsSwiftPrecis(AsSwiftDefault(asValue, nullValue), "with_default")) // TO DO: AsDefault requires constraint args (coercion and defaultValue) to instantiate; native language will call() it to create new instances with appropriate constraints // TO DO: need to review SwiftCoercion usage within native environment // TO DO: should `with_default` be an optional clause to `optional…with_default…`?
-
-    env.define(coercion: asEditable)
-
-    env.define(coercion: asAnything) // `anything` = `optional value` (i.e. accepts anything, including `nothing`)
-    env.define(coercion: AsSwiftOptional(asValue)) // TO DO: decide on `optional` vs `anything`; stdlib glue currently uses `optional` rather than `anything` (`anything` may be more easily confused with `value`)
-
+    stdlib_loadCoercions(into: env) // temporary
 }
 

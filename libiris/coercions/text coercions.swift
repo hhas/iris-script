@@ -55,7 +55,7 @@ public struct AsString: SwiftCoercion {
         switch value {
         // TO DO: if/when String conforms to Value, add extra case for it here
         case let v as Text: return v.data
-        case let v as SelfEvaluatingProtocol: return try v.eval(in: scope, as: self)
+        case let v as SelfEvaluatingValue: return try v.eval(in: scope, as: self)
         case let v as Int: return String(v)
         case let v as Double: return String(v)
         default: return try _asString.coerce(value, in: scope)

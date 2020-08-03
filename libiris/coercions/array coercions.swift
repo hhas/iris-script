@@ -26,7 +26,7 @@ public struct AsArray<ElementType: SwiftCoercion>: SwiftCoercion {
         // TO DO: how/where to support constraint checking?
         let result: SwiftType
         switch value {
-        case let v as SelfEvaluatingProtocol:
+        case let v as SelfEvaluatingValue:
             result = try v.eval(in: scope, as: self)
         case let v as OrderedList:
             if v.data.isEmpty {
@@ -75,7 +75,7 @@ extension AsArray {
 
 
 
-public struct AsOrderedList: CallableNativeCoercion {
+public struct AsOrderedList: NativeCoercion {
     
     public var name: Symbol = "list" // TO DO: parameterize
     
@@ -100,7 +100,7 @@ public struct AsOrderedList: CallableNativeCoercion {
         // TO DO: how/where to support constraint checking?
         let result: [Value]
         switch value {
-        case let v as SelfEvaluatingProtocol:
+        case let v as SelfEvaluatingValue:
             result = try v.eval(in: scope, as: AsArray(PrimitivizedCoercion(self.elementType)))
         case let v as OrderedList:
             if v.data.isEmpty {
@@ -121,28 +121,6 @@ public struct AsOrderedList: CallableNativeCoercion {
             result = [try self.elementType.coerce(value, in: scope)]
         }
         return OrderedList(result)
-    }
-    
-    private static let type_list = (
-        name: Symbol("list"),
-        param_0: (Symbol("of"), Symbol("type"), asCoercion),
-        result: asCoercion
-    )
-    
-    private static let interface_list = HandlerInterface(
-        name: type_list.name,
-        parameters: [
-            nativeParameter(type_list.param_0),
-        ],
-        result: type_list.result.nativeCoercion
-    )
-    
-    public func call<T>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType where T : SwiftCoercion {
-        var index = 0
-        let arg_0 = try command.value(for: AsOrderedList.type_list.param_0, at: &index, in: scope)
-        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
-        let result = try coercion.coerce(AsOrderedList(arg_0), in: scope)
-        return result
     }
 }
 

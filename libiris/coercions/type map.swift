@@ -30,7 +30,7 @@ public class TypeMap<SwiftType>: SwiftCoercion {
     
     public required init(_ name: Symbol, _ swiftName: String,
                          _ boxFunc: @escaping WrapFunc, _ addUnboxFuncs: (TypeMap<SwiftType>)->Void = {_ in ()}) {
-        //assert(!(SwiftType.self is SelfEvaluatingProtocol.Type))
+        //assert(!(SwiftType.self is SelfEvaluatingValue.Type))
         self.name = name
         self.swiftLiteralDescription = swiftName
         self.wrapFunc = boxFunc
@@ -48,7 +48,7 @@ public class TypeMap<SwiftType>: SwiftCoercion {
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         switch value {
-        case let v as SelfEvaluatingProtocol: return try v.eval(in: scope, as: self)
+        case let v as SelfEvaluatingValue: return try v.eval(in: scope, as: self)
         case let v as SwiftType: return v
         default:
             if let t = self.coercions.first(where: {$0.t == type(of: value)}) { return try t.fn(value, scope) }

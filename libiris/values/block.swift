@@ -7,7 +7,7 @@ import Foundation
 
 
 
-public class Block: BoxedCollectionValue, SelfEvaluatingProtocol { // caution: this does not capture lexical scope
+public class Block: BoxedCollectionValue, SelfEvaluatingValue { // caution: this does not capture lexical scope
     
     // TO DO: what about preserving user's punctuation?
         
@@ -44,7 +44,7 @@ public class Block: BoxedCollectionValue, SelfEvaluatingProtocol { // caution: t
        // print("Block.eval", self, "as", T.self)
         //var result: Value = nullValue
         for value in self.data.dropLast() { // self.data is zero or more exprs to evaluate; note that the result of each expr is normally discarded
-            if let expr = value as? SelfEvaluatingProtocol {
+            if let expr = value as? SelfEvaluatingValue {
                 // TO DO: what about early return? (simplest is for `return EXPR?` to throw an EarlyReturn error containing the EXPR to be evaluated, then catch it here and eval that expr with coercion T; problem is that only breaks us out of the current block, not the handler’s block; if we want to break out of the current handler then the early return error must be trapped by the handler itself)
                 let _ = try expr.eval(in: scope, as: asAnything)
             }

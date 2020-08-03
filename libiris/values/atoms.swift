@@ -17,7 +17,7 @@ extension Bool: AtomicValue {
 }
 
 
-public struct NullValue: AtomicValue, SelfEvaluatingProtocol {
+public struct NullValue: AtomicValue, SelfEvaluatingValue {
     
     public var literalDescription: String { return "nothing" }
     

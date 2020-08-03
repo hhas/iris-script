@@ -6,7 +6,7 @@
 import Foundation
 
 
-// SelfEvaluatingProtocol?
+// SelfEvaluatingValue?
 
 public struct Thunk<ElementType: SwiftCoercion>: Value {
     

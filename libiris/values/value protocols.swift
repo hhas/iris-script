@@ -89,8 +89,15 @@ extension Value { // default implementations
 }
 
 
-public protocol StaticValue: Value { } // values that return self when coerced to `value` (e.g. Int,Text) should adopt StaticValue; values that evaluate to another value (e.g. Command,Block) should implement their own eval method
-    
+public protocol StaticValue: Value { } // values that return self when coerced to `value` (e.g. Int, Text) should adopt StaticValue
+
+
+public protocol SelfEvaluatingValue { // values that take control of their own evaluation when coerced (e.g. Command, Block), typically returning a new (calculated) value; the coercion that invoked the eval() method is passed as argument, making eval() responsible for applying that coercion to the new value before returning it
+
+    func eval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType
+}
+
+
 
 // TO DO: can/should all scalars be BoxedValues? what functionality can be defined on BoxedValue extension?
 

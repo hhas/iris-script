@@ -15,7 +15,7 @@ import SwiftAutomation
 // TO DO: this is an awful awful KLUDGE that needs replaced once a coherent coercion/bridging architecture is found
 
 
-public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEvaluatingProtocol {
+public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEvaluatingValue {
     
     // AppData.sendAppleEvent(…) calls this, passing result as descriptor
     public static func SwiftAutomation_unpackSelf(_ desc: Descriptor, appData: AppData) throws -> NativeResultDescriptor {
@@ -217,7 +217,7 @@ extension Symbol: SelfPacking {
         } else if self.key.hasPrefix("0x") && self.key.count == 10, let code = UInt32(self.key.dropFirst(2), radix: 16) {
             return packAsType(code)
         } else {
-            throw TypeCoercionError(value: self, coercion: asValue) // TO DO: what error?
+            throw TypeCoercionError(value: self, coercion: asSymbol) // TO DO: what error?
         }
     }
 }
@@ -234,7 +234,7 @@ extension Record: SelfPacking {
     public func SwiftAutomation_packSelf(_ appData: AppData) throws -> Descriptor { // TO DO: this is a mess
         return try packAsRecord(self.data.map{ (label: Symbol, value: Value) throws -> (AEKeyword, Value) in
             guard let desc = (appData as! NativeAppData).descriptor(for: label) else {
-                throw TypeCoercionError(value: self, coercion: asValue) // TO DO: what error?
+                throw TypeCoercionError(value: self, coercion: asRecord) // TO DO: what error?
             }
             return (try unpackAsFourCharCode(desc), value)
         }, using: appData.pack)

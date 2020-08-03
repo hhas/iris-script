@@ -65,8 +65,7 @@ public struct ConstraintCoercionError: CoercionError { // value is correct type,
     }
     
     public init<T: SwiftCoercion>(value: Value, coercion: T) {
-        self.value = value
-        self.coercion = coercion.nativeCoercion
+        self.init(value: value, coercion: coercion.nativeCoercion)
     }
 }
 

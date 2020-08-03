@@ -16,8 +16,12 @@ func test() {
     
   //  runScript(" set a to 4. write a. write if true then false. write if false then false else true.")
    // runScript(" optional  ")
-    runScript(" optional integer. ")
-    runScript(" set t to list of: integer. write t. t. ")
+    //runScript(" optional integer. ")
+    //runScript(" set t to list of: integer. write t. t. ")
+    
+    runScript("  list of: integer. ")
+    //runScript(" set t to list of: integer. t. ")// TO DO: this returns `list {of: nothing}` because `t` calls the stored `list {of: integer}` coercion, passing `nothing` as direct argument, which creates a new `list` instance (since `nothing` is both a Value and a Coercion); obviously we don't want the stored `list` coercion to be reparameterized, the problem is how to distinguish slot lookup (the intended behavior) from handler call; should constrainable coercions, once constrained, reject any further calls (e.g. by boxing)? or treat arg-less calls (i.e. `command.arguments.isEmpty`) as equivalent to slot lookup and just return self? it does raise questions as to correct NullValue behavior for optional arguments (we might want to define a separate 'null value' for use in argument unpacking that can't be mistaken for a coercion, even when parameter type is asCoercion); Q. if a callable coercion is assigned to a new environment slot (e.g. when passed as argument or, say, `set my_list to list`), should it remain constrainable via call? or should callability be an attribute of its original binding only?
+    
    // runScript(" to foo run write “bar” \n foo ")
     
    // runScript(" 2+2. to foo{a} run bar a. to bar {v} run 2+v. foo 6. ")

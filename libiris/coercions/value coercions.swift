@@ -6,7 +6,7 @@
 import Foundation
 
 
-public struct AsAnything: SwiftCoercion { // any value or `nothing`; equivalent to `AsOptional(asValue)`
+public struct AsAnything: SwiftCoercion, NativeCoercion { // any value or `nothing`; equivalent to `AsOptional(asValue)`
     
     public typealias SwiftType = Value
     
@@ -16,7 +16,7 @@ public struct AsAnything: SwiftCoercion { // any value or `nothing`; equivalent 
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         do {
-            if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
+            if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
             return value // TO DO: what about array and other collection types? should they also self-evaluate?
         } catch is NullCoercionError {
             return nullValue
@@ -32,7 +32,7 @@ public let asAnything = AsAnything()
 
 
 
-public struct AsValue: SwiftCoercion { // any value except `nothing`
+public struct AsValue: SwiftCoercion, NativeCoercion { // any value except `nothing`
     
     public typealias SwiftType = Value
     
@@ -41,7 +41,7 @@ public struct AsValue: SwiftCoercion { // any value except `nothing`
     public var swiftLiteralDescription: String { return "asValue" }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
-        if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
+        if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
         return value
     }
     

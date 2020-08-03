@@ -36,7 +36,7 @@ public struct AsRecord: RecordCoercion {
     }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> Record {
-        if let v = value as? SelfEvaluatingProtocol { return try v.eval(in: scope, as: self) }
+        if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
         let record = try value as? Record ?? Record([(nullSymbol, value)])
   //      if record.isMemoizable, record.constrainedType.isa(iris.asRecord) { return record } // TO DO: how to test if coercion is equal or superset of record's constrained type?
         var result = [Record.Field]()
@@ -93,7 +93,7 @@ public struct AsStruct<StructType>: RecordCoercion { // TO DO: this needs moved 
     }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> StructType {
-        if let v = value as? SelfEvaluatingProtocol {
+        if let v = value as? SelfEvaluatingValue {
             return try v.eval(in: scope, as: self)
         }
         let items: [Record.Field]

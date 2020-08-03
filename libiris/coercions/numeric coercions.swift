@@ -55,7 +55,7 @@ func textToDouble(value: Text, in scope: Scope) throws -> Double {
     /// The string passed as `description` may begin with a plus or minus sign
     /// character (`+` or `-`), followed by one or more numeric digits (`0-9`).
     if let n = Double(value.data) { return n }
-    throw ConstraintCoercionError(value: value, coercion: iris.asValue)
+    throw ConstraintCoercionError(value: value, coercion: asDouble)
 }
 
 
@@ -104,7 +104,7 @@ public struct AsInt: SwiftCoercion {
         case let v as Int: return v
         case let v as Double: if let res = Int(exactly: v) { return res }
         case let v as Text: if let r = Double(v.data), let res = Int(exactly: r) { return res }
-        case let v as SelfEvaluatingProtocol: return try v.eval(in: scope, as: self)
+        case let v as SelfEvaluatingValue: return try v.eval(in: scope, as: self)
         default: ()
         }
         return try _asInt.coerce(value, in: scope)

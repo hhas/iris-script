@@ -52,7 +52,7 @@ import Foundation
  */
 
 
-public class Command: ComplexValue, LiteralConvertible, SelfEvaluatingProtocol {
+public class Command: ComplexValue, LiteralConvertible, SelfEvaluatingValue {
     
     public typealias Argument = Record.Field
     public typealias Arguments = [Argument]
