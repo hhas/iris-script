@@ -66,7 +66,7 @@ struct ComparisonSelector: TestSelector {
     func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         if command.arguments.count != 2 { throw BadSelectorError() }
         let left = try asReference.coerce(command.arguments[0].value, in: scope).desc as! ObjectSpecifierDescriptor
-        let operandType: NativeCoercion = self.isNumeric ? asNumber.nativeCoercion : asValue.nativeCoercion
+        let operandType: NativeCoercion = self.isNumeric ? asNumber : asValue
         let right = try self.appData.pack(operandType.coerce(command.arguments[1].value, in: scope))
         let result: TestDescriptor
         switch self.form {

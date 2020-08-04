@@ -12,11 +12,17 @@ import Foundation
 
 
 
-public struct KeyedList: BoxedCollectionValue { // TO DO: implement ExpressibleByDictionaryLiteral? // TO DO: what should be value's native name? (currently it's referred to 'key-value list', but that's awkward to write as underscored name; however, 'dictionary' is already used to refer to application dictionaries in ae_lib and might also be used as the term for library documentation)
+public struct KeyedList: BoxedCollectionValue, LiteralConvertible { // TO DO: implement ExpressibleByDictionaryLiteral? // TO DO: what should be value's native name? (currently it's referred to 'key-value list', but that's awkward to write as underscored name; however, 'dictionary' is already used to refer to application dictionaries in ae_lib and might also be used as the term for library documentation)
     
     public var swiftLiteralDescription: String { return self.data.swiftLiteralDescription }
-
-    public var description: String { return self.swiftLiteralDescription }
+    
+    public var literalDescription: String {
+        if self.data.isEmpty {
+            return "[:]"
+        } else {
+            return "[\(self.data.map{ "\(literal(for: $0.key.value)): \(literal(for: $0.value))" }.joined(separator: ", "))]"
+        }
+    }
     
     public typealias SwiftType = [Key: Value]
     

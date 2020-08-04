@@ -81,11 +81,11 @@ public let asThunk = AsThunk(asAnything)
 
 
 
-public struct AsIs: SwiftCoercion { // no evaluation
+public struct AsIs: SwiftCoercion { // no evaluation; value is returned unbound, so should either be evaluated by primitive handler in the current context, or thunked with that context if evaluation is to take place after the handler returns
     
     public typealias SwiftType = Value
     
-    public let name: Symbol = "expression" // TO DO
+    public let name: Symbol = "expression"
     
     public var swiftLiteralDescription: String { return "asIs" }
     

@@ -100,9 +100,7 @@ public extension SwiftCoercion where SwiftType == Value {
 public protocol ConstrainableCoercion: NativeCoercion {
     
     // some native coercions (numbers, lists, etc) can be specialized with additional constraints (element type, min/max, etc)
-
-    //var callableInterface: HandlerInterface { get }
     
     // CallableCoercion (i.e. caller) is passed here for use in errors
-    func constrain(with command: Command, in scope: Scope, as coercion: CallableCoercion) throws -> Self
+    func constrain(with command: Command, in scope: Scope, as coercion: CallableCoercion) throws -> NativeCoercion
 }

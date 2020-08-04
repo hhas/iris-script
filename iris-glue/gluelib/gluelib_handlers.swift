@@ -3,7 +3,6 @@
 //  libiris
 //
 
-// code generator
 
 import Foundation
 import iris
@@ -11,9 +10,8 @@ import iris
 
 // define_handler (name, parameters, return_type, action, is_event_handler)
 private let type_defineHandlerGlue_handler_commandEnv = (
-    // TO DO: reduce `name+parameters+result` to single parameter of type asHandlerInterface?
     param_0: (Symbol("interface"), Symbol("interface"), asHandlerInterface),
-    param_1: (Symbol("action"), Symbol("action"), asIs), // TO DO: Record
+    param_1: (Symbol("requires"), Symbol("requirements"), asIs), // TO DO: Record
     result: asNothing
 )
 private let interface_defineHandlerGlue_handler_commandEnv = HandlerInterface(

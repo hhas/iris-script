@@ -7,12 +7,16 @@ import Foundation
 
 
 
-public class Block: BoxedCollectionValue, SelfEvaluatingValue { // caution: this does not capture lexical scope
+public class Block: BoxedCollectionValue, LiteralConvertible, SelfEvaluatingValue { // caution: this does not capture lexical scope
     
     // TO DO: what about preserving user's punctuation?
+    
+    public var swiftLiteralDescription: String {
+        return "Block([\(self.data.map(literal).joined(separator: ", "))])"
+    }
         
-    public var description: String { // TO DO: hand off to pp; also need formatting hints from parser (e.g. whether to use linbreaks and/or punctuation between exprs)
-        return "(\(self.data.map{$0.description}.joined(separator: ", ")))" // unsugared representation
+    public var literalDescription: String { // TO DO: hand off to pp; also need formatting hints from parser (e.g. whether to use linbreaks and/or punctuation between exprs)
+        return "(\(self.data.map(literal).joined(separator: ", ")))" // unsugared representation
     // TO DO: move sugared representation to PP
     //    if let d = self.patternDefinition, case .keyword(let n1) = d.pattern.first, case .keyword(let n2) = //d.pattern.last {
     //        return "\(n1.name.label)\(self.data.map{"\n\t\($0)"}.joined(separator: ""))\n\(n2.name.label)"

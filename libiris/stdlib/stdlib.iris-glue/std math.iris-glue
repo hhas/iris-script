@@ -6,7 +6,6 @@
 «TODO: should symbolic operators have word-based aliases? (these would provide speakable support automatically; alternative is to match spoken phrases to the symbols’ Unicode names)»
 
 to ‘^’ {left as number, right as number} returning number requires {
-    can_error: true
     swift_function: exponent
     operator: {[expression, keyword [“^”, “to_the_power_of”], expression], precedence: 1300, associate: #right}
 }
@@ -20,50 +19,42 @@ to ‘^’ {left as number, right as number} returning number requires {
 «TO DO: rename these ‘+’ and ‘-’ once handler overloading [matching argument labels] is implemented; i.e. canonical names will appear in pretty printed code»
 
 to ‘positive’ {right as number} returning number requires {
-    can_error: true
     swift_function: positive
     operator: {[keyword [“positive”, “+”, 0uFF0B], expression "right"], precedence: 1298, #left, #reductionForPositiveOperator}
 }
 
 to ‘negative’ {right as number} returning number requires {
-    can_error: true
     swift_function: negative
     operator: {[keyword [“negative”, “-”, 0uFF0D, 0u2212, 0uFE63], expression "right"], precedence: 1298, #left, #reductionForNegativeOperator}
 }
 
 
 to ‘*’ {left as number, right as number} returning number requires {
-    can_error: true
     swift_function: multiply
     operator: {infix [“*”, “×”], precedence: 1296}
 }
 
 to ‘/’ {left as number, right as number} returning number requires {
-    can_error: true
     swift_function: divide
     operator: {infix [“/”, “÷”], precedence: 1296}
 }
 
 to ‘div’ {left as real, right as real} returning real requires {
-    can_error: true
     operator: {infix [“div”], precedence: 1296}
 }
 
 to ‘mod’ {left as real, right as real} returning real requires {
-    can_error: true
     operator: {infix [“mod”], precedence: 1296}
 }
 
 
 
 to ‘+’ {left as Number, right as Number} returning Number requires {
-    can_error: true
     swift_function: add
     operator: {infix [“+”, 0uFF0B], precedence: 1290}
 }
 
 to ‘-’ {left as Number, right as Number} returning Number requires {
-    can_error: true
     swift_function: subtract
     operator: {infix [“-”, 0uFF0D, 0u2212, 0uFE63], precedence: 1290}
 }

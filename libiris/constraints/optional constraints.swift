@@ -14,6 +14,7 @@ extension AsOptional: ConstrainableCoercion {
     private static let type_optional = (
         name: Symbol("optional"),
         param_0: (Symbol("type"), Symbol("type"), asCoercion),
+        param_1: (Symbol("default"), Symbol("default"), AsSwiftDefault(asAnything, nullValue)),
         result: asCoercion
     )
     
@@ -21,16 +22,18 @@ extension AsOptional: ConstrainableCoercion {
         name: type_optional.name,
         parameters: [
             nativeParameter(type_optional.param_0),
+            nativeParameter(type_optional.param_1),
         ],
         result: type_optional.result.nativeCoercion
     )
     
-    public func constrain(with command: Command, in scope: Scope, as coercion: CallableCoercion) throws -> Self {
+    public func constrain(with command: Command, in scope: Scope, as coercion: CallableCoercion) throws -> NativeCoercion {
         // coercion is passed for error reporting only
         var index = 0
         let arg_0 = try command.value(for: AsOptional.type_optional.param_0, at: &index, in: scope)
+        let arg_1 = try command.value(for: AsOptional.type_optional.param_1, at: &index, in: scope)
         if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: coercion) }
-        return arg_0 is NullValue ? self : AsOptional(arg_0)
+        return AsOptional(arg_0, defaultValue: arg_1)
     }
 }
 

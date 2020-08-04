@@ -12,11 +12,11 @@ import Foundation
 // foo; of bar; of baz
 
 
-public struct OrderedList: BoxedCollectionValue { // ExpressibleByArrayLiteral?
+public struct OrderedList: BoxedCollectionValue, LiteralConvertible { // ExpressibleByArrayLiteral?
     
     public var swiftLiteralDescription: String { return self.data.swiftLiteralDescription }
-
-    public var description: String { return self.swiftLiteralDescription }
+    
+    public var literalDescription: String { return "[\(self.data.map{ literal(for: $0) }.joined(separator: ", "))]" }
     
     public static let nominalType: NativeCoercion = asOrderedList
     

@@ -64,13 +64,12 @@ extension NullValue: SwiftCoercion, NativeCoercion { // used as return type wher
     
     public var name: Symbol { return "nothing" }
     
-    //public var swiftLiteralDescription: String { return "asNothing" }
-    
     public typealias SwiftType = Value
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
-        // calling AsNothing.unbox() is [presumably] an implementation error // TO DO: should it return nullValue instead? or is it best to have explicit error, assuming calling this method is always a bug?
-        throw InternalError(description: "AsNothing.unbox() is not supported.")
+        // because Block uses its return type coercion to evaluate its last expression, we still need to evaluate that expression here
+        if let v = value as? SelfEvaluatingValue { let _ = try v.eval(in: scope, as: asAnything) }
+        return nullValue
     }
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
@@ -80,5 +79,5 @@ extension NullValue: SwiftCoercion, NativeCoercion { // used as return type wher
 
 public typealias AsNothing = NullValue
 
-public let asNothing = nullValue //AsNothing()
+public let asNothing = nullValue
 

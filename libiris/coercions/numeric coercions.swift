@@ -7,6 +7,9 @@ import Foundation
 
 // TO DO: need to implement String-to-Int/Double conversion that accepts same chars as literal numbers (e.g. various +/- chars)
 
+public typealias AsDouble = TypeMap<Double>
+public typealias AsSwiftNumber = TypeMap<Number>
+
 //***************************************************************************************//
 // coercions
 
@@ -48,7 +51,7 @@ func intToDouble(value: Int, in scope: Scope) throws -> Double {
 }
 
 func numberToDouble(value: Number, in scope: Scope) throws -> Double {
-    return try value.toDouble()
+    return value.toDouble()
 }
 
 func textToDouble(value: Text, in scope: Scope) throws -> Double {
@@ -81,7 +84,7 @@ func textToNumber(value: Text, in scope: Scope) throws -> Number {
     return try Number(value.data)
 }
 
-public let asNumber = AsNumber("number", "asNumber", {
+public let asSwiftNumber = AsSwiftNumber("number", "asNumber", {
     $0.add(intToNumber)
     $0.add(doubleToNumber)
     $0.add(textToNumber)
@@ -138,3 +141,110 @@ public struct AsInt: SwiftCoercion {
 }
 
 public let asInt = AsInt()
+
+
+public struct AsUInt: SwiftCoercion {
+    
+    public typealias SwiftType = UInt
+    
+    public let name: Symbol = "integer"
+    
+    public var swiftLiteralDescription: String { return "asUInt" }
+    
+    // TO DO: less inclined to override here; main benefit is when coercing homogenous lists, where coerceFunc is more efficient
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        var result: Int?
+        switch value {
+        case let v as Int: result = v
+        case let v as Double: if let res = Int(exactly: v) { result = res }
+        case let v as Text: if let r = Double(v.data), let res = Int(exactly: r) { result = res }
+        case let v as SelfEvaluatingValue: return try v.eval(in: scope, as: self)
+        default: ()
+        }
+        let v = try result ?? _asInt.coerce(value, in: scope)
+        if v < 0 { throw ConstraintCoercionError(value: v, coercion: self) }
+        return UInt(v)
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return value <= UInt(Int.max) ? Int(value) : Double(value)
+    }
+}
+
+public let asUInt = AsUInt()
+
+
+/****************************************************************************************/
+// native
+
+public struct AsNumber: NativeCoercion {
+    
+    public typealias SwiftType = Value
+    
+    public let name: Symbol = "number"
+    
+    public var swiftLiteralDescription: String { return "asSwiftNumber" }
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        switch value {
+        case let v as Int: return v
+        case let v as Double: if let res = Int(exactly: v) { return res }
+        case let v as Text: if let r = Double(v.data), let res = Int(exactly: r) { return res }
+        case let v as SelfEvaluatingValue: return try v.eval(in: scope, as: asSwiftNumber)
+        default: ()
+        }
+        return try _asInt.coerce(value, in: scope)
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return value
+    }
+}
+
+public let asNumber = AsNumber()
+
+
+//
+
+public struct AsConstrainedNumber: NativeCoercion { // returned by AsNumber.constrain()
+    
+    public var name: Symbol { return asNumber.name }
+        
+    public typealias ElementType = AsNumber
+    public typealias SwiftType = Number
+    
+    public var swiftLiteralDescription: String {
+        var range = ""
+        if let n = self.min { range += "min: \(n), " }
+        if let n = self.max { range += "max: \(n), " }
+        return "\(type(of: self))(\(range)isWhole: \(self.isWhole))"
+    }
+    
+    public var literalDescription: String {
+        var range = ""
+        if let n = self.min { range += ", min: \(n)" }
+        if let n = self.max { range += ", max: \(n)" }
+        return "number {whole: \(self.isWhole)\(range)}"
+    }
+    
+    private let isWhole: Bool, min: SwiftType?, max: SwiftType?
+    
+    public init(isWhole: Bool = false, min: SwiftType? = nil, max: SwiftType? = nil) {
+        self.isWhole = isWhole
+        self.min = min
+        self.max = max
+    }
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> Value {
+        let result = try asSwiftNumber.coerce(value, in: scope)
+        if self.isWhole && !result.isWholeNumber { throw ConstraintCoercionError(value: value, coercion: self) }
+        if let min = self.min, result < min { throw ConstraintCoercionError(value: value, coercion: self) }
+        if let max = self.max, result > max { throw ConstraintCoercionError(value: value, coercion: self) }
+        return result
+    }
+    
+    public func wrap(_ value: Value, in scope: Scope) -> Value {
+        return value
+    }
+}
+

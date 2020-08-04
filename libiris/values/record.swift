@@ -69,16 +69,18 @@ public extension Record.Fields { // also used as Command.Arguments
 
 
 
-public struct Record: ComplexValue, Accessor, Sequence {
+public struct Record: ComplexValue, LiteralConvertible, Accessor, Sequence {
     
     public var swiftLiteralDescription: String {
         // TO DO: what about including constrainedType?
         return "Record(uniqueLabelsWithValues: \(self.data.swiftLiteralDescription))"
     }
     
+    public var literalDescription: String {
+        return "{\(self.data.map{ $0 == nullSymbol ? "\($1)" : "\($0.label): \(literal(for: $1))"}.joined(separator: ", "))}"
+    }
+
     // TO DO: `description` should return Swift representation (we need a separate visitor-style API for pretty-printing native values, as formatting needs to be customizable [e.g. when reformatting script's code, where line-wrapping and reindentation is automatic, command arguments can omit record punctuation for low-noise AS-like appearance, and commands can be formatted with or without using custom operator syntax; plus, of course, literate formatting where visual emphasis is assigned to high-level structures rather than low-level token types]; TBH generating Swift representations should probably also be done using same PP API, e.g. for use by cross-compiler when generating [human-readable] Swift code, with `description` invoking that with default formatting options when displaying values for debugging/troubleshooting)
-    
-    public var description: String { return "{\(self.data.map{ $0 == nullSymbol ? "\($1)" : "\($0.label): \($1)"}.joined(separator: ", "))}" }
     
     public typealias Field = (label: Symbol, value: Value) // nullSymbol = unnamed field
     public typealias Fields = [Field]

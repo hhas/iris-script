@@ -112,28 +112,44 @@ public struct AsSwiftPrecis<ElementType: SwiftCoercion>: SwiftCoercion {
 
 public struct AsOptional: NativeCoercion {
     
-    public var description: String { return "optional \(literal(for: self.elementType))" }
+    public var swiftLiteralDescription: String {
+        if self.defaultValue is NullValue {
+            return "AsSwiftOptional(\(self.elementType.swiftLiteralDescription))"
+        } else {
+            return "AsSwiftDefault(\(self.elementType.swiftLiteralDescription), \(formatSwiftLiteral(self.defaultValue)))"
+        }
+    }
+    
+    public var literalDescription: String {
+        if self.defaultValue is NullValue {
+            return "optional {\(self.elementType.literalDescription)}"
+        } else {
+            return "optional {\(self.elementType.literalDescription), default: \(literal(for: self.defaultValue))}"
+        }
+    }
     
     public typealias SwiftType = Value
     
-    public let name: Symbol = "optional" // TO DO: that's nominal name; what about parameterized name?
+    public let name: Symbol = "optional"
     
     public let elementType: NativeCoercion
+    private let defaultValue: Value
     
-    public init(_ elementType: NativeCoercion) {
+    public init(_ elementType: NativeCoercion, defaultValue: Value = nullValue) {
         self.elementType = elementType
+        self.defaultValue = defaultValue
     }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         do { // NullValue will self-evaluate by throwing a NullCoercionError which is intercepted here
             return try self.elementType.coerce(value, in: scope)
         } catch is NullCoercionError {
-            return nullValue
+            return self.defaultValue
         }
     }
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
-        return value
+        return self.elementType.wrap(value, in: scope)
     }
 }
 

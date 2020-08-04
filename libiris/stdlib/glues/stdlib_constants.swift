@@ -33,7 +33,7 @@ public func stdlib_loadConstants(into env: Environment) {
         registry.prefix("editable", 320)
         
         // TO DO: FIX: defining both atomic and prefix forms of `optional` operator doesn’t parse correctly (the latter definition appears to mask the former; thus, in this case, `foo as editable` parses but `foo as editable value` does not); a workaround for now would be to define `optional EXPR?` as a single pattern with optional EXPR, however, it'd be best to fix the bug at source (presumably in OperatorRegistry)
-        registry.atom("optional")
+        registry.add([.keyword("optional"), .expressionLabeled("type"), .optional([.keyword("with_default"), .expressionLabeled("default")])], 1500)
         registry.atom("editable")
         registry.infix("with_default", 500)
 

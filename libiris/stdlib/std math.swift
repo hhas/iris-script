@@ -8,15 +8,15 @@ import Darwin
 
 // TO DO: guard against divide-by-zero exceptions by using `AsDouble(nonZero:true)` in interfaces
 
-func exponent(left: Number, right: Number) throws -> Number { return try left.pow(right) }
-func positive(right: Number) throws -> Number { return right }
-func negative(right: Number) throws -> Number { return try -right }
-func add(left: Number, right: Number) throws -> Number { return try left + right }
-func subtract(left: Number, right: Number) throws -> Number { return try left - right }
-func multiply(left: Number, right: Number) throws -> Number { return try left * right }
-func divide(left: Number, right: Number) throws -> Number { return try left / right }
-func div(left: Double, right: Double) throws -> Double { return (left / right).rounded(.towardZero) }
-func mod(left: Double, right: Double) throws -> Double { return left.truncatingRemainder(dividingBy: right) }
+func exponent(left: Number, right: Number) -> Number { return left.pow(right) }
+func positive(right: Number) -> Number { return right }
+func negative(right: Number) -> Number { return -right }
+func add(left: Number, right: Number) -> Number { return left + right }
+func subtract(left: Number, right: Number) -> Number { return left - right }
+func multiply(left: Number, right: Number) -> Number { return left * right }
+func divide(left: Number, right: Number) -> Number { return left / right }
+func div(left: Double, right: Double) -> Double { return (left / right).rounded(.towardZero) }
+func mod(left: Double, right: Double) -> Double { return left.truncatingRemainder(dividingBy: right) }
 
 // math comparison
 

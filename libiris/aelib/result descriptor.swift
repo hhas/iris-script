@@ -196,7 +196,6 @@ extension Number: SelfPacking {
         switch self {
         case .integer(let n, radix: _): return packAsInt(n)
         case .floatingPoint(let n): return packAsDouble(n)
-        default: throw InternalError(description: "Can't pack Number: \(self)")
         }
     }
 }

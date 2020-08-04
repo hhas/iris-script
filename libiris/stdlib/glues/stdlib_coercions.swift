@@ -15,9 +15,9 @@ public func stdlib_loadCoercions(into env: Environment) {
     env.define(coercion: asBool)   // TO DO: need to decide if native Boolean representation should be `true`/`false` constants or non-empty/empty values (probably best with traditional constants for pedagogical purposes, although “emptiness” does have its advantages as does Icon-style result/failure)
     env.define(coercion: asSymbol)
     
-    env.define(coercion: asInt)
+    env.define(coercion: asInt) // TO DO: not sure about this; language should distinguish “whole” from “fractional” numbers; would be better to define `integer` slot as handler that forwards to `number{whole: true,…}`
     env.define(coercion: asDouble)
-    env.define(coercion: asNumber)
+    env.define(coercion: CallableCoercion(asNumber))
 
     env.define(coercion: asText) //
 

@@ -87,8 +87,6 @@ public extension TypeMap {
 
 
 public typealias AsBool   = TypeMap<Bool>
-public typealias AsDouble = TypeMap<Double>
-public typealias AsNumber = TypeMap<Number>
 public typealias AsSymbol = TypeMap<Symbol>
 
 

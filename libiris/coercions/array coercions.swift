@@ -11,7 +11,7 @@ public struct AsArray<ElementType: SwiftCoercion>: SwiftCoercion {
     
     public typealias SwiftType = [ElementType.SwiftType]
     
-    public let name: Symbol = "list" // TO DO
+    public let name: Symbol = "list"
     
     public var swiftLiteralDescription: String { return "AsArray(\(self.elementType.swiftLiteralDescription))" }
     
@@ -77,27 +77,29 @@ extension AsArray {
 
 public struct AsOrderedList: NativeCoercion {
     
-    public var name: Symbol = "list" // TO DO: parameterize
+    public var name: Symbol = "list"
     
     public var swiftLiteralDescription: String { return "AsArray(\(self.elementType.swiftLiteralDescription))" }
     
     public var literalDescription: String {
-        if self.elementType is NativizedCoercion<AsAnything> {
-            return self.name.label
-        } else {
-            return "\(self.name.label) {of: \(self.elementType.literalDescription)}" // TO DO: also min/max (how/where should value constraints be defined?)
-        }
+        var arguments = [String]()
+        if !(self.elementType is AsValue) { arguments.append("of: \(self.elementType.literalDescription)") }
+        if self.minLength != 0 { arguments.append("from: \(self.minLength)") }
+        if self.maxLength != Int.max { arguments.append("to: \(self.maxLength)") }
+        return arguments.isEmpty ? self.name.label : "\(self.name.label) {\(arguments.joined(separator: ", "))}"
     }
     
     public let elementType: NativeCoercion
+    private let minLength: Int, maxLength: Int
     
-    public init(_ elementType: NativeCoercion = asAnything.nativeCoercion) {
+    public init(_ elementType: NativeCoercion = asValue, minLength: Int? = nil, maxLength: Int? = nil) {
         self.elementType = elementType
+        self.minLength = minLength ?? 0
+        self.maxLength = maxLength ?? Int.max
     }
 
     public func coerce(_ value: Value, in scope: Scope) throws -> Value {
-        // TO DO: if an item fails to eval/unbox, catch and rethrow error describing entire list, including index of the item that failed to coerce?
-        // TO DO: how/where to support constraint checking?
+        // TO DO: if an item fails to coerce, catch and rethrow error describing entire list, including index of the item that failed to coerce? (Q. should failed item be described using chunk expression, e.g. `item 3 of […]`? depends on how integral chunk exprs are to language: being library-defined, what would be fallback if/when they’re not loaded?)
         let result: [Value]
         switch value {
         case let v as SelfEvaluatingValue:
@@ -120,8 +122,12 @@ public struct AsOrderedList: NativeCoercion {
         default:
             result = [try self.elementType.coerce(value, in: scope)]
         }
+        // TO DO: would it be better to verify list length before processing its items?
+        if result.count < self.minLength || result.count > self.maxLength {
+            throw ConstraintCoercionError(value: value, coercion: self)
+        }
         return OrderedList(result)
     }
 }
 
-public let asOrderedList = AsOrderedList() // TO DO: implement as struct
+public let asOrderedList = AsOrderedList()

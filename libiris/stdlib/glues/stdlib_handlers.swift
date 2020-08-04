@@ -36,9 +36,9 @@ private func procedure_joinValues_left_right(command: Command, commandEnv: Scope
 // * {left, right}
 private let type_multiply_left_right = (
     name: Symbol("*"),
-    param_0: (Symbol("left"), Symbol("left"), asNumber),
-    param_1: (Symbol("right"), Symbol("right"), asNumber),
-    result: asNumber
+    param_0: (Symbol("left"), Symbol("left"), asSwiftNumber),
+    param_1: (Symbol("right"), Symbol("right"), asSwiftNumber),
+    result: asSwiftNumber
 )
 private let interface_multiply_left_right = HandlerInterface(
     name: type_multiply_left_right.name,
@@ -53,7 +53,7 @@ private func procedure_multiply_left_right(command: Command, commandEnv: Scope, 
     let arg_0 = try command.value(for: type_multiply_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_multiply_left_right.param_1, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = try multiply(
+    let result = multiply(
     	left: arg_0,
     	right: arg_1
     )
@@ -63,9 +63,9 @@ private func procedure_multiply_left_right(command: Command, commandEnv: Scope, 
 // + {left, right}
 private let type_add_left_right = (
     name: Symbol("+"),
-    param_0: (Symbol("left"), Symbol("left"), asNumber),
-    param_1: (Symbol("right"), Symbol("right"), asNumber),
-    result: asNumber
+    param_0: (Symbol("left"), Symbol("left"), asSwiftNumber),
+    param_1: (Symbol("right"), Symbol("right"), asSwiftNumber),
+    result: asSwiftNumber
 )
 private let interface_add_left_right = HandlerInterface(
     name: type_add_left_right.name,
@@ -80,7 +80,7 @@ private func procedure_add_left_right(command: Command, commandEnv: Scope, handl
     let arg_0 = try command.value(for: type_add_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_add_left_right.param_1, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = try add(
+    let result = add(
     	left: arg_0,
     	right: arg_1
     )
@@ -90,9 +90,9 @@ private func procedure_add_left_right(command: Command, commandEnv: Scope, handl
 // - {left, right}
 private let type_subtract_left_right = (
     name: Symbol("-"),
-    param_0: (Symbol("left"), Symbol("left"), asNumber),
-    param_1: (Symbol("right"), Symbol("right"), asNumber),
-    result: asNumber
+    param_0: (Symbol("left"), Symbol("left"), asSwiftNumber),
+    param_1: (Symbol("right"), Symbol("right"), asSwiftNumber),
+    result: asSwiftNumber
 )
 private let interface_subtract_left_right = HandlerInterface(
     name: type_subtract_left_right.name,
@@ -107,7 +107,7 @@ private func procedure_subtract_left_right(command: Command, commandEnv: Scope, 
     let arg_0 = try command.value(for: type_subtract_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_subtract_left_right.param_1, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = try subtract(
+    let result = subtract(
     	left: arg_0,
     	right: arg_1
     )
@@ -117,9 +117,9 @@ private func procedure_subtract_left_right(command: Command, commandEnv: Scope, 
 // / {left, right}
 private let type_divide_left_right = (
     name: Symbol("/"),
-    param_0: (Symbol("left"), Symbol("left"), asNumber),
-    param_1: (Symbol("right"), Symbol("right"), asNumber),
-    result: asNumber
+    param_0: (Symbol("left"), Symbol("left"), asSwiftNumber),
+    param_1: (Symbol("right"), Symbol("right"), asSwiftNumber),
+    result: asSwiftNumber
 )
 private let interface_divide_left_right = HandlerInterface(
     name: type_divide_left_right.name,
@@ -134,7 +134,7 @@ private func procedure_divide_left_right(command: Command, commandEnv: Scope, ha
     let arg_0 = try command.value(for: type_divide_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_divide_left_right.param_1, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = try divide(
+    let result = divide(
     	left: arg_0,
     	right: arg_1
     )
@@ -329,9 +329,9 @@ private func procedure_XOR_left_right(command: Command, commandEnv: Scope, handl
 // ^ {left, right}
 private let type_exponent_left_right = (
     name: Symbol("^"),
-    param_0: (Symbol("left"), Symbol("left"), asNumber),
-    param_1: (Symbol("right"), Symbol("right"), asNumber),
-    result: asNumber
+    param_0: (Symbol("left"), Symbol("left"), asSwiftNumber),
+    param_1: (Symbol("right"), Symbol("right"), asSwiftNumber),
+    result: asSwiftNumber
 )
 private let interface_exponent_left_right = HandlerInterface(
     name: type_exponent_left_right.name,
@@ -346,7 +346,7 @@ private func procedure_exponent_left_right(command: Command, commandEnv: Scope, 
     let arg_0 = try command.value(for: type_exponent_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_exponent_left_right.param_1, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = try exponent(
+    let result = exponent(
     	left: arg_0,
     	right: arg_1
     )
@@ -603,7 +603,7 @@ private func procedure_div_left_right(command: Command, commandEnv: Scope, handl
     let arg_0 = try command.value(for: type_div_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_div_left_right.param_1, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = try div(
+    let result = div(
     	left: arg_0,
     	right: arg_1
     )
@@ -1120,7 +1120,7 @@ private func procedure_mod_left_right(command: Command, commandEnv: Scope, handl
     let arg_0 = try command.value(for: type_mod_left_right.param_0, at: &index, in: commandEnv)
     let arg_1 = try command.value(for: type_mod_left_right.param_1, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = try mod(
+    let result = mod(
     	left: arg_0,
     	right: arg_1
     )
@@ -1158,8 +1158,8 @@ private func procedure_nameSelector_elementType_selectorData(command: Command, c
 // negative {right}
 private let type_negative_right = (
     name: Symbol("negative"),
-    param_0: (Symbol("right"), Symbol("right"), asNumber),
-    result: asNumber
+    param_0: (Symbol("right"), Symbol("right"), asSwiftNumber),
+    result: asSwiftNumber
 )
 private let interface_negative_right = HandlerInterface(
     name: type_negative_right.name,
@@ -1172,7 +1172,7 @@ private func procedure_negative_right(command: Command, commandEnv: Scope, handl
     var index = 0
     let arg_0 = try command.value(for: type_negative_right.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = try negative(
+    let result = negative(
     	right: arg_0
     )
     return type_negative_right.result.wrap(result, in: handlerEnv)
@@ -1210,8 +1210,8 @@ private func procedure_ofClause_attribute_target(command: Command, commandEnv: S
 // positive {right}
 private let type_positive_right = (
     name: Symbol("positive"),
-    param_0: (Symbol("right"), Symbol("right"), asNumber),
-    result: asNumber
+    param_0: (Symbol("right"), Symbol("right"), asSwiftNumber),
+    result: asSwiftNumber
 )
 private let interface_positive_right = HandlerInterface(
     name: type_positive_right.name,
@@ -1224,7 +1224,7 @@ private func procedure_positive_right(command: Command, commandEnv: Scope, handl
     var index = 0
     let arg_0 = try command.value(for: type_positive_right.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = try positive(
+    let result = positive(
     	right: arg_0
     )
     return type_positive_right.result.wrap(result, in: handlerEnv)

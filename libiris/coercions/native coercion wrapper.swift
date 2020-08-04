@@ -83,7 +83,7 @@ public struct CallableCoercion: NativeCoercion, Callable {
     }
     
     public func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        return try coercion.coerce(command.arguments.isEmpty ?
-            self.elementType : self.elementType.constrain(with: command, in: scope, as: self), in: scope)
+        return try coercion.coerce(command.arguments.isEmpty ? self.elementType
+            : self.elementType.constrain(with: command, in: scope, as: self), in: scope)
     }
 }

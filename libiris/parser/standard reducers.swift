@@ -245,7 +245,7 @@ func reductionForNegativeOperator(stack: Parser.TokenStack, match: PatternMatch,
         switch n { // TO DO: bit clumsy
         case let n as Int:    return n == Int.min ? -Double(n) : -n // Int.max < Int.min so `-Int.min` must return [lossy] Double
         case let n as Double: return -n // // check Double’s behavior at edges of expressible range (c.f. Int.min/.max)
-        case let n as Number: if let n = try? -n { return n }
+        case let n as Number: return -n
         default: ()
         }
     }

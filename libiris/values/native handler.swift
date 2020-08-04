@@ -8,7 +8,7 @@ import Foundation
 
 // weak, latent typing (strictly speaking, code is untyped and latent typing is implemented as a library-defined behavior on top of untyped code; performs runtime type-checking by default but should also support compile-time type checking/inference given alternate primitive libraries)
 
-@inlinable public func nativeParameter<T: SwiftCoercion>(_ param: (Symbol, Symbol, T)) -> HandlerInterface.Parameter {
+@inline(__always) public func nativeParameter<T: SwiftCoercion>(_ param: (Symbol, Symbol, T)) -> HandlerInterface.Parameter {
     return (param.0, param.1, param.2.nativeCoercion)
 }
 

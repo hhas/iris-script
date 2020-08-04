@@ -48,7 +48,7 @@ public struct AsError: SwiftCoercion {
 }
 
 
-public struct AsCoercion: SwiftCoercion {
+public struct AsCoercion: SwiftCoercion { // TO DO: constructor argument for determining NullValue behavior (in most cases it should throw; however, when used as return type in handler interface it should return nullValue)
     
     public typealias SwiftType = NativeCoercion
     
@@ -56,13 +56,19 @@ public struct AsCoercion: SwiftCoercion {
     
     public var swiftLiteralDescription: String { return "asCoercion" }
     
+    private let allowNothing: Bool
+    
+    public init(allowNothing: Bool = false) {
+        self.allowNothing = allowNothing
+    }
+    
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         do {
             if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
             if let v = value as? SwiftType { return v }
             throw TypeCoercionError(value: value, coercion: self)
-        } catch is NullCoercionError {
-            return nullValue // TO DO: not entirely sure about this: NullValue is a NativeCoercion, but only intended for use as return type to indicate that nothing is returned (since native handlers that do not declare an explicit return type will automatically return the result of the last expression evaluated, i.e. their return type is `anything`); used anywhere else, however, `nothing` is intended to indicate an omitted value (i.e. throw NullCoercionError and leave it to parent coercion, if any, to substitute with default value or else rethrow as a permanent TypeCoercionError)
+        } catch is NullCoercionError where self.allowNothing {
+            return nullValue
         }
     }
     
@@ -75,6 +81,7 @@ public struct AsCoercion: SwiftCoercion {
 public let asHandler = AsHandler()
 public let asError = AsError()
 public let asCoercion = AsCoercion()
+public let asResultCoercion = AsCoercion(allowNothing: true)
 
 
 // TO DO: sort out errors; this should throw simple, descriptive errors indicating type of error; caller should raise full coercion error with complete signature
@@ -129,7 +136,7 @@ func unpackSignature(_ value: Value, in env: Scope) throws -> (Symbol, [HandlerI
     case let command as Command: // name with optional params
         name = command.name
         parameters = try unpackParameters(command.arguments, in: env)
-    case let record as Record: // params only
+    case let record as Record: // params only (anonymous callable) // TO DO: constructing anonymous functions natively is not currently supported
         name = nullSymbol
         parameters = try unpackParameters(record.data, in: env)
     default:
@@ -138,26 +145,6 @@ func unpackSignature(_ value: Value, in env: Scope) throws -> (Symbol, [HandlerI
     }
     return (name, parameters)
 }
-
-// TO DO: for metaprogramming, may be better to provide a separate constructor handler that takes name, parameters, etc as arguments, avoiding need to compose out of literal commands (which, being literals, can’t be parameterized at run-time)
-func handlerInterface(for command: Command, in scope: Scope) throws -> HandlerInterface {
-    let name: Symbol, parameters: [HandlerInterface.Parameter], returnType: NativeCoercion
-    if command.name == "returning" {
-        let args = command.arguments
-        if args.count != 2 {
-            print("Bad `returning` operator")
-            throw TypeCoercionError(value: command, coercion: asHandlerInterface)
-        }
-        // TO DO: should really use standard argument match+unpack method here for consistency of behavior throughout
-        (name, parameters) = try unpackSignature(args[0].value, in: scope)
-        returnType = try asCoercion.coerce(args[1].value, in: scope)
-    } else {
-        (name, parameters) = try unpackSignature(command, in: scope)
-        returnType = asAnything.nativeCoercion
-    }
-    return HandlerInterface(name: name, parameters: parameters, result: returnType, isEventHandler: false)
-}
-
 
 
 public struct AsHandlerInterface: SwiftCoercion {
@@ -169,8 +156,23 @@ public struct AsHandlerInterface: SwiftCoercion {
     public var swiftLiteralDescription: String { return "asHandlerInterface" }
 
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
-        if let v = value as? Command { return try handlerInterface(for: v, in: scope) }
-        throw TypeCoercionError(value: value, coercion: self)
+        // TO DO: this implementation assumes the handler interface is defined using literal `name {param,…} returning type` syntax, which is not conducive constructing handler interfaces programmatically; for metaprogramming, provide a separate handler [interface] constructor that takes name, parameters, etc as arguments, as alternative to describing handler interface using literal commands (which, being literals, can’t be parameterized at run-time)
+        guard let command = value as? Command else { throw TypeCoercionError(value: value, coercion: self) }
+        let name: Symbol, parameters: [HandlerInterface.Parameter], returnType: NativeCoercion
+        if command.name == "returning" {
+            let args = command.arguments
+            if args.count != 2 {
+                print("Bad `returning` operator")
+                throw TypeCoercionError(value: command, coercion: asHandlerInterface)
+            }
+            // TO DO: should really use standard argument match+unpack method here for consistency of behavior throughout
+            (name, parameters) = try unpackSignature(args[0].value, in: scope)
+            returnType = try asResultCoercion.coerce(args[1].value, in: scope) // return type may be `nothing`, in which case handler *always* returns `nothing`
+        } else {
+            (name, parameters) = try unpackSignature(command, in: scope)
+            returnType = asAnything.nativeCoercion
+        }
+        return HandlerInterface(name: name, parameters: parameters, result: returnType, isEventHandler: false)
     }
 }
 

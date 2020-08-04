@@ -19,11 +19,25 @@ func test() {
     //runScript(" optional integer. ")
     //runScript(" set t to list of: integer. write t. t. ")
     
-    runScript("  list of: integer. ")
-    //runScript(" set t to list of: integer. t. ")// TO DO: this returns `list {of: nothing}` because `t` calls the stored `list {of: integer}` coercion, passing `nothing` as direct argument, which creates a new `list` instance (since `nothing` is both a Value and a Coercion); obviously we don't want the stored `list` coercion to be reparameterized, the problem is how to distinguish slot lookup (the intended behavior) from handler call; should constrainable coercions, once constrained, reject any further calls (e.g. by boxing)? or treat arg-less calls (i.e. `command.arguments.isEmpty`) as equivalent to slot lookup and just return self? it does raise questions as to correct NullValue behavior for optional arguments (we might want to define a separate 'null value' for use in argument unpacking that can't be mistaken for a coercion, even when parameter type is asCoercion); Q. if a callable coercion is assigned to a new environment slot (e.g. when passed as argument or, say, `set my_list to list`), should it remain constrainable via call? or should callability be an attribute of its original binding only?
+    runScript("to foo x returning anything run write x. foo 33.")
     
+    runScript("to foo x returning nothing run write x. foo 33.")
+    
+    
+    runScript("  list of: integer. ")
+    runScript(" set t to list of: integer. write t. t ")
+    runScript("  list of: integer from: 1 to: 10. ")
+    // TO DO: should `as` have higher precedence than command? e.g. `write 5 as t` probably means to coerce `5`, but currently coerces the result of `write {5}` (which is always `nothing`); might also help if linter suggests adding parentheses to avoid any ambiguity/confusion
+    runScript(" set t to optional list of: integer with_default [3]. write t. write {nothing as t}. write {“5” as t}. ")
+    runScript("  optional list of: integer. ")
+    runScript(" 5 as list of: integer from: 2 to: 10. ") // this should throw constraint error; Q. how might errors explain the exact issue (in this case, the list needs to contain at least 2 items but [5] contains only one), ideally in a way that is conducive to l10n
+    runScript(" “6” as optional list of: integer. ") // -> 6
+    runScript(" “6” as list of: optional integer. ") // -> 6
+    runScript(" [1, nothing, “3”] as list of: optional integer. ") // -> [1, nothing, 3]
+    runScript(" [1, nothing, “3”] as optional list of: integer. ") // this should throw as the list, if given, must contain integers (i.e. the NullCoercionError raised on the failed `nothing as integer` coercion should not propagate back to the `optional list` coercion)
    // runScript(" to foo run write “bar” \n foo ")
     
+    return;
    // runScript(" 2+2. to foo{a} run bar a. to bar {v} run 2+v. foo 6. ")
     
    // print(asBool.name)
