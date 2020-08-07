@@ -39,7 +39,7 @@ public struct HandlerInterface: ComplexValue, StaticValue { // native representa
     
     // TO DO: store binding names separately? primitive handlers don't need them, and native handlers should probably treat them as private (i.e. third-party code should not make any assumptions about these names - they are defined by and for the handler's own use only); in theory, code analysis tools will want to know all bound names; then again, the easiest way to do code analysis in iris it to execute the script against alternate libraries that have the same signatures but different behaviors (e.g. whereas a standard `switch` handler lazily matches conditions and only evaluates the first matched case, an analytical `switch` handler would evaluate all conditions and all cases to generate an analysis of all possible behaviors)
     
-    public typealias Parameter = (label: Symbol, binding: Symbol, coercion: NativeCoercion) // TO DO: include docstring? // binding is only needed in native handlers when different to label (e.g. in `foo(bar:baz as TYPE)`, bar is the parameter name and baz is the name under which the parameter value is stored in the handler's stack frame)
+    public typealias Parameter = FieldType // TO DO: include docstring? // binding is only needed in native handlers when different to label (e.g. in `foo(bar:baz as TYPE)`, bar is the parameter name and baz is the name under which the parameter value is stored in the handler's stack frame)
     
     public static let nominalType: NativeCoercion = asHandlerInterface.nativeCoercion
     
@@ -52,8 +52,6 @@ public struct HandlerInterface: ComplexValue, StaticValue { // native representa
     
     // what about introspectable user documentation and other metadata?
     
-    // caution: generated glues should use init(name:parameters:result:isEventHandler); native handlers should use validatedInterface(name:parameters:result:isEventHandler)
-    
     public init() {
         self.name = nullSymbol
         self.parameters = []
@@ -61,22 +59,14 @@ public struct HandlerInterface: ComplexValue, StaticValue { // native representa
         self.isEventHandler = false
     }
     
-    public init(name: Symbol, parameters: [Parameter], result: NativeCoercion, isEventHandler: Bool = false) {
+    public init(name: Symbol, parameters: [Parameter], result: NativeCoercion, isEventHandler: Bool = false) { // caution: parameters must have unique, non-empty labels
         self.name = name
         self.parameters = parameters
         self.result = result
         self.isEventHandler = isEventHandler
     }
     
-    public init<T: SwiftCoercion>(name: Symbol, parameters: [(label: Symbol, binding: Symbol, coercion: T)], result: NativeCoercion, isEventHandler: Bool = false) {
-        self.name = name
-        self.parameters = parameters.map{ ($0.label, $0.binding, $0.coercion.nativeCoercion) }
-        self.result = result
-        self.isEventHandler = isEventHandler
-    }
-    
-    // TO DO: move this up to AsHandlerInterface?
-    static func validatedInterface(name: Symbol, parameters: [Parameter], result: NativeCoercion, isEventHandler: Bool = false) throws -> HandlerInterface {
+    static func validatedInterface(name: Symbol, parameters: [Parameter], result: NativeCoercion, isEventHandler: Bool = false) throws -> HandlerInterface { // TO DO: currently unused
         var uniqueLabels = Set<Symbol>(), uniqueBindings = Set<Symbol>()
         let parameters = parameters.map{ (label: Symbol, binding: Symbol, coercion: NativeCoercion) -> Parameter in
             // TO DO: in native handler definitions, binding should always be given while label is optional; that said, we may want to keep current logic depending on where AsHandlerInterface coercion does its validation (since the same coercion may be applied to primitive as well as native handler interfaces)
@@ -98,14 +88,6 @@ public struct HandlerInterface: ComplexValue, StaticValue { // native representa
         if self.isEventHandler { return self }
         return HandlerInterface(name: self.name, parameters: self.parameters, result: self.result, isEventHandler: true)
     }
-    
-    
-    /*
-    public func toRawRecord(in scope: Scope, as coercion: RecordCoercion) throws -> Record {
-        return Record([(Symbol("name"), self.name),
-                       (Symbol("input"), OrderedList(self.parameters.map({$0.coercion}))), // TO DO: what about including binding names?
-                       (Symbol("output"), self.result)], as: asRecord) // TO DO: what coercion?
-    }*/
 }
 
 

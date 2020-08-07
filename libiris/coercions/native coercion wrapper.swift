@@ -12,14 +12,13 @@ public struct NativizedCoercion<ElementType: SwiftCoercion>: NativeCoercion {
     
     // TO DO: printing value description has a tendency to infinitely recurse when printing handler interface if interface contains nativized coercions (which it often does); for now, we break this cycle by printing primitive representation, but this requires further thought (in theory, every SwiftCoercion should return a true native equivalent, but in practice that may not always be possible/desirable, plus it’s more implementation overhead for coercions that are unlikely to be introspected outside of documentation [where descriptions can be elided/summarized for human readability only])
     
-    public var description: String { return "«\(self.swiftLiteralDescription)»" }
-    
     public typealias SwiftType = Value
     
     public var name: Symbol { return self.elementType.name }
     
     // TO DO: the returned Swift code may or may not be appropriate to context
     public var swiftLiteralDescription: String { return self.elementType.swiftLiteralDescription }
+    public var literalDescription: String { return self.elementType.literalDescription }
     
     public let elementType: ElementType
     
@@ -45,6 +44,7 @@ public struct PrimitivizedCoercion: SwiftCoercion {
     
     // TO DO: the returned Swift code may or may not be appropriate to context
     public var swiftLiteralDescription: String { return self.elementType.swiftLiteralDescription }
+    public var literalDescription: String { return self.elementType.literalDescription }
     
     public let elementType: NativeCoercion
     
@@ -52,10 +52,10 @@ public struct PrimitivizedCoercion: SwiftCoercion {
         self.elementType = elementType
     }
     
-    public func coerce(_ value: Value, in scope: Scope) throws -> Value {
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         return try self.elementType.coerce(value, in: scope)
     }
-    public func wrap(_ value: Value, in scope: Scope) -> Value {
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return value
     }
 }
@@ -65,12 +65,15 @@ public struct PrimitivizedCoercion: SwiftCoercion {
 
 public struct CallableCoercion: NativeCoercion, Callable {
     
+    public var interface: HandlerInterface { return self.elementType.interface }
+    
     public typealias SwiftType = Value
     
     public var name: Symbol { return self.elementType.name }
     
     // TO DO: the returned Swift code may or may not be appropriate to context
     public var swiftLiteralDescription: String { return self.elementType.swiftLiteralDescription }
+    public var literalDescription: String { return self.elementType.literalDescription }
     
     public let elementType: ConstrainableCoercion
     
@@ -84,6 +87,6 @@ public struct CallableCoercion: NativeCoercion, Callable {
     
     public func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
         return try coercion.coerce(command.arguments.isEmpty ? self.elementType
-            : self.elementType.constrain(with: command, in: scope, as: self), in: scope)
+            : self.elementType.constrain(to: command, in: scope), in: scope)
     }
 }

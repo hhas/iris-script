@@ -38,7 +38,7 @@ func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handl
     if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command, to: handler) }
     writeHelp("""
     # iris help
-
+    
     ## REPL commands
 
     `_`         – output the result of the previous line
@@ -50,9 +50,9 @@ func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handl
     `commands`  – list all available commands
     
     `quit`      – exit the interactive shell
-
-    `read {prompt as text with_default "?"} – read next line of input from stdin, with customizable prompt
-
+    
+    `read {prompt as optional string with_default "?"} – read next line of input from stdin, with customizable prompt
+    
     ## Notes
     
     Emacs key bindings are supported, e.g. `Ctrl-L` to clear screen.
@@ -86,7 +86,7 @@ func procedure_commands(command: Command, commandEnv: Scope, handler: Handler, h
         if let handler = value as? Callable {
             writeHelp("\(handler.interface)\n")
         } else {
-            writeHelp("`\(name.label)` – \(value)\n")
+            writeHelp("‘\(name.label)’ – \(value)\n")
         }
     }
     return nullValue

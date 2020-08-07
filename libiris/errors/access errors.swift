@@ -10,7 +10,7 @@ import Foundation
 
 public struct UnknownNameError: NativeError {
     
-    public var description: String { return "Can’t find `\(self.name.label)` in \(self.scope)" }
+    public var description: String { return "Can’t find value named ‘\(self.name.label)’ in \(self.scope)" }
     
     let name: Symbol
     let scope: Accessor
@@ -24,7 +24,7 @@ public struct UnknownNameError: NativeError {
 
 public struct ImmutableScopeError: NativeError {
     
-    public var description: String { return "Can’t modify `\(self.name.label)` in immutable \(self.scope)" }
+    public var description: String { return "Can’t modify value named ‘\(self.name.label)’ in immutable \(self.scope)" }
     
     let name: Symbol
     let scope: Accessor
@@ -37,7 +37,7 @@ public struct ImmutableScopeError: NativeError {
 
 public struct ExistingNameError: NativeError {
     
-    public var description: String { return "Can’t replace existing value named `\(self.name.label)` in \(self.scope)" }
+    public var description: String { return "Can’t replace existing value named ‘\(self.name.label)’ in \(self.scope)" }
     
     let name: Symbol
     let scope: Accessor
@@ -50,7 +50,13 @@ public struct ExistingNameError: NativeError {
 
 public struct ImmutableValueError: NativeError {
     
-    public var description: String { return "Can’t modify immutable value named `\(self.name.label)` in \(self.scope)" }
+    public var description: String {
+        if self.name.isEmpty {
+            return "Can’t modify immutable value."
+        } else {
+            return "Can’t modify immutable value named ‘\(self.name.label)’ in \(self.scope)."
+        }
+    }
     
     let name: Symbol
     let scope: Accessor

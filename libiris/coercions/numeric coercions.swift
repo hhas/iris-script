@@ -229,7 +229,8 @@ public struct AsConstrainedNumber: NativeCoercion { // returned by AsNumber.cons
     
     private let isWhole: Bool, min: SwiftType?, max: SwiftType?
     
-    public init(isWhole: Bool = false, min: SwiftType? = nil, max: SwiftType? = nil) {
+    public init(isWhole: Bool = false, min: SwiftType? = nil, max: SwiftType? = nil) throws {
+        if let min = min, let max = max, min > max { throw BadRangeError(min: min, max: max) }
         self.isWhole = isWhole
         self.min = min
         self.max = max

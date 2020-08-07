@@ -47,7 +47,8 @@ func runREPL() {
                 if let ast = parser.ast() { // parser has accummulated a complete single-/multi-line expression sequence
                     //print("PARSED:", ast)
                     let result = try ast.eval(in: parser.env, as: asAnything)
-                    let ignoreNullResult = previousValue.get(nullSymbol)! is NullValue
+                    guard let prev = previousValue.get(nullSymbol) else { exit(5) } // bug if get() returns nil
+                    let ignoreNullResult = prev is NullValue
                     previousValue.set(to: result)
                     if let error = result as? SyntaxErrorDescription { // TO DO: this is a bit hazy as we decide exactly how to encapsulate and discover syntax errors within AST
                         writeError(error.error)

@@ -7,6 +7,7 @@
 
 // comparison // TO DO: text comparisons are case-insensitive by default; how to cache lowercased strings on repeated use? (would require extending backing store); alternative is to use Foundation string comparison API, which can normalize
 
+// TO DO: non-numeric comparisons need to be optionally parameterizable with ComparableCoercion, which normalizes and compares two values (default is case_insensitive_string)
 
 // comparison
 func isBefore(left: String, right: String) throws -> Bool { return left.lowercased() <  right.lowercased() }

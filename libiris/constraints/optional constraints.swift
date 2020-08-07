@@ -11,28 +11,29 @@ import Foundation
 
 extension AsOptional: ConstrainableCoercion {
     
-    private static let type_optional = (
+    public var interface: HandlerInterface { return AsOptional.interface_constrain }
+    
+    private static let type_constrain = (
         name: Symbol("optional"),
-        param_0: (Symbol("type"), Symbol("type"), asCoercion),
-        param_1: (Symbol("default"), Symbol("default"), AsSwiftDefault(asAnything, nullValue)),
+        param_0: (Symbol("of_type"), Symbol("value_type"), AsSwiftDefault(asCoercion, asValue)),
+        param_1: (Symbol("with_default"), Symbol("default_value"), asAnything),
         result: asCoercion
     )
     
-    private static let interface_optional = HandlerInterface(
-        name: type_optional.name,
+    private static let interface_constrain = HandlerInterface(
+        name: type_constrain.name,
         parameters: [
-            nativeParameter(type_optional.param_0),
-            nativeParameter(type_optional.param_1),
+            nativeParameter(type_constrain.param_0),
+            nativeParameter(type_constrain.param_1),
         ],
-        result: type_optional.result.nativeCoercion
+        result: type_constrain.result.nativeCoercion
     )
     
-    public func constrain(with command: Command, in scope: Scope, as coercion: CallableCoercion) throws -> NativeCoercion {
-        // coercion is passed for error reporting only
+    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
         var index = 0
-        let arg_0 = try command.value(for: AsOptional.type_optional.param_0, at: &index, in: scope)
-        let arg_1 = try command.value(for: AsOptional.type_optional.param_1, at: &index, in: scope)
-        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: coercion) }
+        let arg_0 = try command.value(for: AsOptional.type_constrain.param_0, at: &index, in: scope)
+        let arg_1 = try command.value(for: AsOptional.type_constrain.param_1, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
         return AsOptional(arg_0, defaultValue: arg_1)
     }
 }

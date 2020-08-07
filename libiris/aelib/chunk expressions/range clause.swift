@@ -1,5 +1,5 @@
 //
-//  element range.swift
+//  range clause.swift
 //  iris-script
 //
 

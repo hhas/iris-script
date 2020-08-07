@@ -10,7 +10,7 @@ import Foundation
 public struct IntConstraint<ElementType: SwiftCoercion>: SwiftCoercion where ElementType.SwiftType: FixedWidthInteger {
     
     public var name: Symbol { return self.elementType.name }
-        
+    
     public typealias SwiftType = ElementType.SwiftType
     
     public var swiftLiteralDescription: String {
@@ -46,7 +46,7 @@ public struct IntConstraint<ElementType: SwiftCoercion>: SwiftCoercion where Ele
 public struct DoubleConstraint<ElementType: SwiftCoercion>: SwiftCoercion where ElementType.SwiftType: BinaryFloatingPoint {
     
     public var name: Symbol { return self.elementType.name }
-        
+    
     public typealias SwiftType = ElementType.SwiftType
     
     public var swiftLiteralDescription: String {
@@ -83,32 +83,33 @@ public struct DoubleConstraint<ElementType: SwiftCoercion>: SwiftCoercion where 
 
 extension AsNumber: ConstrainableCoercion {
     
-    private static let type_number = (
+    public var interface: HandlerInterface { return AsNumber.interface_constrain }
+    
+    private static let type_constrain = (
         name: Symbol("number"),
         param_0: (Symbol("whole"), Symbol("whole"), AsSwiftDefault(asBool, false)),
         param_1: (Symbol("from"), Symbol("minimum"), AsSwiftOptional(asSwiftNumber)),
-        param_2: (Symbol("to"), Symbol("maximum"), AsSwiftOptional(asSwiftNumber)), // TO DO: how to express `minimum < maximum` constraint?
+        param_2: (Symbol("to"), Symbol("maximum"), AsSwiftOptional(asSwiftNumber)), // TO DO: how to express `minimum < maximum` constraint? (this is getting into dependent types territory, which Swift doesn’t support, so would need to be checked during transpilation [if min+max are literal numbers] or else inserted into generated code as runtime checks); note that we could avoid this if we used a single "range" parameter e.g. `number 1 thru 10`- the challenge with that is how to express half-ranges, e.g. `number from 2`, `number to -1`?
         result: asCoercion
     )
     
-    private static let interface_number = HandlerInterface(
-        name: type_number.name,
+    private static let interface_constrain = HandlerInterface(
+        name: type_constrain.name,
         parameters: [
-            nativeParameter(type_number.param_0),
-            nativeParameter(type_number.param_1),
-            nativeParameter(type_number.param_2),
+            nativeParameter(type_constrain.param_0),
+            nativeParameter(type_constrain.param_1),
+            nativeParameter(type_constrain.param_2),
         ],
-        result: type_number.result.nativeCoercion
+        result: type_constrain.result.nativeCoercion
     )
     
-    public func constrain(with command: Command, in scope: Scope, as coercion: CallableCoercion) throws -> NativeCoercion {
+    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
         var index = 0
-        let arg_0 = try command.value(for: AsNumber.type_number.param_0, at: &index, in: scope)
-        let arg_1 = try command.value(for: AsNumber.type_number.param_1, at: &index, in: scope)
-        let arg_2 = try command.value(for: AsNumber.type_number.param_2, at: &index, in: scope)
-        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: coercion) }
-        if let min = arg_1, let max = arg_2, min > max { throw BadArgumentError(at: index, of: command, to: coercion) } // TO DO: how to insert custom checks into generated code? or should initializer perform check and throw on failure?
-        return AsConstrainedNumber(isWhole: arg_0, min: arg_1, max: arg_2)
+        let arg_0 = try command.value(for: AsNumber.type_constrain.param_0, at: &index, in: scope)
+        let arg_1 = try command.value(for: AsNumber.type_constrain.param_1, at: &index, in: scope)
+        let arg_2 = try command.value(for: AsNumber.type_constrain.param_2, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        return try AsConstrainedNumber(isWhole: arg_0, min: arg_1, max: arg_2)
     }
 }
 

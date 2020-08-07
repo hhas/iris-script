@@ -32,6 +32,10 @@ public struct UnknownArgumentError: ArgumentError {
         self.command = command
         self.handlerInterface = handler.interface
     }
+    
+    public init(at index: Int, of command: Command, to coercion: ConstrainableCoercion) {
+        self.init(at: index, of: command, to: CallableCoercion(coercion))
+    }
 }
 
 public struct BadArgumentError: ArgumentError {
@@ -48,6 +52,10 @@ public struct BadArgumentError: ArgumentError {
         self.index = index
         self.command = command
         self.handlerInterface = handler.interface
+    }
+    
+    public init(at index: Int, of command: Command, to coercion: ConstrainableCoercion) {
+        self.init(at: index, of: command, to: CallableCoercion(coercion))
     }
 }
 

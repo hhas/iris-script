@@ -26,9 +26,6 @@
 
 
 /******************************************************************************/
-// comparison
-
-// for now, implement for string only; longer term, these should accept optional coercion:Coercion parameter (e.g. `A eq B as list of caseSensitiveText`) to standardize argument types before comparison, and call coercion-specific comparison methods on Values (ideally a default coercion would be inferred where practical, e.g. if it is known that two lists of text are being compared, the default coercion would be `list(text)`); the goal is to avoid inconsistent behavior during comparisons, particularly lt/le/gt/ge; a typical example would be in sorting a mixed list where comparison behavior changes from item to item according to operand coercion(s)
 
 
 
@@ -49,7 +46,7 @@ func isA(value: Value, coercion: NativeCoercion, commandEnv: Scope) -> Bool { //
 // signature: write(value: anything)
 // requires: stdout
 
-func write(value: Value) { // primitive library function // TO DO: this needs to take optional `to:` argument containing external resource to write to; if omitted default value is the host environment's standard 'console' (in shell environment, this'd be stdout)
+func write(value: Value) { // TO DO: this needs to take optional `to:` argument containing external resource to write to; if omitted default value is the host environment's standard 'console' (in shell environment, this'd be stdout); the alternative is to implement standardized `read`/`write` methods on objects representing IO channels, although `tell @CHANNEL to read/write…` syntax arguably doesn't read as well
     print(value)
 }
 

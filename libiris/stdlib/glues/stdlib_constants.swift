@@ -27,16 +27,6 @@ public func stdlib_loadConstants(into env: Environment) {
         
         // keyword-based block
         registry.prefix("do", suffix: "done")
-
-        // coercion modifiers (defined as operators to allow nesting of LP commands)
-        registry.prefix("optional", 320)
-        registry.prefix("editable", 320)
-        
-        // TO DO: FIX: defining both atomic and prefix forms of `optional` operator doesn’t parse correctly (the latter definition appears to mask the former; thus, in this case, `foo as editable` parses but `foo as editable value` does not); a workaround for now would be to define `optional EXPR?` as a single pattern with optional EXPR, however, it'd be best to fix the bug at source (presumably in OperatorRegistry)
-        registry.add([.keyword("optional"), .expressionLabeled("type"), .optional([.keyword("with_default"), .expressionLabeled("default")])], 1500)
-        registry.atom("editable")
-        registry.infix("with_default", 500)
-
     }
     
     env.define("nothing", nullValue) // TO DO: should `nothing` be both Value and TYPE? e.g. `foo {} returning nothing`? (note: primitive handlers use `asNoResult` as signature's return coercion to indicate no return value, in which case bridge code generator changes return statement to `return nullValue`)

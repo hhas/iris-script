@@ -75,6 +75,10 @@ extension NullValue: SwiftCoercion, NativeCoercion { // used as return type wher
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return nullValue
     }
+    
+    @inlinable public func coerceFunc(for valueType: Value.Type) -> CoerceFunc {
+        return self.coerce
+    }
 }
 
 public typealias AsNothing = NullValue

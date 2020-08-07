@@ -48,37 +48,25 @@ public struct KeyedList: BoxedCollectionValue, LiteralConvertible { // TO DO: im
     
     //
     
-    public static let nominalType: NativeCoercion = asOrderedList
+    public static let nominalType: NativeCoercion = asKeyedList
     
-    // TO DO: rename `constrainedType` to `structuralType`/`reifiedType`? make it public on Value?
-    
-    private var constrainedType: NativeCoercion = asOrderedList // TO DO: how/when is best to specialize this (bear in mind that list may contain commands and other exprs that are not guaranteed to eval to same type/value every time)
+    public let constrainedType: AsKeyedList
     
     public var isMemoizable: Bool { return false } // TO DO: lists are memoizable only if all elements are; how/when should we determine this? (we want to avoid iterating long lists more than is necessary); should we also take opportunity to determine minimally constrained type? (e.g. if all items are numbers, constrained type could be inferred as AsArray(asNumber), although whether we want to enforce this when editing list is another question)
     
     public let data: SwiftType // TO DO: what about Array<Element>? boxing an array of Swift primitives and boxing each item upon use might have performance advantage in some situations (if so, we probably want to implement that as a GenericList<Element> struct which is natively polymorphic with OrderedList; however, that will mean chunk expressions and library commands can't operate directly on OrderedList.data all access to list contents must go via methods on CollectionValue/OrderedList, which adds an extra level of indirection to an already Swift-stack-heavy AST-walking interpreter)
     
-    public init(_ data: SwiftType = [:]) {
+    public init(_ data: SwiftType = [:], ofType: AsKeyedList = asKeyedList) {
+        // caution: this does not check that the provided data conforms to the specified coercion
         self.data = data
+        self.constrainedType = ofType
+    }
+    
+    public init(_ data: SwiftType = [:]) {
+        self.init(data, ofType: asKeyedList)
     }
     
     public __consuming func makeIterator() -> SwiftType.Iterator {
         return self.data.makeIterator()
     }
-    
-    /*
-    public func toValue(in scope: Scope, as coercion: Coercion) throws -> Value { // TO DO: is coercion argument appropriate here?
-        //return try self.toList(in: scope, as: asOrderedList)
-        return try self.toKeyedList(in: scope, as: asOrderedList)
-    }
-    
-    public func toKeyedList(in scope: Scope, as coercion: CollectionCoercion) throws -> KeyedList {
-        return try KeyedList([Key:Value](uniqueKeysWithValues: self.data.map{ ($0, try $1.eval(in: scope, as: coercion.item)) }))
-    }
-    */
-    /*
-    func toDictionary<T: SwiftCollectionCoercion>(in scope: Scope, as coercion: T) throws -> [T.ElementCoercion.SwiftType] {
-        return try self.map{ try $0.swiftEval(in: scope, as: coercion.item) }
-    }*/
-    
 }

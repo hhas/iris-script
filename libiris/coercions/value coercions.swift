@@ -5,6 +5,7 @@
 
 import Foundation
 
+ // TO DO: lists and records that contain unevaluated expressions also need to self-evaluate; e.g. currently runScript("[foo].") returns `[‘foo’]` which is not what we want; alternative is to check if value isMemoizable: if false, always fully evaluate it
 
 public struct AsAnything: SwiftCoercion, NativeCoercion { // any value or `nothing`; equivalent to `AsOptional(asValue)`
     
@@ -17,7 +18,7 @@ public struct AsAnything: SwiftCoercion, NativeCoercion { // any value or `nothi
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         do {
             if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
-            return value // TO DO: what about array and other collection types? should they also self-evaluate?
+            return value
         } catch is NullCoercionError {
             return nullValue
         }
@@ -25,6 +26,10 @@ public struct AsAnything: SwiftCoercion, NativeCoercion { // any value or `nothi
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return value
+    }
+    
+    @inlinable public func coerceFunc(for valueType: Value.Type) -> CoerceFunc {
+        return self.coerce
     }
 }
 
@@ -47,6 +52,10 @@ public struct AsValue: SwiftCoercion, NativeCoercion { // any value except `noth
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return value
+    }
+    
+    @inlinable public func coerceFunc(for valueType: Value.Type) -> CoerceFunc {
+        return self.coerce
     }
 }
 

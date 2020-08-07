@@ -40,7 +40,7 @@ struct NativeHandler: Handler {
         do {
             var index = 0
             for (label, binding, coercion) in self.interface.parameters {
-                let argument = try command.value(for: (label, binding, PrimitivizedCoercion(coercion)), at: &index, in: commandScope)
+                let argument = try command.value(for: (label, binding, coercion.swiftCoercion), at: &index, in: commandScope)
                 handlerScope.bind(name: binding, to: argument)
             }
             if command.arguments.count > index && !self.interface.isEventHandler { // too many arguments

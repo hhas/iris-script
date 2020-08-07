@@ -3,23 +3,4 @@
    uuid = "CE77B6D2-8E19-4818-944C-17777D17A76B"
    type = "1"
    version = "2.0">
-   <Breakpoints>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "EDA3192F-11F2-42FB-AD0D-45E2F2F92024"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "iris-script/stdlib/chunk expressions/query funcs.swift"
-            timestampString = "589393174.144659"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "40"
-            endingLineNumber = "40"
-            landmarkName = "ofClause(attribute:target:commandEnv:handlerEnv:)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-   </Breakpoints>
 </Bucket>

@@ -12,8 +12,58 @@ import AppleEvents
 import SwiftAutomation
 
 
-// TO DO: this is an awful awful KLUDGE that needs replaced once a coherent coercion/bridging architecture is found
 
+
+struct RemoteCall: Handler {
+    
+    // for AE commands, the command name (e.g. Symbol("get")) needs to be looked up in glue; Q. should glue return HandlerInterface, or dedicated data structure (in which case `interface` will be calculated var); note that HI provides no argument processing support,
+    
+    var interface: HandlerInterface { return self.appData.interfaceForCommand(term: self.term) }
+    let term: CommandTerm
+    let appData: NativeAppData
+    
+    // TO DO: also pass target (this packs as keyDirectObject or keySubjectAttr)
+    
+    let isStaticBindable = false // TO DO: need to decide policy for methods
+    
+    func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        //print("Calling", command)
+        let directParameter: Any
+        var keywordParameters = [KeywordParameter]()
+        if command.arguments.isEmpty {
+            directParameter = noParameter
+        } else {
+            if command.arguments[0].label == nullSymbol {
+                directParameter = try asValue.coerce(command.arguments[0].value, in: scope)
+                for argument in command.arguments.dropFirst() {
+                    guard let param = self.term.parameter(for: argument.label.key) else {
+                        throw InternalError(description: "Bad parameter")
+                    }
+                    keywordParameters.append((param.name, param.code, try asValue.coerce(argument.value, in: scope)))
+                }
+            } else {
+                directParameter = noParameter
+                for argument in command.arguments {
+                    guard let param = self.term.parameter(for: argument.label.key) else {
+                        throw InternalError(description: "Bad parameter")
+                    }
+                    keywordParameters.append((param.name, param.code, try asValue.coerce(argument.value, in: scope)))
+                }
+            }
+        }
+        // TO DO: parentSpecifier arg is annoyingly specific about type
+        let parentSpecifier = Specifier(parentQuery: nil, appData: self.appData, descriptor: RootSpecifierDescriptor.app)
+        let resultDesc = try self.appData.sendAppleEvent(name: self.term.name,
+                                                         event: self.term.event,
+                                                         parentSpecifier: parentSpecifier, // TO DO
+            directParameter: directParameter, // the first (unnamed) parameter to the command method; see special-case packing logic below
+            keywordParameters: keywordParameters) as NativeResultDescriptor
+        return try coercion.coerce(resultDesc, in: scope)
+    }
+}
+
+
+// TO DO: this is an awful awful KLUDGE that needs replaced once a coherent coercion/bridging architecture is found
 
 public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEvaluatingValue {
     
@@ -43,9 +93,12 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEva
         self.appData = appData
     }
     
-    // TO DO: unpacking AEDescs needs to be re-implemented as eval<T> (the alternative would be to install additional coercion handlers into existing TypeMap<> instances)
+    // TO DO: how/where to unpack AEDescs (NativeResultDescriptor is a holdover from double-dispatch design; it should be possible to reduce it to opaque wrapper for unbridged AEDescs only, and perform the unpacking at end of AE dispatch; see `RemoteCall.call()`)
     
     public func eval<T: SwiftCoercion>(in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        if self.desc.type == typeNull || (self.desc.type == typeType && self.desc.data == missingValueDescriptor.data) {
+            return try coercion.coerce(nullValue, in: scope)
+        }
         switch T.SwiftType.self {
         case is ScalarValue.Type:
             return try coercion.coerce(self.toScalar(in: scope, as: coercion.nativeCoercion), in: scope)
@@ -72,13 +125,13 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEva
     
     // unpack atomic types
     
-    public func toBool(in env: Scope, as coercion: NativeCoercion) throws -> Bool {
+    private func toBool(in env: Scope, as coercion: NativeCoercion) throws -> Bool {
         // TO DO: rework this (should it follow AE coercion rules or native? e.g. 0 = true or false?)
         if let result = try? unpackAsBool(self.desc) { return result }
         throw TypeCoercionError(value: self, coercion: coercion)
     }
         
-    public func toScalar(in scope: Scope, as coercion: NativeCoercion) throws -> ScalarValue {
+    private func toScalar(in scope: Scope, as coercion: NativeCoercion) throws -> ScalarValue {
         switch self.desc.type {
         // common AE types
         case typeSInt32, typeSInt16, typeUInt16, typeSInt64, typeUInt64, typeUInt32:
@@ -96,7 +149,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEva
     
     // unpack collections
     
-    public func toList(in env: Scope, as coercion: AsOrderedList) throws -> OrderedList {
+    private func toList(in env: Scope, as coercion: AsOrderedList) throws -> OrderedList {
         do {
             if let desc = self.desc as? ListDescriptor {
                 var result = [Value]()
@@ -140,7 +193,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEva
     */
     private let classKey = Symbol("class")
     
-    public func toRawRecord(in env: Scope, as coercion: AsRecord) throws -> Record {
+    private func toRawRecord(in env: Scope, as coercion: AsRecord) throws -> Record {
         guard let recordDesc = self.desc as? RecordDescriptor else { // TO DO: need to implement ScalarDescriptor.toRecord() and call that here; for now, record descs with descriptorType other than typeAERecord will not unpack correctly
             return try Record([(nullSymbol, self)])
         }
@@ -160,7 +213,7 @@ public struct NativeResultDescriptor: Value, SelfPacking, SelfUnpacking, SelfEva
     
     // unpack as anything
     
-    public func toValue(in scope: Scope, as coercion: NativeCoercion) throws -> Value { // quick-n-dirty implementation
+    private func toValue(in scope: Scope, as coercion: NativeCoercion) throws -> Value { // quick-n-dirty implementation
         switch self.desc.type {
         case typeBoolean, typeTrue, typeFalse:
             return try self.toBool(in: scope, as: coercion)

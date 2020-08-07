@@ -52,7 +52,7 @@ public class TypeMap<SwiftType>: SwiftCoercion {
         case let v as SwiftType: return v
         default:
             if let t = self.coercions.first(where: {$0.t == type(of: value)}) { return try t.fn(value, scope) }
-            throw InternalError(description: "unsupported coercion: \(type(of:value)) -> \(SwiftType.self)")
+            throw TypeCoercionError(value: value, coercion: self)
         }
     }
 }
@@ -127,6 +127,10 @@ public struct AsItself: Value, SwiftCoercion, NativeCoercion {
     
     public var nativeCoercion: NativeCoercion { // caution: glue generator filters by `HandlerInterface.result is AsItself`, so make sure handler interface hasn't wrapped it in NativizedCoercion or that test will fail
         return self
+    }
+    
+    @inlinable public func coerceFunc(for valueType: Value.Type) -> CoerceFunc {
+        return self.coerce
     }
 }
 

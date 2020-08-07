@@ -23,6 +23,8 @@ func literal(for value: Value) -> String { // TO DO: temporary; see also formatt
     }
 }
 
+
+
 public extension Record.Fields { // also used as Command.Arguments
     
     var swiftLiteralDescription: String {
@@ -30,9 +32,8 @@ public extension Record.Fields { // also used as Command.Arguments
     }
     
     var literalDescription: String {
-        return "{\(self.map{ "\($0.isEmpty ? "" : "\($0.label): ")\(literal(for: $1))" }.joined(separator: ", "))}"
+        return "{\(self.map{ "\($0.isEmpty ? "" : "\($0.label): ") \(literal(for: $1))" }.joined(separator: ", "))}"
     }
-    
     // TO DO: better error messages
     
     private func value(labeled label: Symbol, at index: inout Int) -> Value {
@@ -65,6 +66,51 @@ public extension Record.Fields { // also used as Command.Arguments
             }
         }
     }
+    
+    //
+    
+    func toRecordType(in scope: Scope) throws -> FieldTypes { // coercion names are looked up in the given scope
+        var uniqueLabels = Set<Symbol>(), uniqueBindings = Set<Symbol>() // all labels must be unique; ditto all binding names
+        let result = try self.map{ (label: Symbol, value: Value) throws -> FieldType in
+            // label may be nullSymbol, in which case use binding name
+            var label = label, binding: Symbol, coercion: NativeCoercion
+            switch value {
+            case let command as Command:
+                if command.name == "as" { // e.g. {foo as list} // TO DO: this assumes record definition using standard operator syntax; it is awkward to construct using literal command syntax and isn’t suitable for metaprogramming
+                    let args = command.arguments
+                    // TO DO: need simpler way to convert command to identifier
+                    guard args.count == 2, let name = args[0].value.asIdentifier() else {
+                        print("Bad `as` operator:",command) // DEBUG
+                        throw TypeCoercionError(value: Record(self, as: asRecord), coercion: asRecordType)
+                    }
+                    binding = name
+                    coercion = try asCoercion.coerce(args[1].value, in: scope)
+                } else { // e.g. {bar}
+                    guard let name = command.asIdentifier() else {
+                        print("Bad name:",command) // DEBUG
+                        throw TypeCoercionError(value: Record(self, as: asRecord), coercion: asRecordType)
+                    }
+                    binding = name
+                    coercion = asAnything // if no parameter type is specified, accept any value or `nothing`
+                }
+            default:
+                print("toRecordType() failed on", type(of:value),value) // DEBUG
+                throw TypeCoercionError(value: try Record(self), coercion: asRecordType)
+            }
+            if binding == nullSymbol { binding = label }
+            if label == nullSymbol { label = binding }
+            uniqueLabels.insert(label)
+            uniqueBindings.insert(binding)
+            return (label, binding, coercion)
+        }
+        //
+        if uniqueLabels.contains(nullSymbol) || uniqueLabels.count != self.count || uniqueBindings.count != self.count {
+            print("toRecordType() found bad labels") // DEBUG
+            throw TypeCoercionError(value: Record(self, as: asRecord), coercion: asRecordType)
+        }
+        return result
+    }
+
 }
 
 
@@ -85,7 +131,7 @@ public struct Record: ComplexValue, LiteralConvertible, Accessor, Sequence {
     public typealias Field = (label: Symbol, value: Value) // nullSymbol = unnamed field
     public typealias Fields = [Field]
 
-    public static let nominalType: NativeCoercion = asRecord.nativeCoercion
+    public static let nominalType: NativeCoercion = asRecord
     
     public let isMemoizable: Bool // true if all field names are given and all values are memoizable
 
@@ -98,7 +144,7 @@ public struct Record: ComplexValue, LiteralConvertible, Accessor, Sequence {
     
     public init(_ fields: Fields) throws { // field names may be omitted, but must be unique
         var isMemoizable = true
-        var nominalFields = [AsRecord.Field]()
+        var fieldTypes = FieldTypes()
         self.data = fields
         for (key, value) in fields {
             if key == nullSymbol {
@@ -108,16 +154,16 @@ public struct Record: ComplexValue, LiteralConvertible, Accessor, Sequence {
                 self.namedFields[key] = value // TO DO: this might be problematic, as now we've two instances of struct value
                 if isMemoizable {
                     if !value.isMemoizable { isMemoizable = false }
-                    nominalFields.append((key, value.nominalType))
+                    fieldTypes.append((key, key, value.nominalType))
                 }
             }
         }
         self.isMemoizable = isMemoizable
-        self.constrainedType = (isMemoizable ? AsRecord(nominalFields) : asRecord).nativeCoercion
+        self.constrainedType = isMemoizable ? AsRecord(fieldTypes) : asRecord
     }
     
     public init() {
-        self.init([], as: asRecord.nativeCoercion)
+        self.init([], as: asRecord)
     }
     
     public init(uniqueLabelsWithValues fields: Fields) {
@@ -140,7 +186,7 @@ public struct Record: ComplexValue, LiteralConvertible, Accessor, Sequence {
     }
     
     public func get(_ name: Symbol) -> Value? { // TO DO: what about getting by index? or should we provide pattern-matching/eval only?
-        return self.namedFields[name]
+        return name == nullSymbol ? self : self.namedFields[name]
     }
     
     /*

@@ -1,5 +1,5 @@
 //
-//  query values.swift
+//  query funcs.swift
 //  libiris
 //
 //  these are stubs

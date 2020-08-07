@@ -172,10 +172,10 @@ public class Parser {
         // when auto-reducing blocks, we don’t want to overshoot, e.g. given `[[…]]`, both list literal patterns will match the first `]` but only the second should be allowed (requiring a full, not provisional, match would also exclude the first, but this is simpler)
         // we also need to check if a full [atomic] match here can be reduced immediately, or if there is a longer match in progress, e.g. `optional` is registered as two separate operators, `optional` and `optional EXPR`, so `optional integer` needs to be matched by the second; OTOH, in `end of documents` the `end` keyword (atomic operator) must be reduced before the `…of…` operator can be reduced; plus lists and records will always be auto-reduced here
         // TO DO: need to check this as a current match can be a full match and still have a longer match available (the goal is to eliminate full matches that aren’t longest complete match so that we don't prematurely reduce them)
-        let partialIDs = currentMatches.filter{ !$0.isAFullMatch }.map{ $0.groupID }
+        let partialIDs = currentMatches.filter{ !$0.isLongestFullMatch }.map{ $0.groupID }
         fullMatches.removeAll{ $0.startIndex(from: stopIndex) < startIndex || partialIDs.contains($0.groupID) }
         if let longestMatch = fullMatches.max(by: { $0.count < $1.count }) {
-  //          print("\nAUTO-REDUCE:", longestMatch.definition.name.label)
+            //print("\nAUTO-REDUCE:", longestMatch.definition.name.label)
  //           print(fullMatches)
             if self.tokenStack.reduce(match: longestMatch) {
                 if case .operatorName(let d) = form, self.blockStack.blockMatches(for: d.name) != nil { // kludgy

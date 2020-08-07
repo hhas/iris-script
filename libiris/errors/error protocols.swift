@@ -23,10 +23,6 @@ public extension NativeError {
     func from(_ parent: Error) -> Error {
         return ChainedError(error: self, parent: parent)
     }
-    
-    func toValue(in scope: Scope, as coercion: NativeCoercion) throws -> Value {
-        return self
-    }
 }
 
 

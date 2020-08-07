@@ -1,5 +1,5 @@
 //
-//  selector methods.swift
+//  reference selectors.swift
 //  iris-script
 //
 

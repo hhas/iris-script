@@ -32,3 +32,10 @@ struct BadInterfaceError: NativeError { // TO DO: where should this be defined/u
     }
 }
 
+
+public struct BadRangeError: NativeError {
+    
+    public var description: String { return "Not a valid range: \(self.min) thru \(self.max)" }
+    
+    public let min: Value, max: Value
+}

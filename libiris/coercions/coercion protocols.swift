@@ -27,19 +27,32 @@ public extension Coercion {
 
 public protocol NativeCoercion: Value, Coercion {
     
-    // we can't define NativeType as associated type as this protocol needs to be concrete (e.g. NativeCoercion is used as argument+slot type in coercion errors); we could define a var/let that returns the native Value.Type, e.g. `Text.self`, if needed
+    // we can't define NativeType as subtype of SwiftCoercion [whose SwiftType is always Value] as this protocol needs to be concrete for use in APIs (e.g. NativeCoercion is used as argument+attribute in coercion errors), and code becomes hopelessly complicated if everything else has to become generic
     
     func wrap(_ value: Value, in scope: Scope) -> Value // TO DO: redundant; can/should we get rid of this?
     func coerce(_ value: Value, in scope: Scope) throws -> Value
+    
+    func coerceFunc(for valueType: Value.Type) -> CoerceFunc // used by AsOrdered/KeyedList to reduce overheads when unpacking arrays of [mostly/all] same element type
+
+    var swiftCoercion: PrimitivizedCoercion { get }
 }
 
 public extension NativeCoercion {
+    
+    typealias CoerceFunc = (Value, Scope) throws -> Value
     
     static var nominalType: NativeCoercion { return asCoercion.nativeCoercion }
     
     @inlinable func wrap(_ value: Value, in scope: Scope) -> Value {
         return value
     }
+    
+    // default coerceFunc() implementation
+    @inlinable func coerceFunc(for valueType: Value.Type) -> CoerceFunc {
+        return self.coerce
+    }
+    
+    var swiftCoercion: PrimitivizedCoercion { return PrimitivizedCoercion(self) }
 }
 
 
@@ -57,11 +70,8 @@ public protocol SwiftCoercion: Coercion {
     
     func wrap(_ value: SwiftType, in scope: Scope) -> Value
     
-    func coerceFunc(for valueType: Value.Type) -> CoerceFunc // used by AsArray to reduce overheads when unpacking arrays of [mostly/all] same element type
-    
     var nativeCoercion: NativeCoercion { get }
 }
-
 
 public extension SwiftCoercion {
     
@@ -74,9 +84,6 @@ public extension SwiftCoercion {
         return NativizedCoercion(self)
     }
 }
-
-
-//
 
 public extension SwiftCoercion where SwiftType: Value {
     
@@ -96,11 +103,14 @@ public extension SwiftCoercion where SwiftType == Value {
 }
 
 
+//
 
 public protocol ConstrainableCoercion: NativeCoercion {
+    
+    var interface: HandlerInterface { get }
     
     // some native coercions (numbers, lists, etc) can be specialized with additional constraints (element type, min/max, etc)
     
     // CallableCoercion (i.e. caller) is passed here for use in errors
-    func constrain(with command: Command, in scope: Scope, as coercion: CallableCoercion) throws -> NativeCoercion
+    func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion
 }

@@ -9,7 +9,22 @@ import iris
 
 
 func test() {
+
+    runScript(" set a to 3. set a to 5. ") // this should throw immutable value error
     
+    runScript(" set a to 3 as editable. set a to 5. write a. ") // this should update mutable value
+    
+   // runScript(" tell app “com.apple.iTunes” to pause ")
+        
+    runScript(" set t to record {foo as string, bar:baz as optional boolean}. 3 as t. ")
+    /*
+    runScript(" optional ")
+    runScript(" optional value ")
+    runScript(" optional value with_default 2 ")
+    runScript(" optional with_default 2 ")
+    */
+    
+    return;
 //    runScript("tell app “com.apple.Finder” to first folder of home")
     
   //  runScript("end of documents")
@@ -19,10 +34,16 @@ func test() {
     //runScript(" optional integer. ")
     //runScript(" set t to list of: integer. write t. t. ")
     
-    runScript("to foo x returning anything run write x. foo 33.")
+//    runScript("to foo x returning anything run write x. foo 33.")
+//    runScript("to foo x returning nothing run write x. foo 33.")
+//    runScript("to foo x run write x. foo 33.")
+//    
+//    runScript("to foo x returning anything run x. foo 33.")
+//    runScript("to foo x returning nothing run x. foo 33.")
+//    runScript("to foo x run x. foo 33.")
+//    runScript("to foo x run x. foo nothing.")
     
-    runScript("to foo x returning nothing run write x. foo 33.")
-    
+   // return;
     
     runScript("  list of: integer. ")
     runScript(" set t to list of: integer. write t. t ")

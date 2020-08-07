@@ -29,7 +29,7 @@ public class EditableValue: Handler, Mutator { // TO DO: Handler or Callable?
     
     // get() and call() behaviors are pass-thrus to the underlying Value; set() replaces the current Value with a new Value
     
-    public static let nominalType: NativeCoercion = asEditable.nativeCoercion
+    public static let nominalType: NativeCoercion = asEditable
     
     public var description: String { return "editable \(self.data)" }
     
@@ -79,7 +79,7 @@ public class EditableValue: Handler, Mutator { // TO DO: Handler or Callable?
     }
     
     public func get(_ name: Symbol) -> Value? {
-        return self.data.get(name)
+        return name == nullSymbol ? self : self.data.get(name) // TO DO: if name is nullSymbol, return self (i.e. keep the value mutable)?
     }
     
     public func set(to value: Value) {
@@ -139,6 +139,6 @@ public struct ScopeLockedValue: Handler, Mutator { // experimental
     }
     
     public func get(_ name: Symbol) -> Value? {
-        return self.data.get(name)
+        return self.data.get(name) // TO DO: if name is nullSymbol, return self?
     }
 }

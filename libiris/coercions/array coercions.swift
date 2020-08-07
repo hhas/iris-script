@@ -3,6 +3,11 @@
 //  libiris
 //
 
+// TO DO: should default element type for AsOrderedList, AsKeyedList be asValue or asAnything?
+
+// TO DO: support coercing list containing a single NativeCoercion, e.g. `[number]` -> `AsOrderedList(asNumber)`; similar to using a record to express a record type, e.g. `foo as {label1 as type1, label2 as type2}` -> `{label1: value1, label2: value2}` (BTW, this is probably a good reason to allow field matching to step over unwanted fields - currently all fields must be specified or an error will occur, which is unhelpful and not very forward-compatible)
+
+
 import Foundation
 
 // TO DO: As[Lazy]Sequence
@@ -11,7 +16,7 @@ public struct AsArray<ElementType: SwiftCoercion>: SwiftCoercion {
     
     public typealias SwiftType = [ElementType.SwiftType]
     
-    public let name: Symbol = "list"
+    public let name: Symbol = "ordered_list"
     
     public var swiftLiteralDescription: String { return "AsArray(\(self.elementType.swiftLiteralDescription))" }
     
@@ -33,8 +38,8 @@ public struct AsArray<ElementType: SwiftCoercion>: SwiftCoercion {
                 result = []
             } else {
                 // if list items are of same type and elementType.coerceFunc returns optimized closure, this is 50% quicker than calling elementType.unbox() every time
-                var coerceFunc = self.elementType.coerceFunc(for: type(of: v.data[0]))
                 var itemType = type(of: v.data[0])
+                var coerceFunc = self.elementType.coerceFunc(for: itemType)
                 var i = 0 // significantly quicker than enumerated()
                 result = try v.data.map { item in
                     i += 1
@@ -77,7 +82,7 @@ extension AsArray {
 
 public struct AsOrderedList: NativeCoercion {
     
-    public var name: Symbol = "list"
+    public let name: Symbol = "ordered_list"
     
     public var swiftLiteralDescription: String { return "AsArray(\(self.elementType.swiftLiteralDescription))" }
     
@@ -92,10 +97,17 @@ public struct AsOrderedList: NativeCoercion {
     public let elementType: NativeCoercion
     private let minLength: Int, maxLength: Int
     
-    public init(_ elementType: NativeCoercion = asValue, minLength: Int? = nil, maxLength: Int? = nil) {
+    public init(_ elementType: NativeCoercion = asAnything, minLength: Int? = nil, maxLength: Int? = nil) throws {
+        if let min = minLength, let max = maxLength, min > max { throw BadRangeError(min: min, max: max) }
         self.elementType = elementType
         self.minLength = minLength ?? 0
         self.maxLength = maxLength ?? Int.max
+    }
+    
+    public init(_ elementType: NativeCoercion = asAnything) {
+        self.elementType = elementType
+        self.minLength = 0
+        self.maxLength = Int.max
     }
 
     public func coerce(_ value: Value, in scope: Scope) throws -> Value {
@@ -103,16 +115,22 @@ public struct AsOrderedList: NativeCoercion {
         let result: [Value]
         switch value {
         case let v as SelfEvaluatingValue:
-            result = try v.eval(in: scope, as: AsArray(PrimitivizedCoercion(self.elementType)))
+            result = try v.eval(in: scope, as: AsArray(self.elementType.swiftCoercion)) // TO DO: pass min/max to AsArray()?
         case let v as OrderedList:
             if v.data.isEmpty {
                 result = []
             } else {
+                var itemType = type(of: v.data[0])
+                var coerceFunc = self.elementType.coerceFunc(for: itemType)
                 var i = 0
                 result = try v.data.map { item in
+                    i += 1
+                    if type(of: item) != itemType {
+                        itemType = type(of: item)
+                        coerceFunc = self.elementType.coerceFunc(for: itemType)
+                    }
                     do {
-                        i += 1
-                        return try self.elementType.coerce(item, in: scope)
+                        return try coerceFunc(item, scope)
                     } catch {
                         print("Can't coerce item", i, "to", self.elementType)
                         throw TypeCoercionError(value: item, coercion: self)

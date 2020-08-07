@@ -1,5 +1,5 @@
 //
-//  query target.swift
+//  reference.swift
 //  iris-script
 //
 
@@ -18,60 +18,6 @@ import SwiftAutomation
 // TO DO: might be better if selector commands took element_type as Symbol and left operator parsefunc to take literal name and convert it
 
 // TO DO: how to hint to PP when to use singular vs plural names? (and how to describe these names in easily machine-readable way)
-
-
-
-let asDescriptor = asValue // TO DO: this won't work as NativeAppData is required to pack Symbol (short of attaching appData to scope, which will likely create its own problems)
-
-
-
-struct RemoteCall: Handler {
-    
-    // for AE commands, the command name (e.g. Symbol("get")) needs to be looked up in glue; Q. should glue return HandlerInterface, or dedicated data structure (in which case `interface` will be calculated var); note that HI provides no argument processing support,
-    
-    var interface: HandlerInterface { return self.appData.interfaceForCommand(term: self.term) }
-    let term: CommandTerm
-    let appData: NativeAppData
-    
-    // TO DO: also pass target (this packs as keyDirectObject or keySubjectAttr)
-    
-    let isStaticBindable = false // TO DO: need to decide policy for methods
-    
-    func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        //print("Calling", command)
-        let directParameter: Any
-        var keywordParameters = [KeywordParameter]()
-        if command.arguments.isEmpty {
-            directParameter = noParameter
-        } else {
-            if command.arguments[0].label == nullSymbol {
-                directParameter = try asValue.coerce(command.arguments[0].value, in: scope)
-                for argument in command.arguments.dropFirst() {
-                    guard let param = self.term.parameter(for: argument.label.key) else {
-                        throw InternalError(description: "Bad parameter")
-                    }
-                    keywordParameters.append((param.name, param.code, try asValue.coerce(argument.value, in: scope)))
-                }
-            } else {
-                directParameter = noParameter
-                for argument in command.arguments {
-                    guard let param = self.term.parameter(for: argument.label.key) else {
-                        throw InternalError(description: "Bad parameter")
-                    }
-                    keywordParameters.append((param.name, param.code, try asValue.coerce(argument.value, in: scope)))
-                }
-            }
-        }
-        // TO DO: parentSpecifier arg is annoyingly specific about type
-        let parentSpecifier = Specifier(parentQuery: nil, appData: self.appData, descriptor: RootSpecifierDescriptor.app)
-        let resultDesc = try self.appData.sendAppleEvent(name: self.term.name,
-                                                         event: self.term.event,
-                                                         parentSpecifier: parentSpecifier, // TO DO
-            directParameter: directParameter, // the first (unnamed) parameter to the command method; see special-case packing logic below
-            keywordParameters: keywordParameters) as NativeResultDescriptor
-        return try coercion.coerce(resultDesc, in: scope)
-    }
-}
 
 
 // NativeAppData
@@ -113,7 +59,7 @@ extension ReferenceProtocol {
     
     var description: String { return "«\(self.desc) of \(self.appData)»" }
     
-    public var swiftLiteralDescription: String { return self.description } // TO DO: implement
+    public var swiftLiteralDescription: String { return self.description } // TO DO: how best to implement this? when transpiling, we might in theory target SwiftAutomation directly, but that will require external knowledge (i.e. it’s only practical if all code is converted to Swift; if it’s mixed Swift+native then it’s safest to stick to native Reference); the best we can do here is to add methods for constructing specifiers from generated Swift and call those, although that might be improved on if we skip constructing intermediate References and only wrap the completed QueryDescriptor, e.g. `Reference(appData: self.appData, desc: self.desc.elements(cDocument).byName(packAsString(…)).property(cText).elements(cParagraph).first)`
     
     public func get(_ name: Symbol) -> Value? { // TO DO: can/should get+call be folded into single call()?
         //print("get \(name) slot of \(self)")
@@ -145,10 +91,6 @@ extension ReferenceProtocol {
             }
             return self.lookup(name)
         }
-    }
-    
-    public func toValue(in scope: Scope, as coercion: NativeCoercion) throws -> Value {
-        return self
     }
 }
 
@@ -203,7 +145,7 @@ struct Reference: ReferenceProtocol {
                 let seld = try? NativeResultDescriptor(desc.seld, appData: appData).eval(in: nullScope, as: asAnything) {
                 switch desc.form {
                 case .absolutePosition:
-                    // ordinals aren’t unpacked
+                    // ordinals aren’t automatically unpacked, so check for typeAbsoluteOrdinal description here; see also TODO below (e.g. how to express `first document where TEST…`/`document at 1 where TEST…`)
                     if let seld = seld as? NativeResultDescriptor, seld.desc.type == typeAbsoluteOrdinal {
                         switch try! decodeFixedWidthInteger(seld.desc.data) as OSType {
                         case OSType(AppleEvents.kAEFirst):  return "first \(names.singular)\(parent)"
@@ -211,7 +153,7 @@ struct Reference: ReferenceProtocol {
                         case OSType(AppleEvents.kAELast):   return "last \(names.singular)\(parent)"
                         case OSType(AppleEvents.kAEAny):    return "any \(names.singular)\(parent)"
                         case OSType(AppleEvents.kAEAll):    return "\(names.plural)\(parent)"
-                        default: ()
+                        default: () // fallthru if unknown four-char-code
                         }
                     }
                     return "\(names.singular) at \(seld)\(parent)"

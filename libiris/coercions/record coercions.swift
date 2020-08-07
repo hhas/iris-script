@@ -6,15 +6,52 @@
 import Foundation
 
 
-public protocol RecordCoercion: SwiftCoercion {
+public typealias FieldType = (label: Symbol, binding: Symbol, coercion: NativeCoercion)
+public typealias FieldTypes = [FieldType]
+
+
+
+public extension FieldTypes {
     
-    typealias Field = (name: Symbol, coercion: NativeCoercion)
+    var literalDescription: String {
+        return "{\(self.map{ "\($0.label == $0.binding ? "" : "\($0.label.label): ")\($0.binding.label) as \($0.coercion.literalDescription)" }.joined(separator: ", "))}"
+    }
+}
+
+
+
+public protocol RecordCoercion: NativeCoercion {
     
-    var fields: [Field] { get }
+    var fields: FieldTypes { get }
 }
 
 
 let missingField: Record.Field = (nullSymbol, nullValue)
+
+
+
+public struct AsRecordType: SwiftCoercion {
+    
+    public let name: Symbol = "record_type"
+    
+    public var swiftLiteralDescription: String { return "asRecordType" }
+    
+    public typealias SwiftType = FieldTypes
+
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
+        let record = try value as? Record ?? Record([(nullSymbol, value)])
+        return try record.data.toRecordType(in: scope) // TO DO: this assumes literal record syntax so isn't suitable for metaprogramming; see also HandlerInterface, which is constructed from literals but is a Value in its own right
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        fatalError("TODO")
+    }
+    
+}
+
+public let asRecordType = AsRecordType()
+
 
 
 public struct AsRecord: RecordCoercion {
@@ -25,18 +62,20 @@ public struct AsRecord: RecordCoercion {
         return "AsRecord(\(self.fields.swiftLiteralDescription))"
     }
     
-    public var description: String { return "record" } // TO DO
+    public var literalDescription: String {
+        return self.fields.isEmpty ? "record" : "record {\(self.fields.literalDescription)}"
+    }
     
     public typealias SwiftType = Record
     
-    public let fields: [RecordCoercion.Field]
+    public let fields: FieldTypes
     
-    public init(_ fields: [RecordCoercion.Field] = []) { // TO DO: what if fields is empty? (currently coerce() accepts any fields of anything); also guard against nullSymbol name? // TO DO: guard against duplicate field names, null field names(?)
+    public init(_ fields: FieldTypes = []) { // TO DO: guard against nullSymbol name? // TO DO: guard against duplicate field names, null field names(?)
         self.fields = fields
     }
     
-    public func coerce(_ value: Value, in scope: Scope) throws -> Record {
-        if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
+    public func coerce(_ value: Value, in scope: Scope) throws -> Value {
+        if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self.swiftCoercion) }
         let record = try value as? Record ?? Record([(nullSymbol, value)])
   //      if record.isMemoizable, record.constrainedType.isa(iris.asRecord) { return record } // TO DO: how to test if coercion is equal or superset of record's constrained type?
         var result = [Record.Field]()
@@ -49,7 +88,7 @@ public struct AsRecord: RecordCoercion {
             } else { // coerce the specified fields to the specified types; TO DO: should this ignore/discard any record fields not required by this coercion
                 var iter = record.data.makeIterator()
                 var (key, value) = iter.next() ?? missingField
-                for (expectedLabel, expectedCoercion) in self.fields {
+                for (expectedLabel, _, expectedCoercion) in self.fields {
                     // catch and rethrow to indicate failed field?
                     if key == nullSymbol || key == expectedLabel {
                         // if record field is unlabeled it is always matched, otherwise it is matched if it has the expected label, otherwise it is discarded without evaluation
@@ -65,7 +104,7 @@ public struct AsRecord: RecordCoercion {
                 }
             }
         } catch {
-            throw ConstraintCoercionError(value: record, coercion: iris.asRecord.nativeCoercion).from(error)
+            throw ConstraintCoercionError(value: record, coercion: self).from(error)
         }
         return Record(uniqueLabelsWithValues: result)//Record(result, as: self)
     }

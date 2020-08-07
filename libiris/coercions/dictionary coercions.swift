@@ -71,18 +71,18 @@ public struct AsDictionary<KeyType: SwiftCoercion, ValueType: SwiftCoercion>: Sw
                 let (k, v) = val.data.first!
                 var keyType = type(of: k.value)
                 var valueType = type(of: v)
-                var unboxKey = self.keyType.coerceFunc(for: keyType)
-                var unboxValue = self.valueType.coerceFunc(for: valueType)
+                var coerceKey = self.keyType.coerceFunc(for: keyType)
+                var coerceValue = self.valueType.coerceFunc(for: valueType)
                 for (k, v) in val.data {
                     if type(of: k.value) != keyType {
                         keyType = type(of: k.value)
-                        unboxKey = self.keyType.coerceFunc(for: keyType)
+                        coerceKey = self.keyType.coerceFunc(for: keyType)
                     }
                     if type(of: v) != valueType {
                         valueType = type(of: v)
-                        unboxValue = self.valueType.coerceFunc(for: valueType)
+                        coerceValue = self.valueType.coerceFunc(for: valueType)
                     }
-                    try result[unboxKey(k.value, scope)] = unboxValue(v, scope)
+                    try result[coerceKey(k.value, scope)] = coerceValue(v, scope)
                 }
             }
         default:
@@ -103,3 +103,66 @@ public struct AsDictionary<KeyType: SwiftCoercion, ValueType: SwiftCoercion>: Sw
 
 
 // TO DO: AsKeyedList
+
+
+
+public struct AsKeyedList: NativeCoercion {
+    
+    public typealias KeyType = NativeCoercion
+    public typealias ValueType = NativeCoercion
+    
+    public let name: Symbol = "keyed_list"
+    
+    public var swiftLiteralDescription: String {
+        return "AsDictionary(\(self.keyType.swiftLiteralDescription), \(self.valueType.swiftLiteralDescription))"
+    }
+    
+    private let keyType: KeyType
+    private let valueType: ValueType
+    
+    public init(keyType: KeyType = asHashableValue.nativeCoercion, valueType: ValueType = asAnything) {
+        // TO DO: there’s no way to determine if a native coercion will return a HashableValue; therefore an inappropriate keyType can only be detected upon use
+        self.keyType = keyType
+        self.valueType = valueType
+    }
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> Value {
+        // TO DO: if an item fails to eval/unbox, catch and rethrow error describing entire list, including index of the item that failed to coerce?
+        switch value {
+        case let v as SelfEvaluatingValue:
+            return try v.eval(in: scope, as: self.swiftCoercion)
+        case let val as KeyedList:
+            if val.data.isEmpty {
+                return KeyedList()
+            } else {
+                var result = [KeyedList.Key:Value](minimumCapacity: val.data.count)
+                let (k, v) = val.data.first!
+                var keyType = type(of: k.value)
+                var valueType = type(of: v)
+                var coerceKey = self.keyType.coerceFunc(for: keyType)
+                var coerceValue = self.valueType.coerceFunc(for: valueType)
+                for (k, v) in val.data {
+                    if type(of: k.value) != keyType {
+                        keyType = type(of: k.value)
+                        coerceKey = self.keyType.coerceFunc(for: keyType)
+                    }
+                    if type(of: v) != valueType {
+                        valueType = type(of: v)
+                        coerceValue = self.valueType.coerceFunc(for: valueType)
+                    }
+                    guard let key = try? coerceKey(k.value, scope) as? HashableValue else {
+                        throw TypeCoercionError(value: k.value, coercion: asHashableValue)
+                    }
+                    try result[key.dictionaryKey] = coerceValue(v, scope)
+                }
+                return KeyedList(result)
+            }
+        default:
+            throw TypeCoercionError(value: value, coercion: self)
+        }
+    }
+}
+
+
+public let asKeyedList = AsKeyedList()
+

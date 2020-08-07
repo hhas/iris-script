@@ -46,6 +46,8 @@ public protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible
     
     var nominalType: NativeCoercion { get } // for convenience, each Value type’s nominalType property appears as instance property as well // TO DO: should the instance var be constrainedType? (i.e. is there any situation where caller would want to ignore the additional type info, e.g. `list {of: integer}`, and—if it does—can't just use `type(of:value).nominalType` to get it?)
     
+    // TO DO: what about `constrainedType`? (for atomic/scalar values this will be same as nominalType; for lists and records it may be reified by coercions; the goal being to minimize the need to apply coercions across the entire list/record when an `isa` check against its constrained type indicates the value already conforms to the new type, e.g. `([1,2,3] as list of: integer) as list of: string` should only iterate the list once, and only then if the list itself didn't originate from an API that knows it’s building a list of integers so can set its constrainedType to `AsOrderedList(asInteger)` upon completion)
+    
     var isMemoizable: Bool { get }
     
     var immutableValue: Value { get } // experimental
@@ -76,7 +78,7 @@ extension Value { // default implementations
     }
 
     public func set(_ name: Symbol, to value: Value) throws {
-        throw ImmutableValueError(name: name, in: self) // TO DO: check if/where name can be nullSymbol (e.g. when setting an environment slot, ideally we want the error message to give the slot name)
+        throw ImmutableValueError(name: name, in: self) // TO DO: name will be `nullSymbol` if attempting to replace an existing value in an immutable environment slot, which currently results in a not very helpful error message: “Can’t modify immutable value.”; simplest solution may be for caller to catch and re-throw ImmutableValueError as ExistingNameError, giving slot name in new error
     }
     
     // TO DO: also implement default `call` for non-callable values?
@@ -139,13 +141,6 @@ extension KeyConvertible {
 
 public protocol AtomicValue: StaticValue, LiteralConvertible { } // e.g. nothing, true/false, Symbol
 
-extension AtomicValue {
-    
-    public func toValue(in scope: Scope, as coercion: NativeCoercion) throws -> Value {
-        return self
-    }
-}
-
 
 
 public protocol ScalarValue: StaticValue { } // Int, Double, Number, Text
@@ -173,14 +168,6 @@ public protocol CollectionValue: Value, Sequence {
     
 }
 
-public extension CollectionValue {
-    
-/*
-    func toValue(in scope: Scope, as coercion: Coercion) throws -> Value {
-        return try type(of:self).init(data: self.map{ try $0.toValue(in: scope, as: coercion) })
-    }
-*/
-}
 
 public typealias BoxedCollectionValue = CollectionValue & BoxedSwiftValue
 
