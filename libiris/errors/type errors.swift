@@ -25,9 +25,9 @@ struct BadInterfaceError: NativeError { // TO DO: where should this be defined/u
     
     public var description: String { return "Invalid interface: \(self.interface)." }
     
-    public let interface: HandlerInterface
+    public let interface: HandlerType
     
-    public init(_ interface: HandlerInterface) {
+    public init(_ interface: HandlerType) {
         self.interface = interface
     }
 }

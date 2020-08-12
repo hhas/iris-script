@@ -72,7 +72,7 @@ func test2() {
         
         
         try env.define(
-            HandlerInterface(name: "foo", parameters: [("number", nullSymbol, AsEditable(asNumber))], result: asNothing),
+            HandlerType(name: "foo", parameters: [("number", nullSymbol, AsEditable(asNumber))], result: asNothing),
             Block([Command("show", [(nullSymbol, Command("bar"))])]))
         
         

@@ -62,6 +62,8 @@ public let asLiteralName = AsLiteralName()
 
 extension NullValue: SwiftCoercion, NativeCoercion { // used as return type where handler returns `nothing`
     
+    public var swiftTypeDescription: String { return String(describing: SwiftType.self) }
+    
     public var name: Symbol { return "nothing" }
     
     public typealias SwiftType = Value

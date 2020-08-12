@@ -32,6 +32,7 @@ protocol Node {
     var name: String { get }
     subscript(dynamicMember name: String) -> Node { get }
     func set(_ content: String)
+    func set<T>(_ content: T)
     func map<S: Sequence>(_ values: S, using renderer: (Node, S.Element) -> Void)
     func map<S: Sequence, T>(_ values: S, with options: T, using renderer: (Node, S.Element, T) -> Void)
     func delete()
@@ -45,7 +46,7 @@ extension Node {
 }
 
 
-class MultipleNode: Node {
+class MultipleNode: Node { // if a node contains >1 subnode with same name, subnodes are grouped as one
     
     let name: String
     let elements: [Node]
@@ -189,7 +190,7 @@ class TextTemplate<T>: TextNode {
         return node.render()
     }
     
-    private func parse(_ template: String) {
+    private func parse(_ template: String) { // TO DO: throw on parsing errors rather than raise fatal exception
         // TO DO: fatalError if name in reserved names (copy, set, map, etc)
         // TO DO: customizable delimiters? (currently hardcoded as "««"+"»»"), option to disable auto-trimming
         var stack: [TextNode] = [self]
@@ -214,7 +215,7 @@ class TextTemplate<T>: TextNode {
                     stack.append(node)
                 case "-":
                     if isSep {
-                        stack.removeLast().separator = prefix
+                        stack.removeLast().separator = s
                         isSep = false
                     } else {
                         let node = stack.removeLast()

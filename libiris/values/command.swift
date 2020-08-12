@@ -72,7 +72,7 @@ public class Command: ComplexValue, LiteralConvertible, SelfEvaluatingValue {
     public static let nominalType: NativeCoercion = asCommand.nativeCoercion
     
     public let name: Symbol
-    public let arguments: Arguments // TO DO: single, optional argument which is coerced to record and pattern-matched against HandlerInterface.Parameter
+    public let arguments: Arguments // TO DO: single, optional argument which is coerced to record and pattern-matched against HandlerType.Parameter
     let operatorPattern: PatternMatch? // if the command was constructed from a matched operator, store that operator pattern for PP’s use // TO DO: what about using operator syntax in error messages? (note: error messages also require command to capture its position in source code [caveat relying on source string character offsets is suboptimal as those will change when code is pretty-printed; better to uniquely identify the AST node, perhaps with AST maintaining a lookup table from which to locate every Command node in tree without requiring a full recursive search; this all ties in with IDE support and queryable AST])
     
     public init(_ name: Symbol, _ arguments: Arguments = [], operatorPattern: PatternMatch? = nil) {
@@ -114,7 +114,7 @@ public extension Command {
         
     convenience init(_ match: PatternMatch, _ arguments: Value...) {
         assert(arguments.count == match.argumentLabels.count) // these should _always_ be the same (any optional operands omitted in script will not appear in the final exact match); anything else is a bug
-        // caution: this assumes operands will always have same ordering as parameters // TO DO: are there any use cases where operands may appear in different order to parameters? if so, reducefunc will also need HandlerInterface to reorder the arguments correctly
+        // caution: this assumes operands will always have same ordering as parameters // TO DO: are there any use cases where operands may appear in different order to parameters? if so, reducefunc will also need HandlerType to reorder the arguments correctly
         self.init(match, [(Symbol, Value)](zip(match.argumentLabels, arguments)))
     }
 }

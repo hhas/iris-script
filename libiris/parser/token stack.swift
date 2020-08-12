@@ -101,6 +101,14 @@ extension Array where Element == Parser.TokenInfo {
                 self[leftIndex].form = secondForm
                 self[newRightIndex].form = secondForm
                 return (secondForm, newRightIndex)
+            case .none:
+                // TO DO: how to implement? e.g. `1 thru 4 thru 8` should be a syntax error (for now, just alias to .left)
+                let firstForm = try leftMatch.reductionFor(stack: self, startIndex: leftIndex)
+                self[commonIndex].form = firstForm
+                let (secondForm, newRightIndex) = try self.reduce(leftMatch: rightMatch, from: commonIndex, onto: rightIndex, stopIndex: stopIndex, found: &found)
+                self[leftIndex].form = secondForm
+                self[newRightIndex].form = secondForm
+                return (secondForm, newRightIndex)
             }
         } else { // no right match to compare (either we’ve reached the expression’s rightmost operation or we’ve reduced the expression down to its last operator) so reduce left match
             let form = try leftMatch.reductionFor(stack: self, startIndex: leftIndex)

@@ -16,9 +16,9 @@ import SwiftAutomation
 
 struct RemoteCall: Handler {
     
-    // for AE commands, the command name (e.g. Symbol("get")) needs to be looked up in glue; Q. should glue return HandlerInterface, or dedicated data structure (in which case `interface` will be calculated var); note that HI provides no argument processing support,
+    // for AE commands, the command name (e.g. Symbol("get")) needs to be looked up in glue; Q. should glue return HandlerType, or dedicated data structure (in which case `interface` will be calculated var); note that HI provides no argument processing support,
     
-    var interface: HandlerInterface { return self.appData.interfaceForCommand(term: self.term) }
+    var interface: HandlerType { return self.appData.interfaceForCommand(term: self.term) }
     let term: CommandTerm
     let appData: NativeAppData
     

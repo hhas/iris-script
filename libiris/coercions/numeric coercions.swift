@@ -214,17 +214,19 @@ public struct AsConstrainedNumber: NativeCoercion { // returned by AsNumber.cons
     public typealias SwiftType = Number
     
     public var swiftLiteralDescription: String {
-        var range = ""
-        if let n = self.min { range += "min: \(n), " }
-        if let n = self.max { range += "max: \(n), " }
-        return "\(type(of: self))(\(range)isWhole: \(self.isWhole))"
+        var args = [String]()
+        if self.isWhole { args.append("isWhole: true") }
+        if let n = self.min { args.append("min: \(n)") }
+        if let n = self.max { args.append("max: \(n)") }
+        return "\(type(of: self))(\(args.joined(separator: ", ")))"
     }
     
-    public var literalDescription: String {
-        var range = ""
-        if let n = self.min { range += ", min: \(n)" }
-        if let n = self.max { range += ", max: \(n)" }
-        return "number {whole: \(self.isWhole)\(range)}"
+    public var literalDescription: String { // TO DO: how to auto-generate as part of constraint extension?
+        var args = [String]()
+        if self.isWhole { args.append("whole: true") }
+        if let n = self.min { args.append("min: \(n)") }
+        if let n = self.max { args.append("max: \(n)") }
+        return "\(self.name.label)\(args.isEmpty ? "" : " {\(args.joined(separator: ", "))}")"
     }
     
     private let isWhole: Bool, min: SwiftType?, max: SwiftType?
@@ -234,6 +236,13 @@ public struct AsConstrainedNumber: NativeCoercion { // returned by AsNumber.cons
         self.isWhole = isWhole
         self.min = min
         self.max = max
+    }
+    
+    public init(isWhole: Bool = false, min: Int? = nil, max: Int? = nil) throws {
+        var minimum: Number?, maximum: Number?
+        if let n = min { minimum = Number(n) }
+        if let n = max { maximum = Number(n) }
+        try self.init(isWhole: isWhole, min: minimum, max: maximum)
     }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> Value {
@@ -246,6 +255,80 @@ public struct AsConstrainedNumber: NativeCoercion { // returned by AsNumber.cons
     
     public func wrap(_ value: Value, in scope: Scope) -> Value {
         return value
+    }
+}
+
+
+
+// primitive constraints
+
+public struct IntConstraint<ElementType: SwiftCoercion>: SwiftCoercion where ElementType.SwiftType: FixedWidthInteger {
+    
+    public var name: Symbol { return self.elementType.name }
+    
+    public typealias SwiftType = ElementType.SwiftType
+    
+    public var swiftLiteralDescription: String {
+        var range = ""
+        if let n = self.min { range += ", min: \(n)" }
+        if let n = self.max { range += ", max: \(n)" }
+        return "\(type(of: self))(\(self.elementType.swiftLiteralDescription)\(range))"
+    }
+    
+    public let elementType: ElementType
+    private let min: SwiftType?, max: SwiftType?
+    
+    public init(_ elementType: ElementType, min: SwiftType? = nil, max: SwiftType? = nil) {
+        self.elementType = elementType
+        self.min = min
+        self.max = max
+    }
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> ElementType.SwiftType {
+        let result = try self.elementType.coerce(value, in: scope)
+        if let min = self.min, result < min { throw ConstraintCoercionError(value: value, coercion: self) }
+        if let max = self.max, result > max { throw ConstraintCoercionError(value: value, coercion: self) }
+        return result
+    }
+    
+    public func wrap(_ value: ElementType.SwiftType, in scope: Scope) -> Value {
+        return self.elementType.wrap(value, in: scope)
+    }
+}
+
+
+
+public struct DoubleConstraint<ElementType: SwiftCoercion>: SwiftCoercion where ElementType.SwiftType: BinaryFloatingPoint {
+    
+    public var name: Symbol { return self.elementType.name }
+    
+    public typealias SwiftType = ElementType.SwiftType
+    
+    public var swiftLiteralDescription: String {
+        var range = ""
+        if let n = self.min { range += ", min: \(n)" }
+        if let n = self.max { range += ", max: \(n)" }
+        return "\(type(of: self))(\(self.elementType.swiftLiteralDescription)\(range))"
+    }
+    
+    public let elementType: ElementType
+    private let min: SwiftType?, max: SwiftType?
+    
+    public init(_ elementType: ElementType, min: SwiftType? = nil, max: SwiftType? = nil) {
+        self.elementType = elementType
+        self.min = min
+        self.max = max
+    }
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> ElementType.SwiftType {
+        let result = try self.elementType.coerce(value, in: scope)
+        if let min = self.min, result < min { throw ConstraintCoercionError(value: value, coercion: self) }
+        if let max = self.max, result > max { throw ConstraintCoercionError(value: value, coercion: self) }
+        return result
+    }
+    
+    public func wrap(_ value: ElementType.SwiftType, in scope: Scope) -> Value {
+        return self.elementType.wrap(value, in: scope)
     }
 }
 

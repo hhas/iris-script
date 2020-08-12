@@ -64,6 +64,10 @@ public struct AsSwiftDefault<ElementType: SwiftCoercion>: SwiftCoercion {
         self.defaultValue = defaultValue
     }
     
+    public init(_ elementType: ElementType, defaultValue: Value) { // KLUDGE: AsOptional is currently unable to convert default native value to Swift value; TO DO: how to remedy this?
+        self.init(elementType, try! elementType.coerce(defaultValue, in: nullScope))
+    }
+    
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         do {
             return try self.elementType.coerce(value, in: scope)
@@ -72,7 +76,7 @@ public struct AsSwiftDefault<ElementType: SwiftCoercion>: SwiftCoercion {
         }
     }
     
-    // caution: wrap() doesn't caller to pass nil; it's assumed they will pass the default value itself
+    // caution: wrap() doesn't allow caller to pass nil; caller must pass defaultValue itself
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return self.elementType.wrap(value, in: scope)
     }
@@ -86,7 +90,7 @@ public struct AsOptional: NativeCoercion {
         if self.defaultValue is NullValue {
             return "AsSwiftOptional(\(self.elementType.swiftLiteralDescription))"
         } else {
-            return "AsSwiftDefault(\(self.elementType.swiftLiteralDescription), \(formatSwiftLiteral(self.defaultValue)))"
+            return "AsSwiftDefault(\(self.elementType.swiftLiteralDescription), defaultValue: \(formatSwiftLiteral(self.defaultValue)))" // KLUDGE: see AsSwiftDefault TODO
         }
     }
     
@@ -94,7 +98,7 @@ public struct AsOptional: NativeCoercion {
         var arguments = [String]()
         if !(self.elementType is AsValue) { arguments.append(self.elementType.literalDescription) }
         if !(self.defaultValue is NullValue) { arguments.append("with_default: \(literal(for: self.defaultValue))") }
-        return arguments.isEmpty ? "‘optional’" : "‘optional’ {\(arguments.joined(separator:", "))}"
+        return "‘\(self.name.label)’\(arguments.isEmpty ? "" : " {\(arguments.joined(separator:", "))}")"
     }
     
     public typealias SwiftType = Value
@@ -104,7 +108,7 @@ public struct AsOptional: NativeCoercion {
     public let elementType: NativeCoercion
     private let defaultValue: Value
     
-    public init(_ elementType: NativeCoercion = asValue, defaultValue: Value = nullValue) {
+    public init(_ elementType: NativeCoercion = asValue, default defaultValue: Value = nullValue) {
         self.elementType = elementType
         self.defaultValue = defaultValue
     }

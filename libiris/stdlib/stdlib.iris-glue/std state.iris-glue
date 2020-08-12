@@ -1,26 +1,26 @@
 
 «= stdlib glue definition =»
 
-to ‘as’ {value as anything, coercion as coercion} returning anything requires {
+swift_handler ‘as’ {value as anything, coercion as coercion} returning anything requires {
     can_error: true
     use_scopes: #command
     swift_function: coerce
     operator: {infix [“as”], 350}
 }
 
-to ‘returning’ {interface as handler_interface, coercion as coercion} returning itself requires {
+swift_handler ‘returning’ {interface as handler_interface, coercion as coercion} returning itself requires {
     operator: {infix “returning”, 300}
 }
 
 
-to ‘to’ {interface as handler_interface, action as expression} returning handler requires {
+swift_handler ‘to’ {interface as handler_interface, action as expression} returning (handler) requires {
     can_error: true
     use_scopes: #command
     swift_function: defineCommandHandler {interface, action}
     operator: {[keyword “to”, expression “interface”, keyword “run”, expression “action”], 80}
 }
 
-to ‘when’ {interface as handler_interface, action as expression} returning handler requires {
+swift_handler ‘when’ {interface as handler_interface, action as expression} returning (handler) requires {
     can_error: true
     use_scopes: #command
     swift_function: defineEventHandler {interface, action}
@@ -28,21 +28,21 @@ to ‘when’ {interface as handler_interface, action as expression} returning h
 }
 
 
-to ‘set’ {name as name, to: value as anything} returning anything requires { «assignment; TODO: ‘name’ argument should be name or chunk expression»
+swift_handler ‘set’ {name as name, to: value as anything} returning anything requires { «assignment; TODO: ‘name’ argument should be name or chunk expression»
     can_error: true
     use_scopes: #command
     operator: {[keyword “set”, expression “name”, keyword “to”, expression “value”], 80}
 }
 
 
-to ‘tell’ {target as value, action as expression} returning anything requires {
+swift_handler ‘tell’ {target as value, action as expression} returning anything requires {
     can_error: true
     use_scopes: #command
     swift_function: tell {target, action}
     operator: {[keyword “tell”, expression “target”, keyword “to”, expression “action”], 101}
 }
 
-to ‘of’ {attribute as expression, value as value} returning expression requires { «TODO: is left operand always a command?»
+swift_handler ‘of’ {attribute as expression, value as value} returning expression requires { «TODO: is left operand always a command?»
     can_error: true «TODO: throw immediately, or wait until query if fully constructed?»
     use_scopes: [#command, #handler]
     swift_function: ofClause {attribute, target}

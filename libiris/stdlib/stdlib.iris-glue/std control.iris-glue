@@ -6,7 +6,7 @@
 «TODO: how to describe return type in terms of parameter types? e.g. `if {…} returning either [result of its action, result of its alternate_action]`?»
 
 
-to ‘if’ {test: condition as boolean, then: action as expression, else: alternative_action as expression} returning anything requires {
+swift_handler ‘if’ {test: condition as boolean, then: action as expression, else: alternative_action as expression} returning anything requires {
     can_error: true «TODO: would be better to distinguish errors thrown by arguments from errors thrown by handler itself»
     use_scopes: #command
     swift_function: ifTest {condition, action, alternativeAction}
@@ -16,14 +16,14 @@ to ‘if’ {test: condition as boolean, then: action as expression, else: alter
                precedence: 101}
 }
 
-to ‘while’ {condition as boolean, action as expression} returning anything requires {
+swift_handler ‘while’ {condition as boolean, action as expression} returning anything requires {
     can_error: true
     use_scopes: #command
     swift_function: whileRepeat {condition, action}
     operator: {[keyword “while”, expression “condition”, keyword “repeat”, expression “action”], 101}
 }
 
-to ‘repeat’ {action as expression, condition as boolean} returning anything requires {
+swift_handler ‘repeat’ {action as expression, condition as boolean} returning anything requires {
     can_error: true
     use_scopes: #command
     swift_function: repeatWhile {action, condition}

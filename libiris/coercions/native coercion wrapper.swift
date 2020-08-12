@@ -10,6 +10,7 @@ import Foundation
 
 public struct NativizedCoercion<ElementType: SwiftCoercion>: NativeCoercion {
     
+    
     // TO DO: printing value description has a tendency to infinitely recurse when printing handler interface if interface contains nativized coercions (which it often does); for now, we break this cycle by printing primitive representation, but this requires further thought (in theory, every SwiftCoercion should return a true native equivalent, but in practice that may not always be possible/desirable, plus it’s more implementation overhead for coercions that are unlikely to be introspected outside of documentation [where descriptions can be elided/summarized for human readability only])
     
     public typealias SwiftType = Value
@@ -17,6 +18,7 @@ public struct NativizedCoercion<ElementType: SwiftCoercion>: NativeCoercion {
     public var name: Symbol { return self.elementType.name }
     
     // TO DO: the returned Swift code may or may not be appropriate to context
+    public var swiftTypeDescription: String { return String(describing: self.elementType.swiftTypeDescription) }
     public var swiftLiteralDescription: String { return self.elementType.swiftLiteralDescription }
     public var literalDescription: String { return self.elementType.literalDescription }
     
@@ -65,13 +67,15 @@ public struct PrimitivizedCoercion: SwiftCoercion {
 
 public struct CallableCoercion: NativeCoercion, Callable {
     
-    public var interface: HandlerInterface { return self.elementType.interface }
+    
+    public var interface: HandlerType { return self.elementType.interface }
     
     public typealias SwiftType = Value
     
     public var name: Symbol { return self.elementType.name }
     
     // TO DO: the returned Swift code may or may not be appropriate to context
+    public var swiftTypeDescription: String { return String(describing: self.elementType.swiftTypeDescription) }
     public var swiftLiteralDescription: String { return self.elementType.swiftLiteralDescription }
     public var literalDescription: String { return self.elementType.literalDescription }
     

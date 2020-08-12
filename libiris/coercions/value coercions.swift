@@ -8,6 +8,8 @@ import Foundation
  // TO DO: lists and records that contain unevaluated expressions also need to self-evaluate; e.g. currently runScript("[foo].") returns `[‘foo’]` which is not what we want; alternative is to check if value isMemoizable: if false, always fully evaluate it
 
 public struct AsAnything: SwiftCoercion, NativeCoercion { // any value or `nothing`; equivalent to `AsOptional(asValue)`
+
+    public var swiftTypeDescription: String { return String(describing: SwiftType.self) }
     
     public typealias SwiftType = Value
     
@@ -38,6 +40,8 @@ public let asAnything = AsAnything()
 
 
 public struct AsValue: SwiftCoercion, NativeCoercion { // any value except `nothing`
+
+    public var swiftTypeDescription: String { return String(describing: SwiftType.self) }
     
     public typealias SwiftType = Value
     

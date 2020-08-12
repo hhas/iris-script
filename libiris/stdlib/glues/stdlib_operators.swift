@@ -35,7 +35,7 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.add([.keyword("first"), .expression], 1130, .left)
     registry.add([.expression, .keyword("from"), .expression], 1110, .left)
     registry.add([.expression, .keyword("id"), .expression], 1110, .left)
-    registry.add([.keyword("if"), .expressionLabeled("test"), .keyword("then"), .expressionLabeled("then"), .optional([.keyword("else"),.expressionLabeled("else")])], 101, .left)
+    registry.add([.keyword("if"), .expressionLabeled("test"), .keyword("then"), .expressionLabeled("then"), .optional([.keyword("else"), .expressionLabeled("else")])], 101, .left)
     registry.add([.expression, .keyword("is_a"), .expression], 540, .left)
     registry.add([.expression, .keyword("is_after"), .expression], 540, .left)
     registry.add([.expression, .keyword("is_before"), .expression], 540, .left)
@@ -63,4 +63,7 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.add([.expression, .keyword(["≠", "<>"]), .expression], 540, .left)
     registry.add([.expression, .keyword(["≤", "<="]), .expression], 540, .left)
     registry.add([.expression, .keyword(["≥", ">="]), .expression], 540, .left)
+    registry.add([.keyword("editable"), .optional(.expressionLabeled("of_type"))], 1500, .left)
+    registry.add([.keyword("optional"), .optional(.expressionLabeled("of_type")), .optional([.keyword("with_default"), .expressionLabeled("with_default")])], 1500, .left)
+    registry.add([.keyword("record"), .optional(.expressionLabeled("of_type"))], 1500, .left)
 }

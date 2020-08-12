@@ -33,6 +33,8 @@ public class EditableValue: Handler, Mutator { // TO DO: Handler or Callable?
     
     public var description: String { return "editable \(self.data)" }
     
+    public var interface: HandlerType { return (self.data as? Callable)?.interface ?? nullHandlerType }
+    
     private(set) var data: Value
     public let coercion: NativeCoercion // the type of the underlying value
     

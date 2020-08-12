@@ -29,7 +29,7 @@ func writeHelp(_ string: String) {
 // define REPL commands (for now these are handcoded but can eventually move to glue)
 
 // `help` – print help
-let interface_help = HandlerInterface(
+let interface_help = HandlerType(
     name: "help",
     parameters: [],
     result: asNothing.nativeCoercion
@@ -63,7 +63,7 @@ func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handl
 
 // `clear` – clear screen
 
-let interface_clear = HandlerInterface(
+let interface_clear = HandlerType(
     name: "clear",
     parameters: [],
     result: asNothing.nativeCoercion
@@ -75,7 +75,7 @@ func procedure_clear(command: Command, commandEnv: Scope, handler: Handler, hand
 }
 
 // `commands` – list the contents of Environment
-let interface_commands = HandlerInterface(
+let interface_commands = HandlerType(
     name: "commands",
     parameters: [],
     result: asNothing.nativeCoercion
@@ -96,7 +96,7 @@ func procedure_commands(command: Command, commandEnv: Scope, handler: Handler, h
 // `quit` – exit the REPL
 var isRunning = true
 
-let interface_quit = HandlerInterface(
+let interface_quit = HandlerType(
     name: "quit",
     parameters: [],
     result: asNothing.nativeCoercion
@@ -115,7 +115,7 @@ private let type_read_prompt = (
     result: asString
 )
 
-let interface_read_prompt = HandlerInterface(
+let interface_read_prompt = HandlerType(
     name: type_read_prompt.name,
     parameters: [
         nativeParameter(type_read_prompt.param_0),
@@ -141,7 +141,7 @@ private let type_pp_value = (
     result: asNothing
 )
 
-let interface_pp_value = HandlerInterface(
+let interface_pp_value = HandlerType(
     name: type_pp_value.name,
     parameters: [
         nativeParameter(type_pp_value.param_0),
@@ -168,7 +168,7 @@ private let type_spp_value = (
     result: asNothing
 )
 
-let interface_spp_value = HandlerInterface(
+let interface_spp_value = HandlerType(
     name: type_spp_value.name,
     parameters: [
         nativeParameter(type_spp_value.param_0),

@@ -10,6 +10,9 @@ import iris
 
 func test() {
 
+    // runScript(" tell @com.apple.iTunes to playpause ")
+    
+
     runScript(" set a to 3. set a to 5. ") // this should throw immutable value error
     
     runScript(" set a to 3 as editable. set a to 5. write a. ") // this should update mutable value

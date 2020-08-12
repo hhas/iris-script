@@ -57,8 +57,8 @@ struct AbsoluteOrdinalSelector: QuerySelector { // first/middle/last/any/all {el
         self.parentDesc = parentDesc
     }
     
-    var interface: HandlerInterface {
-        return HandlerInterface(name: self.form.rawValue,
+    var interface: HandlerType {
+        return HandlerType(name: self.form.rawValue,
                                 parameters: [("right", "element_type", asLiteralName.nativeCoercion)], // TO DO: what labels?
                                 result: asReference.nativeCoercion)
     }
@@ -85,8 +85,8 @@ struct ByIndexSelector: QuerySelector { // ‘at’ {element_type, selector_data
     let appData: NativeAppData
     let parentDesc: SpecifierDescriptor
     
-    var interface: HandlerInterface {
-        return HandlerInterface(name: "at",
+    var interface: HandlerType {
+        return HandlerType(name: "at",
                                 parameters: [("left", "element_type", asLiteralName.nativeCoercion),
                                              ("right", "selector_data", asValue.nativeCoercion)], // usually, but not necessarily, integer
                                 result: asReference.nativeCoercion)
@@ -107,8 +107,8 @@ struct ByNameSelector: QuerySelector { // ‘named’ {element_type, selector_da
     let appData: NativeAppData
     let parentDesc: SpecifierDescriptor
     
-    var interface: HandlerInterface {
-        return HandlerInterface(name: "named",
+    var interface: HandlerType {
+        return HandlerType(name: "named",
                                 parameters: [("left", "element_type", asLiteralName.nativeCoercion),
                                              ("right", "selector_data", asValue.nativeCoercion)], // usually, but not necessarily, string
                                 result: asReference.nativeCoercion)
@@ -130,8 +130,8 @@ struct ByIDSelector: QuerySelector { // ‘id’ {element_type, selector_data}
     let appData: NativeAppData
     let parentDesc: SpecifierDescriptor
     
-    var interface: HandlerInterface {
-        return HandlerInterface(name: "id",
+    var interface: HandlerType {
+        return HandlerType(name: "id",
                                 parameters: [("left", "element_type", asLiteralName.nativeCoercion),
                                              ("right", "selector_data", asValue.nativeCoercion)], // usually, but not necessarily, string
                                 result: asReference.nativeCoercion)
@@ -159,10 +159,10 @@ struct ByRelativeSelector: QuerySelector { // `ELEMENT before/after parentDesc` 
     let appData: NativeAppData
     let parentDesc: ObjectSpecifierDescriptor
     
-    var interface: HandlerInterface {
-        return HandlerInterface(name: self.form.rawValue,
+    var interface: HandlerType {
+        return HandlerType(name: self.form.rawValue,
                                 parameters: [], // TO DO: what parameters? (strictly speaking this handler should be a multimethod, but we can probable get away with standard left+right infix arguments, where left is optional name and right is asReference)
-                                result: asValue.nativeCoercion) // TO DO: returns Reference or InsertionLocation, depending on parameters (again, it's an MM issue; we may need a way for HandlerInterface to express multiple input-output pairs)
+                                result: asValue.nativeCoercion) // TO DO: returns Reference or InsertionLocation, depending on parameters (again, it's an MM issue; we may need a way for HandlerType to express multiple input-output pairs)
     }
     
     // TO DO: this is just nasty
@@ -191,8 +191,8 @@ struct ByRangeSelector: QuerySelector { // ‘at’ {element_type, selector_data
     let appData: NativeAppData
     let parentDesc: SpecifierDescriptor
     
-    var interface: HandlerInterface {
-        return HandlerInterface(name: "from",
+    var interface: HandlerType {
+        return HandlerType(name: "from",
                                 parameters: [("left", "element_type", asLiteralName.nativeCoercion),
                                              ("right", "selector_data", asRange.nativeCoercion)], //
                                 result: asReference.nativeCoercion)
@@ -230,8 +230,8 @@ struct ByTestSelector: QuerySelector { // ‘whose’ {element_type, test}
     let appData: NativeAppData
     let parentDesc: SpecifierDescriptor
     
-    var interface: HandlerInterface {
-        return HandlerInterface(name: "whose",
+    var interface: HandlerType {
+        return HandlerType(name: "whose",
                                 parameters: [("left", "element_type", asLiteralName.nativeCoercion),
                                              ("right", "selector_data", asTestClause.nativeCoercion)], // TO DO: left may also be [deferred] selector command
                                 result: asReference.nativeCoercion)

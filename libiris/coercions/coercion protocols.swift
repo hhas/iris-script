@@ -14,6 +14,7 @@ public protocol Coercion: LiteralConvertible {
     
     var literalDescription: String { get }
     var swiftLiteralDescription: String { get }
+    var swiftTypeDescription: String { get }
     
 }
 
@@ -38,6 +39,8 @@ public protocol NativeCoercion: Value, Coercion {
 }
 
 public extension NativeCoercion {
+    
+    var swiftTypeDescription: String { return String(describing: Value.self) }
     
     typealias CoerceFunc = (Value, Scope) throws -> Value
     
@@ -75,6 +78,8 @@ public protocol SwiftCoercion: Coercion {
 
 public extension SwiftCoercion {
     
+    var swiftTypeDescription: String { return String(describing: SwiftType.self) }
+    
     // default coerceFunc() implementation
     @inlinable func coerceFunc(for valueType: Value.Type) -> CoerceFunc {
         return self.coerce
@@ -107,7 +112,7 @@ public extension SwiftCoercion where SwiftType == Value {
 
 public protocol ConstrainableCoercion: NativeCoercion {
     
-    var interface: HandlerInterface { get }
+    var interface: HandlerType { get }
     
     // some native coercions (numbers, lists, etc) can be specialized with additional constraints (element type, min/max, etc)
     

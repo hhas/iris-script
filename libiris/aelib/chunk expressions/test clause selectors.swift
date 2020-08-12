@@ -39,8 +39,8 @@ struct ComparisonSelector: TestSelector {
     
     var description: String { return "\(self.interface)" }
     
-    var interface: HandlerInterface {
-        return HandlerInterface(name: self.name,
+    var interface: HandlerType {
+        return HandlerType(name: self.name,
                                 parameters: [("left", "reference", asReference.nativeCoercion),
                                              ("right", "value", asValue.nativeCoercion)], // TO DO: right is test clause, although we don't yet have a coercion for that (can't use AsComplex as it's protocol-based)
             result: asTestClause.nativeCoercion)
@@ -89,8 +89,8 @@ struct UnaryLogicalSelector: TestSelector {
     
     var description: String { return "\(self.interface)" }
     
-    var interface: HandlerInterface {
-        return HandlerInterface(name: "NOT",
+    var interface: HandlerType {
+        return HandlerType(name: "NOT",
                                 parameters: [("right", "", asTestClause.nativeCoercion)],
                                 result: asTestClause.nativeCoercion)
     }
@@ -108,8 +108,8 @@ struct BinaryLogicalSelector: TestSelector {
     
     var description: String { return "\(self.interface)" }
     
-    var interface: HandlerInterface {
-        return HandlerInterface(name: self.form.rawValue,
+    var interface: HandlerType {
+        return HandlerType(name: self.form.rawValue,
                                 parameters: [("left", "", asTestClause.nativeCoercion),
                                              ("right", "", asTestClause.nativeCoercion)],
                                 result: asTestClause.nativeCoercion)

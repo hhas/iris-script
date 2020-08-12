@@ -8,14 +8,14 @@ import Foundation
 
 // weak, latent typing (strictly speaking, code is untyped and latent typing is implemented as a library-defined behavior on top of untyped code; performs runtime type-checking by default but should also support compile-time type checking/inference given alternate primitive libraries)
 
-@inline(__always) public func nativeParameter<T: SwiftCoercion>(_ param: (Symbol, Symbol, T)) -> HandlerInterface.Parameter {
+@inline(__always) public func nativeParameter<T: SwiftCoercion>(_ param: (Symbol, Symbol, T)) -> HandlerType.Parameter {
     return (param.0, param.1, param.2.nativeCoercion)
 }
 
 
 struct NativeHandler: Handler {
         
-    let interface: HandlerInterface
+    let interface: HandlerType
     
     let action: Value // usually a Block
     
@@ -27,7 +27,7 @@ struct NativeHandler: Handler {
     
     internal var _lexicalScope_strong: Environment? = nil // this should be assigned only when handler is captured as closure (note: only the NativeHandler struct instance returned by eval strongly captures the lexical scope; the original instance in the lexical Environment does not; bear this in mind if converting NativeHandler to a class)
     
-    init(interface: HandlerInterface, action: Value, in lexicalScope: Environment) {
+    init(interface: HandlerType, action: Value, in lexicalScope: Environment) {
         self.interface = interface
         self.action = action
         self.lexicalScope = lexicalScope

@@ -8,6 +8,9 @@
 import Foundation
 import iris
 
+// TO DO: how to insert additional import statement[s]? e.g. non-built-in libraries need `import iris`
+
+
 // TO DO: coercion parameter isn't being used
 
 
@@ -32,7 +35,7 @@ import Foundation
 
 ««+defineHandler»»
 
-// ««nativeName»» {««nativeArgumentNames»»}
+// ««nativeName»» {««nativeArguments»»}
 private let type_««signature»» = (
     name: Symbol("««nativeName»»"),
 	««+typeParameters»»
@@ -40,7 +43,7 @@ private let type_««signature»» = (
 	««-typeParameters»»
     result: ««returnType»»
 )
-private let interface_««signature»» = HandlerInterface(
+private let interface_««signature»» = HandlerType(
     name: type_««signature»».name,
     parameters: [
     ««+interfaceParameters»»
@@ -68,11 +71,7 @@ private func procedure_««signature»»(command: Command, commandEnv: Scope, ha
 
     ««+resultAssignment»»
     let result =
-    ««-resultAssignment»»««+tryKeyword»» try ««-tryKeyword»» ««functionName»»(
-    ««+functionArguments»»
-    	««label»»: ««argument»» ««~functionArguments»»,
-    ««-functionArguments»»
-    )
+    ««-resultAssignment»»««+tryKeyword»» try ««-tryKeyword»» ««swiftName»»(««+swiftArguments»»««label»»: ««argument»» ««~swiftArguments»», ««-swiftArguments»»)
     ««+returnIfResult»»
     return type_««signature»».result.wrap(result, in: handlerEnv)
     ««-returnIfResult»»
@@ -92,26 +91,21 @@ public func stdlib_loadHandlers(into env: Environment) {
 }
 """
 
-let nullParameters: [HandlerGlue.Parameter] = [("", "", "()")]
 
 let handlersTemplate = TextTemplate(templateSource) {
-    (tpl: Node, args: (libraryName: String, handlerGlues: [HandlerGlue])) in
+    (tpl: Node, args: (libraryName: String, glues: [HandlerGlue])) in
     tpl.libraryName.set(args.libraryName)
-    tpl.defineHandler.map(args.handlerGlues) {
+    tpl.defineHandler.map(args.glues) {
         (node: Node, glue: HandlerGlue) -> Void in
         node.signature.set(glue.signature)
         node.nativeName.set(glue.name)
-        node.nativeArgumentNames.set(glue.parameters.map{$0.name}.joined(separator: ", "))
-        if glue.parameters.isEmpty {
-            node.typeParameters.set("\n\t_: (),") // swiftc doesn't like single-item (`result`-only) tuples, so add placeholder field
-        } else {
-            node.typeParameters.map(glue.parameters.enumerated()) {
-                (node: Node, item: (count: Int, param: HandlerGlue.Parameter)) -> Void in
-                node.count.set(item.count)
-                node.label.set(item.param.name)
-                node.binding.set(item.param.binding)
-                node.coercion.set(item.param.coercion)
-            }
+        node.nativeArguments.set(glue.parameters.map{$0.label}.joined(separator: ", "))
+        node.typeParameters.map(glue.parameters.enumerated()) {
+            (node: Node, item: (count: Int, param: HandlerGlue.Parameter)) -> Void in
+            node.count.set(item.count)
+            node.label.set(item.param.label)
+            node.binding.set(item.param.binding)
+            node.coercion.set(item.param.coercion)
         }
         node.returnType.set(glue.result)
         node.interfaceParameters.map(glue.parameters.enumerated()) {
@@ -142,15 +136,15 @@ let handlersTemplate = TextTemplate(templateSource) {
                 node.returnIfResult.signature.set(glue.signature)
             }
             if !glue.canError { node.tryKeyword.delete() }
-            node.functionName.set(glue.swiftName)
-            node.functionArguments.map(glue.swiftArguments) {
+            node.swiftName.set(glue.swiftName)
+            node.swiftArguments.map(glue.swiftArguments) {
                 (node: Node, item: (label: String, param: String)) -> Void in
                 node.label.set(item.label)
                 node.argument.set(item.param)
             }
         }
     }
-    tpl.loadHandlers.map(args.handlerGlues) {
+    tpl.loadHandlers.map(args.glues) {
         (node: Node, glue: HandlerGlue) -> Void in
         node.signature.set(glue.signature)
     }
@@ -158,9 +152,9 @@ let handlersTemplate = TextTemplate(templateSource) {
 
 
 
-func camelCase(_ name: String) -> String { // convert underscored_name to camelCase
+func camelCase(_ name: String, uppercaseFirst: Bool = false) -> String { // convert underscored_name to camelCase
     var result = ""
-    var isUpper = false
+    var isUpper = uppercaseFirst
     for c in name {
         if c == "_" {
             isUpper = true
@@ -174,23 +168,7 @@ func camelCase(_ name: String) -> String { // convert underscored_name to camelC
     return result
 }
 
-
-extension HandlerGlue {
-    
-    var swiftName: String { return self.swiftFunction?.name ?? camelCase(self.name) }
-    
-    var _swiftArguments: [String] {
-        if let params = self.swiftFunction?.params, params.count == self.parameters.count {
-            return params
-        } else {
-            return self.parameters.map{camelCase($0.name)}
-        }
-    }
-    
-    var swiftArguments: [(String, String)] {
-        return self._swiftArguments.enumerated().map{($1, "arg_\($0)")} + self.useScopes.map{($0, $0)}
-    }
-    
-    var signature: String { return self.swiftName + "_" + self._swiftArguments.joined(separator: "_") }
+func camelCase(_ name: Symbol, uppercaseFirst: Bool = false) -> Symbol {
+    return Symbol(camelCase(name.label, uppercaseFirst: uppercaseFirst))
 }
 

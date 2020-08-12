@@ -55,6 +55,7 @@ public protocol Value: Mutator, SwiftLiteralConvertible, CustomStringConvertible
 
 extension Value where Self: LiteralConvertible {
     public var description: String { return self.literalDescription }
+    // TO DO: debugDescription should use self.swiftLiteralDescription
 }
 
 extension Value { // default implementations

@@ -1,0 +1,15 @@
+
+
+
+swift_record {pattern as operator_syntax, precedence as integer,
+              associate as optional associativity with_default #left,
+              reducer as optional string} requires {
+    swift_name: "OperatorSyntax"
+}
+
+
+swift_multichoice [#left, #right, #none] requires {
+    name: "associativity"
+}
+
+

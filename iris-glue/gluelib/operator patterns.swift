@@ -1,12 +1,12 @@
 //
-//  define patterns.swift
+//  operator patterns.swift
 //  iris-glue
 //
 
 import Foundation
 import iris
 
-let currentHandlerInterfaceKey = Symbol(".handler_interface")
+let currentHandlerTypeKey = Symbol(".handler_interface")
 
 
     
@@ -15,56 +15,57 @@ func keyword(for names: [String]) -> Keyword {
 }
 
 
-func newSequencePattern(for patterns: [PatternValue]) -> PatternValue {
-    return PatternValue(Pattern.sequence(patterns.map{$0.data}))
+func newSequencePattern(for patterns: [iris.Pattern]) -> iris.Pattern {
+    return .sequence(patterns)
 }
 
-func newAnyOfPattern(for patterns: [PatternValue]) -> PatternValue {
-    return PatternValue(Pattern.anyOf(patterns.map{$0.data}))
+func newAnyOfPattern(for patterns: [iris.Pattern]) -> iris.Pattern {
+    return .anyOf(patterns)
 }
 
-func newKeywordPattern(for names: [String]) -> PatternValue {
-    return PatternValue(.keyword(keyword(for: names)))
+func newKeywordPattern(for names: [String]) -> iris.Pattern {
+    return .keyword(keyword(for: names))
 }
 
-func newExpressionPattern(binding: String?, handlerEnv: Scope) -> PatternValue {
+func newExpressionPattern(binding: String?, handlerEnv: Scope) -> iris.Pattern {
     if let binding = binding {
-        let interface = handlerEnv.get(currentHandlerInterfaceKey) as! HandlerInterface
+        let interface = handlerEnv.get(currentHandlerTypeKey) as! HandlerType
         guard let label = interface.labelForBinding(Symbol(binding)) else {
-            fatalError("TODO: Can’t find argument label for \(binding) operand in \(handlerEnv)")
+            // TO DO: this should throw error, rather than raise exception
+            fatalError("Can’t find argument label for \(binding) operand in \(handlerEnv)")
         }
-        return PatternValue(.expressionLabeled(label))
+        return .expressionLabeled(label)
     } else {
-        return PatternValue(.expression)
+        return .expression
     }
 }
 
-func newOptionalPattern(pattern: PatternValue) -> PatternValue {
-    return PatternValue(.optional(pattern.data))
+func newOptionalPattern(pattern: iris.Pattern) -> iris.Pattern {
+    return .optional(pattern)
 }
 
-func newZeroOrMorePattern(pattern: PatternValue) -> PatternValue {
-    return PatternValue(.zeroOrMore(pattern.data))
+func newZeroOrMorePattern(pattern: iris.Pattern) -> iris.Pattern {
+    return .zeroOrMore(pattern)
 }
 
-func newOneOrMorePattern(pattern: PatternValue) -> PatternValue {
-    return PatternValue(.oneOrMore(pattern.data))
+func newOneOrMorePattern(pattern: iris.Pattern) -> iris.Pattern {
+    return .oneOrMore(pattern)
 }
 
-func newAtomPattern(named names: [String]) -> PatternValue {
-    return PatternValue(.keyword(keyword(for: names)))
+func newAtomPattern(named names: [String]) -> iris.Pattern {
+    return .keyword(keyword(for: names))
 }
 
-func newPrefixPattern(named names: [String]) -> PatternValue {
-    return PatternValue([.keyword(keyword(for: names)), .expression])
+func newPrefixPattern(named names: [String]) -> iris.Pattern {
+    return [.keyword(keyword(for: names)), .expression]
 }
 
-func newInfixPattern(named names: [String]) -> PatternValue {
-    return PatternValue([.expression, .keyword(keyword(for: names)), .expression])
+func newInfixPattern(named names: [String]) -> iris.Pattern {
+    return [.expression, .keyword(keyword(for: names)), .expression]
 }
 
-func newPostfixPattern(named names: [String]) -> PatternValue {
-    return PatternValue([.expression, .keyword(keyword(for: names))])
+func newPostfixPattern(named names: [String]) -> iris.Pattern {
+    return [.expression, .keyword(keyword(for: names))]
 }
 
 
@@ -72,10 +73,10 @@ func newPostfixPattern(named names: [String]) -> PatternValue {
 // sequence {…}
 private let type_sequence = (
 name: Symbol("sequence"),
-    param_0: (Symbol("patterns"), Symbol("patterns"), AsArray(asPatternValue)), // TO DO: min:1
-    result: asPatternValue
+    param_0: (Symbol("patterns"), Symbol("patterns"), AsArray(asPattern)), // TO DO: min:1
+    result: asPattern
 )
-private let interface_sequence = HandlerInterface(
+private let interface_sequence = HandlerType(
     name: type_sequence.name,
     parameters: [
         nativeParameter(type_sequence.param_0),
@@ -95,10 +96,10 @@ private func procedure_sequence(command: Command, commandEnv: Scope, handler: Ha
 // any {…}
 private let type_any = (
     name: Symbol("any"),
-    param_0: (Symbol("patterns"), Symbol("patterns"), AsArray(asPatternValue)), // TO DO: min:1
-    result: asPatternValue
+    param_0: (Symbol("patterns"), Symbol("patterns"), AsArray(asPattern)), // TO DO: min:1
+    result: asPattern
 )
-private let interface_any = HandlerInterface(
+private let interface_any = HandlerType(
     name: type_any.name,
     parameters: [
         nativeParameter(type_any.param_0),
@@ -119,9 +120,9 @@ private func procedure_any(command: Command, commandEnv: Scope, handler: Handler
 private let type_keyword = (
     name: Symbol("keyword"),
     param_0: (Symbol("named"), Symbol("names"), AsArray(asString)), // TO DO: min:1
-    result: asPatternValue
+    result: asPattern
 )
-private let interface_keyword = HandlerInterface(
+private let interface_keyword = HandlerType(
     name: type_keyword.name,
     parameters: [
         nativeParameter(type_keyword.param_0),
@@ -142,9 +143,9 @@ private func procedure_keyword(command: Command, commandEnv: Scope, handler: Han
 private let type_expression = (
     name: Symbol("expression"),
     param_0: (Symbol("binding"), Symbol("binding"), AsSwiftOptional(asString)),
-    result: asPatternValue
+    result: asPattern
 )
-private let interface_expression = HandlerInterface(
+private let interface_expression = HandlerType(
     name: type_expression.name,
     parameters: [
         nativeParameter(type_expression.param_0),
@@ -165,10 +166,10 @@ private func procedure_expression(command: Command, commandEnv: Scope, handler: 
 // optional {…}
 private let type_optional = (
     name: Symbol("is_optional"), // TO DO: there are problems with overriding existing `optional` handler as it also has operator syntax that for some reason refuses to parse; look into this later; for now, workaround by renaming the Pattern.optional(…) constructor so it doesn't class
-    param_0: (Symbol("pattern"), Symbol("pattern"), asPatternValue),
-    result: asPatternValue
+    param_0: (Symbol("pattern"), Symbol("pattern"), asPattern),
+    result: asPattern
 )
-private let interface_optional = HandlerInterface(
+private let interface_optional = HandlerType(
     name: type_optional.name,
     parameters: [
         nativeParameter(type_optional.param_0),
@@ -188,10 +189,10 @@ private func procedure_optional(command: Command, commandEnv: Scope, handler: Ha
 // zero_or_more {…}
 private let type_zero_or_more = (
     name: Symbol("zero_or_more"),
-    param_0: (Symbol("pattern"), Symbol("pattern"), asPatternValue),
-    result: asPatternValue
+    param_0: (Symbol("pattern"), Symbol("pattern"), asPattern),
+    result: asPattern
 )
-private let interface_zero_or_more = HandlerInterface(
+private let interface_zero_or_more = HandlerType(
     name: type_zero_or_more.name,
     parameters: [
         nativeParameter(type_zero_or_more.param_0),
@@ -211,10 +212,10 @@ private func procedure_zero_or_more(command: Command, commandEnv: Scope, handler
 // one_or_more {…}
 private let type_one_or_more = (
     name: Symbol("one_or_more"),
-    param_0: (Symbol("pattern"), Symbol("pattern"), asPatternValue),
-    result: asPatternValue
+    param_0: (Symbol("pattern"), Symbol("pattern"), asPattern),
+    result: asPattern
 )
-private let interface_one_or_more = HandlerInterface(
+private let interface_one_or_more = HandlerType(
     name: type_one_or_more.name,
     parameters: [
         nativeParameter(type_one_or_more.param_0),
@@ -237,9 +238,9 @@ private func procedure_one_or_more(command: Command, commandEnv: Scope, handler:
 private let type_atom = (
     name: Symbol("atom"),
     param_0: (Symbol("named"), Symbol("names"), AsArray(asString)),
-    result: asPatternValue
+    result: asPattern
 )
-private let interface_atom = HandlerInterface(
+private let interface_atom = HandlerType(
     name: type_atom.name,
     parameters: [
         nativeParameter(type_atom.param_0),
@@ -260,9 +261,9 @@ private func procedure_atom(command: Command, commandEnv: Scope, handler: Handle
 private let type_prefix = (
     name: Symbol("prefix"),
     param_0: (Symbol("named"), Symbol("names"), AsArray(asString)),
-    result: asPatternValue
+    result: asPattern
 )
-private let interface_prefix = HandlerInterface(
+private let interface_prefix = HandlerType(
     name: type_prefix.name,
     parameters: [
         nativeParameter(type_prefix.param_0),
@@ -283,9 +284,9 @@ private func procedure_prefix(command: Command, commandEnv: Scope, handler: Hand
 private let type_infix = (
     name: Symbol("infix"),
     param_0: (Symbol("named"), Symbol("names"), AsArray(asString)),
-    result: asPatternValue
+    result: asPattern
 )
-private let interface_infix = HandlerInterface(
+private let interface_infix = HandlerType(
     name: type_infix.name,
     parameters: [
         nativeParameter(type_infix.param_0),
@@ -306,9 +307,9 @@ private func procedure_infix(command: Command, commandEnv: Scope, handler: Handl
 private let type_postfix = (
     name: Symbol("postfix"),
     param_0: (Symbol("named"), Symbol("names"), AsArray(asString)),
-    result: asPatternValue
+    result: asPattern
 )
-private let interface_postfix = HandlerInterface(
+private let interface_postfix = HandlerType(
     name: type_postfix.name,
     parameters: [
         nativeParameter(type_postfix.param_0),
@@ -333,9 +334,9 @@ class PatternDialect: Scope {
     private let parent: Scope
     private var frame = [Symbol: Value]()
     
-    init(parent: Scope, for handlerInterface: HandlerInterface) { // the handler interface is used by `expression BINDING_NAME` to remap the operand’s binding name to the underlying Command’s argument label (it would be neater to implement `expression` as a closure that captures this value directly, but this is good enough); e.g. `set…to…` is defined as native pattern [keyword “set”, expression “name”, keyword “to”, expression “value”], which outputs Swift pattern: [.keyword("set"), .expressionLabeled(Symbol("name")), .keyword("to"), .expressionLabeled(Symbol("to"))], remapping the “name” and “value” name bindings to argument labels `{name:,to:}`
+    init(parent: Scope, for handlerType: HandlerType) { // the handler interface is used by `expression BINDING_NAME` to remap the operand’s binding name to the underlying Command’s argument label (it would be neater to implement `expression` as a closure that captures this value directly, but this is good enough); e.g. `set…to…` is defined as native pattern [keyword “set”, expression “name”, keyword “to”, expression “value”], which outputs Swift pattern: [.keyword("set"), .expressionLabeled(Symbol("name")), .keyword("to"), .expressionLabeled(Symbol("to"))], remapping the “name” and “value” name bindings to argument labels `{name:,to:}`
         self.parent = parent
-        self.frame[currentHandlerInterfaceKey] = handlerInterface
+        self.frame[currentHandlerTypeKey] = handlerType
         for (interface, action) in [
             // primitive pattern constructors
             (interface_sequence, procedure_sequence),

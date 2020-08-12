@@ -1,5 +1,5 @@
 //
-//  glue renderer.swift
+//  render glues.swift
 //  iris-glue
 //
 //  GlueRenderer implements API for reading .iris-glue files and writing .swift glue files
@@ -21,17 +21,29 @@ public struct GlueError: Error, CustomStringConvertible {
 }
 
 
-typealias OpaqueHandlerGlues = OpaqueValue<[Symbol:HandlerGlue]>
+typealias OpaqueHandlerGlues  = OpaqueValue<[Symbol:HandlerGlue]>
+typealias OpaqueRecordGlues   = OpaqueValue<[Symbol:RecordGlue]>
+typealias OpaqueCoercionGlues = OpaqueValue<[Symbol:CoercionGlue]>
+typealias OpaqueEnumGlues     = OpaqueValue<[Symbol:EnumGlue]>
 
-let asHandlerGlues = TypeMap<OpaqueHandlerGlues>("opaque_handler_glues", "asHandlerGlues")
+let asHandlerGlues  = TypeMap<OpaqueHandlerGlues>("opaque_handler_glues", "asHandlerGlues")
+let asRecordGlues   = TypeMap<OpaqueRecordGlues>("opaque_record_glues", "asRecordGlues")
+let asCoercionGlues = TypeMap<OpaqueCoercionGlues>("opaque_coercion_glues", "asCoercionGlues")
+let asEnumGlues     = TypeMap<OpaqueEnumGlues>("opaque_enum_glues", "asEnumGlues")
 
-let handlerGluesKey = Symbol(".handler_glues")
+let handlerGluesKey  = Symbol(".handler_glues")
+let recordGluesKey   = Symbol(".record_glues")
+let coercionGluesKey = Symbol(".coercion_glues")
+let enumGluesKey     = Symbol(".enum_glues")
 
 
 public struct GlueRenderer {
     
     private let parser: IncrementalParser
     private let handlerGlues: OpaqueHandlerGlues
+    private let recordGlues: OpaqueRecordGlues
+    private let coercionGlues: OpaqueCoercionGlues
+    private let enumGlues: OpaqueEnumGlues
     
     public let libraryName: String
     
@@ -41,12 +53,21 @@ public struct GlueRenderer {
         let parser = IncrementalParser(withStdLib: false)
         gluelib_loadHandlers(into: parser.env) // TO DO: what handlers must gluelib define? Q. what about optionally loading stdlib handlers (and operators?) into a parent scope, for metaprogramming use? (this option should be off by default, not least to allow unimpeded generation of stdlib glue, and because it adds complexity that straightforward glue definitions don’t need)
         gluelib_loadOperators(into: parser.env.operatorRegistry) // essential operators used in glue defs; these may be overwritten by stdlib operators
-        gluelib_loadConstants(into: parser.env)
         stdlib_loadConstants(into: parser.env) // mostly needed for coercions
+        gluelib_loadConstants(into: parser.env) // TO DO: for now this overrides [e.g.] stdlib-defined asText with asString; longer-term we need some way to indicate if generated glue code should use native vs primitive coercion
         self.parser = parser
         let handlerGlues = OpaqueHandlerGlues([:])
         parser.env.define(handlerGluesKey, handlerGlues)
         self.handlerGlues = handlerGlues
+        let recordGlues = OpaqueRecordGlues([:])
+        parser.env.define(recordGluesKey, recordGlues)
+        self.recordGlues = recordGlues
+        let coercionGlues = OpaqueCoercionGlues([:])
+        parser.env.define(coercionGluesKey, coercionGlues)
+        self.coercionGlues = coercionGlues
+        let enumGlues = OpaqueEnumGlues([:])
+        parser.env.define(enumGluesKey, enumGlues)
+        self.enumGlues = enumGlues
     }
     
     public func read(file: URL) throws {
@@ -55,22 +76,41 @@ public struct GlueRenderer {
     
     public func write(to outDir: URL) throws {
         guard let script = self.parser.ast() else {
-            throw GlueError(description: "Found errors in glue: \(self.parser.errors())")
+            let errors = self.parser.errors()
+            if errors.isEmpty { throw GlueError(description: "Found syntax errors in glue.") }
+            throw GlueError(description: "Found syntax errors in glue: \(errors)")
         }
         let _ = (try script.eval(in: parser.env, as: asAnything))
-        guard let handlerGlues = (parser.env.get(handlerGluesKey) as? OpaqueHandlerGlues) else {
-            throw GlueError(description: "Can’t get \(handlerGluesKey.label).")
-        }
-        let handlersGlueFile = outDir.appendingPathComponent("\(self.libraryName)_handlers.swift")
-        let operatorsGlueFile = outDir.appendingPathComponent("\(self.libraryName)_operators.swift")
-        let handlersStubFile = outDir.appendingPathComponent("\(self.libraryName) stubs.swift")
-        let glues = handlerGlues.data.values.sorted{$0.name < $1.name}
-        try handlersTemplate.render((self.libraryName, glues))
-            .write(to: handlersGlueFile, atomically: true, encoding: .utf8)
-        try operatorsTemplate.render((self.libraryName, glues))
-            .write(to: operatorsGlueFile, atomically: true, encoding: .utf8)
-        try handlerStubsTemplate.render((self.libraryName, glues))
-            .write(to: handlersStubFile, atomically: true, encoding: .utf8)
+        let handlerGlues = self.handlerGlues.data.values.sorted{$0.name < $1.name}
+        let recordGlues = self.recordGlues.data.values.sorted{$0.swiftType < $1.swiftType}
+        let coercionGlues = self.coercionGlues.data.values.sorted{$0.swiftType < $1.swiftType}
+        let enumGlues = self.enumGlues.data.values.sorted{$0.swiftType < $1.swiftType}
+        let operatorGlues = handlerGlues + coercionGlues.compactMap{ $0.constructor }
+        try handlersTemplate.render((self.libraryName, handlerGlues),
+                                    to: "\(self.libraryName)_handlers.swift", in: outDir)
+        try operatorsTemplate.render((self.libraryName, operatorGlues),
+                                     to: "\(self.libraryName)_operators.swift", in: outDir)
+        try handlerStubsTemplate.render((self.libraryName, handlerGlues),
+                                        to: "\(self.libraryName) handler stubs.swift", in: outDir)
+        try recordsTemplate.render((self.libraryName, recordGlues),
+                                   to: "\(self.libraryName)_records.swift", in: outDir)
+        try recordStubsTemplate.render((self.libraryName, recordGlues),
+                                       to: "\(self.libraryName) record stubs.swift", in: outDir)
+        try coercionsTemplate.render((self.libraryName, coercionGlues),
+                                     to: "\(self.libraryName)_coercions.swift", in: outDir)
+        try enumsTemplate.render((self.libraryName, enumGlues),
+                                 to: "\(self.libraryName)_enums.swift", in: outDir)
+        try enumStubsTemplate.render((self.libraryName, enumGlues),
+                                     to: "\(self.libraryName) enum stubs.swift", in: outDir)
+        // TO DO: coercions can also define operators; probably best to collect operator definitions separately
+    }
+}
+
+
+extension TextTemplate {
+    
+    func render(_ options: T, to file: String, in directory: URL) throws {
+        try self.render(options).write(to: directory.appendingPathComponent(file), atomically: true, encoding: .utf8)
     }
 }
 

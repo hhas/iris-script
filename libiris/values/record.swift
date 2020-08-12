@@ -13,7 +13,7 @@
 import Foundation
 
 
-// TO DO: should record be BoxedCollectionValue/BoxedComplexValue? the problem is that labeled fields require unique labels, which Swift type system can't enforce, so we rely on runtime checking with throws, but the boxed protocol requires a non-throwing init, which record can't provide (there is `Record(uniqueLabelsWithValues:)` but that has a different signature)
+// TO DO: should record be BoxedCollectionValue/BoxedComplexValue? the problem is that labeled fields require unique labels, which Swift type system can't enforce, so we rely on runtime checking with throws, but the boxed protocol requires a non-throwing init, which record can't provide (there is `Record(uniqueLabelsWithValues:)` but that has a different signature and doesn’t validate); only option would be to raise fatalError()
 
 func literal(for value: Value) -> String { // TO DO: temporary; see also formatting
     if let v = value as? LiteralConvertible {
@@ -67,11 +67,12 @@ public extension Record.Fields { // also used as Command.Arguments
         }
     }
     
-    //
+    // TO DO: how should records treat mutability?
     
-    func toRecordType(in scope: Scope) throws -> FieldTypes { // coercion names are looked up in the given scope
+    func toRecordType(in scope: Scope) throws -> RecordType { // coercion names are looked up in the given scope
+        // if label is omitted, binding name is used for both; if coercion is omitted, asAnything is used
         var uniqueLabels = Set<Symbol>(), uniqueBindings = Set<Symbol>() // all labels must be unique; ditto all binding names
-        let result = try self.map{ (label: Symbol, value: Value) throws -> FieldType in
+        let result = try self.map{ (label: Symbol, value: Value) throws -> RecordType.Field in
             // label may be nullSymbol, in which case use binding name
             var label = label, binding: Symbol, coercion: NativeCoercion
             switch value {
@@ -108,7 +109,7 @@ public extension Record.Fields { // also used as Command.Arguments
             print("toRecordType() found bad labels") // DEBUG
             throw TypeCoercionError(value: Record(self, as: asRecord), coercion: asRecordType)
         }
-        return result
+        return RecordType(result)
     }
 
 }
@@ -138,20 +139,20 @@ public struct Record: ComplexValue, LiteralConvertible, Accessor, Sequence {
     public let constrainedType: NativeCoercion
     
     public let data: Fields // TO DO: why is this not named data as per BoxedSwiftValue?
-    private var namedFields = [Symbol: Value]() // Q. any performance benefit over `first(where:…)`? (bearing in mind a typical record would have <20 slots) if not, get rid of this
     
     // TO DO: would it be better to collapse duplicate keys (i.e. discard all but first/last) rather than throw error? (depends on what, if any, commands we provide for joining/splicing records)
     
     public init(_ fields: Fields) throws { // field names may be omitted, but must be unique
+        var fieldLabels = Set<Symbol>()
         var isMemoizable = true
-        var fieldTypes = FieldTypes()
+        var fieldTypes = RecordType.Fields()
         self.data = fields
         for (key, value) in fields {
             if key == nullSymbol {
                 isMemoizable = false
             } else {
-                if self.namedFields[key] != nil { throw MalformedRecordError(name: key, in: fields) }
-                self.namedFields[key] = value // TO DO: this might be problematic, as now we've two instances of struct value
+                if fieldLabels.contains(key) { throw MalformedRecordError(name: key, in: fields) }
+                fieldLabels.insert(key)
                 if isMemoizable {
                     if !value.isMemoizable { isMemoizable = false }
                     fieldTypes.append((key, key, value.nominalType))
@@ -166,8 +167,9 @@ public struct Record: ComplexValue, LiteralConvertible, Accessor, Sequence {
         self.init([], as: asRecord)
     }
     
-    public init(uniqueLabelsWithValues fields: Fields) {
-        try! self.init(fields)
+    public init(uniqueLabelsWithValues fields: Fields, as coercion: NativeCoercion = asRecord) {
+        // caution: this does not verify that labels are unique
+        self.init(fields, as: coercion)
     }
     
     internal init(_ fields: Fields, as coercion: NativeCoercion) {
@@ -185,8 +187,8 @@ public struct Record: ComplexValue, LiteralConvertible, Accessor, Sequence {
         return self.data.makeIterator()
     }
     
-    public func get(_ name: Symbol) -> Value? { // TO DO: what about getting by index? or should we provide pattern-matching/eval only?
-        return name == nullSymbol ? self : self.namedFields[name]
+    public func get(_ name: Symbol) -> Value? {
+        return name == nullSymbol ? self : self.data.first{ $0.label == name }?.value
     }
     
     /*

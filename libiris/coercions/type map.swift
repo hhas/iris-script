@@ -104,6 +104,8 @@ public let asSymbol = AsSymbol("symbol", "asSymbol") // TO DO: should we support
 
 
 public struct AsItself: Value, SwiftCoercion, NativeCoercion {
+
+    public var swiftTypeDescription: String { return String(describing: SwiftType.self) }
     
     // “magical” coercion type; may be used as a handler return type to indicate that the handler should return the calling command (after boxing it so it can be passed around safely), e.g. defining a handler for the `returning` operator avoids confusing errors if `foo returning bar` is executed outside of a handler interface definition; compare `nothing`
     
@@ -125,7 +127,7 @@ public struct AsItself: Value, SwiftCoercion, NativeCoercion {
         return nullValue
     }
     
-    public var nativeCoercion: NativeCoercion { // caution: glue generator filters by `HandlerInterface.result is AsItself`, so make sure handler interface hasn't wrapped it in NativizedCoercion or that test will fail
+    public var nativeCoercion: NativeCoercion { // caution: glue generator filters by `HandlerType.result is AsItself`, so make sure handler interface hasn't wrapped it in NativizedCoercion or that test will fail
         return self
     }
     

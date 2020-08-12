@@ -41,7 +41,7 @@ extension RandomAccessCollection where Element == Pattern {
 public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringLiteral, ExpressibleByArrayLiteral, SwiftLiteralConvertible {
     
     private func literalPattern(_ patterns: [Pattern]) -> String {
-        return "[\(patterns.map{$0.swiftLiteralDescription}.joined(separator: ","))]"
+        return "[\(patterns.map{$0.swiftLiteralDescription}.joined(separator: ", "))]"
     }
     
     public var swiftLiteralDescription: String {
@@ -66,7 +66,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
     
     case keyword(Keyword)
     case expression // any value
-    case expressionLabeled(Symbol) // any value
+    case expressionLabeled(Symbol) // any value // TO DO: replace with namedExpression(label: Symbol, binding: Symbol), allowing the binding name (which native pattern uses) to appear in auto-generated documentation
     
     // TO DO: case binding(Symbol, Pattern); allows e.g. arg labels to be attached to operator pattern for use in constructed Command (while we could supply a descriptive binding name here for documentation purposes, since operators are defined as part of handler definition the documentation generator can already obtain binding name from that; for now, operands are treated as positional only, which is fine for the common case where there operator has no optional clauses); TO DO: what about `do…done` blocks, where the body is an expression sequence? (these use a custom reducefunc which can simply ignore any labels, but it could be a problem for tooling that reads these patterns for other purposes)
     

@@ -33,7 +33,7 @@ func ofClause(attribute: Value, target value: Value, commandEnv: Scope, handlerE
 
 // handlers
 
-func defineCommandHandler(interface: HandlerInterface, action: Value, commandEnv: Scope) throws -> Handler {
+func defineCommandHandler(interface: HandlerType, action: Value, commandEnv: Scope) throws -> Handler {
     guard let env = commandEnv as? Environment else {
         fatalError("\(interface.name) handler requires a full Environment but received \(commandEnv)")
     }
@@ -42,7 +42,7 @@ func defineCommandHandler(interface: HandlerInterface, action: Value, commandEnv
     return handler
 }
 
-func defineEventHandler(interface: HandlerInterface, action: Value, commandEnv: Scope) throws -> Handler {
+func defineEventHandler(interface: HandlerType, action: Value, commandEnv: Scope) throws -> Handler {
     guard let env = commandEnv as? Environment else {
         fatalError("\(interface.name) handler requires a full Environment but received \(commandEnv)")
     }
@@ -67,6 +67,6 @@ func coerce(value: Value, coercion: NativeCoercion, commandEnv: Scope) throws ->
 
 
 
-func returning(interface: HandlerInterface, coercion: Coercion) -> Value {
+func returning(interface: HandlerType, coercion: Coercion) -> Value {
     fatalError()
 }

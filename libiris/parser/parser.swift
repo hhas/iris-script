@@ -417,7 +417,7 @@ public class Parser {
         return AbstractSyntaxTree(result)
     }
     
-    public func errors() -> [NativeError] { // TO DO: this returns top-level errors only; how best to get errors nested within block structures? (that's easiest if parser caches all shift+reduce errors as they’re thrown; this may also assist IDE in making [some] in-place corrections)
+    public func errors() -> [NativeError] { // TO DO: FIX: this returns top-level errors only; how best to get errors nested within block structures? (that's easiest if parser caches all shift+reduce errors as they’re thrown; this may also assist IDE in making [some] in-place corrections)
         var result = [NativeError]()
         for (form, _, _) in self.tokenStack {
             switch form {

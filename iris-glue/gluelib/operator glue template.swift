@@ -9,6 +9,9 @@ import Foundation
 import iris
 
 
+// TO DO: operators currently use first keyword’s name as command name; should there be an option to supply custom name? (ideally the command name should be same as existing operator keyword to avoid adding extra—and unexpected—names to namespace, but occasionally it may be beneficial to name handler after, say, operator’s alias rather than canonical name, e.g. mapping unary `-` to `negative` handler)
+
+
 // Operation(pattern: [.keyword(name)], precedence: precedence, associate: associate)
 
 
@@ -22,21 +25,27 @@ private let templateSource = """
 import Foundation
 
 func stdlib_loadOperators(into registry: OperatorRegistry) {
-««+loadOperators»»
+    ««+loadOperators»»
     registry.add(««args»»)
-««-loadOperators»»
+    ««-loadOperators»»
 }
 
 """
 
 
-let operatorsTemplate = TextTemplate(templateSource) { (tpl: Node, args: (libraryName: String, handlerGlues: [HandlerGlue])) in
+let operatorsTemplate = TextTemplate(templateSource) {
+    (tpl: Node, args: (libraryName: String, glues: [HandlerGlue])) in
     tpl.libraryName.set(args.libraryName)
-    tpl.loadOperators.map(args.handlerGlues.filter{$0.operatorSyntax != nil}.map{$0.operatorSyntax!}) {
-        (node: Node, syntax: HandlerGlue.OperatorSyntax) -> Void in
+    tpl.loadOperators.map(args.glues.compactMap{ $0.operatorSyntax }) {
+        (node: Node, syntax: OperatorSyntax) -> Void in
         let reducefunc: String
-        if let reducer = syntax.reducefunc { reducefunc = ", \(reducer)" } else { reducefunc = "" }
-        node.args.set("\(syntax.pattern.swiftLiteralDescription), \(syntax.precedence), .\(syntax.associate)\(reducefunc)")
+        if let reducer = syntax.reducer { reducefunc = ", \(reducer)" } else { reducefunc = "" }
+        let pattern: String
+        switch syntax.pattern {
+        case .sequence:  pattern = syntax.pattern.swiftLiteralDescription
+        default:         pattern = "[\(syntax.pattern.swiftLiteralDescription)]"
+        }
+        node.args.set("\(pattern), \(syntax.precedence), .\(syntax.associate)\(reducefunc)")
     }
 }
 

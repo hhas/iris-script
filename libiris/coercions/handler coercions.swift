@@ -6,6 +6,8 @@
 import Foundation
 
 
+// TO DO: AsHandler should be parameterizable with HandlerType; HandlerType should be constructable using `command returning type` operator, with underlying command `callable_type {named: name as optional symbol, input as record_type, output as coercion, is_event_handler as optional boolean with_default false}`; main challenge is deciding conformation
+
 
 public struct AsHandler: SwiftCoercion {
     
@@ -30,23 +32,23 @@ public let asHandler = AsHandler()
 
 
 
-public struct AsHandlerInterface: SwiftCoercion {
+public struct AsHandlerType: SwiftCoercion {
     
-    public typealias SwiftType = HandlerInterface
+    public typealias SwiftType = HandlerType
     
     public var name: Symbol = "handler_interface"
     
-    public var swiftLiteralDescription: String { return "asHandlerInterface" }
+    public var swiftLiteralDescription: String { return "asHandlerType" }
     
-    private func unpackSignature(_ value: Value, in env: Scope) throws -> (Symbol, [HandlerInterface.Parameter]) {
-        let name: Symbol, parameters: [HandlerInterface.Parameter]
+    private func unpackSignature(_ value: Value, in env: Scope) throws -> (Symbol, [HandlerType.Parameter]) {
+        let name: Symbol, parameters: [HandlerType.Parameter]
         switch value {
         case let command as Command: // name with optional params
             name = command.name
-            parameters = try command.arguments.toRecordType(in: env)
+            parameters = try command.arguments.toRecordType(in: env).fields
         case let record as Record: // params only (anonymous callable) // TO DO: constructing anonymous functions natively is not currently supported
             name = nullSymbol
-            parameters = try record.data.toRecordType(in: env)
+            parameters = try record.data.toRecordType(in: env).fields
         default:
             print("unpackSignature failed on", type(of:value)) // DEBUG
             throw TypeCoercionError(value: value, coercion: self)
@@ -58,7 +60,7 @@ public struct AsHandlerInterface: SwiftCoercion {
         // TO DO: this implementation assumes the handler interface is defined using literal `name {param,…} returning type` syntax, which is not conducive constructing handler interfaces programmatically; for metaprogramming, provide a separate handler [interface] constructor that takes name, parameters, etc as arguments, as alternative to describing handler interface using literal commands (which, being literals, can’t be parameterized at run-time)
         // TO DO: sort out error reporting; this should catch individual errors when unpacking parameters and return type and rethrow chained to a coercion error describing the entire interface
         guard let command = value as? Command else { throw TypeCoercionError(value: value, coercion: self) }
-        let name: Symbol, parameters: [HandlerInterface.Parameter], returnType: NativeCoercion
+        let name: Symbol, parameters: [HandlerType.Parameter], returnType: NativeCoercion
         if command.name == "returning" {
             let args = command.arguments
             if args.count != 2 {
@@ -72,11 +74,11 @@ public struct AsHandlerInterface: SwiftCoercion {
             (name, parameters) = try self.unpackSignature(command, in: scope)
             returnType = asAnything.nativeCoercion
         }
-        return HandlerInterface(name: name, parameters: parameters, result: returnType, isEventHandler: false)
+        return HandlerType(name: name, parameters: parameters, result: returnType, isEventHandler: false)
     }
 }
 
-public let asHandlerInterface = AsHandlerInterface()
+public let asHandlerType = AsHandlerType()
 
 
 //

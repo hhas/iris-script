@@ -25,7 +25,7 @@ import SwiftAutomation
 class NativeAppData: AppData {
     
     let glueTable: GlueTable
-    private var commandInterfaces = [String: HandlerInterface]()
+    private var commandInterfaces = [String: HandlerType]()
     
     public convenience init(bundleIdentifier: String) throws {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else {
@@ -65,9 +65,9 @@ class NativeAppData: AppData {
         fatalError()
     }
     
-    func interfaceForCommand(term: CommandTerm) -> HandlerInterface {
+    func interfaceForCommand(term: CommandTerm) -> HandlerType {
         if let interface = self.commandInterfaces[term.name] { return interface }
-        let interface = HandlerInterface(name: Symbol(term.name),
+        let interface = HandlerType(name: Symbol(term.name),
                                          parameters: term.parameters.map{ (Symbol($0.name), nullSymbol, asValue.nativeCoercion) },
                                          result: asIs.nativeCoercion)
         commandInterfaces[term.name] = interface

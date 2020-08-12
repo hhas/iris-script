@@ -9,32 +9,32 @@
 
 «=== comparison operators ===»
 
-to ‘is_before’ {left as string, right as string} returning boolean requires {
+swift_handler ‘is_before’ {left as string, right as string} returning boolean requires {
     can_error: true
     operator: {infix [“is_before”], precedence: 540}
 }
 
-to ‘is_not_after’ {left as string, right as string} returning boolean requires {
+swift_handler ‘is_not_after’ {left as string, right as string} returning boolean requires {
     can_error: true
     operator: {infix [“is_not_after”, “is_before_or_same_as”], precedence: 540}
 }
 
-to ‘is_same_as’ {left as string, right as string} returning boolean requires {
+swift_handler ‘is_same_as’ {left as string, right as string} returning boolean requires {
     can_error: true
     operator: {infix [“is_same_as”], precedence: 540}
 }
 
-to ‘is_not_same_as’ {left as string, right as string} returning boolean requires {
+swift_handler ‘is_not_same_as’ {left as string, right as string} returning boolean requires {
     can_error: true
     operator: {infix [“is_not_same_as”], precedence: 540}
 }
 
-to ‘is_after’ {left as string, right as string} returning boolean requires {
+swift_handler ‘is_after’ {left as string, right as string} returning boolean requires {
     can_error: true
     operator: {infix [“is_after”], precedence: 540}
 }
 
-to ‘is_not_before’ {left as string, right as string} returning boolean requires {
+swift_handler ‘is_not_before’ {left as string, right as string} returning boolean requires {
     can_error: true
     operator: {infix [“is_not_before”, “is_same_as_or_after”], precedence: 540}
 }
@@ -43,29 +43,29 @@ to ‘is_not_before’ {left as string, right as string} returning boolean requi
 
 «TO DO: convenience `does_not_begin_with`, etc.»
 
-to ‘begins_with’ {left as string, right as string} returning boolean requires {
+swift_handler ‘begins_with’ {left as string, right as string} returning boolean requires {
     can_error: true
     operator: {infix [“begins_with”], precedence: 542}
 }
 
-to ‘ends_with’ {left as string, right as string} returning boolean requires {
+swift_handler ‘ends_with’ {left as string, right as string} returning boolean requires {
     can_error: true
     operator: {infix [“ends_with”], precedence: 542}
 }
 
-to ‘contains’ {left as string, right as string} returning boolean requires {
+swift_handler ‘contains’ {left as string, right as string} returning boolean requires {
     can_error: true
     operator: {infix [“contains”], precedence: 542}
 }
 
-to ‘is_in’ {left as string, right as string} returning boolean requires {
+swift_handler ‘is_in’ {left as string, right as string} returning boolean requires {
     can_error: true
     operator: {infix [“is_in”], precedence: 542}
 }
 
 «=== other operators ===»
 
-to ‘&’ {left as string, right as string} returning string requires {
+swift_handler ‘&’ {left as string, right as string} returning string requires {
     can_error: true
     swift_function: joinValues
     operator: {infix [“&”], precedence: 340}
@@ -74,13 +74,13 @@ to ‘&’ {left as string, right as string} returning string requires {
 
 «== String commands ==»
 
-to uppercase {text as string} returning string requires {
+swift_handler uppercase {text as string} returning string requires {
 }
 
-to lowercase {text as string} returning string requires {
+swift_handler lowercase {text as string} returning string requires {
 }
 
-to format_code {value as anything} returning string requires {
+swift_handler format_code {value as anything} returning string requires {
 }
 
 

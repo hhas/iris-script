@@ -1,51 +1,219 @@
 //
 //  stdlib_coercions.swift
-//  libiris
+//
+//  Bridging code for primitive coercions. This file is auto-generated; do not edit directly.
 //
 
 import Foundation
 
-
-public func stdlib_loadCoercions(into env: Environment) {
-    // define operator names for constants, miscellany
-    if let registry = (env as? ExtendedEnvironment)?.operatorRegistry {
-        
-        // define `record` as keyword to simplify syntax when passing record as operand, i.e. `record {…}` instead of `record {{…}}`
-        registry.add([.keyword("record"), .optional(.expressionLabeled("of_type"))], 1500)
-        
-        // coercion modifiers (defined as operators to allow nesting of LP commands)
-        registry.add([.keyword("optional"), .optional(.expressionLabeled("of_type")),
-                      .optional([.keyword("with_default"), .expressionLabeled("with_default")])], 1500)
-        
-        // `editable EXPR?` (note: this could be defined as single operator with optional operand, but for now add two separate definitions to test alternate code path in pattern matching)
-        registry.atom("editable")
-        registry.prefix("editable", 1500)
+extension AsEditable: ConstrainableCoercion {
+    
+    private static let type_constrain = (
+        param_0: (Symbol("of_type"), Symbol("value_type"), AsSwiftDefault(asCoercion, defaultValue: asValue)),
+        _: ()
+    )
+    
+    public var interface: HandlerType {
+        return HandlerType(
+            name: self.name,
+            parameters: [
+                nativeParameter(Self.type_constrain.param_0),
+            ],
+            result: asCoercion.nativeCoercion
+        )
     }
     
-    env.define(coercion: asAnything) // `anything` is equivalent to `optional value` (i.e. accepts anything, including `nothing`)
-    env.define(coercion: asValue) // `value` (i.e. accepts anything except `nothing`)
-    
-    env.define(coercion: asBool)   // TO DO: need to decide if native Boolean representation should be `true`/`false` constants or non-empty/empty values (probably best with traditional constants for pedagogical purposes, although “emptiness” does have its advantages as does Icon-style result/failure)
-    env.define(coercion: asSymbol)
-    
-    env.define(coercion: asInt) // TO DO: define `integer` slot as handler that forwards to `number{whole: true,…}`
-    //env.define(coercion: asDouble)
-    env.define(coercion: CallableCoercion(asNumber))
-
-    env.define(coercion: asText) // constraint options?
-
-    env.define(coercion: CallableCoercion(asOrderedList))
-    env.define("list",   CallableCoercion(asOrderedList)) // `ordered_list` is aliased as `list` for convenience
-    env.define(coercion: CallableCoercion(asKeyedList))
-    env.define(coercion: CallableCoercion(asRecord))
-    
-    env.define(coercion: asCoercion)
-    env.define(coercion: asHandler)
-    env.define(coercion: asBlock) // TO DO: asBlockLiteral? (this'd need to accept single values too) // TO DO: replace with `expression`, which thunks a given value in current command context
-    
-    env.define(coercion: CallableCoercion(asEditable))
-
-    env.define(coercion: CallableCoercion(asOptional)) // TO DO: by default this is `optional value` which is equivalent to `anything`; would it help
-
+    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
+        var index = 0
+        let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        return AsEditable(_: arg_0)
+    }
 }
 
+extension AsKeyedList: ConstrainableCoercion {
+    
+    private static let type_constrain = (
+        param_0: (Symbol("key_type"), Symbol("key_type"), AsSwiftDefault(asCoercion, defaultValue: asValue)),
+        param_1: (Symbol("value_type"), Symbol("value_type"), AsSwiftDefault(asCoercion, defaultValue: asValue)),
+        _: ()
+    )
+    
+    public var interface: HandlerType {
+        return HandlerType(
+            name: self.name,
+            parameters: [
+                nativeParameter(Self.type_constrain.param_0),
+                nativeParameter(Self.type_constrain.param_1),
+            ],
+            result: asCoercion.nativeCoercion
+        )
+    }
+    
+    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
+        var index = 0
+        let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
+        let arg_1 = try command.value(for: Self.type_constrain.param_1, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        return AsKeyedList(keyType: arg_0, valueType: arg_1)
+    }
+}
+
+extension AsNumber: ConstrainableCoercion {
+    
+    private static let type_constrain = (
+        param_0: (Symbol("whole"), Symbol("whole"), AsSwiftDefault(asBool, defaultValue: false)),
+        param_1: (Symbol("from"), Symbol("minimum"), AsSwiftOptional(asSwiftNumber)),
+        param_2: (Symbol("to"), Symbol("maximum"), AsSwiftOptional(asSwiftNumber)),
+        _: ()
+    )
+    
+    public var interface: HandlerType {
+        return HandlerType(
+            name: self.name,
+            parameters: [
+                nativeParameter(Self.type_constrain.param_0),
+                nativeParameter(Self.type_constrain.param_1),
+                nativeParameter(Self.type_constrain.param_2),
+            ],
+            result: asCoercion.nativeCoercion
+        )
+    }
+    
+    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
+        var index = 0
+        let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
+        let arg_1 = try command.value(for: Self.type_constrain.param_1, at: &index, in: scope)
+        let arg_2 = try command.value(for: Self.type_constrain.param_2, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        return try AsConstrainedNumber(isWhole: arg_0, min: arg_1, max: arg_2)
+    }
+}
+
+extension AsOptional: ConstrainableCoercion {
+    
+    private static let type_constrain = (
+        param_0: (Symbol("of_type"), Symbol("value_type"), AsSwiftDefault(asCoercion, defaultValue: asValue)),
+        param_1: (Symbol("with_default"), Symbol("default_value"), asAnything),
+        _: ()
+    )
+    
+    public var interface: HandlerType {
+        return HandlerType(
+            name: self.name,
+            parameters: [
+                nativeParameter(Self.type_constrain.param_0),
+                nativeParameter(Self.type_constrain.param_1),
+            ],
+            result: asCoercion.nativeCoercion
+        )
+    }
+    
+    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
+        var index = 0
+        let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
+        let arg_1 = try command.value(for: Self.type_constrain.param_1, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        return AsOptional(_: arg_0, default: arg_1)
+    }
+}
+
+extension AsOrderedList: ConstrainableCoercion {
+    
+    private static let type_constrain = (
+        param_0: (Symbol("of"), Symbol("type"), AsSwiftDefault(asCoercion, defaultValue: asValue)),
+        param_1: (Symbol("from"), Symbol("minimum"), AsSwiftOptional(asInt)),
+        param_2: (Symbol("to"), Symbol("maximum"), AsSwiftOptional(asInt)),
+        _: ()
+    )
+    
+    public var interface: HandlerType {
+        return HandlerType(
+            name: self.name,
+            parameters: [
+                nativeParameter(Self.type_constrain.param_0),
+                nativeParameter(Self.type_constrain.param_1),
+                nativeParameter(Self.type_constrain.param_2),
+            ],
+            result: asCoercion.nativeCoercion
+        )
+    }
+    
+    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
+        var index = 0
+        let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
+        let arg_1 = try command.value(for: Self.type_constrain.param_1, at: &index, in: scope)
+        let arg_2 = try command.value(for: Self.type_constrain.param_2, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        return try AsOrderedList(_: arg_0, minLength: arg_1, maxLength: arg_2)
+    }
+}
+
+extension AsRecord: ConstrainableCoercion {
+    
+    private static let type_constrain = (
+        param_0: (Symbol("of_type"), Symbol("record_type"), AsSwiftOptional(asRecordType)),
+        _: ()
+    )
+    
+    public var interface: HandlerType {
+        return HandlerType(
+            name: self.name,
+            parameters: [
+                nativeParameter(Self.type_constrain.param_0),
+            ],
+            result: asCoercion.nativeCoercion
+        )
+    }
+    
+    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
+        var index = 0
+        let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        return AsRecord(_: arg_0)
+    }
+}
+
+extension AsSymbolEnum: ConstrainableCoercion {
+    
+    private static let type_constrain = (
+        param_0: (Symbol("options"), Symbol("options"), AsArray(asSymbol)),
+        _: ()
+    )
+    
+    public var interface: HandlerType {
+        return HandlerType(
+            name: self.name,
+            parameters: [
+                nativeParameter(Self.type_constrain.param_0),
+            ],
+            result: asCoercion.nativeCoercion
+        )
+    }
+    
+    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
+        var index = 0
+        let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        return AsSymbolEnum(_: arg_0)
+    }
+}
+
+public func stdlib_loadCoercions(into env: Environment) {
+    env.define(coercion: asAnything)
+    env.define(coercion: asBlock)
+    env.define(coercion: asBool)
+    env.define(coercion: asCoercion)
+    env.define(coercion: CallableCoercion(asEditable))
+    env.define(coercion: asHandler)
+    env.define(coercion: CallableCoercion(asKeyedList))
+    env.define(coercion: CallableCoercion(asNumber))
+    env.define(coercion: CallableCoercion(asOptional))
+    env.define(coercion: CallableCoercion(asOrderedList))
+    env.define("list", CallableCoercion(asOrderedList))
+    env.define(coercion: CallableCoercion(asRecord))
+    env.define(coercion: asSymbol)
+    env.define(coercion: CallableCoercion(asSymbolEnum))
+    env.define(coercion: asText)
+    env.define(coercion: asValue)
+}

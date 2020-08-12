@@ -14,18 +14,19 @@
 		4F27E93F24CC59B900102572 /* access errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27E93E24CC59B900102572 /* access errors.swift */; };
 		4F27E94124CC59EC00102572 /* type errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27E94024CC59EC00102572 /* type errors.swift */; };
 		4F2819BA24DC21F900626261 /* optional coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2819B924DC21F900626261 /* optional coercions.swift */; };
-		4F2819C124DC22C400626261 /* editable constraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2819C024DC22C400626261 /* editable constraints.swift */; };
+		4F28591924DE83CD00610AB9 /* record glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28591824DE83CD00610AB9 /* record glue template.swift */; };
+		4F289BC324DEDB1200CAA41E /* record type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F289BC224DEDB1200CAA41E /* record type.swift */; };
+		4F289FE224DD82E700E71195 /* coercion glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F289FDC24DD82E700E71195 /* coercion glue template.swift */; };
 		4F2B0C6624C0CC4F00664ABB /* formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B0C6524C0CC4F00664ABB /* formatter.swift */; };
-		4F2B2B8E24D835DE004B2189 /* optional constraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B2B8D24D835DE004B2189 /* optional constraints.swift */; };
-		4F2B2B9024D83CC6004B2189 /* array constraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B2B8F24D83CC6004B2189 /* array constraints.swift */; };
 		4F2B2B9224D83FD3004B2189 /* stdlib_coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B2B9124D83FD3004B2189 /* stdlib_coercions.swift */; };
 		4F2B2B9424D85947004B2189 /* editable coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B2B9324D85947004B2189 /* editable coercions.swift */; };
-		4F2B2B9624D86BE1004B2189 /* numeric constraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B2B9524D86BE1004B2189 /* numeric constraints.swift */; };
-		4F2B711124DB5C1E00CE63DD /* dictionary constraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B711024DB5C1E00CE63DD /* dictionary constraints.swift */; };
-		4F2B711824DB686C00CE63DD /* record constraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B711724DB686C00CE63DD /* record constraints.swift */; };
+		4F2BC78424E0159100498A61 /* record stub template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2BC78324E0159100498A61 /* record stub template.swift */; };
+		4F2BC78624E02BF700498A61 /* enum coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2BC78524E02BF700498A61 /* enum coercions.swift */; };
+		4F2BC78824E02F2800498A61 /* enum glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2BC78724E02F2800498A61 /* enum glue template.swift */; };
+		4F2BC78A24E0712300498A61 /* define record glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2BC78924E0712300498A61 /* define record glue.swift */; };
 		4F2C4D1E24C864CE0058749A /* pattern value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D1624C863420058749A /* pattern value.swift */; };
-		4F2C4D2124C86BD30058749A /* define patterns.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2024C86BD30058749A /* define patterns.swift */; };
-		4F2C4D2324C8C0A40058749A /* handler glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2224C8C0A40058749A /* handler glue.swift */; };
+		4F2C4D2124C86BD30058749A /* operator patterns.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2024C86BD30058749A /* operator patterns.swift */; };
+		4F2C4D2324C8C0A40058749A /* glue data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2224C8C0A40058749A /* glue data.swift */; };
 		4F2C4D2924C8DC910058749A /* gluelib_constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2824C8DC910058749A /* gluelib_constants.swift */; };
 		4F2C4D2C24C8F5CC0058749A /* stdlib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2A24C8F5CB0058749A /* stdlib_operators.swift */; };
 		4F2C4D2D24C8F5CC0058749A /* stdlib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C4D2B24C8F5CC0058749A /* stdlib_handlers.swift */; };
@@ -79,7 +80,7 @@
 		4F988CE424BCC5A500EE66C7 /* command.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D00F22AE7E2500C9FD23 /* command.swift */; };
 		4F988CE524BCC5A500EE66C7 /* command bindings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26066122C017EF0036D904 /* command bindings.swift */; };
 		4F988CE624BCC5A500EE66C7 /* handler protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F84D01122AE7E2C00C9FD23 /* handler protocols.swift */; };
-		4F988CE724BCC5A500EE66C7 /* handler interface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065A22C015F10036D904 /* handler interface.swift */; };
+		4F988CE724BCC5A500EE66C7 /* handler type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065A22C015F10036D904 /* handler type.swift */; };
 		4F988CE824BCC5A500EE66C7 /* native handler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065C22C0161D0036D904 /* native handler.swift */; };
 		4F988CE924BCC5A500EE66C7 /* primitive handler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065E22C016570036D904 /* primitive handler.swift */; };
 		4F988CEA24BCC5A500EE66C7 /* value modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F26065522C0158C0036D904 /* value modifiers.swift */; };
@@ -130,7 +131,12 @@
 		4FE5503824C0389400509806 /* texttemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C81D23129BCC007D694C /* texttemplate.swift */; };
 		4FE5503924C0389400509806 /* gluelib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FA23109824007D694C /* gluelib_handlers.swift */; };
 		4FE5503A24C0389400509806 /* gluelib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC5C7FB23109826007D694C /* gluelib_operators.swift */; };
-		4FE5504024C06B9600509806 /* render glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5503F24C06B9600509806 /* render glue.swift */; };
+		4FE5504024C06B9600509806 /* render glues.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE5503F24C06B9600509806 /* render glues.swift */; };
+		4FE8D45324E280BF008AE1D3 /* define coercion glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE8D45224E280BF008AE1D3 /* define coercion glue.swift */; };
+		4FE8D45924E2B304008AE1D3 /* gluelib_records.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE8D45824E2B304008AE1D3 /* gluelib_records.swift */; };
+		4FE8D45B24E2DA7B008AE1D3 /* define enum glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE8D45A24E2DA7B008AE1D3 /* define enum glue.swift */; };
+		4FE8D46724E33FB5008AE1D3 /* gluelib_enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE8D46624E33FB5008AE1D3 /* gluelib_enums.swift */; };
+		4FE8D46924E3FDD4008AE1D3 /* enum stub template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE8D46824E3FDD4008AE1D3 /* enum stub template.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -254,7 +260,7 @@
 		4F26065322BECD7B0036D904 /* record.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = record.swift; sourceTree = "<group>"; };
 		4F26065522C0158C0036D904 /* value modifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "value modifiers.swift"; sourceTree = "<group>"; };
 		4F26065722C015A30036D904 /* symbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = symbol.swift; sourceTree = "<group>"; };
-		4F26065A22C015F10036D904 /* handler interface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler interface.swift"; sourceTree = "<group>"; };
+		4F26065A22C015F10036D904 /* handler type.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler type.swift"; sourceTree = "<group>"; };
 		4F26065C22C0161D0036D904 /* native handler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "native handler.swift"; sourceTree = "<group>"; };
 		4F26065E22C016570036D904 /* primitive handler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "primitive handler.swift"; sourceTree = "<group>"; };
 		4F26066122C017EF0036D904 /* command bindings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "command bindings.swift"; sourceTree = "<group>"; };
@@ -269,11 +275,13 @@
 		4F27E93E24CC59B900102572 /* access errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "access errors.swift"; sourceTree = "<group>"; };
 		4F27E94024CC59EC00102572 /* type errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "type errors.swift"; sourceTree = "<group>"; };
 		4F2819B924DC21F900626261 /* optional coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "optional coercions.swift"; sourceTree = "<group>"; };
-		4F2819C024DC22C400626261 /* editable constraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "editable constraints.swift"; sourceTree = "<group>"; };
 		4F282D5524AEFF470027D6DE /* reduce expressions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reduce expressions.swift"; sourceTree = "<group>"; };
 		4F28323E2474712C004C9CE5 /* reduce commands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reduce commands.swift"; sourceTree = "<group>"; };
 		4F28388D24B8C4D80054C70E /* SwiftAutomation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SwiftAutomation.xcodeproj; path = ../SwiftAutomation/SwiftAutomation.xcodeproj; sourceTree = "<group>"; };
+		4F28591824DE83CD00610AB9 /* record glue template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record glue template.swift"; sourceTree = "<group>"; };
 		4F2876B32471A35A0012E692 /* standard patterns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "standard patterns.swift"; sourceTree = "<group>"; };
+		4F289BC224DEDB1200CAA41E /* record type.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record type.swift"; sourceTree = "<group>"; };
+		4F289FDC24DD82E700E71195 /* coercion glue template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "coercion glue template.swift"; sourceTree = "<group>"; };
 		4F28B59424ACDF44005583C7 /* misc tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "misc tests.swift"; sourceTree = "<group>"; };
 		4F28B59624ACE1C2005583C7 /* test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test.swift; sourceTree = "<group>"; };
 		4F28C40724731F750079301A /* standard reducers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "standard reducers.swift"; sourceTree = "<group>"; };
@@ -282,17 +290,17 @@
 		4F29320122E23AD700BC0AD4 /* other line readers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "other line readers.swift"; sourceTree = "<group>"; };
 		4F29320322E25E7100BC0AD4 /* operator reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator reader.swift"; sourceTree = "<group>"; };
 		4F2B0C6524C0CC4F00664ABB /* formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = formatter.swift; sourceTree = "<group>"; };
-		4F2B2B8D24D835DE004B2189 /* optional constraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "optional constraints.swift"; sourceTree = "<group>"; };
-		4F2B2B8F24D83CC6004B2189 /* array constraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "array constraints.swift"; sourceTree = "<group>"; };
 		4F2B2B9124D83FD3004B2189 /* stdlib_coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = stdlib_coercions.swift; sourceTree = "<group>"; };
 		4F2B2B9324D85947004B2189 /* editable coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "editable coercions.swift"; sourceTree = "<group>"; };
-		4F2B2B9524D86BE1004B2189 /* numeric constraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "numeric constraints.swift"; sourceTree = "<group>"; };
-		4F2B711024DB5C1E00CE63DD /* dictionary constraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "dictionary constraints.swift"; sourceTree = "<group>"; };
-		4F2B711724DB686C00CE63DD /* record constraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record constraints.swift"; sourceTree = "<group>"; };
 		4F2BAC3824B6017800107A87 /* block stack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "block stack.swift"; sourceTree = "<group>"; };
+		4F2BC78324E0159100498A61 /* record stub template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record stub template.swift"; sourceTree = "<group>"; };
+		4F2BC78524E02BF700498A61 /* enum coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "enum coercions.swift"; sourceTree = "<group>"; };
+		4F2BC78724E02F2800498A61 /* enum glue template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "enum glue template.swift"; sourceTree = "<group>"; };
+		4F2BC78924E0712300498A61 /* define record glue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "define record glue.swift"; sourceTree = "<group>"; };
+		4F2BC78B24E1B2A900498A61 /* glue structs.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "glue structs.iris-glue"; sourceTree = "<group>"; };
 		4F2C4D1624C863420058749A /* pattern value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "pattern value.swift"; sourceTree = "<group>"; };
-		4F2C4D2024C86BD30058749A /* define patterns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "define patterns.swift"; sourceTree = "<group>"; };
-		4F2C4D2224C8C0A40058749A /* handler glue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "handler glue.swift"; sourceTree = "<group>"; };
+		4F2C4D2024C86BD30058749A /* operator patterns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator patterns.swift"; sourceTree = "<group>"; };
+		4F2C4D2224C8C0A40058749A /* glue data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "glue data.swift"; sourceTree = "<group>"; };
 		4F2C4D2824C8DC910058749A /* gluelib_constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gluelib_constants.swift; sourceTree = "<group>"; };
 		4F2C4D2A24C8F5CB0058749A /* stdlib_operators.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = stdlib_operators.swift; sourceTree = "<group>"; };
 		4F2C4D2B24C8F5CC0058749A /* stdlib_handlers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = stdlib_handlers.swift; sourceTree = "<group>"; };
@@ -364,12 +372,20 @@
 		4FDAE7B1232B9F31005197DE /* reference coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "reference coercions.swift"; sourceTree = "<group>"; };
 		4FE5502424C035D500509806 /* iris-glue */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "iris-glue"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FE5502624C035D500509806 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		4FE5503F24C06B9600509806 /* render glue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "render glue.swift"; sourceTree = "<group>"; };
+		4FE5503F24C06B9600509806 /* render glues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "render glues.swift"; sourceTree = "<group>"; };
 		4FE5504224C06EFC00509806 /* opaque value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "opaque value.swift"; sourceTree = "<group>"; };
-		4FE5504624C080EE00509806 /* stdlib stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib stubs.swift"; sourceTree = "<group>"; };
 		4FE78455246AB15E006AC859 /* pattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pattern.swift; sourceTree = "<group>"; };
 		4FE7845C246AB1CC006AC859 /* pattern definition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "pattern definition.swift"; sourceTree = "<group>"; };
 		4FE7845E246AB298006AC859 /* keyword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = keyword.swift; sourceTree = "<group>"; };
+		4FE8D44C24E27C24008AE1D3 /* std coercions.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "std coercions.iris-glue"; sourceTree = "<group>"; };
+		4FE8D45224E280BF008AE1D3 /* define coercion glue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "define coercion glue.swift"; sourceTree = "<group>"; };
+		4FE8D45824E2B304008AE1D3 /* gluelib_records.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gluelib_records.swift; sourceTree = "<group>"; };
+		4FE8D45A24E2DA7B008AE1D3 /* define enum glue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "define enum glue.swift"; sourceTree = "<group>"; };
+		4FE8D46624E33FB5008AE1D3 /* gluelib_enums.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = gluelib_enums.swift; sourceTree = "<group>"; };
+		4FE8D46824E3FDD4008AE1D3 /* enum stub template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "enum stub template.swift"; sourceTree = "<group>"; };
+		4FE8D46A24E4016A008AE1D3 /* stdlib handler stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib handler stubs.swift"; sourceTree = "<group>"; };
+		4FE8D46B24E4016A008AE1D3 /* stdlib enum stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib enum stubs.swift"; sourceTree = "<group>"; };
+		4FE8D46C24E4016A008AE1D3 /* stdlib record stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib record stubs.swift"; sourceTree = "<group>"; };
 		4FFC6F2422D6818000D636B9 /* base lexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "base lexer.swift"; sourceTree = "<group>"; };
 		4FFC6F2922D7704D00D636B9 /* access protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "access protocols.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -465,7 +481,7 @@
 			isa = PBXGroup;
 			children = (
 				4F84D01122AE7E2C00C9FD23 /* handler protocols.swift */,
-				4F26065A22C015F10036D904 /* handler interface.swift */,
+				4F26065A22C015F10036D904 /* handler type.swift */,
 				4F26065C22C0161D0036D904 /* native handler.swift */,
 				4F26065E22C016570036D904 /* primitive handler.swift */,
 			);
@@ -507,6 +523,7 @@
 				4F1EA48822B2888400FFA4D2 /* ordered list.swift */,
 				4F27087522D9E584009F40B2 /* keyed list.swift */,
 				4F26065322BECD7B0036D904 /* record.swift */,
+				4F289BC224DEDB1200CAA41E /* record type.swift */,
 				4F84D01322AE7EEA00C9FD23 /* block.swift */,
 			);
 			name = collections;
@@ -596,24 +613,14 @@
 			path = "pretty printer";
 			sourceTree = "<group>";
 		};
-		4F2B2B8724D835C5004B2189 /* constraints */ = {
-			isa = PBXGroup;
-			children = (
-				4F2B2B8D24D835DE004B2189 /* optional constraints.swift */,
-				4F2B2B9524D86BE1004B2189 /* numeric constraints.swift */,
-				4F2B2B8F24D83CC6004B2189 /* array constraints.swift */,
-				4F2B711024DB5C1E00CE63DD /* dictionary constraints.swift */,
-				4F2B711724DB686C00CE63DD /* record constraints.swift */,
-				4F2819C024DC22C400626261 /* editable constraints.swift */,
-			);
-			path = constraints;
-			sourceTree = "<group>";
-		};
 		4F2C4D1F24C8690A0058749A /* handlers */ = {
 			isa = PBXGroup;
 			children = (
 				4FC5C81C23129BCC007D694C /* define handler glue.swift */,
-				4F2C4D2024C86BD30058749A /* define patterns.swift */,
+				4F2BC78924E0712300498A61 /* define record glue.swift */,
+				4FE8D45224E280BF008AE1D3 /* define coercion glue.swift */,
+				4FE8D45A24E2DA7B008AE1D3 /* define enum glue.swift */,
+				4F2C4D2024C86BD30058749A /* operator patterns.swift */,
 			);
 			name = handlers;
 			sourceTree = "<group>";
@@ -626,6 +633,8 @@
 				4F2C4D3224C977C00058749A /* std text.iris-glue */,
 				4F2C4D3124C977C00058749A /* std control.iris-glue */,
 				4F2C4D3024C977C00058749A /* std state.iris-glue */,
+				4FE8D44C24E27C24008AE1D3 /* std coercions.iris-glue */,
+				4F2BC78B24E1B2A900498A61 /* glue structs.iris-glue */,
 				4F2C4D3724C97BAA0058749A /* ae chunk.iris-glue */,
 			);
 			path = "stdlib.iris-glue";
@@ -677,11 +686,13 @@
 		4F5B24D623171E55001C1941 /* glues */ = {
 			isa = PBXGroup;
 			children = (
-				4FE5504624C080EE00509806 /* stdlib stubs.swift */,
 				4F2C4D2B24C8F5CC0058749A /* stdlib_handlers.swift */,
 				4F2C4D2A24C8F5CB0058749A /* stdlib_operators.swift */,
 				4F2B2B9124D83FD3004B2189 /* stdlib_coercions.swift */,
 				4F857700230C9247002B47F2 /* stdlib_constants.swift */,
+				4FE8D46A24E4016A008AE1D3 /* stdlib handler stubs.swift */,
+				4FE8D46C24E4016A008AE1D3 /* stdlib record stubs.swift */,
+				4FE8D46B24E4016A008AE1D3 /* stdlib enum stubs.swift */,
 			);
 			path = glues;
 			sourceTree = "<group>";
@@ -741,7 +752,6 @@
 				4FFC6F2322D6816F00D636B9 /* parser */,
 				4F1EA48B22B4E71300FFA4D2 /* values */,
 				4FC82CED24CEBE8C00EEC170 /* coercions */,
-				4F2B2B8724D835C5004B2189 /* constraints */,
 				4FFC6F2822D7703000D636B9 /* scopes */,
 				4F5B24B0231405C8001C1941 /* formatting */,
 				4F27E93024CC587300102572 /* errors */,
@@ -763,8 +773,8 @@
 		4FC5C7F9231097FE007D694C /* gluelib */ = {
 			isa = PBXGroup;
 			children = (
-				4F2C4D2224C8C0A40058749A /* handler glue.swift */,
-				4FE5503F24C06B9600509806 /* render glue.swift */,
+				4FE5503F24C06B9600509806 /* render glues.swift */,
+				4F2C4D2224C8C0A40058749A /* glue data.swift */,
 				4F2C4D1624C863420058749A /* pattern value.swift */,
 				4FE5503B24C0396900509806 /* templates */,
 				4F2C4D1F24C8690A0058749A /* handlers */,
@@ -791,6 +801,7 @@
 				4FC82CF324CEBEAE00EEC170 /* value coercions.swift */,
 				4FC82CF124CEBEAE00EEC170 /* numeric coercions.swift */,
 				4FC82CF024CEBEAE00EEC170 /* text coercions.swift */,
+				4F2BC78524E02BF700498A61 /* enum coercions.swift */,
 				4FC82CF624CEBEAF00EEC170 /* array coercions.swift */,
 				4FC82D0824D0A2CC00EEC170 /* dictionary coercions.swift */,
 				4FC82CEF24CEBEAE00EEC170 /* record coercions.swift */,
@@ -816,8 +827,13 @@
 			isa = PBXGroup;
 			children = (
 				4FC5C81B23129BCC007D694C /* handler glue template.swift */,
-				4F409195231904C900045E85 /* handler stub template.swift */,
+				4F28591824DE83CD00610AB9 /* record glue template.swift */,
+				4F289FDC24DD82E700E71195 /* coercion glue template.swift */,
 				4F5B24B123150C52001C1941 /* operator glue template.swift */,
+				4F2BC78724E02F2800498A61 /* enum glue template.swift */,
+				4F409195231904C900045E85 /* handler stub template.swift */,
+				4F2BC78324E0159100498A61 /* record stub template.swift */,
+				4FE8D46824E3FDD4008AE1D3 /* enum stub template.swift */,
 			);
 			name = templates;
 			sourceTree = "<group>";
@@ -828,6 +844,8 @@
 				4FC5C7FA23109824007D694C /* gluelib_handlers.swift */,
 				4FC5C7FB23109826007D694C /* gluelib_operators.swift */,
 				4F2C4D2824C8DC910058749A /* gluelib_constants.swift */,
+				4FE8D45824E2B304008AE1D3 /* gluelib_records.swift */,
+				4FE8D46624E33FB5008AE1D3 /* gluelib_enums.swift */,
 			);
 			name = glues;
 			sourceTree = "<group>";
@@ -1082,6 +1100,7 @@
 				4F988CFE24BCC5CC00EE66C7 /* reference.swift in Sources */,
 				4F988CFF24BCC5CC00EE66C7 /* reference selectors.swift in Sources */,
 				4F988D0024BCC5CC00EE66C7 /* range clause.swift in Sources */,
+				4F289BC324DEDB1200CAA41E /* record type.swift in Sources */,
 				4F27E94124CC59EC00102572 /* type errors.swift in Sources */,
 				4F988D0124BCC5CC00EE66C7 /* test clause.swift in Sources */,
 				4F988D0224BCC5CC00EE66C7 /* test clause selectors.swift in Sources */,
@@ -1090,7 +1109,6 @@
 				4FC82D0924D0A2CC00EEC170 /* dictionary coercions.swift in Sources */,
 				4F988D0424BCC5CC00EE66C7 /* query funcs.swift in Sources */,
 				4F988D0524BCC5CC00EE66C7 /* native app data.swift in Sources */,
-				4F2B2B9024D83CC6004B2189 /* array constraints.swift in Sources */,
 				4F27E93924CC591100102572 /* parser errors.swift in Sources */,
 				4F988D0624BCC5CC00EE66C7 /* result descriptor.swift in Sources */,
 				4F988D0724BCC5CC00EE66C7 /* keyword converter.swift in Sources */,
@@ -1108,12 +1126,10 @@
 				4F27E93724CC58BA00102572 /* internal errors.swift in Sources */,
 				4F988CCB24BCC5A500EE66C7 /* quote document reader.swift in Sources */,
 				4FC82D0B24D1C75100EEC170 /* literal coercions.swift in Sources */,
-				4F2B711124DB5C1E00CE63DD /* dictionary constraints.swift in Sources */,
 				4F988CCC24BCC5A500EE66C7 /* keyword.swift in Sources */,
+				4F2BC78624E02BF700498A61 /* enum coercions.swift in Sources */,
 				4F988CCD24BCC5A500EE66C7 /* pattern.swift in Sources */,
-				4F2819C124DC22C400626261 /* editable constraints.swift in Sources */,
 				4F988CCE24BCC5A500EE66C7 /* pattern match.swift in Sources */,
-				4F2B2B9624D86BE1004B2189 /* numeric constraints.swift in Sources */,
 				4F988CCF24BCC5A500EE66C7 /* pattern definition.swift in Sources */,
 				4F988CD024BCC5A500EE66C7 /* standard patterns.swift in Sources */,
 				4F2C4D2D24C8F5CC0058749A /* stdlib_handlers.swift in Sources */,
@@ -1130,7 +1146,6 @@
 				4F988CD824BCC5A500EE66C7 /* parser.swift in Sources */,
 				4FC82D0324CF069800EEC170 /* native coercion wrapper.swift in Sources */,
 				4F2B2B9424D85947004B2189 /* editable coercions.swift in Sources */,
-				4F2B2B8E24D835DE004B2189 /* optional constraints.swift in Sources */,
 				4F988CD924BCC5A500EE66C7 /* editable script.swift in Sources */,
 				4F2F81A024C739CC00EB2F0F /* opaque value.swift in Sources */,
 				4F988CDA24BCC5A500EE66C7 /* value protocols.swift in Sources */,
@@ -1138,7 +1153,6 @@
 				4F2C4D2C24C8F5CC0058749A /* stdlib_operators.swift in Sources */,
 				4F988CDC24BCC5A500EE66C7 /* numeric.swift in Sources */,
 				4F988CDD24BCC5A500EE66C7 /* ordered list.swift in Sources */,
-				4F2B711824DB686C00CE63DD /* record constraints.swift in Sources */,
 				4F988CDE24BCC5A500EE66C7 /* keyed list.swift in Sources */,
 				4F988CDF24BCC5A500EE66C7 /* atoms.swift in Sources */,
 				4F988CE024BCC5A500EE66C7 /* symbol.swift in Sources */,
@@ -1148,7 +1162,7 @@
 				4FC82CF824CEC0BC00EEC170 /* thunk.swift in Sources */,
 				4F988CE524BCC5A500EE66C7 /* command bindings.swift in Sources */,
 				4F988CE624BCC5A500EE66C7 /* handler protocols.swift in Sources */,
-				4F988CE724BCC5A500EE66C7 /* handler interface.swift in Sources */,
+				4F988CE724BCC5A500EE66C7 /* handler type.swift in Sources */,
 				4F988CE824BCC5A500EE66C7 /* native handler.swift in Sources */,
 				4F27E93D24CC596C00102572 /* coercion errors.swift in Sources */,
 				4FD41C1C24BE614600B56A14 /* null token stream.swift in Sources */,
@@ -1168,16 +1182,26 @@
 			buildActionMask = 2147483647;
 			files = (
 				4FE5502724C035D500509806 /* main.swift in Sources */,
+				4FE8D45324E280BF008AE1D3 /* define coercion glue.swift in Sources */,
 				4FE5503424C0389400509806 /* define handler glue.swift in Sources */,
 				4F2C4D2924C8DC910058749A /* gluelib_constants.swift in Sources */,
-				4F2C4D2124C86BD30058749A /* define patterns.swift in Sources */,
-				4FE5504024C06B9600509806 /* render glue.swift in Sources */,
-				4F2C4D2324C8C0A40058749A /* handler glue.swift in Sources */,
+				4F2C4D2124C86BD30058749A /* operator patterns.swift in Sources */,
+				4FE8D45924E2B304008AE1D3 /* gluelib_records.swift in Sources */,
+				4FE5504024C06B9600509806 /* render glues.swift in Sources */,
+				4F2BC78824E02F2800498A61 /* enum glue template.swift in Sources */,
+				4FE8D45B24E2DA7B008AE1D3 /* define enum glue.swift in Sources */,
+				4F2BC78A24E0712300498A61 /* define record glue.swift in Sources */,
+				4F2C4D2324C8C0A40058749A /* glue data.swift in Sources */,
 				4F2C4D1E24C864CE0058749A /* pattern value.swift in Sources */,
 				4FE5503524C0389400509806 /* handler stub template.swift in Sources */,
 				4FE5503624C0389400509806 /* handler glue template.swift in Sources */,
+				4FE8D46924E3FDD4008AE1D3 /* enum stub template.swift in Sources */,
 				4FE5503724C0389400509806 /* operator glue template.swift in Sources */,
+				4F28591924DE83CD00610AB9 /* record glue template.swift in Sources */,
+				4F289FE224DD82E700E71195 /* coercion glue template.swift in Sources */,
 				4FE5503924C0389400509806 /* gluelib_handlers.swift in Sources */,
+				4F2BC78424E0159100498A61 /* record stub template.swift in Sources */,
+				4FE8D46724E33FB5008AE1D3 /* gluelib_enums.swift in Sources */,
 				4FE5503A24C0389400509806 /* gluelib_operators.swift in Sources */,
 				4FE5503824C0389400509806 /* texttemplate.swift in Sources */,
 			);

@@ -7,21 +7,37 @@ import Foundation
 import iris
 
 
-// TO DO: move parameter tuples from interface_ to type_
 
-// TO DO: how easy/hard to implement general-purpose reducefunc that uses pattern definition to reduce [most] patterns? or are we as well to determine which hardcoded reducer to use for common patterns during glue generation, based on pattern?
-
-
-public class PatternValue: OpaqueValue<iris.Pattern> {
+public class PatternValue: OpaqueValue<iris.Pattern> { // basic wrapper for parser’s Pattern enum, allowing it to be returned by pattern constructors used in `operator` syntax definitions
 
     public override var description: String { return "«pattern: \(self.data)»" }
 
 }
 
 
-// TO DO: need to support coercing list of pattern values to PatternValue(Pattern.sequence(…))
+public struct AsPattern: SwiftCoercion {
+    
+    public let name: Symbol = "pattern"
+    
+    public let swiftLiteralDescription = "asPattern"
+    
+    public typealias SwiftType = iris.Pattern
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        switch value {
+        case let v as SelfEvaluatingValue: return try v.eval(in: scope, as: self)
+        case let v as OrderedList: return try .sequence(v.data.map{ try asPattern.coerce($0, in: scope) })
+        case let v as PatternValue: return v.data
+        default: throw TypeCoercionError(value: value, coercion: self)
+        }
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return PatternValue(value)
+    }
+}
 
-let asPatternValue = TypeMap<PatternValue>("pattern", "asPatternValue")
+let asPattern = AsPattern()
 
 
 /*

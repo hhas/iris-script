@@ -13,24 +13,24 @@ public protocol ArgumentError: NativeError { // TO DO: would it be better to hav
     
     var index: Int { get }
     var command: Command { get }
-    var handlerInterface: HandlerInterface { get } // for now, only the handler's interface is held here (to capture the full Handler in usable form we'd need to copy it into a closure; however, with the Swift stack unwinding on returning errors there’s no easy way to support interactive correct-and-resume, so that’d only be wasted effort)
+    var handlerType: HandlerType { get } // for now, only the handler's interface is held here (to capture the full Handler in usable form we'd need to copy it into a closure; however, with the Swift stack unwinding on returning errors there’s no easy way to support interactive correct-and-resume, so that’d only be wasted effort)
 }
 
 
 public struct UnknownArgumentError: ArgumentError {
     
     public var description: String {
-        return "Can’t match argument field \(self.index+1) of \(self.command) to handler: \(self.handlerInterface)"
+        return "Can’t match argument field \(self.index+1) of \(self.command) to handler: \(self.handlerType)"
     }
     
     public let index: Int
     public let command: Command
-    public let handlerInterface: HandlerInterface
+    public let handlerType: HandlerType
     
     public init(at index: Int, of command: Command, to handler: Callable) {
         self.index = index
         self.command = command
-        self.handlerInterface = handler.interface
+        self.handlerType = handler.interface
     }
     
     public init(at index: Int, of command: Command, to coercion: ConstrainableCoercion) {
@@ -41,17 +41,17 @@ public struct UnknownArgumentError: ArgumentError {
 public struct BadArgumentError: ArgumentError {
      // TO DO: change message to "is missing" if index >= command.arguments.count
     public var description: String {
-        return "Can’t evaluate argument field \(self.index+1) of \(self.command) for handler: \(self.handlerInterface)"
+        return "Can’t evaluate argument field \(self.index+1) of \(self.command) for handler: \(self.handlerType)"
     }
     
     public let index: Int
     public let command: Command
-    public let handlerInterface: HandlerInterface
+    public let handlerType: HandlerType
     
     public init(at index: Int, of command: Command, to handler: Callable) {
         self.index = index
         self.command = command
-        self.handlerInterface = handler.interface
+        self.handlerType = handler.interface
     }
     
     public init(at index: Int, of command: Command, to coercion: ConstrainableCoercion) {
@@ -78,7 +78,7 @@ public struct HandlerError: NativeError {
 
 public struct NotAHandlerError: NativeError {
     
-    public var description: String { return "The \(self.command) command could not be handled by \(self.value.nominalType): \(self.value)" }
+    public var description: String { return "The \(self.command) command could not be handled by this \(self.value.nominalType): \(self.value)" }
     
     let command: Command
     let value: Value

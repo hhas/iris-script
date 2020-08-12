@@ -88,7 +88,7 @@ public class Environment: MutableScope { // TO DO: open?
     
     // TO DO: `set` takes slot name only; what if a chunk expr is given, e.g. `set field_name of slot_name to new_value`? probably better to get() slot, and determine action from there (one challenge: get-ing an editable box needs to discard the box if a write-barrier is crossed)
     
-    internal func bind(name: Symbol, to value: Value) { // called by [Native]Handler.call() when populating handler's stack frame; this does not check for name masking/duplicate names (the former is unavoidable, but as the handler controls those parameter names it will know how to address masked globals [either by renaming its parameters or by using a chunk expr to explicitly reference the masked name's scope], while HandlerInterface is responsible for ensuring all parameter and binding names are unique)
+    internal func bind(name: Symbol, to value: Value) { // called by [Native]Handler.call() when populating handler's stack frame; this does not check for name masking/duplicate names (the former is unavoidable, but as the handler controls those parameter names it will know how to address masked globals [either by renaming its parameters or by using a chunk expr to explicitly reference the masked name's scope], while HandlerType is responsible for ensuring all parameter and binding names are unique)
         self.frame[name] = value
     }
     
@@ -126,12 +126,12 @@ extension Environment {
         self.define(coercion: coercion.nativeCoercion)
     }
     
-    public func define(_ interface: HandlerInterface, _ action: @escaping PrimitiveHandler.Call) { // called by library glues
+    public func define(_ interface: HandlerType, _ action: @escaping PrimitiveHandler.Call) { // called by library glues
         // this assumes environment is initially empty so does not check for existing names
         self.bind(name: interface.name, to: PrimitiveHandler(interface: interface, action: action, in: self))
     }
     
-    public func define(_ interface: HandlerInterface, _ action: Value) throws { // called by `to`/`when` handler
+    public func define(_ interface: HandlerType, _ action: Value) throws { // called by `to`/`when` handler
         // this checks current frame and throws if slot is already occupied (even if EditableValue)
         if self.frame[interface.name] != nil { throw ExistingNameError(name: interface.name, in: self) }
         self.bind(name: interface.name, to: NativeHandler(interface: interface, action: action, in: self))
