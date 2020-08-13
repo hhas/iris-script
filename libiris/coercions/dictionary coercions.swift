@@ -113,6 +113,10 @@ public struct AsKeyedList: NativeCoercion {
     
     public let name: Symbol = "keyed_list"
     
+    public var swiftTypeDescription: String {
+        return "[\(self.keyType.swiftTypeDescription):\(self.valueType.swiftTypeDescription)]"
+    }
+
     public var swiftLiteralDescription: String {
         return "AsDictionary(\(self.keyType.swiftLiteralDescription), \(self.valueType.swiftLiteralDescription))"
     }

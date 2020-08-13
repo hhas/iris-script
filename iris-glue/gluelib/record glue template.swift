@@ -28,7 +28,7 @@ public struct As««structName»»: SwiftCoercion {
         _: ()
     )
     
-    public let name: Symbol = "record"
+    public let name: Symbol = "««nativeName»»"
     
     public var swiftLiteralDescription: String { return "as««structName»»" }
     
@@ -76,6 +76,7 @@ let recordsTemplate = TextTemplate(templateSource) {
     tpl.defineStruct.map(args.glues) {
         (node: Node, glue: RecordGlue) -> Void in
         node.structName.set(glue.swiftType)
+        node.nativeName.set(glue.name)
         node.typeFields.map(glue.fields.enumerated()) {
             (node: Node, item: (count: Int, field: RecordGlue.Field)) -> Void in
             node.count.set(item.count)

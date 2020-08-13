@@ -18,14 +18,14 @@ swift_handler ‘^’ {left as number, right as number} returning number require
 
 «TO DO: rename these ‘+’ and ‘-’ once handler overloading [matching argument labels] is implemented; i.e. canonical names will appear in pretty printed code»
 
-swift_handler ‘positive’ {right as number} returning number requires {
+swift_handler ‘+’ {right as number} returning number requires {
     swift_function: positive
-    operator: {[keyword [“positive”, “+”, 0uFF0B], expression "right"], precedence: 1298, #left, "reductionForPositiveOperator"}
+    operator: {[keyword [“+”, “positive”, 0uFF0B], expression "right"], precedence: 1298, #left, "reductionForPositiveOperator"}
 }
 
-swift_handler ‘negative’ {right as number} returning number requires {
+swift_handler ‘-’ {right as number} returning number requires {
     swift_function: negative
-    operator: {[keyword [“negative”, “-”, 0uFF0D, 0u2212, 0uFE63], expression "right"], precedence: 1298, #left, "reductionForNegativeOperator"}
+    operator: {[keyword [“-”, “negative”, 0uFF0D, 0u2212, 0uFE63], expression "right"], precedence: 1298, #left, "reductionForNegativeOperator"}
 }
 
 

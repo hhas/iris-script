@@ -18,6 +18,7 @@ public struct AsHandler: SwiftCoercion {
     public var swiftLiteralDescription: String { return "asHandler" }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        // TO DO: FIX: `lowercase as handler` isn’t working correctly (`lowercase{}` is being evaluated here as a command, instead this should look up "lowercase" handler in env and return that)
         if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
         if let v = value as? SwiftType { return v }
         throw TypeCoercionError(value: value, coercion: self)

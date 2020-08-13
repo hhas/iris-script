@@ -54,6 +54,27 @@ private func procedure_multiply_left_right(command: Command, commandEnv: Scope, 
     return type_multiply_left_right.result.wrap(result, in: handlerEnv)
 }
 
+// + {right}
+private let type_positive_right = (
+    name: Symbol("+"),
+    param_0: (Symbol("right"), Symbol("right"), asSwiftNumber),
+    result: asSwiftNumber
+)
+private let interface_positive_right = HandlerType(
+    name: type_positive_right.name,
+    parameters: [
+        nativeParameter(type_positive_right.param_0),
+    ],
+    result: type_positive_right.result.nativeCoercion
+)
+private func procedure_positive_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.value(for: type_positive_right.param_0, at: &index, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
+    let result = positive(right: arg_0)
+    return type_positive_right.result.wrap(result, in: handlerEnv)
+}
+
 // + {left, right}
 private let type_add_left_right = (
     name: Symbol("+"),
@@ -76,6 +97,27 @@ private func procedure_add_left_right(command: Command, commandEnv: Scope, handl
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = add(left: arg_0, right: arg_1)
     return type_add_left_right.result.wrap(result, in: handlerEnv)
+}
+
+// - {right}
+private let type_negative_right = (
+    name: Symbol("-"),
+    param_0: (Symbol("right"), Symbol("right"), asSwiftNumber),
+    result: asSwiftNumber
+)
+private let interface_negative_right = HandlerType(
+    name: type_negative_right.name,
+    parameters: [
+        nativeParameter(type_negative_right.param_0),
+    ],
+    result: type_negative_right.result.nativeCoercion
+)
+private func procedure_negative_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.value(for: type_negative_right.param_0, at: &index, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
+    let result = negative(right: arg_0)
+    return type_negative_right.result.wrap(result, in: handlerEnv)
 }
 
 // - {left, right}
@@ -315,28 +357,49 @@ private func procedure_exponent_left_right(command: Command, commandEnv: Scope, 
     return type_exponent_left_right.result.wrap(result, in: handlerEnv)
 }
 
-// after {element_type, expression}
-private let type_afterElement_elementType_expression = (
+// after {reference}
+private let type_insertAfter_reference = (
     name: Symbol("after"),
-    param_0: (Symbol("element_type"), Symbol("element_type"), asLiteralName),
-    param_1: (Symbol("expression"), Symbol("expression"), asIs),
+    param_0: (Symbol("reference"), Symbol("reference"), asIs),
     result: asIs
 )
-private let interface_afterElement_elementType_expression = HandlerType(
-    name: type_afterElement_elementType_expression.name,
+private let interface_insertAfter_reference = HandlerType(
+    name: type_insertAfter_reference.name,
     parameters: [
-        nativeParameter(type_afterElement_elementType_expression.param_0),
-        nativeParameter(type_afterElement_elementType_expression.param_1),
+        nativeParameter(type_insertAfter_reference.param_0),
     ],
-    result: type_afterElement_elementType_expression.result.nativeCoercion
+    result: type_insertAfter_reference.result.nativeCoercion
 )
-private func procedure_afterElement_elementType_expression(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+private func procedure_insertAfter_reference(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.value(for: type_afterElement_elementType_expression.param_0, at: &index, in: commandEnv)
-    let arg_1 = try command.value(for: type_afterElement_elementType_expression.param_1, at: &index, in: commandEnv)
+    let arg_0 = try command.value(for: type_insertAfter_reference.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = afterElement(elementType: arg_0, expression: arg_1)
-    return type_afterElement_elementType_expression.result.wrap(result, in: handlerEnv)
+    let result = insertAfter(reference: arg_0)
+    return type_insertAfter_reference.result.wrap(result, in: handlerEnv)
+}
+
+// after {element_type, reference}
+private let type_afterElement_elementType_reference = (
+    name: Symbol("after"),
+    param_0: (Symbol("element_type"), Symbol("element_type"), asLiteralName),
+    param_1: (Symbol("reference"), Symbol("reference"), asIs),
+    result: asIs
+)
+private let interface_afterElement_elementType_reference = HandlerType(
+    name: type_afterElement_elementType_reference.name,
+    parameters: [
+        nativeParameter(type_afterElement_elementType_reference.param_0),
+        nativeParameter(type_afterElement_elementType_reference.param_1),
+    ],
+    result: type_afterElement_elementType_reference.result.nativeCoercion
+)
+private func procedure_afterElement_elementType_reference(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.value(for: type_afterElement_elementType_reference.param_0, at: &index, in: commandEnv)
+    let arg_1 = try command.value(for: type_afterElement_elementType_reference.param_1, at: &index, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
+    let result = afterElement(elementType: arg_0, reference: arg_1)
+    return type_afterElement_elementType_reference.result.wrap(result, in: handlerEnv)
 }
 
 // any {element_type}
@@ -384,9 +447,9 @@ private func procedure_Application_bundleIdentifier(command: Command, commandEnv
 // as {value, coercion}
 private let type_coerce_value_coercion = (
     name: Symbol("as"),
-    param_0: (Symbol("value"), Symbol("value"), asAnything),
+    param_0: (Symbol("value"), Symbol("value"), asIs),
     param_1: (Symbol("coercion"), Symbol("coercion"), asCoercion),
-    result: asAnything
+    result: asIs
 )
 private let interface_coerce_value_coercion = HandlerType(
     name: type_coerce_value_coercion.name,
@@ -429,28 +492,49 @@ private func procedure_atSelector_elementType_selectorData(command: Command, com
     return type_atSelector_elementType_selectorData.result.wrap(result, in: handlerEnv)
 }
 
-// before {element_type, expression}
-private let type_beforeElement_elementType_expression = (
+// before {reference}
+private let type_insertBefore_reference = (
     name: Symbol("before"),
-    param_0: (Symbol("element_type"), Symbol("element_type"), asLiteralName),
-    param_1: (Symbol("expression"), Symbol("expression"), asIs),
+    param_0: (Symbol("reference"), Symbol("reference"), asIs),
     result: asIs
 )
-private let interface_beforeElement_elementType_expression = HandlerType(
-    name: type_beforeElement_elementType_expression.name,
+private let interface_insertBefore_reference = HandlerType(
+    name: type_insertBefore_reference.name,
     parameters: [
-        nativeParameter(type_beforeElement_elementType_expression.param_0),
-        nativeParameter(type_beforeElement_elementType_expression.param_1),
+        nativeParameter(type_insertBefore_reference.param_0),
     ],
-    result: type_beforeElement_elementType_expression.result.nativeCoercion
+    result: type_insertBefore_reference.result.nativeCoercion
 )
-private func procedure_beforeElement_elementType_expression(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+private func procedure_insertBefore_reference(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     var index = 0
-    let arg_0 = try command.value(for: type_beforeElement_elementType_expression.param_0, at: &index, in: commandEnv)
-    let arg_1 = try command.value(for: type_beforeElement_elementType_expression.param_1, at: &index, in: commandEnv)
+    let arg_0 = try command.value(for: type_insertBefore_reference.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = beforeElement(elementType: arg_0, expression: arg_1)
-    return type_beforeElement_elementType_expression.result.wrap(result, in: handlerEnv)
+    let result = insertBefore(reference: arg_0)
+    return type_insertBefore_reference.result.wrap(result, in: handlerEnv)
+}
+
+// before {element_type, reference}
+private let type_beforeElement_elementType_reference = (
+    name: Symbol("before"),
+    param_0: (Symbol("element_type"), Symbol("element_type"), asLiteralName),
+    param_1: (Symbol("reference"), Symbol("reference"), asIs),
+    result: asIs
+)
+private let interface_beforeElement_elementType_reference = HandlerType(
+    name: type_beforeElement_elementType_reference.name,
+    parameters: [
+        nativeParameter(type_beforeElement_elementType_reference.param_0),
+        nativeParameter(type_beforeElement_elementType_reference.param_1),
+    ],
+    result: type_beforeElement_elementType_reference.result.nativeCoercion
+)
+private func procedure_beforeElement_elementType_reference(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.value(for: type_beforeElement_elementType_reference.param_0, at: &index, in: commandEnv)
+    let arg_1 = try command.value(for: type_beforeElement_elementType_reference.param_1, at: &index, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
+    let result = beforeElement(elementType: arg_0, reference: arg_1)
+    return type_beforeElement_elementType_reference.result.wrap(result, in: handlerEnv)
 }
 
 // beginning {}
@@ -1024,27 +1108,6 @@ private func procedure_nameSelector_elementType_selectorData(command: Command, c
     return type_nameSelector_elementType_selectorData.result.wrap(result, in: handlerEnv)
 }
 
-// negative {right}
-private let type_negative_right = (
-    name: Symbol("negative"),
-    param_0: (Symbol("right"), Symbol("right"), asSwiftNumber),
-    result: asSwiftNumber
-)
-private let interface_negative_right = HandlerType(
-    name: type_negative_right.name,
-    parameters: [
-        nativeParameter(type_negative_right.param_0),
-    ],
-    result: type_negative_right.result.nativeCoercion
-)
-private func procedure_negative_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    var index = 0
-    let arg_0 = try command.value(for: type_negative_right.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = negative(right: arg_0)
-    return type_negative_right.result.wrap(result, in: handlerEnv)
-}
-
 // of {attribute, value}
 private let type_ofClause_attribute_target = (
     name: Symbol("of"),
@@ -1067,27 +1130,6 @@ private func procedure_ofClause_attribute_target(command: Command, commandEnv: S
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = try ofClause(attribute: arg_0, target: arg_1, commandEnv: commandEnv, handlerEnv: handlerEnv)
     return type_ofClause_attribute_target.result.wrap(result, in: handlerEnv)
-}
-
-// positive {right}
-private let type_positive_right = (
-    name: Symbol("positive"),
-    param_0: (Symbol("right"), Symbol("right"), asSwiftNumber),
-    result: asSwiftNumber
-)
-private let interface_positive_right = HandlerType(
-    name: type_positive_right.name,
-    parameters: [
-        nativeParameter(type_positive_right.param_0),
-    ],
-    result: type_positive_right.result.nativeCoercion
-)
-private func procedure_positive_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    var index = 0
-    let arg_0 = try command.value(for: type_positive_right.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = positive(right: arg_0)
-    return type_positive_right.result.wrap(result, in: handlerEnv)
 }
 
 // repeat {action, condition}
@@ -1420,7 +1462,9 @@ private func procedure_isGreaterOrEqual_left_right(command: Command, commandEnv:
 public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_joinValues_left_right, procedure_joinValues_left_right)
     env.define(interface_multiply_left_right, procedure_multiply_left_right)
+    env.define(interface_positive_right, procedure_positive_right)
     env.define(interface_add_left_right, procedure_add_left_right)
+    env.define(interface_negative_right, procedure_negative_right)
     env.define(interface_subtract_left_right, procedure_subtract_left_right)
     env.define(interface_divide_left_right, procedure_divide_left_right)
     env.define(interface_isLess_left_right, procedure_isLess_left_right)
@@ -1431,12 +1475,14 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_OR_left_right, procedure_OR_left_right)
     env.define(interface_XOR_left_right, procedure_XOR_left_right)
     env.define(interface_exponent_left_right, procedure_exponent_left_right)
-    env.define(interface_afterElement_elementType_expression, procedure_afterElement_elementType_expression)
+    env.define(interface_insertAfter_reference, procedure_insertAfter_reference)
+    env.define(interface_afterElement_elementType_reference, procedure_afterElement_elementType_reference)
     env.define(interface_randomElement_elementType, procedure_randomElement_elementType)
     env.define(interface_Application_bundleIdentifier, procedure_Application_bundleIdentifier)
     env.define(interface_coerce_value_coercion, procedure_coerce_value_coercion)
     env.define(interface_atSelector_elementType_selectorData, procedure_atSelector_elementType_selectorData)
-    env.define(interface_beforeElement_elementType_expression, procedure_beforeElement_elementType_expression)
+    env.define(interface_insertBefore_reference, procedure_insertBefore_reference)
+    env.define(interface_beforeElement_elementType_reference, procedure_beforeElement_elementType_reference)
     env.define(interface_insertAtBeginning_, procedure_insertAtBeginning_)
     env.define(interface_beginsWith_left_right, procedure_beginsWith_left_right)
     env.define(interface_contains_left_right, procedure_contains_left_right)
@@ -1462,9 +1508,7 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_middleElement_elementType, procedure_middleElement_elementType)
     env.define(interface_mod_left_right, procedure_mod_left_right)
     env.define(interface_nameSelector_elementType_selectorData, procedure_nameSelector_elementType_selectorData)
-    env.define(interface_negative_right, procedure_negative_right)
     env.define(interface_ofClause_attribute_target, procedure_ofClause_attribute_target)
-    env.define(interface_positive_right, procedure_positive_right)
     env.define(interface_repeatWhile_action_condition, procedure_repeatWhile_action_condition)
     env.define(interface_returning_interface_coercion, procedure_returning_interface_coercion)
     env.define(interface_set_name_to, procedure_set_name_to)

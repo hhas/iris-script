@@ -51,7 +51,7 @@ extension Double: NumericValue, KeyConvertible {
 
 
 
-public enum Number: NumericValue, KeyConvertible {
+public enum Number: NumericValue, KeyConvertible, ExpressibleByIntegerLiteral, ExpressibleByFloatLiteral {
     // what about fractions? (this may require `indirect` to allow nested composition; alternatively, might be best to implement as PrecisionNumber struct/class, possibly in optional library)
     
     public var literalDescription: String { // get canonical native code representation (note: this is currently implemented as a method to allow for formatting options to be passed in future // TO DO: check these representations are always correct
@@ -104,6 +104,14 @@ public enum Number: NumericValue, KeyConvertible {
     public init(_ n: Double) {
         self = .floatingPoint(n)
     }
+    
+    public init(integerLiteral value: Int) {
+        self = .integer(value, radix: 10)
+    }
+    public init(floatLiteral value: Double) {
+        self = .floatingPoint(value)
+    }
+
     public init(_ code: String) throws {
         // temporary (we really want to parse and format numbers ourselves, potentially with localization support [although we'll need access to an environment for that, as it'll be script-specific, relying on top-level syntax imports])
         guard let d = Double(code) else { throw TypeCoercionError(value: Text(code), coercion: Number.nominalType) }

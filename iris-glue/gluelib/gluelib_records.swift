@@ -18,7 +18,7 @@ public struct AsOperatorSyntax: SwiftCoercion {
         _: ()
     )
     
-    public let name: Symbol = "record"
+    public let name: Symbol = "operator_syntax"
     
     public var swiftLiteralDescription: String { return "asOperatorSyntax" }
     

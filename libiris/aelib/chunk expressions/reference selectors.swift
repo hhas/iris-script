@@ -165,22 +165,20 @@ struct ByRelativeSelector: QuerySelector { // `ELEMENT before/after parentDesc` 
                                 result: asValue.nativeCoercion) // TO DO: returns Reference or InsertionLocation, depending on parameters (again, it's an MM issue; we may need a way for HandlerType to express multiple input-output pairs)
     }
     
-    // TO DO: this is just nasty
-    func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType { // e.g. `first document`
-        // TO DO: fix
-        fatalError("TODO")
-        /*
-        if command.arguments.count == 1 && command.arguments[0].label == "right" {
-            return InsertionLocation(appData: self.appData,
-                                     desc: self.form == .before ? self.parentDesc.before : self.parentDesc.after)
+    func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
+        // kludgy
+        let reference: Value
+        if command.arguments.count == 1 && [nullSymbol, "reference"].contains(command.arguments[0].label) {
+            reference = InsertionLocation(appData: self.appData, desc: self.form == .before ? self.parentDesc.before : self.parentDesc.after)
         } else if command.arguments.count == 2, let name = command.arguments[0].value.asIdentifier()?.key, // TO DO: check labels?
             let typeDesc = self.appData.glueTable.typesByName[name], let code = try? unpackAsFourCharCode(typeDesc),
             let parent = try? asReference.coerce(command.arguments[1].value, in: scope),
             let parentDesc = parent.desc as? ObjectSpecifierDescriptor {
-            return Reference(appData: self.appData, desc: self.form == .before ? parentDesc.previous(code) : parentDesc.next(code))
+            reference = Reference(appData: self.appData, desc: self.form == .before ? parentDesc.previous(code) : parentDesc.next(code))
         } else {
             throw BadSelectorError()
-        }*/
+        }
+        return try coercion.coerce(reference, in: scope)
     }
 }
 

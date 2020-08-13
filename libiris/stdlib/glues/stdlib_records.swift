@@ -6,7 +6,7 @@
 
 import Foundation
 
-public struct AsOperatorSyntax: SwiftCoercion {
+public struct AsOperatorDefinition: SwiftCoercion {
 
     private static let type_struct = (
         field_0: (Symbol("pattern"), Symbol("pattern"), asPattern),
@@ -16,13 +16,13 @@ public struct AsOperatorSyntax: SwiftCoercion {
         _: ()
     )
     
-    public let name: Symbol = "record"
+    public let name: Symbol = "operator_definition"
     
-    public var swiftLiteralDescription: String { return "asOperatorSyntax" }
+    public var swiftLiteralDescription: String { return "asOperatorDefinition" }
     
     public var literalDescription: String { return "record \(Self.recordType.literalDescription)" }
     
-    public typealias SwiftType = OperatorSyntax
+    public typealias SwiftType = OperatorDefinition
     
     public static let recordType = RecordType([
         nativeParameter(Self.type_struct.field_0),
@@ -42,7 +42,7 @@ public struct AsOperatorSyntax: SwiftCoercion {
         let arg_2 = try fields.coerce(param: Self.type_struct.field_2, at: &index, in: scope)
         let arg_3 = try fields.coerce(param: Self.type_struct.field_3, at: &index, in: scope)
         if fields.count > index { throw UnknownFieldError(at: index, of: fields) }
-        return OperatorSyntax( pattern: arg_0,  precedence: arg_1,  associate: arg_2,  reducer: arg_3)
+        return OperatorDefinition( pattern: arg_0,  precedence: arg_1,  associate: arg_2,  reducer: arg_3)
     }
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
@@ -55,4 +55,4 @@ public struct AsOperatorSyntax: SwiftCoercion {
     }
 }
 
-public let asOperatorSyntax = AsOperatorSyntax()
+public let asOperatorDefinition = AsOperatorDefinition()

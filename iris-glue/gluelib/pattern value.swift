@@ -17,7 +17,7 @@ public class PatternValue: OpaqueValue<iris.Pattern> { // basic wrapper for pars
 
 public struct AsPattern: SwiftCoercion {
     
-    public let name: Symbol = "pattern"
+    public let name: Symbol = "operator_syntax"
     
     public let swiftLiteralDescription = "asPattern"
     

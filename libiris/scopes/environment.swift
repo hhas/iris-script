@@ -127,8 +127,23 @@ extension Environment {
     }
     
     public func define(_ interface: HandlerType, _ action: @escaping PrimitiveHandler.Call) { // called by library glues
-        // this assumes environment is initially empty so does not check for existing names
-        self.bind(name: interface.name, to: PrimitiveHandler(interface: interface, action: action, in: self))
+        // TO DO: partial experimental support for handler overloads; for now, this only works for primitive handlers loaded via `env.define(…)`, not for native handlers, coercions, or slots containing non-callable values; we also need to decide policy when an existing [multi]handler is assigned as a closure to a different slot (which may be a slot with same name in different scope, or a slot with a different name); also, how best to implement multihandlers as methods on primitive objects (e.g. aelib’s before/after selector methods, each of which has two forms: unary [prefix] and binary [infix])
+        let name = interface.name
+        if let value = self.frame[name] {
+            guard let handler = value as? Handler else { fatalError("TODO: overloading of non-handler slots is not yet supported") }
+            let multihandler: MultiHandler
+            if let h = handler as? MultiHandler {
+                multihandler = h
+            } else {
+                multihandler = MultiHandler(named: name)
+                multihandler.add(handler)
+                self.frame[name] = multihandler
+            }
+            multihandler.add(PrimitiveHandler(interface: interface, action: action, in: self))
+        } else {
+            // this assumes environment is initially empty so does not check for existing names
+            self.bind(name: interface.name, to: PrimitiveHandler(interface: interface, action: action, in: self))
+        }
     }
     
     public func define(_ interface: HandlerType, _ action: Value) throws { // called by `to`/`when` handler

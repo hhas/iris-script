@@ -4,8 +4,16 @@
 swift_record {pattern as operator_syntax, precedence as integer,
               associate as optional associativity with_default #left,
               reducer as optional string} requires {
-    swift_name: "OperatorSyntax"
+    name: "operator_definition"
 }
+
+
+«TODO: handler_requirements record:»
+«"can_error", AsSwiftDefault(asBool, false)»
+«"swift_function", AsSwiftOptional(asLiteralCommand)»
+«"use_scopes", AsSwiftDefault(asSymbols, [])»
+«"operator", AsSwiftOptional(asOperatorSyntax)»
+
 
 
 swift_multichoice [#left, #right, #none] requires {

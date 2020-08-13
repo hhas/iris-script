@@ -238,13 +238,6 @@ public struct AsConstrainedNumber: NativeCoercion { // returned by AsNumber.cons
         self.max = max
     }
     
-    public init(isWhole: Bool = false, min: Int? = nil, max: Int? = nil) throws {
-        var minimum: Number?, maximum: Number?
-        if let n = min { minimum = Number(n) }
-        if let n = max { maximum = Number(n) }
-        try self.init(isWhole: isWhole, min: minimum, max: maximum)
-    }
-    
     public func coerce(_ value: Value, in scope: Scope) throws -> Value {
         let result = try asSwiftNumber.coerce(value, in: scope)
         if self.isWhole && !result.isWholeNumber { throw ConstraintCoercionError(value: value, coercion: self) }

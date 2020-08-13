@@ -84,6 +84,8 @@ public struct AsOrderedList: NativeCoercion {
     
     public let name: Symbol = "ordered_list"
     
+    public var swiftTypeDescription: String { return "[\(self.elementType.swiftTypeDescription)]" }
+    
     public var swiftLiteralDescription: String { return "AsArray(\(self.elementType.swiftLiteralDescription))" }
     
     public var literalDescription: String {

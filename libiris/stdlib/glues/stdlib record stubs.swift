@@ -8,13 +8,13 @@
 
 import Foundation
 
-public struct OperatorSyntax {
+public struct OperatorDefinition {
     public let pattern: Pattern
     public let precedence: Int
-    public let associate: Value
-    public let reducer: Value
+    public let associate: Associativity
+    public let reducer: String?
     
-    public init(pattern: Pattern, precedence: Int, associate: Value, reducer: Value) {
+    public init(pattern: Pattern, precedence: Int, associate: Associativity, reducer: String?) {
         self.pattern = pattern
         self.precedence = precedence
         self.associate = associate

@@ -137,6 +137,7 @@
 		4FE8D45B24E2DA7B008AE1D3 /* define enum glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE8D45A24E2DA7B008AE1D3 /* define enum glue.swift */; };
 		4FE8D46724E33FB5008AE1D3 /* gluelib_enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE8D46624E33FB5008AE1D3 /* gluelib_enums.swift */; };
 		4FE8D46924E3FDD4008AE1D3 /* enum stub template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE8D46824E3FDD4008AE1D3 /* enum stub template.swift */; };
+		4FE8D46E24E5184A008AE1D3 /* multihandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE8D46D24E5184A008AE1D3 /* multihandler.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -386,6 +387,7 @@
 		4FE8D46A24E4016A008AE1D3 /* stdlib handler stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib handler stubs.swift"; sourceTree = "<group>"; };
 		4FE8D46B24E4016A008AE1D3 /* stdlib enum stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib enum stubs.swift"; sourceTree = "<group>"; };
 		4FE8D46C24E4016A008AE1D3 /* stdlib record stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib record stubs.swift"; sourceTree = "<group>"; };
+		4FE8D46D24E5184A008AE1D3 /* multihandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = multihandler.swift; sourceTree = "<group>"; };
 		4FFC6F2422D6818000D636B9 /* base lexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "base lexer.swift"; sourceTree = "<group>"; };
 		4FFC6F2922D7704D00D636B9 /* access protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "access protocols.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -484,6 +486,7 @@
 				4F26065A22C015F10036D904 /* handler type.swift */,
 				4F26065C22C0161D0036D904 /* native handler.swift */,
 				4F26065E22C016570036D904 /* primitive handler.swift */,
+				4FE8D46D24E5184A008AE1D3 /* multihandler.swift */,
 			);
 			name = handlers;
 			sourceTree = "<group>";
@@ -1152,6 +1155,7 @@
 				4F988CDB24BCC5A500EE66C7 /* text.swift in Sources */,
 				4F2C4D2C24C8F5CC0058749A /* stdlib_operators.swift in Sources */,
 				4F988CDC24BCC5A500EE66C7 /* numeric.swift in Sources */,
+				4FE8D46E24E5184A008AE1D3 /* multihandler.swift in Sources */,
 				4F988CDD24BCC5A500EE66C7 /* ordered list.swift in Sources */,
 				4F988CDE24BCC5A500EE66C7 /* keyed list.swift in Sources */,
 				4F988CDF24BCC5A500EE66C7 /* atoms.swift in Sources */,

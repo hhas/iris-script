@@ -86,6 +86,10 @@ public struct AsSwiftDefault<ElementType: SwiftCoercion>: SwiftCoercion {
 
 public struct AsOptional: NativeCoercion {
     
+    public var swiftTypeDescription: String {
+        return "\(self.elementType.swiftTypeDescription)\(self.defaultValue is NullValue ? "?" : "")"
+    }
+    
     public var swiftLiteralDescription: String {
         if self.defaultValue is NullValue {
             return "AsSwiftOptional(\(self.elementType.swiftLiteralDescription))"

@@ -92,13 +92,15 @@ public struct RecordGlue {
     
     public typealias Field = (label: String, binding: String, coercion: String)
     
+    public let name: String // the SwiftCoercion’s `name` attribute
     public let fields: [Field] // native-style (snake_case) label and binding names, e.g. "of_type"; coercion is Swift constructor/binding name, e.g. "AsArray(asString)"
     public let swiftType: String // struct’s name
     public let swiftFields: [Field] // camelCase labels are used as parameter labels in init(…), binding names are used as property names; coercion is SwiftType used as parameter+property types, e.g. "String"
     public let canError: Bool
     
-    init(fields: RecordType.Fields, structName: String, structFields: RecordType.Fields?, canError: Bool) {
+    init(fields: RecordType.Fields, name: String, structName: String, structFields: RecordType.Fields?, canError: Bool) {
         self.fields = fields.map{ ($0.label, $1.label, $2.swiftLiteralDescription) }
+        self.name = name
         self.swiftType = structName
         if let structFields = structFields, structFields.count == fields.count {
             self.swiftFields = structFields.map{ ($0.label, $1.label, $2.swiftTypeDescription) }

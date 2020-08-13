@@ -7,9 +7,6 @@ import Foundation
 import iris
 
 
-// TO DO: FIX: this isn’t yet inserting correct types for `associate` (Associativity) and `reducer` (String?) slots
-
-
 private let templateSource = """
 //
 //  ««libraryName»» record stubs.swift
@@ -55,7 +52,7 @@ let recordStubsTemplate = TextTemplate(templateSource) {
             (node: Node, field: RecordGlue.Field) -> Void in
             node.label.set(field.label == field.binding ? "" : "\(field.label) ")
             node.binding.set(field.binding)
-            node.swiftType.set(field.coercion) // ditto
+            node.swiftType.set(field.coercion) // ditto // TO DO: ideally this should include default [Swift] value
         }
         node.bindings.map(glue.swiftFields) {
             (node: Node, field: RecordGlue.Field) -> Void in

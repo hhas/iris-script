@@ -16,8 +16,16 @@ func multiply(left: Value, right: Value) -> Value {
     fatalError("multiply of stdlib is not yet implemented.")
 }
 
+func positive(right: Value) -> Value {
+    fatalError("positive of stdlib is not yet implemented.")
+}
+
 func add(left: Value, right: Value) -> Value {
     fatalError("add of stdlib is not yet implemented.")
+}
+
+func negative(right: Value) -> Value {
+    fatalError("negative of stdlib is not yet implemented.")
 }
 
 func subtract(left: Value, right: Value) -> Value {
@@ -60,7 +68,11 @@ func exponent(left: Value, right: Value) -> Value {
     fatalError("exponent of stdlib is not yet implemented.")
 }
 
-func afterElement(elementType: Symbol, expression: Value) -> Value {
+func insertAfter(reference: Value) -> Value {
+    fatalError("insertAfter of stdlib is not yet implemented.")
+}
+
+func afterElement(elementType: Symbol, reference: Value) -> Value {
     fatalError("afterElement of stdlib is not yet implemented.")
 }
 
@@ -80,7 +92,11 @@ func atSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, han
     fatalError("atSelector of stdlib is not yet implemented.")
 }
 
-func beforeElement(elementType: Symbol, expression: Value) -> Value {
+func insertBefore(reference: Value) -> Value {
+    fatalError("insertBefore of stdlib is not yet implemented.")
+}
+
+func beforeElement(elementType: Symbol, reference: Value) -> Value {
     fatalError("beforeElement of stdlib is not yet implemented.")
 }
 
@@ -184,16 +200,8 @@ func nameSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope) t
     fatalError("nameSelector of stdlib is not yet implemented.")
 }
 
-func negative(right: Value) -> Value {
-    fatalError("negative of stdlib is not yet implemented.")
-}
-
 func ofClause(attribute: Value, target value: Value, commandEnv: Scope, handlerEnv: Scope) throws -> Value {
     fatalError("ofClause of stdlib is not yet implemented.")
-}
-
-func positive(right: Value) -> Value {
-    fatalError("positive of stdlib is not yet implemented.")
 }
 
 func repeatWhile(action: Value, condition: Bool, commandEnv: Scope) throws -> Value {

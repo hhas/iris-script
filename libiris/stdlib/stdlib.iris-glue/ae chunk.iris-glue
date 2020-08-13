@@ -88,26 +88,26 @@ swift_handler ‘every’ {element_type as name} returning expression requires {
 
 «=== relative ordinal ===»
 
-swift_handler ‘before’ {element_type as name, expression as expression} returning expression requires {
+swift_handler ‘before’ {element_type as name, reference as expression} returning expression requires {
     swift_function: beforeElement
-    operator: {[expression “element_type”, keyword “before”, expression “expression”], precedence: 1126, #right}
+    operator: {[expression “element_type”, keyword “before”, expression “reference”], precedence: 1106, #right}
 }
 
-swift_handler ‘after’ {element_type as name, expression as expression} returning expression requires {
+swift_handler ‘after’ {element_type as name, reference as expression} returning expression requires {
     swift_function: afterElement
-    operator: {[expression “element_type”, keyword “after”, expression “expression”], precedence: 1126, #right}
+    operator: {[expression “element_type”, keyword “after”, expression “reference”], precedence: 1106, #right}
 }
 
 «== Insertion location ==»
 
-swift_handler ‘before’ {expression as expression} returning expression requires {
+swift_handler ‘before’ {reference as expression} returning expression requires {
     swift_function: insertBefore
-    operator: {[keyword “before”, expression “expression”], precedence: 1106}
+    operator: {[keyword “before”, expression “reference”], precedence: 1106}
 }
 
-swift_handler ‘after’ {expression as expression} returning expression requires {
+swift_handler ‘after’ {reference as expression} returning expression requires {
     swift_function: insertAfter
-    operator: {[keyword “after”, expression “expression”], precedence: 1106}
+    operator: {[keyword “after”, expression “reference”], precedence: 1106}
 }
 
 swift_handler ‘beginning’ returning expression requires {

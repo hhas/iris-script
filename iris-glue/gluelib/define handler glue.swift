@@ -65,10 +65,10 @@ func defineHandlerGlue(interface: HandlerType, attributes: Value, commandEnv: Sc
     let useScopes = try options.value(named: "use_scopes", in: commandEnv, as: AsSwiftDefault(asSymbols, [])).map{"\($0.key)Env"} // TO DO: enum
     let patternScope = PatternDialect(parent: commandEnv, for: interface)
     let operatorSyntax = try options.value(named: "operator", in: patternScope, as: AsSwiftOptional(asOperatorSyntax))
-    let name = interface.name
-    if handlerGlues.data[name] == nil {
-        handlerGlues.data[name] = HandlerGlue(interface: interface, canError: canError, useScopes: useScopes,
-                                              swiftFunction: swiftFunction, operatorSyntax: operatorSyntax)
+    let glue = HandlerGlue(interface: interface, canError: canError, useScopes: useScopes,
+                           swiftFunction: swiftFunction, operatorSyntax: operatorSyntax)
+    if handlerGlues.data[Symbol(glue.signature)] == nil {
+        handlerGlues.data[Symbol(glue.signature)] = glue
     } else {
         print("Error: ignoring duplicate definition for: \(interface)")
     }

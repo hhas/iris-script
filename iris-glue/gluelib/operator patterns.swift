@@ -27,12 +27,12 @@ func newKeywordPattern(for names: [String]) -> iris.Pattern {
     return .keyword(keyword(for: names))
 }
 
-func newExpressionPattern(binding: String?, handlerEnv: Scope) -> iris.Pattern {
+func newExpressionPattern(binding: String?, handlerEnv: Scope) throws -> iris.Pattern {
     if let binding = binding {
         let interface = handlerEnv.get(currentHandlerTypeKey) as! HandlerType
         guard let label = interface.labelForBinding(Symbol(binding)) else {
-            // TO DO: this should throw error, rather than raise exception
-            fatalError("Can’t find argument label for \(binding) operand in \(handlerEnv)")
+            // TO DO: what error? (UnknownNameError doesn’t quite work as that expects an Accessor and provides only a generic “can’t find X in Y” message)
+            throw InternalError(description: "Operator pattern failed on `expression “\(binding)”` as “\(binding)” isn’t a binding name in the handler’s interface: \(interface)")
         }
         return .expressionLabeled(label)
     } else {
@@ -156,7 +156,7 @@ private func procedure_expression(command: Command, commandEnv: Scope, handler: 
     var index = 0
     let arg_0 = try command.value(for: type_expression.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = newExpressionPattern(
+    let result = try newExpressionPattern(
         binding: arg_0,
         handlerEnv: handlerEnv
     )

@@ -1,7 +1,9 @@
 
 «= stdlib glue definition =»
 
-swift_handler ‘as’ {value as anything, coercion as coercion} returning anything requires {
+«TODO: what argument+return types?»
+«TODO: FIX: `lowercase as handler` currently fails as `lowercase{}` is being evaluated as a command»
+swift_handler ‘as’ {value as expression, coercion as coercion} returning expression requires {
     can_error: true
     use_scopes: #command
     swift_function: coerce

@@ -88,19 +88,19 @@ func allElements(elementType: Symbol) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func beforeElement(elementType: Symbol, expression: Value) -> Value {
+func beforeElement(elementType: Symbol, reference: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func afterElement(elementType: Symbol, expression: Value) -> Value {
+func afterElement(elementType: Symbol, reference: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func insertBefore(expression: Value) -> Value {
+func insertBefore(reference: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 
-func insertAfter(expression: Value) -> Value {
+func insertAfter(reference: Value) -> Value {
     fatalError("Not yet implemented.")
 }
 

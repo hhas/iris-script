@@ -12,6 +12,10 @@ func test() {
 
     // runScript(" tell @com.apple.iTunes to playpause ")
     
+    runScript(" set a to 3. 1 + - a ") //
+    
+    return;
+    
 
     runScript(" set a to 3. set a to 5. ") // this should throw immutable value error
     
