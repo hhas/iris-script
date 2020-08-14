@@ -73,8 +73,8 @@ func newPostfixPattern(named names: [String]) -> iris.Pattern {
 // sequence {…}
 private let type_sequence = (
 name: Symbol("sequence"),
-    param_0: (Symbol("patterns"), Symbol("patterns"), AsArray(asPattern)), // TO DO: min:1
-    result: asPattern
+    param_0: (Symbol("patterns"), Symbol("patterns"), AsArray(asOperatorSyntax)), // TO DO: min:1
+    result: asOperatorSyntax
 )
 private let interface_sequence = HandlerType(
     name: type_sequence.name,
@@ -96,8 +96,8 @@ private func procedure_sequence(command: Command, commandEnv: Scope, handler: Ha
 // any {…}
 private let type_any = (
     name: Symbol("any"),
-    param_0: (Symbol("patterns"), Symbol("patterns"), AsArray(asPattern)), // TO DO: min:1
-    result: asPattern
+    param_0: (Symbol("patterns"), Symbol("patterns"), AsArray(asOperatorSyntax)), // TO DO: min:1
+    result: asOperatorSyntax
 )
 private let interface_any = HandlerType(
     name: type_any.name,
@@ -120,7 +120,7 @@ private func procedure_any(command: Command, commandEnv: Scope, handler: Handler
 private let type_keyword = (
     name: Symbol("keyword"),
     param_0: (Symbol("named"), Symbol("names"), AsArray(asString)), // TO DO: min:1
-    result: asPattern
+    result: asOperatorSyntax
 )
 private let interface_keyword = HandlerType(
     name: type_keyword.name,
@@ -143,7 +143,7 @@ private func procedure_keyword(command: Command, commandEnv: Scope, handler: Han
 private let type_expression = (
     name: Symbol("expression"),
     param_0: (Symbol("binding"), Symbol("binding"), AsSwiftOptional(asString)),
-    result: asPattern
+    result: asOperatorSyntax
 )
 private let interface_expression = HandlerType(
     name: type_expression.name,
@@ -166,8 +166,8 @@ private func procedure_expression(command: Command, commandEnv: Scope, handler: 
 // optional {…}
 private let type_optional = (
     name: Symbol("is_optional"), // TO DO: there are problems with overriding existing `optional` handler as it also has operator syntax that for some reason refuses to parse; look into this later; for now, workaround by renaming the Pattern.optional(…) constructor so it doesn't class
-    param_0: (Symbol("pattern"), Symbol("pattern"), asPattern),
-    result: asPattern
+    param_0: (Symbol("pattern"), Symbol("pattern"), asOperatorSyntax),
+    result: asOperatorSyntax
 )
 private let interface_optional = HandlerType(
     name: type_optional.name,
@@ -189,8 +189,8 @@ private func procedure_optional(command: Command, commandEnv: Scope, handler: Ha
 // zero_or_more {…}
 private let type_zero_or_more = (
     name: Symbol("zero_or_more"),
-    param_0: (Symbol("pattern"), Symbol("pattern"), asPattern),
-    result: asPattern
+    param_0: (Symbol("pattern"), Symbol("pattern"), asOperatorSyntax),
+    result: asOperatorSyntax
 )
 private let interface_zero_or_more = HandlerType(
     name: type_zero_or_more.name,
@@ -212,8 +212,8 @@ private func procedure_zero_or_more(command: Command, commandEnv: Scope, handler
 // one_or_more {…}
 private let type_one_or_more = (
     name: Symbol("one_or_more"),
-    param_0: (Symbol("pattern"), Symbol("pattern"), asPattern),
-    result: asPattern
+    param_0: (Symbol("pattern"), Symbol("pattern"), asOperatorSyntax),
+    result: asOperatorSyntax
 )
 private let interface_one_or_more = HandlerType(
     name: type_one_or_more.name,
@@ -238,7 +238,7 @@ private func procedure_one_or_more(command: Command, commandEnv: Scope, handler:
 private let type_atom = (
     name: Symbol("atom"),
     param_0: (Symbol("named"), Symbol("names"), AsArray(asString)),
-    result: asPattern
+    result: asOperatorSyntax
 )
 private let interface_atom = HandlerType(
     name: type_atom.name,
@@ -261,7 +261,7 @@ private func procedure_atom(command: Command, commandEnv: Scope, handler: Handle
 private let type_prefix = (
     name: Symbol("prefix"),
     param_0: (Symbol("named"), Symbol("names"), AsArray(asString)),
-    result: asPattern
+    result: asOperatorSyntax
 )
 private let interface_prefix = HandlerType(
     name: type_prefix.name,
@@ -284,7 +284,7 @@ private func procedure_prefix(command: Command, commandEnv: Scope, handler: Hand
 private let type_infix = (
     name: Symbol("infix"),
     param_0: (Symbol("named"), Symbol("names"), AsArray(asString)),
-    result: asPattern
+    result: asOperatorSyntax
 )
 private let interface_infix = HandlerType(
     name: type_infix.name,
@@ -307,7 +307,7 @@ private func procedure_infix(command: Command, commandEnv: Scope, handler: Handl
 private let type_postfix = (
     name: Symbol("postfix"),
     param_0: (Symbol("named"), Symbol("names"), AsArray(asString)),
-    result: asPattern
+    result: asOperatorSyntax
 )
 private let interface_postfix = HandlerType(
     name: type_postfix.name,

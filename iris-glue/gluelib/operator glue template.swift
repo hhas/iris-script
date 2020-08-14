@@ -36,16 +36,22 @@ func stdlib_loadOperators(into registry: OperatorRegistry) {
 let operatorsTemplate = TextTemplate(templateSource) {
     (tpl: Node, args: (libraryName: String, glues: [HandlerGlue])) in
     tpl.libraryName.set(args.libraryName)
-    tpl.loadOperators.map(args.glues.compactMap{ $0.operatorSyntax }) {
-        (node: Node, syntax: OperatorSyntax) -> Void in
-        let reducefunc: String
-        if let reducer = syntax.reducer { reducefunc = ", \(reducer)" } else { reducefunc = "" }
-        let pattern: String
-        switch syntax.pattern {
-        case .sequence:  pattern = syntax.pattern.swiftLiteralDescription
-        default:         pattern = "[\(syntax.pattern.swiftLiteralDescription)]"
+    tpl.loadOperators.map(args.glues) {
+        (node: Node, glue: HandlerGlue) -> Void in
+        guard let definition = glue.operatorDefinition else {
+            node.delete()
+            return
         }
-        node.args.set("\(pattern), \(syntax.precedence), .\(syntax.associate)\(reducefunc)")
+        let reducefunc: String
+        if let reducer = definition.reducer { reducefunc = ", \(reducer)" } else { reducefunc = "" }
+        let patternScope = PatternDialect(parent: nullScope, for: glue.interface)
+        let syntax = try! asOperatorSyntax.coerce(definition.syntax, in: patternScope)
+        let pattern: String
+        switch syntax {
+        case .sequence:  pattern = syntax.swiftLiteralDescription
+        default:         pattern = "[\(syntax.swiftLiteralDescription)]"
+        }
+        node.args.set("\(pattern), \(definition.precedence), .\(definition.associate)\(reducefunc)")
     }
 }
 

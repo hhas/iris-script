@@ -35,3 +35,31 @@ public struct AsAssociativity: SwiftCoercion {
 }
 
 public let asAssociativity = AsAssociativity()
+
+public struct AsHandlerScope: SwiftCoercion {
+    
+    public typealias SwiftType = HandlerScope
+    
+    public let name: Symbol = "Optional("handler_scope")"
+    
+    public var swiftLiteralDescription: String { return "asHandlerScope" }
+
+    public var literalDescription: String { return self.name.label }
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
+        switch try asSymbol.coerce(value, in: scope) {
+        case Symbol("command"): return .command
+        case Symbol("handler"): return .handler
+        }
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        switch value {
+        case .command: return Symbol("command")
+        case .handler: return Symbol("handler")
+        }
+    }
+}
+
+public let asHandlerScope = AsHandlerScope()

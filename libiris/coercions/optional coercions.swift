@@ -94,7 +94,7 @@ public struct AsOptional: NativeCoercion {
         if self.defaultValue is NullValue {
             return "AsSwiftOptional(\(self.elementType.swiftLiteralDescription))"
         } else {
-            return "AsSwiftDefault(\(self.elementType.swiftLiteralDescription), defaultValue: \(formatSwiftLiteral(self.defaultValue)))" // KLUDGE: see AsSwiftDefault TODO
+            return "AsSwiftDefault(\(self.elementType.swiftLiteralDescription), defaultValue: \(formatSwiftLiteral(self.defaultValue)))" // KLUDGE: see AsSwiftDefault TODO // TO DO: FIX: this produces bad default values (e.g. `[]` instead of `OrderedList()`)
         }
     }
     

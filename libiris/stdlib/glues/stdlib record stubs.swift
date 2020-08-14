@@ -8,6 +8,20 @@
 
 import Foundation
 
+public struct HandlerGlueRequirements {
+    public let canError: Bool
+    public let useScopes: [Symbol]
+    public let swiftFunction: Command?
+    public let operatorDefinition: OperatorDefinition?
+    
+    public init(canError: Bool, useScopes: [Symbol], swiftFunction: Command?, operator operatorDefinition: OperatorDefinition?) {
+        self.canError = canError
+        self.useScopes = useScopes
+        self.swiftFunction = swiftFunction
+        self.operatorDefinition = operatorDefinition
+    }
+}
+
 public struct OperatorDefinition {
     public let pattern: Pattern
     public let precedence: Int

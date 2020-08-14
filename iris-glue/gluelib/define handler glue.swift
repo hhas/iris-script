@@ -39,34 +39,12 @@ let asLiteralCommand = AsLiteral<Command>()
 let asSymbols = AsArray(asSymbol)
 
 
-func defineHandlerGlue(interface: HandlerType, attributes: Value, commandEnv: Scope, handlerEnv: Scope) throws {
+func defineHandlerGlue(interface: HandlerType, requirements: HandlerGlueRequirements, commandEnv: Scope, handlerEnv: Scope) throws {
     print("Defining handler glue for:", interface)
     guard let handlerGlues = handlerEnv.get(handlerGluesKey) as? OpaqueHandlerGlues else {
         throw UnknownNameError(name: handlerGluesKey, in: handlerEnv)
     }
-    guard let body = attributes as? Record else { // TO DO: glue currently uses asIs to pass record without any evaluation, leaving defineHandlerGlue to extract its fields below; eventually handler_glue record should be defined as a SwiftCoercion with named+typed fields, allowing it to unbox directly to HandlerGlue
-        throw TypeCoercionError(value: attributes, coercion: asRecord)
-    }
-    let options = Options(uniqueKeysWithValues: body.data.map{ ($0.key, $1) })
-    let canError = try options.value(named: "can_error", in: commandEnv, as: AsSwiftDefault(asBool, false))
-    let swiftFunction: HandlerGlue.SwiftFunction?
-    if let cmd = try options.value(named: "swift_function", in: commandEnv, as: AsSwiftOptional(asLiteralCommand)) {
-        // TO DO: if given, swiftfunc's parameter record should be of form `{label,…}` and/or `{label:binding,…}` (currently only the first is accepted)
-        // TO DO: error if no. of Swift params is neither 0 nor equal to no. of native params
-        swiftFunction = (name: cmd.name.label, params: try cmd.arguments.map{
-            guard let name = $0.value.asIdentifier() else {
-                throw TypeCoercionError(value: $0.value, coercion: asLiteralName) // TO DO: it would be better for error reporting purposes to move this logic into a custom coercion for matching+unwrapping the entire command
-            }
-            return name.label
-        })
-    } else {
-        swiftFunction = nil
-    }
-    let useScopes = try options.value(named: "use_scopes", in: commandEnv, as: AsSwiftDefault(asSymbols, [])).map{"\($0.key)Env"} // TO DO: enum
-    let patternScope = PatternDialect(parent: commandEnv, for: interface)
-    let operatorSyntax = try options.value(named: "operator", in: patternScope, as: AsSwiftOptional(asOperatorSyntax))
-    let glue = HandlerGlue(interface: interface, canError: canError, useScopes: useScopes,
-                           swiftFunction: swiftFunction, operatorSyntax: operatorSyntax)
+    let glue = HandlerGlue(interface: interface, requirements: requirements)
     if handlerGlues.data[Symbol(glue.signature)] == nil {
         handlerGlues.data[Symbol(glue.signature)] = glue
     } else {

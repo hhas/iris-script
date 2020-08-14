@@ -32,7 +32,7 @@ public struct As««structName»»: SwiftCoercion {
     
     public var swiftLiteralDescription: String { return "as««structName»»" }
     
-    public var literalDescription: String { return "record \\(Self.recordType.literalDescription)" }
+    public var literalDescription: String { return self.name.label }
     
     public typealias SwiftType = ««structName»»
     

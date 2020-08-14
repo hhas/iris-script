@@ -8,13 +8,18 @@ swift_record {pattern as operator_syntax, precedence as integer,
 }
 
 
-«TODO: handler_requirements record:»
-«"can_error", AsSwiftDefault(asBool, false)»
-«"swift_function", AsSwiftOptional(asLiteralCommand)»
-«"use_scopes", AsSwiftDefault(asSymbols, [])»
-«"operator", AsSwiftOptional(asOperatorSyntax)»
+swift_record {can_error as optional boolean with_default false,
+              use_scopes as optional list of: multichoice [#command, #handler] with_default [],
+              swift_function as optional command,
+              operator: operator_definition as optional operator_definition} requires {
+    name: "handler_glue_requirements"
+}
 
 
+
+swift_multichoice [#command, #handler] requires {
+    name: "handler_scope"
+}
 
 swift_multichoice [#left, #right, #none] requires {
     name: "associativity"

@@ -8,6 +8,10 @@ import Foundation
 
 // caution: this is kludgy, slow, and for experimental use; it does not allow mixing of handlers and non-handlers (e.g. env slots that contain non-callable values, CallableCoercion)
 
+// TO DO: how to dispatch on, say, `find [string|pattern] in: string replacing_with: [string|callable {…} returning string]`? or should that be a single handler which does its own routing once it’s unpacked the command arguments? what about overloading `find` to search lists and dicts?
+
+// TO DO: once coercions support is_a, can we order handlers so that the most specific argument types are tested for first?
+
 
 public class MultiHandler: Handler { // caution: each multihandler is currently a mutable class instance, which could cause problems when reassigning to other slots
     

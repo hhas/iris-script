@@ -14,6 +14,7 @@ public func gluelib_loadConstants(into env: Environment) {
     //  env.define(coercion: asScope)
     env.define(coercion: asItself)
     env.define(coercion: asLiteralName)
+    env.define(coercion: asLiteralCommand)
     env.define(coercion: asHandlerType)
     
     // TO DO: how best to expose SwiftCoercions under stable names that don’t conflict with native names?
@@ -21,9 +22,12 @@ public func gluelib_loadConstants(into env: Environment) {
     env.define(coercion: asDouble)
     env.define(coercion: asString)
     
-    env.define("operator_syntax", asPattern.nativeCoercion)
+    env.define(coercion: asOperatorSyntax)
     env.define(coercion: asAssociativity)
+    env.define(coercion: asOperatorDefinition)
     
     env.define(coercion: asRecordType)
+    
+    
     
 }

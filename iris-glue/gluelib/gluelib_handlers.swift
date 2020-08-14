@@ -11,7 +11,7 @@ import iris
 private let type_defineHandlerGlue_handler_commandEnv = (
     name: Symbol("swift_handler"),
     param_0: (Symbol("with_interface"), Symbol("interface"), asHandlerType),
-    param_1: (Symbol("requires"), Symbol("requirements"), asIs), // TO DO: asHandlerRequirements
+    param_1: (Symbol("requires"), Symbol("requirements"), asHandlerGlueRequirements),
     result: asNothing
 )
 private let interface_defineHandlerGlue_handler_commandEnv = HandlerType(
@@ -30,7 +30,7 @@ private func procedure_defineHandlerGlue_handler_commandEnv(command: Command, co
     if arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     try defineHandlerGlue(
         interface: arg_0,
-        attributes: arg_1,
+        requirements: arg_1,
         commandEnv: commandEnv,
         handlerEnv: handlerEnv
     )

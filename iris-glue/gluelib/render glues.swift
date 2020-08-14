@@ -9,7 +9,7 @@
 
 // TO DO: how best to support UTI and library version in file name? (versioning in file name allows multiple versions of a library to exist in same directory structure; however we’ll need to decide how loader should handle versioning)
 
-// TO DO: should glue files include date generated and glue version as code comments and/or API? or is that information more appropriate to Info.plist?
+// TO DO: what about operator patterns that do not map to commands, e.g. `do…done` reduces to an annotated `Block` with no underlying command so does not have a `swift_handler…requires…` glue definition; currently the `do…done` operator definition must be manually added to stdlib’s operator glue but really needs to be added by glue definition (otherwse a separate library loading method will need to be added for importing manually-coded definitions); similarly, atomic operators such as `nothing`, `true`, `false`, `π`, etc are defined as constants which also do not have underlying handlers but still require operator definitions
 
 import Foundation
 import iris

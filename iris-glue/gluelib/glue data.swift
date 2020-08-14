@@ -14,7 +14,31 @@ import iris
 // TO DO: also extract user documentation (from annotations); Q. where should user docs go? may be an idea to put them in separate data file[s] (this might be the original glue file, or it may be XML/JSON/whatever) within library bundle that is only loaded as needed
 
 
-public typealias OperatorSyntax = HandlerGlue.OperatorSyntax
+public typealias OperatorDefinition = HandlerGlueRequirements.OperatorDefinition
+
+
+public struct HandlerGlueRequirements {
+    
+    public struct OperatorDefinition {
+        
+        public let syntax: Value // TO DO: can't evaluate this when evaluating `swift_handler`/`swift_coercion` as it needs special context
+        public let precedence: Int
+        public let associate: Associativity
+        public let reducer: String?
+    }
+    
+    public let canError: Bool
+    public let useScopes: [Symbol]
+    public let swiftFunction: Command?
+    public let operatorDefinition: OperatorDefinition?
+    
+    public init(canError: Bool, useScopes: [Symbol], swiftFunction: Command?, operatorDefinition: OperatorDefinition?) {
+        self.canError = canError
+        self.useScopes = useScopes
+        self.swiftFunction = swiftFunction
+        self.operatorDefinition = operatorDefinition
+    }
+}
 
 
 public struct HandlerGlue {
@@ -24,13 +48,6 @@ public struct HandlerGlue {
     typealias Parameter = (label: String, binding: String, coercion: String)
     typealias SwiftFunction = (name: String, params: [String])
     
-    public struct OperatorSyntax {
-        public let pattern: iris.Pattern
-        public let precedence: Int
-        public let associate: Associativity
-        public let reducer: String?
-    }
-    
     let interface: HandlerType // template uses result and isEventHandler
     
     var name: String { return self.interface.name.label }
@@ -39,18 +56,31 @@ public struct HandlerGlue {
     }
     var result: String { return self.interface.result.swiftLiteralDescription } // coercion name
     
-    let canError: Bool
-    let useScopes: [String] // commandEnv, handlerEnv // TO DO: any use-cases for per-invocation sub-env?
-    let swiftFunction: SwiftFunction? // if different to native names
-    let operatorSyntax: OperatorSyntax?
+    var canError: Bool { return requirements.canError }
+    var useScopes: [String] { // commandEnv, handlerEnv // TO DO: any use-cases for per-invocation sub-env?
+        var scopes = [String]()
+        if requirements.useScopes.contains("command") { scopes.append("commandEnv") }
+        if requirements.useScopes.contains("handler") { scopes.append("handlerEnv") }
+        return scopes
+    }
+    var swiftFunction: SwiftFunction? { // if different to native names
+        if let cmd = requirements.swiftFunction {
+            return (name: cmd.name.label, params: try! cmd.arguments.map{
+                guard let name = $0.value.asIdentifier() else {
+                    throw TypeCoercionError(value: $0.value, coercion: asLiteralName) // TO DO: it would be better for error reporting purposes to move this logic into a custom coercion for matching+unwrapping the entire command
+                }
+                return name.label
+            })
+        }
+        return nil
+    }
+    var operatorDefinition: OperatorDefinition? { return requirements.operatorDefinition }
+    
+    let requirements: HandlerGlueRequirements
 
-    init(interface: HandlerType, canError: Bool = false, useScopes: [String] = [],
-         swiftFunction: SwiftFunction? = nil, operatorSyntax: OperatorSyntax? = nil) {
+    init(interface: HandlerType, requirements: HandlerGlueRequirements) {
         self.interface = interface
-        self.canError = canError
-        self.useScopes = useScopes
-        self.swiftFunction = swiftFunction
-        self.operatorSyntax = operatorSyntax
+        self.requirements = requirements
     }
     
     // TO DO: tidy this up

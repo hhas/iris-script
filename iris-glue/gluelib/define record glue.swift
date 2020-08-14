@@ -6,7 +6,7 @@
 import Foundation
 import iris
 
-// TO DO: how to support nested structs? e.g. HandlerGlue.OperatorSyntax (for now, use a top-level typealias)
+// TO DO: how to support nested structs? e.g. HandlerGlue.OperatorDefinition (for now, use a top-level typealias)
 
 // `swift_record {…} requires {…}`
 

@@ -59,6 +59,31 @@ extension AsKeyedList: ConstrainableCoercion {
     }
 }
 
+extension AsMultichoice: ConstrainableCoercion {
+    
+    private static let type_constrain = (
+        param_0: (Symbol("options"), Symbol("options"), AsArray(asSymbol)),
+        _: ()
+    )
+    
+    public var interface: HandlerType {
+        return HandlerType(
+            name: self.name,
+            parameters: [
+                nativeParameter(Self.type_constrain.param_0),
+            ],
+            result: asCoercion.nativeCoercion
+        )
+    }
+    
+    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
+        var index = 0
+        let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        return AsMultichoice(_: arg_0)
+    }
+}
+
 extension AsNumber: ConstrainableCoercion {
     
     private static let type_constrain = (
@@ -174,31 +199,6 @@ extension AsRecord: ConstrainableCoercion {
     }
 }
 
-extension AsSymbolEnum: ConstrainableCoercion {
-    
-    private static let type_constrain = (
-        param_0: (Symbol("options"), Symbol("options"), AsArray(asSymbol)),
-        _: ()
-    )
-    
-    public var interface: HandlerType {
-        return HandlerType(
-            name: self.name,
-            parameters: [
-                nativeParameter(Self.type_constrain.param_0),
-            ],
-            result: asCoercion.nativeCoercion
-        )
-    }
-    
-    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
-        var index = 0
-        let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
-        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
-        return AsSymbolEnum(_: arg_0)
-    }
-}
-
 public func stdlib_loadCoercions(into env: Environment) {
     env.define(coercion: asAnything)
     env.define(coercion: asBlock)
@@ -207,13 +207,13 @@ public func stdlib_loadCoercions(into env: Environment) {
     env.define(coercion: CallableCoercion(asEditable))
     env.define(coercion: asHandler)
     env.define(coercion: CallableCoercion(asKeyedList))
+    env.define(coercion: CallableCoercion(asMultichoice))
     env.define(coercion: CallableCoercion(asNumber))
     env.define(coercion: CallableCoercion(asOptional))
     env.define(coercion: CallableCoercion(asOrderedList))
     env.define("list", CallableCoercion(asOrderedList))
     env.define(coercion: CallableCoercion(asRecord))
     env.define(coercion: asSymbol)
-    env.define(coercion: CallableCoercion(asSymbolEnum))
     env.define(coercion: asText)
     env.define(coercion: asValue)
 }

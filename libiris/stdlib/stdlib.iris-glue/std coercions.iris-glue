@@ -21,9 +21,9 @@ swift_coercion AsNumber requires {
 swift_coercion AsText requires {} «TODO: constraint (non-empty/pattern)»
 
 
-swift_coercion AsSymbolEnum requires {
+swift_coercion AsMultichoice requires {
     constraints: {options as list of: symbol}
-    swift_function: AsSymbolEnum {_}
+    swift_function: AsMultichoice {_}
 }
 
 

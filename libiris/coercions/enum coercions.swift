@@ -6,12 +6,14 @@
 import Foundation
 
 
-public struct AsSymbolEnum: NativeCoercion {
+public struct AsMultichoice: NativeCoercion {
     
-    public let name: Symbol = "multichoice"
+    public let name: Symbol = "multichoice" // TO DO: rename "choice"? "options"?
+    
+    public var swiftTypeDescription: String { return "Symbol" }
     
     public var swiftLiteralDescription: String {
-        return "AsSymbolEnum([\(self.options.map{$0.swiftLiteralDescription}.joined(separator: ", "))])"
+        return "AsMultichoice([\(self.options.map{$0.swiftLiteralDescription}.joined(separator: ", "))]).swiftCoercion"
     }
     
     public var literalDescription: String {
@@ -36,4 +38,4 @@ public struct AsSymbolEnum: NativeCoercion {
 }
 
 
-let asSymbolEnum = AsSymbolEnum([])
+let asMultichoice = AsMultichoice([])

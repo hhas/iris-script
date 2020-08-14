@@ -68,12 +68,12 @@ func exponent(left: Value, right: Value) -> Value {
     fatalError("exponent of stdlib is not yet implemented.")
 }
 
-func insertAfter(reference: Value) -> Value {
-    fatalError("insertAfter of stdlib is not yet implemented.")
-}
-
 func afterElement(elementType: Symbol, reference: Value) -> Value {
     fatalError("afterElement of stdlib is not yet implemented.")
+}
+
+func insertAfter(reference: Value) -> Value {
+    fatalError("insertAfter of stdlib is not yet implemented.")
 }
 
 func randomElement(elementType: Symbol) -> Value {
@@ -92,12 +92,12 @@ func atSelector(elementType: Symbol, selectorData: Value, commandEnv: Scope, han
     fatalError("atSelector of stdlib is not yet implemented.")
 }
 
-func insertBefore(reference: Value) -> Value {
-    fatalError("insertBefore of stdlib is not yet implemented.")
-}
-
 func beforeElement(elementType: Symbol, reference: Value) -> Value {
     fatalError("beforeElement of stdlib is not yet implemented.")
+}
+
+func insertBefore(reference: Value) -> Value {
+    fatalError("insertBefore of stdlib is not yet implemented.")
 }
 
 func insertAtBeginning() -> Value {

@@ -244,7 +244,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		4F08503923229BC600F0BEAB /* AppleEvents.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppleEvents.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F1EA48422B279B500FFA4D2 /* atoms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = atoms.swift; sourceTree = "<group>"; };
 		4F1EA48622B27B8D00FFA4D2 /* text.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = text.swift; sourceTree = "<group>"; };
 		4F1EA48822B2888400FFA4D2 /* ordered list.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ordered list.swift"; sourceTree = "<group>"; };
@@ -637,8 +636,8 @@
 				4F2C4D3124C977C00058749A /* std control.iris-glue */,
 				4F2C4D3024C977C00058749A /* std state.iris-glue */,
 				4FE8D44C24E27C24008AE1D3 /* std coercions.iris-glue */,
-				4F2BC78B24E1B2A900498A61 /* glue structs.iris-glue */,
 				4F2C4D3724C97BAA0058749A /* ae chunk.iris-glue */,
+				4F2BC78B24E1B2A900498A61 /* glue structs.iris-glue */,
 			);
 			path = "stdlib.iris-glue";
 			sourceTree = "<group>";
@@ -662,7 +661,6 @@
 			children = (
 				4F877A5924BD90A90067A463 /* libedit.tbd */,
 				4F988D0824BCC62C00EE66C7 /* libAppleEvents.a */,
-				4F08503923229BC600F0BEAB /* AppleEvents.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

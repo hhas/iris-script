@@ -15,18 +15,18 @@ public class PatternValue: OpaqueValue<iris.Pattern> { // basic wrapper for pars
 }
 
 
-public struct AsPattern: SwiftCoercion {
+public struct AsOperatorSyntax: SwiftCoercion {
     
     public let name: Symbol = "operator_syntax"
     
-    public let swiftLiteralDescription = "asPattern"
+    public let swiftLiteralDescription = "asOperatorSyntax"
     
     public typealias SwiftType = iris.Pattern
     
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         switch value {
         case let v as SelfEvaluatingValue: return try v.eval(in: scope, as: self)
-        case let v as OrderedList: return try .sequence(v.data.map{ try asPattern.coerce($0, in: scope) })
+        case let v as OrderedList: return try .sequence(v.data.map{ try asOperatorSyntax.coerce($0, in: scope) })
         case let v as PatternValue: return v.data
         default: throw TypeCoercionError(value: value, coercion: self)
         }
@@ -37,7 +37,7 @@ public struct AsPattern: SwiftCoercion {
     }
 }
 
-let asPattern = AsPattern()
+let asOperatorSyntax = AsOperatorSyntax()
 
 
 /*

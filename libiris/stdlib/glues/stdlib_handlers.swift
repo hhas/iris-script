@@ -357,27 +357,6 @@ private func procedure_exponent_left_right(command: Command, commandEnv: Scope, 
     return type_exponent_left_right.result.wrap(result, in: handlerEnv)
 }
 
-// after {reference}
-private let type_insertAfter_reference = (
-    name: Symbol("after"),
-    param_0: (Symbol("reference"), Symbol("reference"), asIs),
-    result: asIs
-)
-private let interface_insertAfter_reference = HandlerType(
-    name: type_insertAfter_reference.name,
-    parameters: [
-        nativeParameter(type_insertAfter_reference.param_0),
-    ],
-    result: type_insertAfter_reference.result.nativeCoercion
-)
-private func procedure_insertAfter_reference(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    var index = 0
-    let arg_0 = try command.value(for: type_insertAfter_reference.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = insertAfter(reference: arg_0)
-    return type_insertAfter_reference.result.wrap(result, in: handlerEnv)
-}
-
 // after {element_type, reference}
 private let type_afterElement_elementType_reference = (
     name: Symbol("after"),
@@ -400,6 +379,27 @@ private func procedure_afterElement_elementType_reference(command: Command, comm
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = afterElement(elementType: arg_0, reference: arg_1)
     return type_afterElement_elementType_reference.result.wrap(result, in: handlerEnv)
+}
+
+// after {reference}
+private let type_insertAfter_reference = (
+    name: Symbol("after"),
+    param_0: (Symbol("reference"), Symbol("reference"), asIs),
+    result: asIs
+)
+private let interface_insertAfter_reference = HandlerType(
+    name: type_insertAfter_reference.name,
+    parameters: [
+        nativeParameter(type_insertAfter_reference.param_0),
+    ],
+    result: type_insertAfter_reference.result.nativeCoercion
+)
+private func procedure_insertAfter_reference(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.value(for: type_insertAfter_reference.param_0, at: &index, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
+    let result = insertAfter(reference: arg_0)
+    return type_insertAfter_reference.result.wrap(result, in: handlerEnv)
 }
 
 // any {element_type}
@@ -492,27 +492,6 @@ private func procedure_atSelector_elementType_selectorData(command: Command, com
     return type_atSelector_elementType_selectorData.result.wrap(result, in: handlerEnv)
 }
 
-// before {reference}
-private let type_insertBefore_reference = (
-    name: Symbol("before"),
-    param_0: (Symbol("reference"), Symbol("reference"), asIs),
-    result: asIs
-)
-private let interface_insertBefore_reference = HandlerType(
-    name: type_insertBefore_reference.name,
-    parameters: [
-        nativeParameter(type_insertBefore_reference.param_0),
-    ],
-    result: type_insertBefore_reference.result.nativeCoercion
-)
-private func procedure_insertBefore_reference(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    var index = 0
-    let arg_0 = try command.value(for: type_insertBefore_reference.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = insertBefore(reference: arg_0)
-    return type_insertBefore_reference.result.wrap(result, in: handlerEnv)
-}
-
 // before {element_type, reference}
 private let type_beforeElement_elementType_reference = (
     name: Symbol("before"),
@@ -535,6 +514,27 @@ private func procedure_beforeElement_elementType_reference(command: Command, com
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = beforeElement(elementType: arg_0, reference: arg_1)
     return type_beforeElement_elementType_reference.result.wrap(result, in: handlerEnv)
+}
+
+// before {reference}
+private let type_insertBefore_reference = (
+    name: Symbol("before"),
+    param_0: (Symbol("reference"), Symbol("reference"), asIs),
+    result: asIs
+)
+private let interface_insertBefore_reference = HandlerType(
+    name: type_insertBefore_reference.name,
+    parameters: [
+        nativeParameter(type_insertBefore_reference.param_0),
+    ],
+    result: type_insertBefore_reference.result.nativeCoercion
+)
+private func procedure_insertBefore_reference(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.value(for: type_insertBefore_reference.param_0, at: &index, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
+    let result = insertBefore(reference: arg_0)
+    return type_insertBefore_reference.result.wrap(result, in: handlerEnv)
 }
 
 // beginning {}
@@ -1475,14 +1475,14 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_OR_left_right, procedure_OR_left_right)
     env.define(interface_XOR_left_right, procedure_XOR_left_right)
     env.define(interface_exponent_left_right, procedure_exponent_left_right)
-    env.define(interface_insertAfter_reference, procedure_insertAfter_reference)
     env.define(interface_afterElement_elementType_reference, procedure_afterElement_elementType_reference)
+    env.define(interface_insertAfter_reference, procedure_insertAfter_reference)
     env.define(interface_randomElement_elementType, procedure_randomElement_elementType)
     env.define(interface_Application_bundleIdentifier, procedure_Application_bundleIdentifier)
     env.define(interface_coerce_value_coercion, procedure_coerce_value_coercion)
     env.define(interface_atSelector_elementType_selectorData, procedure_atSelector_elementType_selectorData)
-    env.define(interface_insertBefore_reference, procedure_insertBefore_reference)
     env.define(interface_beforeElement_elementType_reference, procedure_beforeElement_elementType_reference)
+    env.define(interface_insertBefore_reference, procedure_insertBefore_reference)
     env.define(interface_insertAtBeginning_, procedure_insertAtBeginning_)
     env.define(interface_beginsWith_left_right, procedure_beginsWith_left_right)
     env.define(interface_contains_left_right, procedure_contains_left_right)

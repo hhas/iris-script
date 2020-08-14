@@ -13,3 +13,8 @@ public enum Associativity {
     case right
     case none
 }
+
+public enum HandlerScope {
+    case command
+    case handler
+}

@@ -60,9 +60,9 @@ public extension Record.Fields { // also used as Command.Arguments
         } catch { // TO DO: what to trap here? e.g. should it catch NullCoercionError directly, which can occur if field was not found or if field contains `nothing` but coercion isn't optional/default
             if self.contains(where: {$0.label == param.label})
                 || (currentIndex < self.count && self[currentIndex].label == nullSymbol) { // TO DO: if labeled field is in record but is in wrong order, the error message should reflect that, so use firstIndex() rather than contains() to determine its position relative to currentIndex (“expected ‘LABEL’ field at X index but found it at Y”)
-                throw BadFieldValueError(at: currentIndex, of: self).from(error)
+                throw BadFieldValueError(at: currentIndex, of: self, to: nativeParameter(param)).from(error)
             } else {
-                throw UnknownFieldError(at: currentIndex, of: self).from(error)
+                throw UnknownFieldError(at: currentIndex, of: self, to: nativeParameter(param)).from(error)
             }
         }
     }
