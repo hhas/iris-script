@@ -218,7 +218,7 @@ public func reductionForMatchedPattern(stack: Parser.TokenStack, match: PatternM
         switch m {
         case .keyword: ()
         case .expression:                 arguments.append((nullSymbol, stack.value(at: i)))
-        case .expressionLabeled(let k):   arguments.append((k, stack.value(at: i)))
+        case .boundExpression(let k, _):  arguments.append((k, stack.value(at: i)))
         default: throw InternalError(description: "automaticReduction does not support the following pattern: \(match.exactMatch)")
         }
         i += 1

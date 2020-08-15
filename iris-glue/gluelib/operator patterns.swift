@@ -34,7 +34,7 @@ func newExpressionPattern(binding: String?, handlerEnv: Scope) throws -> iris.Pa
             // TO DO: what error? (UnknownNameError doesn’t quite work as that expects an Accessor and provides only a generic “can’t find X in Y” message)
             throw InternalError(description: "Operator pattern failed on `expression “\(binding)”` as “\(binding)” isn’t a binding name in the handler’s interface: \(interface)")
         }
-        return .expressionLabeled(label)
+        return .boundExpression(label, Symbol(binding))
     } else {
         return .expression
     }
@@ -165,7 +165,7 @@ private func procedure_expression(command: Command, commandEnv: Scope, handler: 
 
 // optional {…}
 private let type_optional = (
-    name: Symbol("is_optional"), // TO DO: there are problems with overriding existing `optional` handler as it also has operator syntax that for some reason refuses to parse; look into this later; for now, workaround by renaming the Pattern.optional(…) constructor so it doesn't class
+    name: Symbol("optional"), // TO DO: there are problems with overriding existing `optional` handler as it also has operator syntax that for some reason refuses to parse; look into this later; for now, workaround by renaming the Pattern.optional(…) constructor so it doesn't class
     param_0: (Symbol("pattern"), Symbol("pattern"), asOperatorSyntax),
     result: asOperatorSyntax
 )
@@ -334,7 +334,7 @@ class PatternDialect: Scope {
     private let parent: Scope
     private var frame = [Symbol: Value]()
     
-    init(parent: Scope, for handlerType: HandlerType) { // the handler interface is used by `expression BINDING_NAME` to remap the operand’s binding name to the underlying Command’s argument label (it would be neater to implement `expression` as a closure that captures this value directly, but this is good enough); e.g. `set…to…` is defined as native pattern [keyword “set”, expression “name”, keyword “to”, expression “value”], which outputs Swift pattern: [.keyword("set"), .expressionLabeled(Symbol("name")), .keyword("to"), .expressionLabeled(Symbol("to"))], remapping the “name” and “value” name bindings to argument labels `{name:,to:}`
+    init(parent: Scope, for handlerType: HandlerType) { // the handler interface is used by `expression BINDING_NAME` to remap the operand’s binding name to the underlying Command’s argument label (it would be neater to implement `expression` as a closure that captures this value directly, but this is good enough); e.g. `set…to…` is defined as native pattern [keyword “set”, expression “name”, keyword “to”, expression “value”], which outputs Swift pattern: [.keyword("set"), .boundExpression(Symbol("name"), Symbol("name")), .keyword("to"), .boundExpression(Symbol("to"), Symbol("value"))], remapping the “name” and “value” name bindings to argument labels `{name:,to:}`
         self.parent = parent
         self.frame[currentHandlerTypeKey] = handlerType
         for (interface, action) in [

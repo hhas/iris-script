@@ -37,12 +37,12 @@ public struct PatternDefinition: CustomStringConvertible {
     
     private let customName: Symbol? // initializer can supply a custom name if the auto-generated name is suboptimal
     
-    var name: Symbol { return self.customName ?? self.keywords.first?.name ?? nullSymbol } // canonical name
+    public var name: Symbol { return self.customName ?? self.keywords.first?.name ?? nullSymbol } // canonical name
     //var conjunctions: ArraySlice<Symbol> { return self.keywords.dropFirst() }
         
-    let pattern: [Pattern] // TO DO: initializer should ideally enforce a non-empty array containing one or more keywords (or punctuation), also we may want to ensure keywords and exprs are not adjacent [e.g. `if…then…` alternates the two, while in the case of `do…done` multiple exprs in the body should have delimiters between them or, if the block is empty, then `Kw LF Kw`]; that said, we want to minimize bootstrap overheads so may be best to perform these checks at glue generation time; note: a keyword may occasionally appear more than once, e.g. `YYYY-MM-DD`
-    let precedence: Precedence
-    let associate: Associativity // only relevant to infix operators, e.g. `^`, `else`
+    public let pattern: [Pattern] // TO DO: initializer should ideally enforce a non-empty array containing one or more keywords (or punctuation), also we may want to ensure keywords and exprs are not adjacent [e.g. `if…then…` alternates the two, while in the case of `do…done` multiple exprs in the body should have delimiters between them or, if the block is empty, then `Kw LF Kw`]; that said, we want to minimize bootstrap overheads so may be best to perform these checks at glue generation time; note: a keyword may occasionally appear more than once, e.g. `YYYY-MM-DD`
+    public let precedence: Precedence
+    public let associate: Associativity // only relevant to infix operators, e.g. `^`, `else`
     
     let reduce: ReduceFunc
     let autoReduce: Bool

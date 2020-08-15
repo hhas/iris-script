@@ -10,7 +10,7 @@ public struct AsHandlerGlueRequirements: SwiftCoercion {
 
     private static let type_struct = (
         field_0: (Symbol("can_error"), Symbol("can_error"), AsSwiftDefault(asBool, defaultValue: false)),
-        field_1: (Symbol("use_scopes"), Symbol("use_scopes"), AsSwiftDefault(AsArray(AsMultichoice([Symbol("handler"), Symbol("command")]).swiftCoercion), defaultValue: [])),
+        field_1: (Symbol("use_scopes"), Symbol("use_scopes"), AsSwiftDefault(AsArray(AsMultichoice([Symbol("command"), Symbol("handler")]).swiftCoercion), defaultValue: [])),
         field_2: (Symbol("swift_function"), Symbol("swift_function"), AsSwiftOptional(AsLiteral<Command>())),
         field_3: (Symbol("operator"), Symbol("operator_definition"), AsSwiftOptional(asOperatorDefinition)),
         _: ()

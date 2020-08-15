@@ -46,7 +46,7 @@ swift_coercion AsKeyedList requires {
 swift_coercion AsRecord requires {
     constraints: {of_type: record_type as optional record_type}
     swift_function: AsRecord {_}
-    operator: {[keyword “record”, is_optional expression “record_type”], 1500}
+    operator: {[keyword “record”, optional expression “record_type”], 1500}
 }
 
 swift_coercion AsCoercion requires {}
@@ -57,13 +57,13 @@ swift_coercion AsOptional requires {
     constraints: {of_type: value_type as optional coercion with_default value,
                   with_default: default_value as anything}
     swift_function: AsOptional {_, default}
-    operator: {[keyword “optional”, is_optional expression “value_type”,
-                is_optional [keyword "with_default", expression "default_value"]], 1500}
+    operator: {[keyword “optional”, optional expression,
+                optional [keyword "with_default", expression "default_value"]], 1500}
 }
 
 swift_coercion AsEditable requires {
     constraints: {of_type: value_type as optional coercion with_default value}
     swift_function: AsEditable {_}
-    operator: {[keyword “editable”, is_optional expression “value_type”], 1500}
+    operator: {[keyword “editable”, optional expression “value_type”], 1500}
 }
 

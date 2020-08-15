@@ -24,12 +24,12 @@ func add(left: Value, right: Value) -> Value {
     fatalError("add of stdlib is not yet implemented.")
 }
 
-func negative(right: Value) -> Value {
-    fatalError("negative of stdlib is not yet implemented.")
-}
-
 func subtract(left: Value, right: Value) -> Value {
     fatalError("subtract of stdlib is not yet implemented.")
+}
+
+func negative(right: Value) -> Value {
+    fatalError("negative of stdlib is not yet implemented.")
 }
 
 func divide(left: Value, right: Value) -> Value {

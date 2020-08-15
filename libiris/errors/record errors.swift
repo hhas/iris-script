@@ -22,7 +22,7 @@ public protocol FieldError: NativeError {
 public struct UnknownFieldError: FieldError {
     
     public var description: String {
-        return "Can’t match field \(self.index+1) in `\(self.fields.literalDescription)`\(self.fieldType == nil ? "" : " to \(self.fieldType!.label)")"
+        return "Can’t match expected ‘\(self.fieldType == nil ? "" : self.fieldType!.label.label)’ label to field \(self.index+1) of `\(self.fields.literalDescription)`" // TO DO: sort error message
     }
 
     public let index: Int

@@ -12,7 +12,7 @@ swift_handler ‘if’ {test: condition as boolean, then: action as expression, 
     swift_function: ifTest {condition, action, alternativeAction}
     operator: {[keyword “if”, expression “condition”,
                 keyword “then”, expression “action”,
-    			is_optional sequence [keyword “else”, expression “alternative_action”]],
+    			optional sequence [keyword “else”, expression “alternative_action”]],
                precedence: 101}
 }
 

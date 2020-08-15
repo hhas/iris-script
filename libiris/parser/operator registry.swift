@@ -23,6 +23,10 @@ public class OperatorRegistry: CustomDebugStringConvertible { // caution: being 
     
     // TO DO: we really want to bind library handler directly to Command, and also attach the operator definition for use by pretty printer; one compromise is for operator definition to point back to library, and leave handler lookup to first call (note: once a script is nominally compiled, it'll retain the Command + library ID, and possibly the operator name that appears in the code for use in error messages, but not the operator definition)
     
+    public var patternDefinitions: [PatternDefinition] {
+        return self.wordOperators.values.flatMap{ $0.definitions } + self.symbolOperators.values.flatMap{ $0.definitions }
+    }
+    
     public var debugDescription: String { return "OperatorRegistry<\(self.wordOperators.keys) \(self.symbolOperators.keys)>" }
     
     private typealias OperatorTable = [String: OperatorDefinitions] // maps a single keyword to all operators that use that keyword

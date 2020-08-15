@@ -45,13 +45,23 @@ let operatorsTemplate = TextTemplate(templateSource) {
         let reducefunc: String
         if let reducer = definition.reducer { reducefunc = ", \(reducer)" } else { reducefunc = "" }
         let patternScope = PatternDialect(parent: nullScope, for: glue.interface)
-        let syntax = try! asOperatorSyntax.coerce(definition.syntax, in: patternScope)
+        do {
+        let syntax = try asOperatorSyntax.coerce(definition.syntax, in: patternScope)
         let pattern: String
         switch syntax {
         case .sequence:  pattern = syntax.swiftLiteralDescription
         default:         pattern = "[\(syntax.swiftLiteralDescription)]"
         }
         node.args.set("\(pattern), \(definition.precedence), .\(definition.associate)\(reducefunc)")
+        } catch {
+            print(error)
+            print()
+            print(definition.syntax)
+            let h = patternScope.get("optional")!
+            print()
+            print(h)
+            exit(5)
+        }
     }
 }
 

@@ -99,27 +99,6 @@ private func procedure_add_left_right(command: Command, commandEnv: Scope, handl
     return type_add_left_right.result.wrap(result, in: handlerEnv)
 }
 
-// - {right}
-private let type_negative_right = (
-    name: Symbol("-"),
-    param_0: (Symbol("right"), Symbol("right"), asSwiftNumber),
-    result: asSwiftNumber
-)
-private let interface_negative_right = HandlerType(
-    name: type_negative_right.name,
-    parameters: [
-        nativeParameter(type_negative_right.param_0),
-    ],
-    result: type_negative_right.result.nativeCoercion
-)
-private func procedure_negative_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    var index = 0
-    let arg_0 = try command.value(for: type_negative_right.param_0, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    let result = negative(right: arg_0)
-    return type_negative_right.result.wrap(result, in: handlerEnv)
-}
-
 // - {left, right}
 private let type_subtract_left_right = (
     name: Symbol("-"),
@@ -142,6 +121,27 @@ private func procedure_subtract_left_right(command: Command, commandEnv: Scope, 
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     let result = subtract(left: arg_0, right: arg_1)
     return type_subtract_left_right.result.wrap(result, in: handlerEnv)
+}
+
+// - {right}
+private let type_negative_right = (
+    name: Symbol("-"),
+    param_0: (Symbol("right"), Symbol("right"), asSwiftNumber),
+    result: asSwiftNumber
+)
+private let interface_negative_right = HandlerType(
+    name: type_negative_right.name,
+    parameters: [
+        nativeParameter(type_negative_right.param_0),
+    ],
+    result: type_negative_right.result.nativeCoercion
+)
+private func procedure_negative_right(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.value(for: type_negative_right.param_0, at: &index, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
+    let result = negative(right: arg_0)
+    return type_negative_right.result.wrap(result, in: handlerEnv)
 }
 
 // / {left, right}
@@ -1464,8 +1464,8 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_multiply_left_right, procedure_multiply_left_right)
     env.define(interface_positive_right, procedure_positive_right)
     env.define(interface_add_left_right, procedure_add_left_right)
-    env.define(interface_negative_right, procedure_negative_right)
     env.define(interface_subtract_left_right, procedure_subtract_left_right)
+    env.define(interface_negative_right, procedure_negative_right)
     env.define(interface_divide_left_right, procedure_divide_left_right)
     env.define(interface_isLess_left_right, procedure_isLess_left_right)
     env.define(interface_isEqual_left_right, procedure_isEqual_left_right)

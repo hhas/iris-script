@@ -48,6 +48,8 @@ func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handl
     `help`      – display this Help
 
     `commands`  – list all available commands
+
+    `operators` – list all available operators
     
     `quit`      – exit the interactive shell
     
@@ -89,6 +91,35 @@ func procedure_commands(command: Command, commandEnv: Scope, handler: Handler, h
             writeHelp("‘\(name.label)’ – \(value)\n")
         }
     }
+    return nullValue
+}
+
+// `operators` – list the contents of Environment
+let interface_operators = HandlerType(
+    name: "operators",
+    parameters: [],
+    result: asNothing.nativeCoercion
+)
+func procedure_operators(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+    guard let env = handlerEnv as? ExtendedEnvironment else {
+        print("not available")
+        return nullValue
+    }
+    if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command, to: handler) }
+    var found = Set<String>()
+    var precedence: Precedence = 0
+    let definitions = env.operatorRegistry.patternDefinitions.map{($0.precedence, $0.name, $0.description)}
+    for definition in definitions.sorted(by: { ($1.0, $0.1) < ($0.0, $1.1) }) {
+        if !found.contains(definition.2) {
+            found.insert(definition.2)
+            if definition.0 != precedence {
+                precedence = definition.0
+                print()
+            }
+            print(definition.2) // TO DO: how best to format operators?
+        }
+    }
+    print()
     return nullValue
 }
 
@@ -193,6 +224,7 @@ func loadREPLHandlers(_ env: Environment) {
     env.define(interface_help, procedure_help)
     env.define(interface_clear, procedure_clear)
     env.define(interface_commands, procedure_commands)
+    env.define(interface_operators, procedure_operators)
     env.define(interface_quit, procedure_quit)
     env.define(interface_read_prompt, procedure_read_prompt)
     env.define(interface_pp_value, procedure_pp_value)

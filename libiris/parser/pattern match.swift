@@ -241,7 +241,7 @@ public extension PatternMatch {
         return self.exactMatch.reduce([]) {
             switch $1 {
             case .expression: return $0 + [nullSymbol]
-            case .expressionLabeled(let name): return $0 + [name] // TO DO: aliases?
+            case .boundExpression(let name, _): return $0 + [name] // TO DO: aliases?
             default: return $0
             }
         }

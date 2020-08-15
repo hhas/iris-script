@@ -57,44 +57,33 @@ public struct HandlerGlue {
     var result: String { return self.interface.result.swiftLiteralDescription } // coercion name
     
     var canError: Bool { return requirements.canError }
+    
     var useScopes: [String] { // commandEnv, handlerEnv // TO DO: any use-cases for per-invocation sub-env?
         var scopes = [String]()
         if requirements.useScopes.contains("command") { scopes.append("commandEnv") }
         if requirements.useScopes.contains("handler") { scopes.append("handlerEnv") }
         return scopes
     }
-    var swiftFunction: SwiftFunction? { // if different to native names
-        if let cmd = requirements.swiftFunction {
-            return (name: cmd.name.label, params: try! cmd.arguments.map{
-                guard let name = $0.value.asIdentifier() else {
-                    throw TypeCoercionError(value: $0.value, coercion: asLiteralName) // TO DO: it would be better for error reporting purposes to move this logic into a custom coercion for matching+unwrapping the entire command
-                }
-                return name.label
-            })
-        }
-        return nil
-    }
+    
     var operatorDefinition: OperatorDefinition? { return requirements.operatorDefinition }
     
     let requirements: HandlerGlueRequirements
+    
+    let swiftName: String
+    let _swiftArguments: [String]
 
     init(interface: HandlerType, requirements: HandlerGlueRequirements) {
         self.interface = interface
         self.requirements = requirements
-    }
-    
-    // TO DO: tidy this up
-    
-    var swiftName: String { return self.swiftFunction?.name ?? camelCase(self.name) }
-    
-    var _swiftArguments: [String] {
-        if let params = self.swiftFunction?.params, params.count == self.parameters.count {
-            return params
+        self.swiftName = requirements.swiftFunction?.name.label ?? camelCase(interface.name.label)
+        if let swiftFunction = requirements.swiftFunction, swiftFunction.arguments.count == interface.parameters.count {
+            self._swiftArguments = swiftFunction.arguments.map{ $0.value.asIdentifier()!.label } // TO DO: use specialized coercion to unpack command, raising error there if not appropriately formed
         } else {
-            return self.parameters.map{camelCase($0.label)}
+            self._swiftArguments = interface.parameters.map{ camelCase($0.label.label) }
         }
     }
-    
+    // TO DO: tidy this up
+            
     var swiftArguments: [(String, String)] {
         return self._swiftArguments.enumerated().map{($1, "arg_\($0)")} + self.useScopes.map{($0, $0)}
     }
@@ -102,16 +91,12 @@ public struct HandlerGlue {
     var signature: String { return self.swiftName + "_" + self._swiftArguments.joined(separator: "_") }
     
     
-    // TO DO: FIX: returned `type` needs to be SwiftType (e.g. `String`), not coercion (e.g. `asString`)
     var swiftParameters: [(label: String, binding: String?, type: String)] { // used in primitive handler function stubs
-        let params: [(String, String, String)]
-        let nativeParameters = self.interface.parameters.map{(camelCase($0.label.label), camelCase($0.binding.label), $0.coercion.swiftTypeDescription)}
-        if let swiftParams = self.swiftFunction?.params, swiftParams.count == nativeParameters.count {
-            params = zip(swiftParams, nativeParameters).map{($0, $1.1, $1.2)}
-        } else {
-            params = nativeParameters
-        }
-        return params.map{($0, ($0 == $1 || $1.isEmpty ? nil : $1), $2)} + self.useScopes.map{($0, nil, "Scope")}
+        return zip(self._swiftArguments, self.interface.parameters).map({
+            (argName: String, param: (_: Symbol, binding: Symbol, coercion: NativeCoercion)) in
+            let paramName = camelCase(param.binding.label) // TO DO: swift_function should probably allow labels and binding names (it only affects function stubs)
+            return (argName, (argName == paramName ? nil : paramName), param.coercion.swiftTypeDescription)
+        }) + self.useScopes.map{($0, nil, "Scope")}
     }
 }
 

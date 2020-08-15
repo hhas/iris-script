@@ -216,7 +216,7 @@ extension Pattern { // this is assumed to be the exact operator pattern from whi
         //case .name:                 return "NAME"  // should only be used in command matchers
         //case .label:                return "LABEL" // should only be used in command matchers
         case .expression:           return formatter.format(operands.removeFirst())
-        case .expressionLabeled:    return formatter.format(operands.removeFirst()) // TO DO: confirm this works as intended
+        case .boundExpression:      return formatter.format(operands.removeFirst()) // TO DO: confirm this works as intended
         //case .token(let t):         return ".\(t)" // should only be used in block value matchers
         case .testValue(_):         return formatter.format(operands.removeFirst())
         //case .delimiter:            return ", "    // should only be used in block value matchers

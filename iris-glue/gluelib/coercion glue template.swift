@@ -79,16 +79,16 @@ let coercionsTemplate = TextTemplate(templateSource) {
             node.binding.set(item.param.binding)
             node.coercion.set(item.param.coercion)
         }
-        node.interfaceParameters.map(constructor.parameters.enumerated()) {
-            (node: Node, item: (count: Int, param: HandlerGlue.Parameter)) -> Void in
-            node.count.set(item.count)
+        node.interfaceParameters.map(0..<constructor.parameters.count) {
+            (node: Node, count: Int) -> Void in
+            node.count.set(count)
         }
         node.unboxArguments.map(0..<constructor.parameters.count) {
             (node: Node, count: Int) -> Void in
             node.count.set(count)
         }
         if !constructor.canError { node.tryKeyword.delete() }
-        node.swiftFunction.set(constructor.swiftFunction?.name ?? glue.swiftType) // this is usually, but not always, same as swiftType
+        node.swiftFunction.set(constructor.swiftName.isEmpty ? glue.swiftType : constructor.swiftName) // this is usually, but not always, same as swiftType
         node.swiftArguments.map(constructor.swiftArguments) {
             (node: Node, item: (label: String, param: String)) -> Void in
             node.label.set(item.label)

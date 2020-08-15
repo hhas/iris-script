@@ -55,7 +55,8 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
         case .name:                     return ".name"
         case .label:                    return ".label"
         case .expression:               return ".expression"
-        case .expressionLabeled(let k): return ".expressionLabeled(\(k.label.debugDescription))"
+        case .boundExpression(let k, let b):
+            return ".boundExpression(\(k.label.debugDescription), \(b.label.debugDescription))"
         case .token(let t):             fatalError("TODO: .token(\(t))")
         case .testValue(let f):         fatalError("TODO: .testValue(\(String(describing: f)))")
         case .delimiter:                return ".delimiter"
@@ -64,12 +65,10 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
     }
 
     
-    case keyword(Keyword)
-    case expression // any value
-    case expressionLabeled(Symbol) // any value // TO DO: replace with namedExpression(label: Symbol, binding: Symbol), allowing the binding name (which native pattern uses) to appear in auto-generated documentation
-    
-    // TO DO: case binding(Symbol, Pattern); allows e.g. arg labels to be attached to operator pattern for use in constructed Command (while we could supply a descriptive binding name here for documentation purposes, since operators are defined as part of handler definition the documentation generator can already obtain binding name from that; for now, operands are treated as positional only, which is fine for the common case where there operator has no optional clauses); TO DO: what about `do…done` blocks, where the body is an expression sequence? (these use a custom reducefunc which can simply ignore any labels, but it could be a problem for tooling that reads these patterns for other purposes)
-    
+    case keyword(Keyword) // match the given keyword
+    case expression // match any value
+    case boundExpression(Symbol, Symbol) // match any value, labeling the value when constructing the operator’s underlying Command’s argument record
+        
     // PEG-style patterns
     case optional(Pattern)
     case sequence([Pattern]) // TO DO: how to enforce non-empty array?
@@ -109,7 +108,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
         case .name:                     return "NAME"
         case .label:                    return "LABEL"
         case .expression:               return "EXPR"
-        case .expressionLabeled(let k): return "EXPR(\(k.label))"
+        case .boundExpression(let k, let b): return "EXPR(\(k.label):\(b.label))"
         case .token(let t):             return ".\(t)"
         case .testValue(_):             return "«VALUE»"
         case .delimiter:                return "DELIM"
@@ -205,7 +204,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
             case .quotedName(_), .unquotedName(_), .operatorName(_): return true // TO DO: ditto; `NAME COLON` should probably be reduced to `Form.label(NAME)` before matchers are applied
             default: return false
             }
-        case .expression, .expressionLabeled(_):
+        case .expression, .boundExpression(_):
             if case .value(_) = form { return true } // TO DO: what about .error? should it always be immediately reduced to error value, or are there cases where it's preferable to put .error token on parser stack for later processing?
         case .token(let t):
             return form == t // TO DO: why does Form.==() not compare exactly? (probably because we currently only use `==` when matching punctuation tokens; it is dicey though; we probably should define a custom method for this, or else implement exact comparison [the other problem with `==` is that it's no use for matching names and other parameterized cases unless we use dummy values, which makes code very confusing/potentially misleading - best to implement those tests as Form.isName:Bool, etc])
@@ -229,7 +228,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
 
     var isExpression: Bool { // does this pattern match an EXPR? caution: this must ONLY be called on reified patterns (i.e. currently/previously matched, NEVER on remainingPatterns[1...])
         switch self {
-        case .expression, .expressionLabeled(_), .testValue(_):
+        case .expression, .boundExpression(_), .testValue(_):
             return true
         case .optional(let p), .zeroOrMore(let p), .oneOrMore(let p):
             fatalError("Cannot get isExpression for non-reified pattern: \(p)")
@@ -242,7 +241,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
 
     var hasLeftOperand: Bool { // crude; assumes all branches are consistent
         switch self {
-        case .expression, .expressionLabeled(_), .testValue(_): return true
+        case .expression, .boundExpression(_), .testValue(_): return true
         case .optional(let p):           return p.hasLeftOperand
         case .sequence(let p):           return p.first!.hasLeftOperand
         case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasLeftOperand }
@@ -254,7 +253,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
     
     var hasRightOperand: Bool { // ditto
         switch self {
-        case .expression, .expressionLabeled(_), .testValue(_): return true
+        case .expression, .boundExpression(_), .testValue(_): return true
         case .optional(let p):           return p.hasRightOperand
         case .sequence(let p):           return p.last!.hasRightOperand
         case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasRightOperand }
