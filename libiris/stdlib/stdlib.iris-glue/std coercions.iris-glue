@@ -41,7 +41,6 @@ swift_coercion AsKeyedList requires {
                   value_type as optional coercion with_default value}
 }
 
-«TODO: it is too easy to use `optional` instead of `is_optional` in operator pattern (we also override `expression`, but that’s a command, not an operator; that said, the problem with overriding `optional` may have resolved itself)»
 
 swift_coercion AsRecord requires {
     constraints: {of_type: record_type as optional record_type}

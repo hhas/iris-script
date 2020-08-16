@@ -25,7 +25,7 @@ import Foundation
 
 public class EditableValue: Handler, Mutator { // TO DO: Handler or Callable?
     
-    public var swiftLiteralDescription: String { return "\(type(of: self))(\(self.data.swiftLiteralDescription), as: \(self.coercion.swiftLiteralDescription))" }
+    public var swiftLiteralDescription: String { return "\(type(of: self))(\(self.data.swiftLiteralDescription), as: \(self.elementType.swiftLiteralDescription))" }
     
     // get() and call() behaviors are pass-thrus to the underlying Value; set() replaces the current Value with a new Value
     
@@ -36,11 +36,11 @@ public class EditableValue: Handler, Mutator { // TO DO: Handler or Callable?
     public var interface: HandlerType { return (self.data as? Callable)?.interface ?? nullHandlerType }
     
     private(set) var data: Value
-    public let coercion: NativeCoercion // the type of the underlying value
+    public let elementType: NativeCoercion // the type of the underlying value // TO DO: what should constrainedType be? elementType or AsEditable(elementType)?
     
-    public init(_ data: Value, as coercion: NativeCoercion) { // called by AsEditable
+    public init(_ data: Value, as elementType: NativeCoercion = defaultCoercion) { // called by AsEditable
         self.data = data
-        self.coercion = coercion
+        self.elementType = elementType
     }
     
     //
@@ -74,7 +74,7 @@ public class EditableValue: Handler, Mutator { // TO DO: Handler or Callable?
     
     public func set(_ name: Symbol, to value: Value) throws { // TO DO: is there ever any situation where name can be anything other than nullSymbol? (Q. should the slot name always be passed here, c.f. call() which always passes the full Command even though the receiving handler ignores the command's name?)
         if name == nullSymbol {
-            self.data = value // TO DO: this needs to apply self.coercion, throwing if the given value does not fit box's original type and constraints
+            self.data = value // try self.coercion.coerce(value, in: scope) // TO DO: this needs to apply self.coercion, throwing if the given value does not fit box's original type and constraints; Q.how to access lexical scope from here?
         } else {
             throw NotYetImplementedError()
         }

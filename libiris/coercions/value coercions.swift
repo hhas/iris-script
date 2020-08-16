@@ -5,7 +5,12 @@
 
 import Foundation
 
- // TO DO: lists and records that contain unevaluated expressions also need to self-evaluate; e.g. currently runScript("[foo].") returns `[‘foo’]` which is not what we want; alternative is to check if value isMemoizable: if false, always fully evaluate it
+ // TO DO: FIX: lists and records that contain unevaluated expressions also need to self-evaluate; e.g. currently runScript("[foo].") returns `[‘foo’]` which is not what we want; alternative is to check if value isMemoizable: if false, always fully evaluate it
+
+
+public let defaultCoercion = asAnything // TO DO: should default elementType for AsOrderedList, AsKeyedList, AsEditable, NativeHandler params, etc be asAnything or asValue? (i.e. should `nothing` be accepted or rejected by default? currently it’s asAnything)
+
+
 
 public struct AsAnything: SwiftCoercion, NativeCoercion { // any value or `nothing`; equivalent to `AsOptional(asValue)`
 

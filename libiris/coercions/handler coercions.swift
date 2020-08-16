@@ -73,7 +73,7 @@ public struct AsHandlerType: SwiftCoercion {
             returnType = try asReturnType.coerce(args[1].value, in: scope) // return type may be `nothing`, in which case handler *always* returns `nothing`
         } else {
             (name, parameters) = try self.unpackSignature(command, in: scope)
-            returnType = asAnything.nativeCoercion
+            returnType = asAnything.nativeCoercion // unlike parameters, which use defaultCoercion, default return type always allows `nothing` as it is normal for handlers that operate purely by side-effect (e.g. `write`) to return nothing, and we don’t want native handlers to fail if last command executed returned nothing
         }
         return HandlerType(name: name, parameters: parameters, result: returnType, isEventHandler: false)
     }
@@ -106,6 +106,9 @@ public struct AsError: SwiftCoercion {
 public let asError = AsError()
 
 
+
+
+// TO DO: should AsCoercion support coercing a list containing a single NativeCoercion to AsOrderedList(…)? e.g. `[number]` -> `ordered_list of: number`; ditto using a record to express a record type, e.g. `v as {label1 as type1, label2 as type2}` -> `v as record {label1 as type1, label2 as type2}`
 
 public struct AsCoercion: SwiftCoercion {
     

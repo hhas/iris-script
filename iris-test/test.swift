@@ -9,10 +9,18 @@ import iris
 
 
 func test() {
+    runScript("""
+        set x to 0 as editable
+        while x < 10 repeat do
+            write x
+            set x to x + 1
+        done
+    """)
+    
 
     // runScript(" tell @com.apple.iTunes to playpause ")
     
-    runScript(" set a to 3. 1 + - a ") //
+    //runScript(" set a to 3. 1 + - a ") //
     
     return;
     

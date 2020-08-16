@@ -3,11 +3,6 @@
 //  libiris
 //
 
-// TO DO: should default element type for AsOrderedList, AsKeyedList be asValue or asAnything?
-
-// TO DO: support coercing list containing a single NativeCoercion, e.g. `[number]` -> `AsOrderedList(asNumber)`; similar to using a record to express a record type, e.g. `foo as {label1 as type1, label2 as type2}` -> `{label1: value1, label2: value2}` (BTW, this is probably a good reason to allow field matching to step over unwanted fields - currently all fields must be specified or an error will occur, which is unhelpful and not very forward-compatible)
-
-
 import Foundation
 
 // TO DO: As[Lazy]Sequence
@@ -99,14 +94,14 @@ public struct AsOrderedList: NativeCoercion {
     public let elementType: NativeCoercion
     private let minLength: Int, maxLength: Int
     
-    public init(_ elementType: NativeCoercion = asAnything, minLength: Int? = nil, maxLength: Int? = nil) throws {
+    public init(_ elementType: NativeCoercion = defaultCoercion, minLength: Int? = nil, maxLength: Int? = nil) throws {
         if let min = minLength, let max = maxLength, min > max { throw BadRangeError(min: min, max: max) }
         self.elementType = elementType
         self.minLength = minLength ?? 0
         self.maxLength = maxLength ?? Int.max
     }
     
-    public init(_ elementType: NativeCoercion = asAnything) {
+    public init(_ elementType: NativeCoercion = defaultCoercion) {
         self.elementType = elementType
         self.minLength = 0
         self.maxLength = Int.max

@@ -26,7 +26,7 @@ A basic interactive shell is available under target `iris-shell`. Bad error repo
 
 ## Features
 
-Homoiconic, minimalist core language, with only two foundational concepts: values and commands. “Everything is a Command.”
+Homoiconic, minimalist core language, with only two foundational concepts: values and commands. “Everything is a Command.” The core language and concepts must be quickly and easily learned; everything else should be discoverable if/as/when needed.
 
 Readable, word-based syntax with basic English-like punctuation rules. Each built-in punctuation has a single, unambiguous meaning:
 
@@ -54,6 +54,8 @@ Colons denote `label: value` pairs; semi-colons denote “pipes” (`foo; bar {2
 Standard built-in value types: numbers, strings, symbols (“hashtags”), lists (both ordered and key-value; aka arrays and dictionaries), records (tuple-struct hybrid).
 
 Syntactic support (via chainable lexers) for currencies, weights and measures, e.g. `$12.02`, `42kg`, `97.5°C`. Literal representations of dates and times should be achievable too: `2020-07-11`, `06:40:55`.
+
+Identifiers use `snake_case`. This allows easy, unambiguous detection of word boundaries within multi-word names, and should allow tooling to fuzzily match space-separated words against known identifiers and replace spaces with underscores automatically. Pretty printers may also de-emphasize underscores (e.g. by reducing opacity) for a more “English-like” visual appearance without losing semantic clarity.
 
 Commands and blocks (sequences of expressions) are also first-class values; thus iris code is also iris data.
 
@@ -88,15 +90,13 @@ Separate operators for performing math vs non-math comparisons (similar to Perl 
 
 Coercion-based native⬌Swift bridging API for implementing primitive library functions, ensuring clean separation between Swift implementation and automatically generated native-to-Swift bridging glue code. Glue definitions are written in iris and evaluated via the `gluelib` library. e.g. The `if…then…else…` handler’s glue definition, including custom operator syntax:
 
-    to ‘if’ {test: condition as boolean, 
-             then: action as expression, 
+    to ‘if’ {test: condition as boolean, then: action as expression, 
              else: alternative_action as expression} returning anything requires {
         can_error: true
         use_scopes: #command
         swift_function: ifTest {condition, action, alternativeAction}
-        operator: {[keyword “if”, expr “condition”,
-                    keyword “then”, expr “action”,
-                    is_optional sequence [keyword “else”, expr “alternative_action”]],
+        operator: {[keyword “if”, expr “condition”, keyword “then”, expr “action”,
+                    optional sequence [keyword “else”, expr “alternative_action”]],
                    precedence: 101}
     }
 
@@ -174,6 +174,8 @@ Additional transpiling optimizations might include storing values directly in Sw
 * standard library packaging scheme; this will probably be zip-encoded bundles containing library scripts/binaries plus user documentation, tests, examples of use
 
 * per-script sandboxing: given the limitations of macOS’s static app-level sandbox model, per-script sandboxing would require running each script in its own completely sandboxed XPC subprocess, with all script IO being performed via the XPC connection to its parent process; the parent process can then decide exactly which of those IO requests to carry out (e.g. a script may include a manifest of essential/optional external resources it wishes to work with explanations for each; the script host can then present that information to user as a single one-time checklist to fully/partially approve/reject as they wish)
+
+* can/should handlers declare 1. errors they throw/rethrow, 2. required/optional IO, 3. other side-effects; if so, how? (primitive handlers already declare if they throw in glue requirements, though this information currently isn’t captured in HandlerType; native handlers can always throw in body; what about handlers that defer argument evaluation? and how should primitive handlers distinguish errors thrown in argument unpacking vs errors thrown in underlying body function?)
 
 * a mediated IO model should also determine the design of the script’s own IO APIs, e.g. rather than have scripts work with arbitrary file paths and raw `open`/`read`/`write` commands, have the script “mount” any file system objects it wishes to access within the global `@` namespace (e.g. using top-level annotations which can be read at parse-/compile-time) and operate directly on them there: e.g. given a file resource, use the file’s UTI to determine the codec/coercion to use for basic read/write operations; thus a `.txt` file would normally read/write as `utf8_text`, a `.plist` file using a `plist` coercion built on `PropertyListSerialization`, etc, with the script able to attach more specific coercions—e.g. `markdown`, `intent_definition`—to the resource as needed (coercions should also indicate where read-write vs default read-only access is required, e.g. `«mount: “/path/to/file” as editable markdown»` would mount a resource at, say, `@path.to.file` which appears to script as a structured, editable Markdown document object)
 

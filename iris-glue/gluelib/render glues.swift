@@ -81,7 +81,7 @@ public struct GlueRenderer {
             throw GlueError(description: "Found syntax errors in glue: \(errors)")
         }
         let _ = (try script.eval(in: parser.env, as: asAnything))
-        let handlerGlues = self.handlerGlues.data.values.sorted{$0.name < $1.name}
+        let handlerGlues = self.handlerGlues.data.values.sorted{$0.signature < $1.signature}
         let recordGlues = self.recordGlues.data.values.sorted{$0.swiftType < $1.swiftType}
         let coercionGlues = self.coercionGlues.data.values.sorted{$0.swiftType < $1.swiftType}
         let enumGlues = self.enumGlues.data.values.sorted{$0.swiftType < $1.swiftType}

@@ -92,7 +92,7 @@ public extension Record.Fields { // also used as Command.Arguments
                         throw TypeCoercionError(value: Record(self, as: asRecord), coercion: asRecordType)
                     }
                     binding = name
-                    coercion = asAnything // if no parameter type is specified, accept any value or `nothing`
+                    coercion = defaultCoercion // use default if no parameter type is specified
                 }
             default:
                 print("toRecordType() failed on", type(of:value),value) // DEBUG

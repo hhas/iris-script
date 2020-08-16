@@ -16,14 +16,15 @@ swift_handler ‘if’ {test: condition as boolean, then: action as expression, 
                precedence: 101}
 }
 
-swift_handler ‘while’ {condition as boolean, action as expression} returning anything requires {
+«TODO: how to indicate condition is an expression that must return boolean»
+swift_handler ‘while’ {condition as expression, action as expression} returning anything requires {
     can_error: true
     use_scopes: #command
     swift_function: whileRepeat {condition, action}
     operator: {[keyword “while”, expression “condition”, keyword “repeat”, expression “action”], 101}
 }
 
-swift_handler ‘repeat’ {action as expression, condition as boolean} returning anything requires {
+swift_handler ‘repeat’ {action as expression, condition as expression} returning anything requires {
     can_error: true
     use_scopes: #command
     swift_function: repeatWhile {action, condition}

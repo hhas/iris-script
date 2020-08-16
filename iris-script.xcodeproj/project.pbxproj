@@ -352,7 +352,6 @@
 		4FC5C81B23129BCC007D694C /* handler glue template.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "handler glue template.swift"; sourceTree = "<group>"; };
 		4FC5C81C23129BCC007D694C /* define handler glue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "define handler glue.swift"; sourceTree = "<group>"; };
 		4FC5C81D23129BCC007D694C /* texttemplate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = texttemplate.swift; sourceTree = "<group>"; };
-		4FC5C8232312A06C007D694C /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		4FC5C825231316D9007D694C /* unicode reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "unicode reader.swift"; sourceTree = "<group>"; };
 		4FC82CEF24CEBEAE00EEC170 /* record coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "record coercions.swift"; sourceTree = "<group>"; };
 		4FC82CF024CEBEAE00EEC170 /* text coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "text coercions.swift"; sourceTree = "<group>"; };
@@ -702,7 +701,6 @@
 			isa = PBXGroup;
 			children = (
 				4F8C405B24BB9C1400735273 /* README.md */,
-				4FC5C8232312A06C007D694C /* notes.txt */,
 				4F28388D24B8C4D80054C70E /* SwiftAutomation.xcodeproj */,
 				4F84CFFF22ADA0F200C9FD23 /* iris-test */,
 				4F8C407324BCC02200735273 /* iris-shell */,

@@ -124,7 +124,7 @@ public struct AsKeyedList: NativeCoercion {
     private let keyType: KeyType
     private let valueType: ValueType
     
-    public init(keyType: KeyType = asHashableValue.nativeCoercion, valueType: ValueType = asAnything) {
+    public init(keyType: KeyType = asHashableValue.nativeCoercion, valueType: ValueType = defaultCoercion) {
         // TO DO: there’s no way to determine if a native coercion will return a HashableValue; therefore an inappropriate keyType can only be detected upon use
         self.keyType = keyType
         self.valueType = valueType

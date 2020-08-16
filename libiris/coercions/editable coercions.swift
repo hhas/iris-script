@@ -20,7 +20,7 @@ public struct AsEditable: NativeCoercion {
     
     public let elementType: NativeCoercion // the type to which the EditableValue instance's content should be coerced when setting it
     
-    public init(_ elementType: NativeCoercion = asAnything) { // TO DO: asValue?
+    public init(_ elementType: NativeCoercion = defaultCoercion) {
         self.elementType = elementType
     }
     
