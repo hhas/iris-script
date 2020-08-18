@@ -165,7 +165,7 @@ private func procedure_expression(command: Command, commandEnv: Scope, handler: 
 
 // optional {…}
 private let type_optional = (
-    name: Symbol("optional"), // TO DO: there are problems with overriding existing `optional` handler as it also has operator syntax that for some reason refuses to parse; look into this later; for now, workaround by renaming the Pattern.optional(…) constructor so it doesn't class
+    name: Symbol("optional"),
     param_0: (Symbol("pattern"), Symbol("pattern"), asOperatorSyntax),
     result: asOperatorSyntax
 )

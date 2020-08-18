@@ -15,7 +15,9 @@ private let templateSource = """
 //
 //  ««libraryName»»_operators.swift
 //
-//  Bridging code for primitive enums. This file is auto-generated; do not edit directly.
+//  Coercions for converting native choices to/from Swift enums.
+//
+//  This file is auto-generated; do not edit directly.
 //
 
 import Foundation

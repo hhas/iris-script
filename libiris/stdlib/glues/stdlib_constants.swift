@@ -12,23 +12,6 @@
 
 public func stdlib_loadConstants(into env: Environment) {
     
-    // TO DO: remove: coercion operators are now defined by stdlib_operators glue
-    /*
-    if let registry = (env as? ExtendedEnvironment)?.operatorRegistry {
-        
-        // define `record` as keyword to simplify syntax when passing record as operand, i.e. `record {…}` instead of `record {{…}}`
-        registry.add([.keyword("record"), .optional(.expressionLabeled("of_type"))], 1500)
-        
-        // coercion modifiers (defined as operators to allow nesting of LP commands)
-        registry.add([.keyword("optional"), .optional(.expressionLabeled("of_type")),
-                      .optional([.keyword("with_default"), .expressionLabeled("with_default")])], 1500)
-        
-        // `editable EXPR?` (note: this could be defined as single operator with optional operand, but for now add two separate definitions to test alternate code path in pattern matching)
-        registry.atom("editable")
-        registry.prefix("editable", 1500)
-    }*/
-    
-    
     // define operator names for constants, miscellany
     if let registry = (env as? ExtendedEnvironment)?.operatorRegistry {
         

@@ -1,27 +1,32 @@
 
 
 
-swift_record {pattern as operator_syntax, precedence as integer,
-              associate as optional associativity with_default #left,
-              reducer as optional string} requires {
-    name: "operator_definition"
-}
+swift_record operator_definition {
+        pattern as operator_syntax,
+        precedence as integer,
+        associate as optional associativity with_default #left,
+        reducer as optional string} requires {}
 
 
-swift_record {can_error as optional boolean with_default false,
-              use_scopes as optional list of: multichoice [#command, #handler] with_default [],
-              swift_function as optional command,
-              operator: operator_definition as optional operator_definition} requires {
-    name: "handler_glue_requirements"
-}
+swift_record handler_glue_requirements {
+        can_error as optional boolean with_default false,
+        use_scopes as optional list of: handler_scope with_default [],
+        swift_constructor as optional command, «TODO: dedicated coercion for describing Swift constructor/function»
+        operator: operator_definition as optional operator_definition} requires {}
+
+
+swift_record record_glue_requirements {
+        can_error as optional boolean with_default false
+        swift_constructor as optional command} requires {}
 
 
 
-swift_multichoice [#command, #handler] requires {
+
+swift_choice [#command, #handler] requires {
     name: "handler_scope"
 }
 
-swift_multichoice [#left, #right, #none] requires {
+swift_choice [#left, #right, #none] requires {
     name: "associativity"
 }
 

@@ -30,7 +30,7 @@ public struct NullCoercionError: CoercionError { // value is `nothing`
     
     // thrown by NullValue.eval(); may be handled by optional/default modifiers
     
-    // caution: NullCoercionError must be rethrown as TypeCoercionError if not immediately intercepted by optional/default modifier; it must not propagate beyond the current coercion, e.g. `[1,nothing,3] as list of: optional number with_default 0` will return `[1,0,3]`, as the `optional` intercepts the NullCoercionError raised on `nothing as number`; however `[1,nothing,3] as optional list of: number` must fail (the `list` coercion catches the NullCoercionError raised on `nothing as number` and rethrows it as a permanent TypeCoercionError which the `optional` applied to the list coercion does not handle)
+    // caution: NullCoercionError must be rethrown as TypeCoercionError if not immediately intercepted by optional/default modifier; it must not propagate beyond the current coercion, e.g. `[1,nothing,3] as list of: optional number default 0` will return `[1,0,3]`, as the `optional` intercepts the NullCoercionError raised on `nothing as number`; however `[1,nothing,3] as optional list of: number` must fail (the `list` coercion catches the NullCoercionError raised on `nothing as number` and rethrows it as a permanent TypeCoercionError which the `optional` applied to the list coercion does not handle)
 
     public let value: Value
     public let coercion: NativeCoercion

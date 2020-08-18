@@ -53,7 +53,7 @@ public struct AsSwiftDefault<ElementType: SwiftCoercion>: SwiftCoercion {
     }
     
     public var literalDescription: String {
-        return "‘optional’ {\(self.elementType.literalDescription), default: \(self.elementType.wrap(self.defaultValue, in: nullScope))}"
+        return "‘optional’ {\(self.elementType.literalDescription), with_default: \(self.elementType.wrap(self.defaultValue, in: nullScope))}"
     }
     
     public let elementType: ElementType

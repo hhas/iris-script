@@ -9,6 +9,10 @@ import iris
 
 
 func test() {
+    
+    //runScript(" with_default ") // stray conjunction should throw syntax error
+    
+    /*
     runScript("""
         set x to 0 as editable
         while x < 10 repeat do
@@ -16,6 +20,7 @@ func test() {
             set x to x + 1
         done
     """)
+     */
     
 
     // runScript(" tell @com.apple.iTunes to playpause ")
@@ -35,8 +40,8 @@ func test() {
     /*
     runScript(" optional ")
     runScript(" optional value ")
-    runScript(" optional value with_default 2 ")
-    runScript(" optional with_default 2 ")
+    runScript(" optional value default 2 ")
+    runScript(" optional default 2 ")
     */
     
     return;
@@ -64,7 +69,7 @@ func test() {
     runScript(" set t to list of: integer. write t. t ")
     runScript("  list of: integer from: 1 to: 10. ")
     // TO DO: should `as` have higher precedence than command? e.g. `write 5 as t` probably means to coerce `5`, but currently coerces the result of `write {5}` (which is always `nothing`); might also help if linter suggests adding parentheses to avoid any ambiguity/confusion
-    runScript(" set t to optional list of: integer with_default [3]. write t. write {nothing as t}. write {“5” as t}. ")
+    runScript(" set t to optional list of: integer default [3]. write t. write {nothing as t}. write {“5” as t}. ")
     runScript("  optional list of: integer. ")
     runScript(" 5 as list of: integer from: 2 to: 10. ") // this should throw constraint error; Q. how might errors explain the exact issue (in this case, the list needs to contain at least 2 items but [5] contains only one), ideally in a way that is conducive to l10n
     runScript(" “6” as optional list of: integer. ") // -> 6

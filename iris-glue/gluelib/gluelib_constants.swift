@@ -25,6 +25,7 @@ public func gluelib_loadConstants(into env: Environment) {
     env.define(coercion: asOperatorSyntax)
     env.define(coercion: asAssociativity)
     env.define(coercion: asOperatorDefinition)
+    env.define(coercion: asHandlerScope)
     
     env.define(coercion: asRecordType)
     

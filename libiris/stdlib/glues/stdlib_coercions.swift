@@ -1,15 +1,42 @@
 //
 //  stdlib_coercions.swift
 //
-//  Bridging code for primitive coercions. This file is auto-generated; do not edit directly.
+//  Handler extensions for constructing constrained coercions.
+//
+//  This file is auto-generated; do not edit directly.
 //
 
 import Foundation
 
+extension AsChoice: ConstrainableCoercion {
+    
+    private static let type_constrain = (
+        param_0: (Symbol("options"), Symbol("options"), AsArray(asSymbol)),
+        _: ()
+    )
+    
+    public var interface: HandlerType {
+        return HandlerType(
+            name: self.name,
+            parameters: [
+                nativeParameter(Self.type_constrain.param_0),
+            ],
+            result: asCoercion.nativeCoercion
+        )
+    }
+    
+    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
+        var index = 0
+        let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
+        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
+        return AsChoice(_: arg_0)
+    }
+}
+
 extension AsEditable: ConstrainableCoercion {
     
     private static let type_constrain = (
-        param_0: (Symbol("of_type"), Symbol("value_type"), AsSwiftDefault(asCoercion, defaultValue: asValue)),
+        param_0: (Symbol("of_type"), Symbol("value_type"), AsSwiftDefault(asCoercion, defaultValue: asAnything)),
         _: ()
     )
     
@@ -35,7 +62,7 @@ extension AsKeyedList: ConstrainableCoercion {
     
     private static let type_constrain = (
         param_0: (Symbol("key_type"), Symbol("key_type"), AsSwiftDefault(asCoercion, defaultValue: asValue)),
-        param_1: (Symbol("value_type"), Symbol("value_type"), AsSwiftDefault(asCoercion, defaultValue: asValue)),
+        param_1: (Symbol("value_type"), Symbol("value_type"), AsSwiftDefault(asCoercion, defaultValue: asAnything)),
         _: ()
     )
     
@@ -56,31 +83,6 @@ extension AsKeyedList: ConstrainableCoercion {
         let arg_1 = try command.value(for: Self.type_constrain.param_1, at: &index, in: scope)
         if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
         return AsKeyedList(keyType: arg_0, valueType: arg_1)
-    }
-}
-
-extension AsMultichoice: ConstrainableCoercion {
-    
-    private static let type_constrain = (
-        param_0: (Symbol("options"), Symbol("options"), AsArray(asSymbol)),
-        _: ()
-    )
-    
-    public var interface: HandlerType {
-        return HandlerType(
-            name: self.name,
-            parameters: [
-                nativeParameter(Self.type_constrain.param_0),
-            ],
-            result: asCoercion.nativeCoercion
-        )
-    }
-    
-    public func constrain(to command: Command, in scope: Scope) throws -> NativeCoercion {
-        var index = 0
-        let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
-        if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
-        return AsMultichoice(_: arg_0)
     }
 }
 
@@ -146,7 +148,7 @@ extension AsOptional: ConstrainableCoercion {
 extension AsOrderedList: ConstrainableCoercion {
     
     private static let type_constrain = (
-        param_0: (Symbol("of"), Symbol("type"), AsSwiftDefault(asCoercion, defaultValue: asValue)),
+        param_0: (Symbol("of"), Symbol("type"), AsSwiftDefault(asCoercion, defaultValue: asAnything)),
         param_1: (Symbol("from"), Symbol("minimum"), AsSwiftOptional(asInt)),
         param_2: (Symbol("to"), Symbol("maximum"), AsSwiftOptional(asInt)),
         _: ()
@@ -203,11 +205,11 @@ public func stdlib_loadCoercions(into env: Environment) {
     env.define(coercion: asAnything)
     env.define(coercion: asBlock)
     env.define(coercion: asBool)
+    env.define(coercion: CallableCoercion(asChoice))
     env.define(coercion: asCoercion)
     env.define(coercion: CallableCoercion(asEditable))
     env.define(coercion: asHandler)
     env.define(coercion: CallableCoercion(asKeyedList))
-    env.define(coercion: CallableCoercion(asMultichoice))
     env.define(coercion: CallableCoercion(asNumber))
     env.define(coercion: CallableCoercion(asOptional))
     env.define(coercion: CallableCoercion(asOrderedList))

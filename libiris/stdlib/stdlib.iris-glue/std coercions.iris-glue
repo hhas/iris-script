@@ -1,4 +1,6 @@
 
+«declare coercion to add it to env; declare constraints to allow it to be parameterized natively»
+
 swift_coercion AsAnything requires {}
 
 swift_coercion AsValue requires {}
@@ -14,37 +16,37 @@ swift_coercion AsNumber requires {
     constraints: {whole as optional boolean with_default false,
                   from: minimum as optional number,
                   to: maximum as optional number}
-    swift_function: AsConstrainedNumber {isWhole, min, max}
+    swift_constructor: AsConstrainedNumber {isWhole, min, max}
     can_error: true
 }
 
 swift_coercion AsText requires {} «TODO: constraint (non-empty/pattern)»
 
 
-swift_coercion AsMultichoice requires {
+swift_coercion AsChoice requires {
     constraints: {options as list of: symbol}
-    swift_function: AsMultichoice {_}
+    swift_constructor: AsChoice {_}
 }
 
 
 swift_coercion AsOrderedList requires {
-    constraints: {of: type as optional coercion with_default value,
+    constraints: {of: type as optional coercion with_default anything,
                   from: minimum as optional integer,
                   to: maximum as optional integer}
-    swift_function: AsOrderedList {_, minLength, maxLength}
+    swift_constructor: AsOrderedList {_, minLength, maxLength}
     can_error: true
     aliases: ["list"]
 }
 
 swift_coercion AsKeyedList requires {
-    constraints: {key_type as optional coercion with_default value,
-                  value_type as optional coercion with_default value}
+    constraints: {key_type as optional coercion with_default value, «TODO: how to restrict to hashable values?»
+                  value_type as optional coercion with_default anything}
 }
 
 
 swift_coercion AsRecord requires {
     constraints: {of_type: record_type as optional record_type}
-    swift_function: AsRecord {_}
+    swift_constructor: AsRecord {_}
     operator: {[keyword “record”, optional expression “record_type”], 1500}
 }
 
@@ -55,14 +57,14 @@ swift_coercion AsBlock requires {}
 swift_coercion AsOptional requires {
     constraints: {of_type: value_type as optional coercion with_default value,
                   with_default: default_value as anything}
-    swift_function: AsOptional {_, default}
+    swift_constructor: AsOptional {_: valueType, default: defaultValue}
     operator: {[keyword “optional”, optional expression,
                 optional [keyword "with_default", expression "default_value"]], 1500}
 }
 
 swift_coercion AsEditable requires {
-    constraints: {of_type: value_type as optional coercion with_default value}
-    swift_function: AsEditable {_}
+    constraints: {of_type: value_type as optional coercion with_default anything}
+    swift_constructor: AsEditable {_}
     operator: {[keyword “editable”, optional expression “value_type”], 1500}
 }
 

@@ -104,9 +104,9 @@ public extension Record.Fields { // also used as Command.Arguments
             uniqueBindings.insert(binding)
             return (label, binding, coercion)
         }
-        //
+        // TO DO: how to handle underscore used as placeholder?
         if uniqueLabels.contains(nullSymbol) || uniqueLabels.count != self.count || uniqueBindings.count != self.count {
-            print("toRecordType() found bad labels") // DEBUG
+            print("toRecordType() found empty/duplicate labels/bindings") // DEBUG
             throw TypeCoercionError(value: Record(self, as: asRecord), coercion: asRecordType)
         }
         return RecordType(result)

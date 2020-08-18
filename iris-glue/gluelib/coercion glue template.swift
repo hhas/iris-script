@@ -13,7 +13,9 @@ private let templateSource = """
 //
 //  ««libraryName»»_coercions.swift
 //
-//  Bridging code for primitive coercions. This file is auto-generated; do not edit directly.
+//  Handler extensions for constructing constrained coercions.
+//
+//  This file is auto-generated; do not edit directly.
 //
 
 import Foundation

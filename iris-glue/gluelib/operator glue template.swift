@@ -19,7 +19,9 @@ private let templateSource = """
 //
 //  ««libraryName»»_operators.swift
 //
-//  Bridging code for primitive handlers. This file is auto-generated; do not edit directly.
+//  Operator definitions for primitive handlers.
+//
+//  This file is auto-generated; do not edit directly.
 //
 
 import Foundation
@@ -46,20 +48,17 @@ let operatorsTemplate = TextTemplate(templateSource) {
         if let reducer = definition.reducer { reducefunc = ", \(reducer)" } else { reducefunc = "" }
         let patternScope = PatternDialect(parent: nullScope, for: glue.interface)
         do {
-        let syntax = try asOperatorSyntax.coerce(definition.syntax, in: patternScope)
-        let pattern: String
-        switch syntax {
-        case .sequence:  pattern = syntax.swiftLiteralDescription
-        default:         pattern = "[\(syntax.swiftLiteralDescription)]"
-        }
-        node.args.set("\(pattern), \(definition.precedence), .\(definition.associate)\(reducefunc)")
+            let syntax = try asOperatorSyntax.coerce(definition.syntax, in: patternScope) // kludge
+            let pattern: String
+            switch syntax {
+            case .sequence:  pattern = syntax.swiftLiteralDescription
+            default:         pattern = "[\(syntax.swiftLiteralDescription)]"
+            }
+            node.args.set("\(pattern), \(definition.precedence), .\(definition.associate)\(reducefunc)")
         } catch {
             print(error)
             print()
             print(definition.syntax)
-            let h = patternScope.get("optional")!
-            print()
-            print(h)
             exit(5)
         }
     }

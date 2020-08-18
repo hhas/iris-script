@@ -2,10 +2,8 @@
 //  glue data.swift
 //  iris-glue
 //
-
-// `handler … {…} returning … requires {…}`
-// `record {…} requires {…}`
-// `coercion … requires {…}`
+//  structs populated from .iris-glue files
+//
 
 
 import Foundation
@@ -15,6 +13,11 @@ import iris
 
 
 public typealias OperatorDefinition = HandlerGlueRequirements.OperatorDefinition
+
+
+func camelCase(_ name: Symbol, uppercaseFirst: Bool = false) -> Symbol {
+    return Symbol(camelCase(name.label, uppercaseFirst: uppercaseFirst))
+}
 
 
 public struct HandlerGlueRequirements {
@@ -75,9 +78,12 @@ public struct HandlerGlue {
     init(interface: HandlerType, requirements: HandlerGlueRequirements) {
         self.interface = interface
         self.requirements = requirements
-        self.swiftName = requirements.swiftFunction?.name.label ?? camelCase(interface.name.label)
+        self.swiftName = requirements.swiftFunction?.name.label ?? camelCase(interface.name.label) // user can specify function name only, in which case params are generated from native interface
         if let swiftFunction = requirements.swiftFunction, swiftFunction.arguments.count == interface.parameters.count {
-            self._swiftArguments = swiftFunction.arguments.map{ $0.value.asIdentifier()!.label } // TO DO: use specialized coercion to unpack command, raising error there if not appropriately formed
+            
+            //print(try? asHandlerType.coerce(swiftFunction, in: nullScope))
+            
+            self._swiftArguments = swiftFunction.arguments.map{ $0.label.isEmpty ? $0.value.asIdentifier()!.label : $0.label.label} // use label if given, else use binding name // TO DO: use specialized coercion to unpack command, raising error there if not appropriately formed
         } else {
             self._swiftArguments = interface.parameters.map{ camelCase($0.label.label) }
         }
@@ -102,6 +108,17 @@ public struct HandlerGlue {
 
 
 
+public struct RecordGlueRequirements {
+    
+    public let canError: Bool
+    public let swiftStruct: NamedRecordType?
+    
+    public init(canError: Bool, swiftStruct: NamedRecordType?) {
+        self.canError = canError
+        self.swiftStruct = swiftStruct
+    }
+}
+
 
 public struct RecordGlue {
     
@@ -112,17 +129,19 @@ public struct RecordGlue {
     public let swiftType: String // struct’s name
     public let swiftFields: [Field] // camelCase labels are used as parameter labels in init(…), binding names are used as property names; coercion is SwiftType used as parameter+property types, e.g. "String"
     public let canError: Bool
+        
     
-    init(fields: RecordType.Fields, name: String, structName: String, structFields: RecordType.Fields?, canError: Bool) {
-        self.fields = fields.map{ ($0.label, $1.label, $2.swiftLiteralDescription) }
-        self.name = name
-        self.swiftType = structName
-        if let structFields = structFields, structFields.count == fields.count {
+    init(interface: NamedRecordType, requirements: RecordGlueRequirements) {
+        self.name = interface.name.label
+        self.fields = interface.parameters.map{ ($0.label, $1.label, $2.swiftLiteralDescription) }
+        self.swiftType = requirements.swiftStruct?.name.label ?? camelCase(interface.name.label, uppercaseFirst: true)
+        self.canError = requirements.canError
+        if let structFields = requirements.swiftStruct?.parameters, structFields.count == fields.count {
             self.swiftFields = structFields.map{ ($0.label, $1.label, $2.swiftTypeDescription) }
         } else {
-            self.swiftFields = fields.map{ (camelCase($0.label), camelCase($1.label), $2.swiftTypeDescription) }
+            self.swiftFields = interface.parameters.map{
+                (camelCase($0.label), camelCase($1.label), $2.swiftTypeDescription) }
         }
-        self.canError = canError
     }
 }
 

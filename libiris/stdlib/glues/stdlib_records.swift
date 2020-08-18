@@ -1,7 +1,9 @@
 //
 //  stdlib_records.swift
 //
-//  Bridging code for primitive structs/classes. This file is auto-generated; do not edit directly.
+//  Coercions for converting native records to/from Swift structs/classes.
+//
+//  This file is auto-generated; do not edit directly.
 //
 
 import Foundation
@@ -10,8 +12,8 @@ public struct AsHandlerGlueRequirements: SwiftCoercion {
 
     private static let type_struct = (
         field_0: (Symbol("can_error"), Symbol("can_error"), AsSwiftDefault(asBool, defaultValue: false)),
-        field_1: (Symbol("use_scopes"), Symbol("use_scopes"), AsSwiftDefault(AsArray(AsMultichoice([Symbol("command"), Symbol("handler")]).swiftCoercion), defaultValue: [])),
-        field_2: (Symbol("swift_function"), Symbol("swift_function"), AsSwiftOptional(AsLiteral<Command>())),
+        field_1: (Symbol("use_scopes"), Symbol("use_scopes"), AsSwiftDefault(AsArray(asHandlerScope), defaultValue: [])),
+        field_2: (Symbol("swift_constructor"), Symbol("swift_constructor"), AsSwiftOptional(AsLiteral<Command>())),
         field_3: (Symbol("operator"), Symbol("operator_definition"), AsSwiftOptional(asOperatorDefinition)),
         _: ()
     )
@@ -42,14 +44,14 @@ public struct AsHandlerGlueRequirements: SwiftCoercion {
         let arg_2 = try fields.coerce(param: Self.type_struct.field_2, at: &index, in: scope)
         let arg_3 = try fields.coerce(param: Self.type_struct.field_3, at: &index, in: scope)
         if fields.count > index { throw UnknownFieldError(at: index, of: fields) }
-        return HandlerGlueRequirements( canError: arg_0,  useScopes: arg_1,  swiftFunction: arg_2,  operator: arg_3)
+        return HandlerGlueRequirements( canError: arg_0,  useScopes: arg_1,  swiftConstructor: arg_2,  operator: arg_3)
     }
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
         return try! Record([
             (Self.type_struct.field_0.0, Self.type_struct.field_0.2.wrap(value.canError, in: scope)),
             (Self.type_struct.field_1.0, Self.type_struct.field_1.2.wrap(value.useScopes, in: scope)),
-            (Self.type_struct.field_2.0, Self.type_struct.field_2.2.wrap(value.swiftFunction, in: scope)),
+            (Self.type_struct.field_2.0, Self.type_struct.field_2.2.wrap(value.swiftConstructor, in: scope)),
             (Self.type_struct.field_3.0, Self.type_struct.field_3.2.wrap(value.operatorDefinition, in: scope)),
         ])
     }
@@ -107,3 +109,46 @@ public struct AsOperatorDefinition: SwiftCoercion {
 }
 
 public let asOperatorDefinition = AsOperatorDefinition()
+
+public struct AsRecordGlueRequirements: SwiftCoercion {
+
+    private static let type_struct = (
+        field_0: (Symbol("can_error"), Symbol("can_error"), AsSwiftDefault(asBool, defaultValue: false)),
+        field_1: (Symbol("swift_constructor"), Symbol("swift_constructor"), AsSwiftOptional(AsLiteral<Command>())),
+        _: ()
+    )
+    
+    public let name: Symbol = "record_glue_requirements"
+    
+    public var swiftLiteralDescription: String { return "asRecordGlueRequirements" }
+    
+    public var literalDescription: String { return self.name.label }
+    
+    public typealias SwiftType = RecordGlueRequirements
+    
+    public static let recordType = RecordType([
+        nativeParameter(Self.type_struct.field_0),
+        nativeParameter(Self.type_struct.field_1),
+    ])
+    
+    public init() {}
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
+        let fields = (value as? Record)?.data ?? [(nullSymbol, value)]
+        var index = 0
+        let arg_0 = try fields.coerce(param: Self.type_struct.field_0, at: &index, in: scope)
+        let arg_1 = try fields.coerce(param: Self.type_struct.field_1, at: &index, in: scope)
+        if fields.count > index { throw UnknownFieldError(at: index, of: fields) }
+        return RecordGlueRequirements( canError: arg_0,  swiftConstructor: arg_1)
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return try! Record([
+            (Self.type_struct.field_0.0, Self.type_struct.field_0.2.wrap(value.canError, in: scope)),
+            (Self.type_struct.field_1.0, Self.type_struct.field_1.2.wrap(value.swiftConstructor, in: scope)),
+        ])
+    }
+}
+
+public let asRecordGlueRequirements = AsRecordGlueRequirements()

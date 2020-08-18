@@ -94,5 +94,12 @@ public struct AsRecordType: SwiftCoercion {
     
 }
 
+// TO DO: consolidate named vs unnamed
+
 public let asRecordType = AsRecordType()
 
+
+
+public typealias NamedRecordType = HandlerType
+
+public let asNamedRecordType = AsSwiftPrecis(asHandlerType, "record_type") // kludge; TO DO: need to decide syntax for named records (use either name prefix or return type, not both; also require non-empty record)

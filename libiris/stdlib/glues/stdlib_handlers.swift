@@ -1,7 +1,9 @@
 //
 //  stdlib_handlers.swift
 //
-//  Bridging code for primitive handlers. This file is auto-generated; do not edit directly.
+//  Handler wrappers for Swift functions.
+//
+//  This file is auto-generated; do not edit directly.
 //
 
 import Foundation

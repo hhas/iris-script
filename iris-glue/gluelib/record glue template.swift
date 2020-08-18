@@ -12,7 +12,9 @@ private let templateSource = """
 //
 //  ««libraryName»»_records.swift
 //
-//  Bridging code for primitive structs/classes. This file is auto-generated; do not edit directly.
+//  Coercions for converting native records to/from Swift structs/classes.
+//
+//  This file is auto-generated; do not edit directly.
 //
 
 import Foundation

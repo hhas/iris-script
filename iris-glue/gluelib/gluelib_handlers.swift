@@ -40,8 +40,8 @@ private func procedure_defineHandlerGlue_handler_commandEnv(command: Command, co
 
 private let type_defineRecordGlue_handler_commandEnv = (
     name: Symbol("swift_record"),
-    param_0: (Symbol("of_type"), Symbol("record_type"), asRecordType),
-    param_1: (Symbol("requires"), Symbol("requirements"), asIs), // TO DO: asRecordRequirements
+    param_0: (Symbol("of_type"), Symbol("record_type"), asNamedRecordType),
+    param_1: (Symbol("requires"), Symbol("requirements"), asRecordGlueRequirements), 
     result: asNothing
 )
 private let interface_defineRecordGlue_handler_commandEnv = HandlerType(
@@ -60,7 +60,7 @@ private func procedure_defineRecordGlue_handler_commandEnv(command: Command, com
     if arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
     try defineRecordGlue(
         interface: arg_0,
-        attributes: arg_1,
+        requirements: arg_1,
         commandEnv: commandEnv,
         handlerEnv: handlerEnv
     )
@@ -99,7 +99,7 @@ private func procedure_defineCoercionGlue_handler_commandEnv(command: Command, c
 
 
 private let type_defineEnumGlue_handler_commandEnv = (
-    name: Symbol("swift_multichoice"),
+    name: Symbol("swift_choice"),
     param_0: (Symbol("options"), Symbol("options"), AsArray(asSymbol)),
     param_1: (Symbol("requires"), Symbol("requirements"), asIs), // TO DO: asEnumRequirements
     result: asNothing

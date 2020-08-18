@@ -28,7 +28,9 @@ private let templateSource = """
 //
 //  ««libraryName»»_handlers.swift
 //
-//  Bridging code for primitive handlers. This file is auto-generated; do not edit directly.
+//  Handler wrappers for Swift functions.
+//
+//  This file is auto-generated; do not edit directly.
 //
 
 import Foundation
@@ -168,7 +170,4 @@ func camelCase(_ name: String, uppercaseFirst: Bool = false) -> String { // conv
     return result
 }
 
-func camelCase(_ name: Symbol, uppercaseFirst: Bool = false) -> Symbol {
-    return Symbol(camelCase(name.label, uppercaseFirst: uppercaseFirst))
-}
 

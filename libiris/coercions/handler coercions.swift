@@ -6,7 +6,7 @@
 import Foundation
 
 
-// TO DO: AsHandler should be parameterizable with HandlerType; HandlerType should be constructable using `command returning type` operator, with underlying command `callable_type {named: name as optional symbol, input as record_type, output as coercion, is_event_handler as optional boolean with_default false}`; main challenge is deciding conformation
+// TO DO: AsHandler should be parameterizable with HandlerType; HandlerType should be constructable using `command returning type` operator, with underlying command `callable_type {named: name as optional symbol, input as record_type, output as coercion, is_event_handler as optional boolean default false}`; main challenge is deciding conformation
 
 
 public struct AsHandler: SwiftCoercion {
@@ -60,7 +60,10 @@ public struct AsHandlerType: SwiftCoercion {
     public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
         // TO DO: this implementation assumes the handler interface is defined using literal `name {param,…} returning type` syntax, which is not conducive constructing handler interfaces programmatically; for metaprogramming, provide a separate handler [interface] constructor that takes name, parameters, etc as arguments, as alternative to describing handler interface using literal commands (which, being literals, can’t be parameterized at run-time)
         // TO DO: sort out error reporting; this should catch individual errors when unpacking parameters and return type and rethrow chained to a coercion error describing the entire interface
-        guard let command = value as? Command else { throw TypeCoercionError(value: value, coercion: self) }
+        guard let command = value as? Command else {
+            if let v = value as? NullValue { throw NullCoercionError(value: v, coercion: self.nativeCoercion) }
+            throw TypeCoercionError(value: value, coercion: self)
+        }
         let name: Symbol, parameters: [HandlerType.Parameter], returnType: NativeCoercion
         if command.name == "returning" {
             let args = command.arguments

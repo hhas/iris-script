@@ -14,8 +14,8 @@ public struct AsHandlerGlueRequirements: SwiftCoercion {
 
     private static let type_struct = (
         field_0: (Symbol("can_error"), Symbol("can_error"), AsSwiftDefault(asBool, defaultValue: false)),
-        field_1: (Symbol("use_scopes"), Symbol("use_scopes"), AsSwiftDefault(AsArray(AsMultichoice([Symbol("command"), Symbol("handler")]).swiftCoercion), [])),
-        field_2: (Symbol("swift_function"), Symbol("swift_function"), AsSwiftOptional(AsLiteral<Command>())),
+        field_1: (Symbol("use_scopes"), Symbol("use_scopes"), AsSwiftDefault(AsArray(AsChoice([Symbol("command"), Symbol("handler")]).swiftCoercion), [])),
+        field_2: (Symbol("swift_function"), Symbol("swift_function"), AsSwiftOptional(AsLiteral<Command>())), // TO DO: asSwiftFunctionType // camelCase name with optional record of camelCase identifiers
         field_3: (Symbol("operator"), Symbol("operator_definition"), AsSwiftOptional(asOperatorDefinition)),
         _: ()
     )
@@ -60,6 +60,55 @@ public struct AsHandlerGlueRequirements: SwiftCoercion {
 }
 
 public let asHandlerGlueRequirements = AsHandlerGlueRequirements()
+
+
+
+
+public struct AsRecordGlueRequirements: SwiftCoercion {
+
+    private static let type_struct = (
+        field_0: (Symbol("can_error"), Symbol("can_error"), AsSwiftDefault(asBool, defaultValue: false)),
+        field_1: (Symbol("swift_constructor"), Symbol("swift_constructor"), AsSwiftOptional(asNamedRecordType)), // TO DO: asSwiftStructType/asSwiftFunctionType/asSwiftConstructorType (camelCase name with optional record of field types; caveat SwiftCoercions/SwiftTypes are already supplied by native interface so shouldn't need declared again - if they are, what to do with them?)
+        _: ()
+    )
+    
+    public let name: Symbol = "record_glue_requirements"
+    
+    public var swiftLiteralDescription: String { return "asRecordGlueRequirements" }
+    
+    public var literalDescription: String { return self.name.label }
+    
+    public typealias SwiftType = RecordGlueRequirements
+    
+    public static let recordType = RecordType([
+        nativeParameter(Self.type_struct.field_0),
+        nativeParameter(Self.type_struct.field_1),
+    ])
+    
+    public init() {}
+    
+    public func coerce(_ value: Value, in scope: Scope) throws -> SwiftType {
+        if let v = value as? SelfEvaluatingValue { return try v.eval(in: scope, as: self) }
+        let fields = (value as? Record)?.data ?? [(nullSymbol, value)]
+        var index = 0
+        let arg_0 = try fields.coerce(param: Self.type_struct.field_0, at: &index, in: scope)
+        let arg_1 = try fields.coerce(param: Self.type_struct.field_1, at: &index, in: scope)
+        if fields.count > index { throw UnknownFieldError(at: index, of: fields) }
+        return RecordGlueRequirements(canError: arg_0,  swiftStruct: arg_1)
+    }
+    
+    public func wrap(_ value: SwiftType, in scope: Scope) -> Value {
+        return try! Record([
+            (Self.type_struct.field_0.0, Self.type_struct.field_0.2.wrap(value.canError, in: scope)),
+            (Self.type_struct.field_1.0, Self.type_struct.field_1.2.wrap(value.swiftStruct, in: scope)),
+        ])
+    }
+}
+
+public let asRecordGlueRequirements = AsRecordGlueRequirements()
+
+
+
 
 
 

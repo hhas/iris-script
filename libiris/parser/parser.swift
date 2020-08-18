@@ -138,22 +138,24 @@ public class Parser {
         
         for match in newMatches {
             assert(match.isAtBeginningOfMatch)
+            var didMatch = false // if .operatorName was a conjunction, it’s a syntax error
             if match.provisionallyMatches(form: form) { // attempt to match first pattern to the current token; this allows new matchers to match atom/prefix operators (the first pattern is a .keyword and the current token is an .operatorName of the same name)
                 currentMatches.append(match)
                 // if the pattern contains one or more conjunctions (e.g. `then` and `else` keywords in `if…then…else…`) then push those onto blockStack so we can correctly balance nesting
                 if match.hasConjunction { newConjunctionMatches.append(match) }
+                didMatch = true
             } else if let previous = self.tokenStack.last, match.provisionallyMatches(form: previous.form) { // attempt to match the previous token (expr), followed by current token (opName); this allows new matchers to match infix/postfix operators (match starts on the token before .operatorName)
                 let matches = match.next().filter{ $0.fullyMatches(form: form) } // re-match the current token (.operatorName); we have to do this to exclude conjunction keywords
                 if !matches.isEmpty {
                     self.tokenStack[self.tokenStack.count - 1].matches.append(match) // preceding .expression
                     currentMatches += matches // current .keyword
                     if match.hasConjunction { newConjunctionMatches.append(match) }
+                    didMatch = true
                 }
-            } // ignore any unsuccessful matches (e.g. a new infix operator matcher for which there was no left operand, or an .operatorName that’s a conjunction keyword for which there is no match already in progress)
-            
+            }  // ignore any unsuccessful matches (e.g. a new infix operator matcher for which there was no left operand, or an .operatorName that’s a conjunction keyword for which there is no match already in progress)
             // allow atomic operators to auto-reduce
             // TO DO: see below TODO re. filtering fullMatches; e.g. either of the following conditionals will pick up `optional`, due to it being defined separately to `optional EXPR` (which, while not optimal compared to using a single `optional EXPR?` pattern, we have to support as it’s possible for two separate libraries to define the same operator name with different operands)
-            if match.isAFullMatch { fullMatches.append(match) }
+            if didMatch && match.isAFullMatch { fullMatches.append(match) }
             // if match.isLongestFullMatch && match.autoReduce { fullMatches.append(match) }
         }
         if !newConjunctionMatches.isEmpty {

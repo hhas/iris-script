@@ -1,7 +1,9 @@
 //
 //  stdlib_operators.swift
 //
-//  Bridging code for primitive handlers. This file is auto-generated; do not edit directly.
+//  Operator definitions for primitive handlers.
+//
+//  This file is auto-generated; do not edit directly.
 //
 
 import Foundation

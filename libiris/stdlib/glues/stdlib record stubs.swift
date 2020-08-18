@@ -10,14 +10,14 @@ import Foundation
 
 public struct HandlerGlueRequirements {
     public let canError: Bool
-    public let useScopes: [Symbol]
-    public let swiftFunction: Command?
+    public let useScopes: [HandlerScope]
+    public let swiftConstructor: Command?
     public let operatorDefinition: OperatorDefinition?
     
-    public init(canError: Bool, useScopes: [Symbol], swiftFunction: Command?, operator operatorDefinition: OperatorDefinition?) {
+    public init(canError: Bool, useScopes: [HandlerScope], swiftConstructor: Command?, operator operatorDefinition: OperatorDefinition?) {
         self.canError = canError
         self.useScopes = useScopes
-        self.swiftFunction = swiftFunction
+        self.swiftConstructor = swiftConstructor
         self.operatorDefinition = operatorDefinition
     }
 }
@@ -33,5 +33,15 @@ public struct OperatorDefinition {
         self.precedence = precedence
         self.associate = associate
         self.reducer = reducer
+    }
+}
+
+public struct RecordGlueRequirements {
+    public let canError: Bool
+    public let swiftConstructor: Command?
+    
+    public init(canError: Bool, swiftConstructor: Command?) {
+        self.canError = canError
+        self.swiftConstructor = swiftConstructor
     }
 }

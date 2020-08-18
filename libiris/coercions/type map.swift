@@ -97,7 +97,7 @@ public typealias AsCommand = TypeMap<Command>
 
 
 public let asBlock = AsBlock("block", "asBlock")
-public let asCommand = AsCommand("command", "asCommand")
+public let asCommand = AsCommand("command", "asCommand") // TO DO: needed? (used as Command.nominalType, but see also asLiteralCommand)
 public let asBool = AsBool("boolean", "asBool")
 public let asSymbol = AsSymbol("symbol", "asSymbol") // TO DO: should we support Text->Symbol? what about Symbol->Text?
 
