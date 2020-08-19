@@ -39,7 +39,7 @@
 			<key>orderHint</key>
 			<integer>16</integer>
 		</dict>
-		<key>shortcut.xcscheme_^#shared#^_</key>
+		<key>sc-dump.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>18</integer>
@@ -47,6 +47,11 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>4F293ECB24EC56E8003D6D1E</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>4F5B24D423171E54001C1941</key>
 		<dict>
 			<key>primary</key>

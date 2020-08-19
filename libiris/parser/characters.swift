@@ -5,6 +5,8 @@
 
 import Foundation
 
+// TO DO: should all/no character set constants be public? (currently using some of these directly in sc-dump, although that should migrate behind vars/methods, e.g. toIdentifierLiteral)
+
 
 // matchable character sets
 
@@ -46,7 +48,7 @@ There are 3 ranges reserved for private use (Co subcategory): U+E000—U+F8FF (6
 let linebreakCharacters     = CharacterSet.newlines
 let whitespaceCharacters    = CharacterSet.whitespaces // TO DO: how to treat vtab, nbsp?
 let nonWhitespaceCharacters = whitespaceCharacters.inverted
-let digitCharacters         = CharacterSet.decimalDigits // 0-9; parsing
+public let digitCharacters         = CharacterSet.decimalDigits // 0-9; parsing
 let punctuationCharacters   = CharacterSet(Token.Form.predefinedSymbols.keys.map{ $0.unicodeScalars.first! })
 
 
@@ -67,7 +69,7 @@ let symbolCharacters   = CharacterSet.punctuationCharacters.union(CharacterSet.s
 let wordCharacters     = _coreCharacters.inverted.subtracting(symbolCharacters).subtracting(_invalidCharacters) // undifferentiated text; downstream tokenizers and parsers may consume as-is, decompose and output as new tokenstreams, halt on as unrecoverable 'syntax error' (not recommended for editing mode, but may be preferable when parsing for execution only), or some combination
 
 let underscoreCharacters = CharacterSet(charactersIn: "_")
-let nameCharacters = wordCharacters.union(underscoreCharacters) // operator names (these do not include digits)
+public let nameCharacters = wordCharacters.union(underscoreCharacters) // operator names (these do not include digits)
 
 // -/+ aren't part of core syntax, but do need to be recognized when processing numeric literals so define matchable symbols here
 // TO DO: should pretty printer replace ASCII +/- chars with true Unicode symbols?
@@ -92,8 +94,9 @@ let hexadecimalCharacters = CharacterSet(charactersIn: "aAbBcCdDeEfF") // e.g. 0
 let exponentMarkerCharacters = CharacterSet(charactersIn: "eE") // scientific-notation, e.g. 1.23e-5
 
 
+// TO DO: public methods for checking if string requires single-quoting to be a valid identifier
 
-extension String {
+public extension String {
     
     func conforms(to characters: CharacterSet) -> Bool { // checks string contains characters in given set only
         return !self.isEmpty && CharacterSet(charactersIn: self).subtracting(characters).isEmpty
@@ -102,7 +105,7 @@ extension String {
 }
 
 
-extension CharacterSet { // being UTF16-y, CharacterSet works with single codepoints, so won't work outside of base plane // TO DO: what to replace CharacterSet with?
+public extension CharacterSet { // being UTF16-y, CharacterSet works with single codepoints, so won't work outside of base plane // TO DO: what to replace CharacterSet with?
     
     func contains(_ character: Character) -> Bool {
         assert(character.unicodeScalars.count == 1)
@@ -117,7 +120,7 @@ extension CharacterSet { // being UTF16-y, CharacterSet works with single codepo
     }
 }
 
-extension CharacterSet { // convenience extension, allows CharacterSet instances to be matched directly by 'switch' cases
+public extension CharacterSet { // convenience extension, allows CharacterSet instances to be matched directly by 'switch' cases
     
     static func ~= (a: CharacterSet, b: Unicode.Scalar) -> Bool {
         return a.contains(b)

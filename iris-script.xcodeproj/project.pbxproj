@@ -18,6 +18,10 @@
 		4F289BC324DEDB1200CAA41E /* record type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F289BC224DEDB1200CAA41E /* record type.swift */; };
 		4F289FE224DD82E700E71195 /* coercion glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F289FDC24DD82E700E71195 /* coercion glue template.swift */; };
 		4F293ECF24EC56E8003D6D1E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293ECE24EC56E8003D6D1E /* main.swift */; };
+		4F293ED824ED1682003D6D1E /* read action.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293ED724ED1682003D6D1E /* read action.swift */; };
+		4F293EDA24ED1696003D6D1E /* datatypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293ED924ED1696003D6D1E /* datatypes.swift */; };
+		4F293EDC24ED179C003D6D1E /* support.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293EDB24ED179C003D6D1E /* support.swift */; };
+		4F293EDF24ED1BD2003D6D1E /* libiris.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988CB624BCC4D700EE66C7 /* libiris.a */; };
 		4F2B0C6624C0CC4F00664ABB /* formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B0C6524C0CC4F00664ABB /* formatter.swift */; };
 		4F2B2B9224D83FD3004B2189 /* stdlib_coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B2B9124D83FD3004B2189 /* stdlib_coercions.swift */; };
 		4F2B2B9424D85947004B2189 /* editable coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B2B9324D85947004B2189 /* editable coercions.swift */; };
@@ -184,6 +188,13 @@
 			remoteGlobalIDString = 4FACE27222723090000A04A0;
 			remoteInfo = SwiftAutomationLite;
 		};
+		4F293EDD24ED1BC3003D6D1E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4F84CFF522ADA0F100C9FD23 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4F988CB524BCC4D700EE66C7;
+			remoteInfo = libiris;
+		};
 		4F877A6924BDBB430067A463 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4F84CFF522ADA0F100C9FD23 /* Project object */;
@@ -299,11 +310,13 @@
 		4F2931FF22E2290B00BC0AD4 /* editable script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "editable script.swift"; sourceTree = "<group>"; };
 		4F29320122E23AD700BC0AD4 /* other line readers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "other line readers.swift"; sourceTree = "<group>"; };
 		4F29320322E25E7100BC0AD4 /* operator reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator reader.swift"; sourceTree = "<group>"; };
-		4F293ECC24EC56E8003D6D1E /* shortcut */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = shortcut; sourceTree = BUILT_PRODUCTS_DIR; };
+		4F293ECC24EC56E8003D6D1E /* sclib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = sclib; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F293ECE24EC56E8003D6D1E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4F293ED424EC573D003D6D1E /* shortcut actions.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "shortcut actions.iris-glue"; sourceTree = "<group>"; };
 		4F293ED524EC5976003D6D1E /* WFActions.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = WFActions.plist; sourceTree = "<group>"; };
-		4F293ED624EC61DA003D6D1E /* extract WF plist interface.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = "extract WF plist interface.py"; sourceTree = "<group>"; };
+		4F293ED724ED1682003D6D1E /* read action.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "read action.swift"; sourceTree = "<group>"; };
+		4F293ED924ED1696003D6D1E /* datatypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = datatypes.swift; sourceTree = "<group>"; };
+		4F293EDB24ED179C003D6D1E /* support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = support.swift; sourceTree = "<group>"; };
 		4F2B0C6524C0CC4F00664ABB /* formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = formatter.swift; sourceTree = "<group>"; };
 		4F2B2B9124D83FD3004B2189 /* stdlib_coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = stdlib_coercions.swift; sourceTree = "<group>"; };
 		4F2B2B9324D85947004B2189 /* editable coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "editable coercions.swift"; sourceTree = "<group>"; };
@@ -410,6 +423,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F293EDF24ED1BD2003D6D1E /* libiris.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -633,10 +647,20 @@
 			children = (
 				4F293ED424EC573D003D6D1E /* shortcut actions.iris-glue */,
 				4F293ED524EC5976003D6D1E /* WFActions.plist */,
-				4F293ED624EC61DA003D6D1E /* extract WF plist interface.py */,
-				4F293ECE24EC56E8003D6D1E /* main.swift */,
+				4F293EE024ED6A85003D6D1E /* sc-dump */,
 			);
 			path = sclib;
+			sourceTree = "<group>";
+		};
+		4F293EE024ED6A85003D6D1E /* sc-dump */ = {
+			isa = PBXGroup;
+			children = (
+				4F293ECE24EC56E8003D6D1E /* main.swift */,
+				4F293ED724ED1682003D6D1E /* read action.swift */,
+				4F293ED924ED1696003D6D1E /* datatypes.swift */,
+				4F293EDB24ED179C003D6D1E /* support.swift */,
+			);
+			path = "sc-dump";
 			sourceTree = "<group>";
 		};
 		4F2B0C5F24C0CC3800664ABB /* pretty printer */ = {
@@ -752,7 +776,7 @@
 				4F8C407224BCC02200735273 /* iris-shell */,
 				4F988CB624BCC4D700EE66C7 /* libiris.a */,
 				4FE5502424C035D500509806 /* iris-glue */,
-				4F293ECC24EC56E8003D6D1E /* shortcut */,
+				4F293ECC24EC56E8003D6D1E /* sclib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -920,9 +944,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		4F293ECB24EC56E8003D6D1E /* shortcut */ = {
+		4F293ECB24EC56E8003D6D1E /* sclib */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4F293ED024EC56E8003D6D1E /* Build configuration list for PBXNativeTarget "shortcut" */;
+			buildConfigurationList = 4F293ED024EC56E8003D6D1E /* Build configuration list for PBXNativeTarget "sclib" */;
 			buildPhases = (
 				4F293EC824EC56E8003D6D1E /* Sources */,
 				4F293EC924EC56E8003D6D1E /* Frameworks */,
@@ -931,10 +955,11 @@
 			buildRules = (
 			);
 			dependencies = (
+				4F293EDE24ED1BC3003D6D1E /* PBXTargetDependency */,
 			);
-			name = shortcut;
+			name = sclib;
 			productName = shortcut;
-			productReference = 4F293ECC24EC56E8003D6D1E /* shortcut */;
+			productReference = 4F293ECC24EC56E8003D6D1E /* sclib */;
 			productType = "com.apple.product-type.tool";
 		};
 		4F84CFFC22ADA0F200C9FD23 /* iris-test */ = {
@@ -1060,7 +1085,7 @@
 				4F988CB524BCC4D700EE66C7 /* libiris */,
 				4F84CFFC22ADA0F200C9FD23 /* iris-test */,
 				4FE5502324C035D500509806 /* iris-glue */,
-				4F293ECB24EC56E8003D6D1E /* shortcut */,
+				4F293ECB24EC56E8003D6D1E /* sclib */,
 			);
 		};
 /* End PBXProject section */
@@ -1115,6 +1140,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F293ED824ED1682003D6D1E /* read action.swift in Sources */,
+				4F293EDC24ED179C003D6D1E /* support.swift in Sources */,
+				4F293EDA24ED1696003D6D1E /* datatypes.swift in Sources */,
 				4F293ECF24EC56E8003D6D1E /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1274,6 +1302,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4F293EDE24ED1BC3003D6D1E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4F988CB524BCC4D700EE66C7 /* libiris */;
+			targetProxy = 4F293EDD24ED1BC3003D6D1E /* PBXContainerItemProxy */;
+		};
 		4F877A6A24BDBB430067A463 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4F988CB524BCC4D700EE66C7 /* libiris */;
@@ -1555,7 +1588,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4F293ED024EC56E8003D6D1E /* Build configuration list for PBXNativeTarget "shortcut" */ = {
+		4F293ED024EC56E8003D6D1E /* Build configuration list for PBXNativeTarget "sclib" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4F293ED124EC56E8003D6D1E /* Debug */,

@@ -6,11 +6,11 @@
 import Foundation
 
 
-public struct AsChoice: NativeCoercion {
+public struct AsChoice: NativeCoercion { // TO DO: support >1 type here? (if so, limit to HashableValue) or define separate versions for strings vs symbols? e.g. Shortcuts glue uses string values for enums
     
     public let name: Symbol = "choice"
     
-    public var swiftTypeDescription: String { return "Symbol" }
+    public var swiftTypeDescription: String { return "Symbol" } // this is imprecise, as valid values are a finite subset of all possible symbols, but sufficient to satisfy Swift parameter/attribute static typing (combined with dynamic membership checks), and bridging code should generally use Swift enums with generated glues anyway
     
     public var swiftLiteralDescription: String {
         return "AsChoice([\(self.options.map{$0.swiftLiteralDescription}.joined(separator: ", "))]).swiftCoercion"

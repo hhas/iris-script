@@ -12,7 +12,10 @@ import Foundation
 
 public struct Symbol: AtomicValue, KeyConvertible, Comparable, ExpressibleByStringLiteral { // TO DO: Identifiable
     
-    public var literalDescription: String { return "#‘\(self.label)’" } // TO DO: pp may provide unquoted representation (in principle this could be any character that isn’t a symbolic operator or built-in punctuation, which require single-quoting)
+    public var literalDescription: String {
+        // TO DO: how relaxed should this default representation be on single-quoting? e.g. might want to limit unquoted names to a more C-like subset, or delegate the choice entirely to pretty printer and always quote here
+        return self.label.conforms(to: nameCharacters) ? "#\(self.label)" : "#‘\(self.label)’"
+    }
     public var swiftLiteralDescription: String { return "Symbol(\(self.label.debugDescription))" }
     
     public var isEmpty: Bool { return self.label.isEmpty }
