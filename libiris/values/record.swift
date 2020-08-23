@@ -88,7 +88,7 @@ public extension Record.Fields { // also used as Command.Arguments
                     coercion = try asCoercion.coerce(args[1].value, in: scope)
                 } else { // e.g. {bar}
                     guard let name = command.asIdentifier() else {
-                        print("Bad name:",command) // DEBUG
+                        print("Bad name (expected identifier but found command):",command) // DEBUG
                         throw TypeCoercionError(value: Record(self, as: asRecord), coercion: asRecordType)
                     }
                     binding = name

@@ -6,6 +6,8 @@
 import Foundation
 import Darwin
 
+// TO DO: how best to support [e.g.] `a < b < c`? the crude solution would be to define every combination of `<≤≥>` as trinary operators, but that is clunky; Icon solves this very elegantly by using success(value)/failure instead of conventional true/false, but we want to use Booleans for pedagogical purposes; one option might be for `EXPR < c` to declare its left operand as accepting either number OR successOrFailure(Number), with `a < b` offering to return either boolean (its preferred type) or successOrFailure(Number); the two handlers can then negotiate to use the common type, successOrFailure(Number), providing Icon-style composition where the intermediate result is either success(Number) or failure, which the second test can unwrap; another option would be for these particular handlers to return a true-like object that behaves as boolean true in boolean contexts but can coerce/unwrap as number where that is needed instead (the false-like object which signals the first test’s failure would need to be handled in the second test to return false); yet another possibility is for these operators to use a custom parser reducer that decomposes [e.g.] `a < b < c` to `a < b AND b < c`, which keeps the run-time simple albeit with some challenges when pretty-printing the resulting commands `AND{<{a,b},<{b,c}}` back to the original representation
+
 // TO DO: guard against divide-by-zero exceptions by using `AsDouble(nonZero:true)` in interfaces
 
 func exponent(left: Number, right: Number) -> Number { return left.pow(right) }

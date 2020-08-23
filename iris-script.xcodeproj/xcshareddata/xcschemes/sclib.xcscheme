@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4F293ECB24EC56E8003D6D1E"
-               BuildableName = "sc-dump"
-               BlueprintName = "sc-dump"
+               BlueprintIdentifier = "4F22428D24F1C7D200C1E64B"
+               BuildableName = "sclib"
+               BlueprintName = "sclib"
                ReferencedContainer = "container:iris-script.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -44,17 +44,13 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4F293ECB24EC56E8003D6D1E"
-            BuildableName = "sc-dump"
-            BlueprintName = "sc-dump"
+            BlueprintIdentifier = "4F22428D24F1C7D200C1E64B"
+            BuildableName = "sclib"
+            BlueprintName = "sclib"
             ReferencedContainer = "container:iris-script.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
-         <CommandLineArgument
-            argument = "${PROJECT_DIR}/shortcuts/WFActions.plist"
-            isEnabled = "YES">
-         </CommandLineArgument>
          <CommandLineArgument
             argument = "${PROJECT_DIR}/shortcuts/glues"
             isEnabled = "YES">
@@ -71,9 +67,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4F293ECB24EC56E8003D6D1E"
-            BuildableName = "sc-dump"
-            BlueprintName = "sc-dump"
+            BlueprintIdentifier = "4F22428D24F1C7D200C1E64B"
+            BuildableName = "sclib"
+            BlueprintName = "sclib"
             ReferencedContainer = "container:iris-script.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

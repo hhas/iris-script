@@ -21,7 +21,7 @@ extension CoercionError {
     // «handler: ‘of’…» failed on command: ‘of’ {‘a’, {b: 1}}
     // Can’t coerce the following command to handler: ‘a’
     public var description: String {
-        return "Can’t coerce the following \(self.value.nominalType) to \(self.coercion): \(self.value)"
+        return "Can’t coerce the following \(self.value.nominalType) to \(self.coercion.literalDescription): \(self.value)"
     }
 }
 

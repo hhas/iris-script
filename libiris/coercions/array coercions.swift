@@ -14,6 +14,8 @@ public struct AsArray<ElementType: SwiftCoercion>: SwiftCoercion {
     public let name: Symbol = "ordered_list"
     
     public var swiftLiteralDescription: String { return "AsArray(\(self.elementType.swiftLiteralDescription))" }
+    public var literalDescription: String { return "ordered_list (\(self.elementType.literalDescription))" }
+
     
     public let elementType: ElementType
     
@@ -45,8 +47,8 @@ public struct AsArray<ElementType: SwiftCoercion>: SwiftCoercion {
                     do {
                         return try coerceFunc(item, scope)
                     } catch {
-                        print("Can't coerce item", i, "to", self.elementType)
-                        throw TypeCoercionError(value: item, coercion: self)
+                        print("AsArray.coerce() failed: Can't coerce item", i, "to", self.elementType)
+                        throw TypeCoercionError(value: item, coercion: self.elementType)
                     }
                 }
             }

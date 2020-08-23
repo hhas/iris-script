@@ -71,6 +71,10 @@ let wordCharacters     = _coreCharacters.inverted.subtracting(symbolCharacters).
 let underscoreCharacters = CharacterSet(charactersIn: "_")
 public let nameCharacters = wordCharacters.union(underscoreCharacters) // operator names (these do not include digits)
 
+// characters that can appear in a quoted name
+public let legalNameCharacters = quotedNameDelimiterCharacters.union(_invalidCharacters)
+    .union(CharacterSet.whitespacesAndNewlines).inverted
+
 // -/+ aren't part of core syntax, but do need to be recognized when processing numeric literals so define matchable symbols here
 // TO DO: should pretty printer replace ASCII +/- chars with true Unicode symbols?
 let minusCharacters    = CharacterSet(charactersIn: "-\u{2212}\u{FF0D}\u{FE63}") // ASCII hyphen, minus sign

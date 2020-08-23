@@ -29,9 +29,24 @@ import Foundation
 // TO DO: language really needs annotation support before pretty printing can be implemented (otherwise PP will “disappear” comments, etc); also need to decide default layout rules, and how to annotate elective formatting (e.g. lists and records laid out vertically using LF separators instead of horizontally using commas; blocks laid out horizontally instead of vertically, non-essential parens)
 
 
+
 private let delimitingChars = linebreakCharacters.union(whitespaceCharacters).union(punctuationCharacters)
+
+// this is a conservative subset of identifier characters
 private let startOfIdentifier = wordCharacters.union(underscoreCharacters)
 private let restOfIdentifier = startOfIdentifier.union(digitCharacters)
+
+
+public func quotableName(_ name: String) -> String {
+    guard let c = name.first else { return "‘’" }
+    if name.conforms(to: legalNameCharacters) {
+        return (startOfIdentifier ~= c && name.conforms(to: restOfIdentifier)) ? name : "‘\(name)’"
+    } else {
+        // TO DO: what to insert if name contains single quotes, linebreaks, or other invalid characters?
+        return name.map{ legalNameCharacters ~= $0 ? String($0) : "_" }.joined(separator: "")
+    }
+}
+
 
 
 
@@ -79,23 +94,11 @@ open class BasicFormatter {
         return name.label
     }
     
-    // this is a conservative subset of wordCharacters; anything else (including symbol-based names) will be single-quoted
-    
-    func isIdentifier(_ s: String) -> Bool {
-        guard let c = s.first, startOfIdentifier.contains(c) else { return false }
-        for c in s.dropFirst() { if !restOfIdentifier.contains(c) { return false } }
-        return true
-    }
-    
-    func quoteIfNeeded(_ s: String) -> String {
-        return self.isIdentifier(s) ? s : "‘\(s)’"
-    }
-    
     //
 
     public func atomic(_ value: AtomicValue) -> String {
         switch value {
-        case let v as Symbol:               return "#\(self.quoteIfNeeded(v.label))"
+        case let v as Symbol:               return "#\(quotableName(v.label))"
         case let v as LiteralConvertible:   return v.literalDescription
         default:                            return self.opaque(value)
         }
@@ -121,13 +124,13 @@ open class BasicFormatter {
             //print(operands)
             result += match.exactMatch.map{ $0.formatOperation(for: &operands, in: self) }.joined(separator: " ")
         } else {
-            result += self.quoteIfNeeded(value.name.label)
+            result += quotableName(value.name.label)
             // TO DO: use FP syntax for nested commands? or just parenthesize the entire command?
             // TO DO: if first argument is unlabeled and is a record, FP syntax MUST be used, e.g. `foo {{bar:1}, baz:…}`
             if !value.arguments.isEmpty {
                 for (label, value) in value.arguments {
                     result += " "
-                    if !label.isEmpty { result += "\(self.quoteIfNeeded(label.label)): " }
+                    if !label.isEmpty { result += "\(quotableName(label.label)): " }
                     result += self.format(value)
                 }
             }
@@ -292,13 +295,13 @@ public class VT100ValueFormatter: BasicFormatter {
             //print(operands)
             result += match.exactMatch.map{ $0.formatOperation(for: &operands, in: self) }.joined(separator: " ")
         } else {
-            result += "\(nameStyle)\(self.quoteIfNeeded(value.name.label))\(resetStyle)"
+            result += "\(nameStyle)\(quotableName(value.name.label))\(resetStyle)"
             // TO DO: use FP syntax for nested commands? or just parenthesize the entire command?
             // TO DO: if first argument is unlabeled and is a record, FP syntax MUST be used, e.g. `foo {{bar:1}, baz:…}`
             if !value.arguments.isEmpty {
                 for (label, value) in value.arguments {
                     result += " "
-                    if !label.isEmpty { result += "\(labelStyle)\(self.quoteIfNeeded(label.label)):\(resetStyle) " }
+                    if !label.isEmpty { result += "\(labelStyle)\(quotableName(label.label)):\(resetStyle) " }
                     result += self.format(value)
                 }
             }

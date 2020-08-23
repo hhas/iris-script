@@ -7,6 +7,15 @@ import Foundation
 
 // TO DO: Coercion.hasConforming(value:Value)->Bool method; e.g. Int and Double should conform to Text (and String) as well as Number; natively this would be `value is_a coercion`; `as` _might_ use this to skip conversion where value types are natively interchangeable (although we need to be careful about that, as bridges to external systems such as Apple events and ObjC which do rely on nominal type-checking of arguments may require such values to be explicitly cast before being passed to those systems)
 
+// TO DO: what about `where` clause on parameter record/result type for describing more complex constraints, e.g.:
+//
+//    number {min as integer, max as integer} where min < max returning number where min ≤ it ≤ max
+//
+// this’d provide run-time checking capabilities loosely comparable to dependent types and contract programming by evaluating these clause expressions in their own restricted env before/after evaluating handler’s body; one question is what operations should/shouldn’t be allowed within the clause, e.g. we probably don't want side effects and need to be careful about permitting arbitrary commands (which brings us back to how to specify complex/external requirements in primitive handler glues)
+//
+// Q. should `where` clause be allowed on individual record fields, e.g. `{min as integer, max as integer where min < it}`? this would need transformed to above form as Coercions only have access to the value being coerced, not to all argument fields, plus we don’t want it sensitive to order in which argument fields are unpacked
+//
+
 
 public protocol Coercion: LiteralConvertible {
     

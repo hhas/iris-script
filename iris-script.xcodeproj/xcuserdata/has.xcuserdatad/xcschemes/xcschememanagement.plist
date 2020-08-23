@@ -44,9 +44,19 @@
 			<key>orderHint</key>
 			<integer>18</integer>
 		</dict>
+		<key>sclib.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>19</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>4F22428D24F1C7D200C1E64B</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>4F293ECB24EC56E8003D6D1E</key>
 		<dict>
 			<key>primary</key>

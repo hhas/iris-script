@@ -25,7 +25,7 @@ extension Array where Element == Parser.TokenInfo {
     
     func dump(_ startIndex: Int = 0, _ stopIndex: Int? = nil) -> String { // startIndex..<stopIndex
         let stopIndex = stopIndex ?? self.count
-        return "Stack[\(startIndex)..<\(stopIndex)]:\n"
+        return "Stack[\(startIndex)...\(stopIndex-1)]:\n"
             + self[startIndex..<(stopIndex)].enumerated().map{"\($0+startIndex))\t.\($1.form) \($1.matches.map{ "\n\t\t\t\t\($0)"}.joined(separator: ""))"
             }.joined(separator: "\n")
     }
@@ -190,7 +190,7 @@ extension Array where Element == Parser.TokenInfo {
             } else {
                 //self.show()
                 print("reduceOperatorExpression couldn’t match tokens \(index...stopIndex-1):")
-                self.show(index, stopIndex); print()
+                self.show(Swift.max(0, index-5), stopIndex); print()
                 // TO DO: better error message
                 result.append(.value(SyntaxErrorDescription("reduceOperatorExpression couldn’t match tokens \(index...stopIndex-1)."))) // TO DO: better error message; the problem is that the expr ends in one or more extra tokens, which could be the result of a missing separator, or a misspelled infix operator, or some stray keyboard crud
                 index += 1 //

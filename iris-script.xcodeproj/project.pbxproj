@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F22429124F1C7D200C1E64B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F22429024F1C7D200C1E64B /* main.swift */; };
+		4F22429624F1CDA500C1E64B /* sclib_handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F22429524F1CDA500C1E64B /* sclib_handlers.swift */; };
+		4F22429724F1CDFE00C1E64B /* libiris.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988CB624BCC4D700EE66C7 /* libiris.a */; };
+		4F22429924F1CF4E00C1E64B /* sclib_records.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F22429824F1CF4E00C1E64B /* sclib_records.swift */; };
 		4F27E93724CC58BA00102572 /* internal errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27E93624CC58BA00102572 /* internal errors.swift */; };
 		4F27E93924CC591100102572 /* parser errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27E93824CC591100102572 /* parser errors.swift */; };
 		4F27E93B24CC593D00102572 /* handler errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F27E93A24CC593D00102572 /* handler errors.swift */; };
@@ -20,8 +24,10 @@
 		4F293ECF24EC56E8003D6D1E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293ECE24EC56E8003D6D1E /* main.swift */; };
 		4F293ED824ED1682003D6D1E /* read action.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293ED724ED1682003D6D1E /* read action.swift */; };
 		4F293EDA24ED1696003D6D1E /* datatypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293ED924ED1696003D6D1E /* datatypes.swift */; };
-		4F293EDC24ED179C003D6D1E /* support.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293EDB24ED179C003D6D1E /* support.swift */; };
+		4F293EDC24ED179C003D6D1E /* formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293EDB24ED179C003D6D1E /* formatting.swift */; };
 		4F293EDF24ED1BD2003D6D1E /* libiris.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988CB624BCC4D700EE66C7 /* libiris.a */; };
+		4F29B00B24F2D8BF00E2A59B /* sclib_coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F29B00A24F2D8BF00E2A59B /* sclib_coercions.swift */; };
+		4F29B00D24F2D92600E2A59B /* sclib_operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F29B00C24F2D92500E2A59B /* sclib_operators.swift */; };
 		4F2B0C6624C0CC4F00664ABB /* formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B0C6524C0CC4F00664ABB /* formatter.swift */; };
 		4F2B2B9224D83FD3004B2189 /* stdlib_coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B2B9124D83FD3004B2189 /* stdlib_coercions.swift */; };
 		4F2B2B9424D85947004B2189 /* editable coercions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2B2B9324D85947004B2189 /* editable coercions.swift */; };
@@ -226,6 +232,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		4F22428C24F1C7D200C1E64B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		4F293ECA24EC56E8003D6D1E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -268,6 +283,10 @@
 		4F1EA48422B279B500FFA4D2 /* atoms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = atoms.swift; sourceTree = "<group>"; };
 		4F1EA48622B27B8D00FFA4D2 /* text.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = text.swift; sourceTree = "<group>"; };
 		4F1EA48822B2888400FFA4D2 /* ordered list.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ordered list.swift"; sourceTree = "<group>"; };
+		4F22428E24F1C7D200C1E64B /* sclib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = sclib; sourceTree = BUILT_PRODUCTS_DIR; };
+		4F22429024F1C7D200C1E64B /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		4F22429524F1CDA500C1E64B /* sclib_handlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sclib_handlers.swift; sourceTree = "<group>"; };
+		4F22429824F1CF4E00C1E64B /* sclib_records.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sclib_records.swift; sourceTree = "<group>"; };
 		4F2503DF232BF8A700C8BDD0 /* test clause.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "test clause.swift"; sourceTree = "<group>"; };
 		4F2503E6232BF96800C8BDD0 /* test clause selectors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "test clause selectors.swift"; sourceTree = "<group>"; };
 		4F25506422EA38F500B7034F /* token stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "token stream.swift"; sourceTree = "<group>"; };
@@ -310,13 +329,16 @@
 		4F2931FF22E2290B00BC0AD4 /* editable script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "editable script.swift"; sourceTree = "<group>"; };
 		4F29320122E23AD700BC0AD4 /* other line readers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "other line readers.swift"; sourceTree = "<group>"; };
 		4F29320322E25E7100BC0AD4 /* operator reader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "operator reader.swift"; sourceTree = "<group>"; };
-		4F293ECC24EC56E8003D6D1E /* sclib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = sclib; sourceTree = BUILT_PRODUCTS_DIR; };
+		4F293ECC24EC56E8003D6D1E /* sc-dump */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "sc-dump"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F293ECE24EC56E8003D6D1E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4F293ED424EC573D003D6D1E /* shortcut actions.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "shortcut actions.iris-glue"; sourceTree = "<group>"; };
 		4F293ED524EC5976003D6D1E /* WFActions.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = WFActions.plist; sourceTree = "<group>"; };
 		4F293ED724ED1682003D6D1E /* read action.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "read action.swift"; sourceTree = "<group>"; };
 		4F293ED924ED1696003D6D1E /* datatypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = datatypes.swift; sourceTree = "<group>"; };
-		4F293EDB24ED179C003D6D1E /* support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = support.swift; sourceTree = "<group>"; };
+		4F293EDB24ED179C003D6D1E /* formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = formatting.swift; sourceTree = "<group>"; };
+		4F29B00A24F2D8BF00E2A59B /* sclib_coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sclib_coercions.swift; sourceTree = "<group>"; };
+		4F29B00C24F2D92500E2A59B /* sclib_operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sclib_operators.swift; sourceTree = "<group>"; };
+		4F29B00F24F2EE9800E2A59B /* shortcut types.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "shortcut types.iris-glue"; sourceTree = "<group>"; };
 		4F2B0C6524C0CC4F00664ABB /* formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = formatter.swift; sourceTree = "<group>"; };
 		4F2B2B9124D83FD3004B2189 /* stdlib_coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = stdlib_coercions.swift; sourceTree = "<group>"; };
 		4F2B2B9324D85947004B2189 /* editable coercions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "editable coercions.swift"; sourceTree = "<group>"; };
@@ -419,6 +441,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4F22428B24F1C7D200C1E64B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4F22429724F1CDFE00C1E64B /* libiris.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4F293EC924EC56E8003D6D1E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -477,6 +507,18 @@
 				4F26065522C0158C0036D904 /* value modifiers.swift */,
 			);
 			path = values;
+			sourceTree = "<group>";
+		};
+		4F22428F24F1C7D200C1E64B /* sclib */ = {
+			isa = PBXGroup;
+			children = (
+				4F22429024F1C7D200C1E64B /* main.swift */,
+				4F22429524F1CDA500C1E64B /* sclib_handlers.swift */,
+				4F22429824F1CF4E00C1E64B /* sclib_records.swift */,
+				4F29B00A24F2D8BF00E2A59B /* sclib_coercions.swift */,
+				4F29B00C24F2D92500E2A59B /* sclib_operators.swift */,
+			);
+			path = sclib;
 			sourceTree = "<group>";
 		};
 		4F25506022EA384F00B7034F /* lexer */ = {
@@ -642,14 +684,15 @@
 			name = "document readers";
 			sourceTree = "<group>";
 		};
-		4F293ECD24EC56E8003D6D1E /* sclib */ = {
+		4F293ECD24EC56E8003D6D1E /* shortcuts */ = {
 			isa = PBXGroup;
 			children = (
-				4F293ED424EC573D003D6D1E /* shortcut actions.iris-glue */,
+				4F22428F24F1C7D200C1E64B /* sclib */,
+				4F29B00E24F2ECCA00E2A59B /* glues */,
 				4F293ED524EC5976003D6D1E /* WFActions.plist */,
 				4F293EE024ED6A85003D6D1E /* sc-dump */,
 			);
-			path = sclib;
+			path = shortcuts;
 			sourceTree = "<group>";
 		};
 		4F293EE024ED6A85003D6D1E /* sc-dump */ = {
@@ -657,18 +700,19 @@
 			children = (
 				4F293ECE24EC56E8003D6D1E /* main.swift */,
 				4F293ED724ED1682003D6D1E /* read action.swift */,
+				4F293EDB24ED179C003D6D1E /* formatting.swift */,
 				4F293ED924ED1696003D6D1E /* datatypes.swift */,
-				4F293EDB24ED179C003D6D1E /* support.swift */,
 			);
 			path = "sc-dump";
 			sourceTree = "<group>";
 		};
-		4F2B0C5F24C0CC3800664ABB /* pretty printer */ = {
+		4F29B00E24F2ECCA00E2A59B /* glues */ = {
 			isa = PBXGroup;
 			children = (
-				4F2B0C6524C0CC4F00664ABB /* formatter.swift */,
+				4F293ED424EC573D003D6D1E /* shortcut actions.iris-glue */,
+				4F29B00F24F2EE9800E2A59B /* shortcut types.iris-glue */,
 			);
-			path = "pretty printer";
+			path = glues;
 			sourceTree = "<group>";
 		};
 		4F2C4D1F24C8690A0058749A /* handlers */ = {
@@ -735,6 +779,7 @@
 		4F5B24B0231405C8001C1941 /* formatting */ = {
 			isa = PBXGroup;
 			children = (
+				4F2B0C6524C0CC4F00664ABB /* formatter.swift */,
 				4F5B24AE231405B8001C1941 /* swift literal.swift */,
 			);
 			path = formatting;
@@ -763,7 +808,7 @@
 				4F8C407324BCC02200735273 /* iris-shell */,
 				4FE5502524C035D500509806 /* iris-glue */,
 				4F988CB724BCC4D700EE66C7 /* libiris */,
-				4F293ECD24EC56E8003D6D1E /* sclib */,
+				4F293ECD24EC56E8003D6D1E /* shortcuts */,
 				4F84CFFE22ADA0F200C9FD23 /* Products */,
 				4F46A415232258E6008E0265 /* Frameworks */,
 			);
@@ -776,7 +821,8 @@
 				4F8C407224BCC02200735273 /* iris-shell */,
 				4F988CB624BCC4D700EE66C7 /* libiris.a */,
 				4FE5502424C035D500509806 /* iris-glue */,
-				4F293ECC24EC56E8003D6D1E /* sclib */,
+				4F293ECC24EC56E8003D6D1E /* sc-dump */,
+				4F22428E24F1C7D200C1E64B /* sclib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -806,7 +852,6 @@
 			isa = PBXGroup;
 			children = (
 				4F988CBF24BCC57E00EE66C7 /* main.swift */,
-				4F2B0C5F24C0CC3800664ABB /* pretty printer */,
 				4FFC6F2322D6816F00D636B9 /* parser */,
 				4F1EA48B22B4E71300FFA4D2 /* values */,
 				4FC82CED24CEBE8C00EEC170 /* coercions */,
@@ -900,10 +945,10 @@
 			isa = PBXGroup;
 			children = (
 				4FC5C7FA23109824007D694C /* gluelib_handlers.swift */,
-				4FC5C7FB23109826007D694C /* gluelib_operators.swift */,
-				4F2C4D2824C8DC910058749A /* gluelib_constants.swift */,
 				4FE8D45824E2B304008AE1D3 /* gluelib_records.swift */,
 				4FE8D46624E33FB5008AE1D3 /* gluelib_enums.swift */,
+				4F2C4D2824C8DC910058749A /* gluelib_constants.swift */,
+				4FC5C7FB23109826007D694C /* gluelib_operators.swift */,
 			);
 			name = glues;
 			sourceTree = "<group>";
@@ -944,9 +989,26 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		4F293ECB24EC56E8003D6D1E /* sclib */ = {
+		4F22428D24F1C7D200C1E64B /* sclib */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4F293ED024EC56E8003D6D1E /* Build configuration list for PBXNativeTarget "sclib" */;
+			buildConfigurationList = 4F22429224F1C7D200C1E64B /* Build configuration list for PBXNativeTarget "sclib" */;
+			buildPhases = (
+				4F22428A24F1C7D200C1E64B /* Sources */,
+				4F22428B24F1C7D200C1E64B /* Frameworks */,
+				4F22428C24F1C7D200C1E64B /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = sclib;
+			productName = sclib;
+			productReference = 4F22428E24F1C7D200C1E64B /* sclib */;
+			productType = "com.apple.product-type.tool";
+		};
+		4F293ECB24EC56E8003D6D1E /* sc-dump */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4F293ED024EC56E8003D6D1E /* Build configuration list for PBXNativeTarget "sc-dump" */;
 			buildPhases = (
 				4F293EC824EC56E8003D6D1E /* Sources */,
 				4F293EC924EC56E8003D6D1E /* Frameworks */,
@@ -957,9 +1019,9 @@
 			dependencies = (
 				4F293EDE24ED1BC3003D6D1E /* PBXTargetDependency */,
 			);
-			name = sclib;
+			name = "sc-dump";
 			productName = shortcut;
-			productReference = 4F293ECC24EC56E8003D6D1E /* sclib */;
+			productReference = 4F293ECC24EC56E8003D6D1E /* sc-dump */;
 			productType = "com.apple.product-type.tool";
 		};
 		4F84CFFC22ADA0F200C9FD23 /* iris-test */ = {
@@ -1043,6 +1105,9 @@
 				LastSwiftUpdateCheck = 1130;
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
+					4F22428D24F1C7D200C1E64B = {
+						CreatedOnToolsVersion = 11.3.1;
+					};
 					4F293ECB24EC56E8003D6D1E = {
 						CreatedOnToolsVersion = 11.3.1;
 					};
@@ -1085,7 +1150,8 @@
 				4F988CB524BCC4D700EE66C7 /* libiris */,
 				4F84CFFC22ADA0F200C9FD23 /* iris-test */,
 				4FE5502324C035D500509806 /* iris-glue */,
-				4F293ECB24EC56E8003D6D1E /* sclib */,
+				4F293ECB24EC56E8003D6D1E /* sc-dump */,
+				4F22428D24F1C7D200C1E64B /* sclib */,
 			);
 		};
 /* End PBXProject section */
@@ -1136,12 +1202,24 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4F22428A24F1C7D200C1E64B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4F22429624F1CDA500C1E64B /* sclib_handlers.swift in Sources */,
+				4F29B00D24F2D92600E2A59B /* sclib_operators.swift in Sources */,
+				4F29B00B24F2D8BF00E2A59B /* sclib_coercions.swift in Sources */,
+				4F22429924F1CF4E00C1E64B /* sclib_records.swift in Sources */,
+				4F22429124F1C7D200C1E64B /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4F293EC824EC56E8003D6D1E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				4F293ED824ED1682003D6D1E /* read action.swift in Sources */,
-				4F293EDC24ED179C003D6D1E /* support.swift in Sources */,
+				4F293EDC24ED179C003D6D1E /* formatting.swift in Sources */,
 				4F293EDA24ED1696003D6D1E /* datatypes.swift in Sources */,
 				4F293ECF24EC56E8003D6D1E /* main.swift in Sources */,
 			);
@@ -1330,6 +1408,28 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		4F22429324F1C7D200C1E64B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 27XZ82KJ77;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		4F22429424F1C7D200C1E64B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 27XZ82KJ77;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		4F293ED124EC56E8003D6D1E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1588,7 +1688,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4F293ED024EC56E8003D6D1E /* Build configuration list for PBXNativeTarget "sclib" */ = {
+		4F22429224F1C7D200C1E64B /* Build configuration list for PBXNativeTarget "sclib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4F22429324F1C7D200C1E64B /* Debug */,
+				4F22429424F1C7D200C1E64B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4F293ED024EC56E8003D6D1E /* Build configuration list for PBXNativeTarget "sc-dump" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4F293ED124EC56E8003D6D1E /* Debug */,

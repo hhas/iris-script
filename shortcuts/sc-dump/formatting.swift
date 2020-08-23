@@ -10,8 +10,9 @@ import iris
 typealias Dict = [String:Any]
 
 
+
 func wordsToSnake(_ s: String) -> String { // replace spaces with underscores; used to convert action names and param labels to native identifiers
-    return s.lowercased().replacingOccurrences(of: " ", with: "_") // TO DO: what about single-quoting?
+    return s.lowercased().replacingOccurrences(of: " ", with: "_").replacingOccurrences(of: "-", with: "_") // TO DO: what about single-quoting?
 }
 
 
@@ -50,17 +51,76 @@ func camelToSnake(_ s: String) -> String { // convert CamelCase to snake_case; u
     return result
 }
 
-func ioType(_ d: Dict) -> String {
-    var t: String
+// all type names from WFActions.plist
+// caution: these are a subset of true types used as various modifiers may be applied
+
+typealias TypeNames = [String: String]
+
+var inputOutputTypes = TypeNames() // [WFOriginalName:snake_name]
+var parameterTypes   = TypeNames()
+var disallowedTypes  = TypeNames()
+
+
+func writeTypeDefinitions(_ label: String, for typeNames: TypeNames.Values, to glue: FileHandle) {
+    glue.write("\n«\(label)»\n")
+    for t in Set<String>(typeNames).sorted() { glue.write("shortcut_type \((t))\n") }
+}
+
+func writeShortcutTypes(to glue: FileHandle) {
+    writeTypeDefinitions("input/output types", for: inputOutputTypes.values, to: glue)
+    writeTypeDefinitions("parameter types", for: parameterTypes.values, to: glue)
+    writeTypeDefinitions("disallowed types", for: disallowedTypes.values, to: glue)
+}
+
+
+func formatType(_ s: String, cache: inout [String:String]) -> String {
+    if let res = cache[s] { return res }
+    let res = camelToSnake(s)
+    cache[s] = res
+    return res
+}
+
+
+func formatIOType(_ s: String) -> String {
+    return formatType(s, cache: &inputOutputTypes)
+}
+
+func formatParameterType(_ s: String) -> String {
+    return formatType(s, cache: &parameterTypes)
+}
+
+func formatDisallowedType(_ s: String) -> String {
+    return formatType(s, cache: &disallowedTypes)
+}
+
+
+func inputOutputType(_ d: Dict) -> String {
+    var result: String
     if let types = d["Types"] as? [String] {
-        t = types.map(camelToSnake).joined(separator: " OR ")
-        if types.count > 1 { t = "(\(t))" }
-        if d["Multiple"] as? Bool ?? false { t = "ordered_list of: \(t)" }
+        if types.isEmpty {
+            /*
+             <key>Input</key>
+             <dict>
+                 <key>Multiple</key>
+                 <true/>
+                 <key>ParameterKey</key>
+                 <string>WFFile</string>
+                 <key>Required</key>
+                 <true/>
+                 <key>Types</key>
+                 <array/> // probably a bug in XML, but we need to put something in for generated code to be valid
+             </dict>
+             */
+            result = "anything"
+        } else {
+            result = types.map(formatIOType).joined(separator: " OR ")
+            if types.count > 1 { result = "(\(result))" }
+        }
+        if d["Multiple"] as? Bool ?? false { result = "ordered_list of: \(result)" }
     } else {
-        t = "nothing"
+        result = "nothing"
     }
-    //if let n = d["OutputName"] { t += " «\(n)»" }
-    return t
+    return result
 }
 
 /*
@@ -82,25 +142,30 @@ func ioType(_ d: Dict) -> String {
          <key>StepperPluralNoun</key>
          <string>Decimal Places</string>
      </dict>
-
- 
  */
 
 func paramType(_ p: Dict) -> String {
-    var t = p["Class"] as! String
-    switch t {
+    var result = p["Class"] as! String
+    switch result {
     case "WFNumberFieldParameter":
-        t = p["AllowsDecimalNumbers"] as? Bool ?? false ? "number" : "integer"
+        result = p["AllowsDecimalNumbers"] as? Bool ?? false ? "number" : "integer"
     case "WFEnumerationParameter":
-        t = "choice [\((p["Items"] as! [String]).map { "“\($0)”" }.joined(separator: ", "))]"
+        result = "choice [\((p["Items"] as! [String]).map { "“\($0)”" }.joined(separator: ", "))]"
     default:
-        t = camelToSnake(t)
+        result = formatParameterType(result)
+    }
+    if result == "string" {
+        if !(p["Multiline"] as? Bool ?? false) {
+            result = "single_line_string" // TO DO: how best to constrain string?
+        }
     }
     if let dv = p["DefaultValue"] {
-        t = "optional \(t) with_default \(formatValue(dv))"
+        result = "optional \(result) with_default \(formatValue(dv))"
     }
-    // TO DO: "DisallowedVariableTypes"
-    return t
+    if let types = p["DisallowedVariableTypes"] as? [String] {
+        result = "\(result) but_not [\(types.map(formatDisallowedType).joined(separator: ", "))]"
+    }
+    return result
 }
 
 //
