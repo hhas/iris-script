@@ -1,7 +1,7 @@
 //
-//  stdlib record stubs.swift
+//  stdlib enum stubs.swift
 //
-//  Swift structs that bridge to native records. Copy and modify as needed.
+//  Swift enums that bridge to native choices. Copy and modify as needed.
 //
 //  This file is auto-generated; do not edit directly.
 //

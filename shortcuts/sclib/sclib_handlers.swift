@@ -8,6 +8,17 @@ import iris
 
 
 
+public typealias Dict = [String:Any]
+
+
+public class Shortcut: OpaqueValue<Dict> {
+    
+    open override var description: String { return self.data.description }
+
+}
+
+
+
 public struct ShortcutAction: Callable {
     
     public static var nominalType: NativeCoercion = asHandler.nativeCoercion
@@ -25,7 +36,29 @@ public struct ShortcutAction: Callable {
     }
     
     public func call<T: SwiftCoercion>(with command: Command, in scope: Scope, as coercion: T) throws -> T.SwiftType {
-        fatalError()
+        // experimental; TO DO: how should individual actions compose into completed workflow?
+        var result: Dict = ["WFWorkflowActionIdentifier":self.requirements.id]
+        var parameters = Dict()
+        var index = 0
+        for param in self.interface.parameters {
+            let arg = command.arguments.value(labeled: param.label, at: &index)
+            if !(arg is NullValue) { parameters[param.binding.label] = arg }
+        }
+        result["WFWorkflowActionParameters"] = parameters
+        //print(self.name, result)
+        return try coercion.coerce(Shortcut(result), in: scope)
+        /*
+        <dict>
+            <key>WFWorkflowActionIdentifier</key>
+            <string>is.workflow.actions.number</string>
+            <key>WFWorkflowActionParameters</key>
+            <dict>
+                <key>WFNumberActionNumber</key>
+                <integer>42</integer>
+            </dict>
+        </dict>
+        */
+        
     }
 }
 
@@ -93,35 +126,10 @@ private func procedure_shortcutType(command: Command, commandEnv: Scope, handler
 
 
 
-private let type_union = (
-    name: Symbol("OR"),
-    param_0: (Symbol("left"), Symbol("left"), asCoercion),
-    param_1: (Symbol("right"), Symbol("right"), asCoercion),
-    result: asCoercion
-)
-private let interface_union = HandlerType(
-    name: type_union.name,
-    parameters: [
-        nativeParameter(type_union.param_0),
-        nativeParameter(type_union.param_1),
-    ],
-    result: type_union.result.nativeCoercion
-)
-private func procedure_union(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    var index = 0
-    let arg_0 = try command.value(for: type_union.param_0, at: &index, in: commandEnv)
-    let arg_1 = try command.value(for: type_union.param_1, at: &index, in: commandEnv)
-    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    return AsUnion(_: arg_0, _: arg_1)
-}
-
-
-
 
 func sclib_loadHandlers(into env: ExtendedEnvironment) {
     env.define(interface_shortcutAction, procedure_shortcutAction)
     env.define(interface_shortcutType, procedure_shortcutType)
-    env.define(interface_union, procedure_union)
 }
 
 

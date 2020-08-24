@@ -13,7 +13,7 @@ private let templateSource = """
 //
 //  ««libraryName»»_coercions.swift
 //
-//  Handler extensions for constructing constrained coercions.
+//  Extend Coercions with native handler interfaces for adding constraints.
 //
 //  This file is auto-generated; do not edit directly.
 //
@@ -49,7 +49,7 @@ extension ««swiftType»»: ConstrainableCoercion {
         let arg_««count»» = try command.value(for: Self.type_constrain.param_««count»», at: &index, in: scope)
         ««-unboxArguments»»
         if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
-        return ««+tryKeyword»» try ««-tryKeyword»» ««swiftFunction»»(««+swiftArguments»»««label»»: ««argument»» ««~swiftArguments»», ««-swiftArguments»»)
+        return ««+tryKeyword»» try ««-tryKeyword»» ««swiftFunction»»(««+swiftArguments»»««label»»: ««argument»» ««|swiftArguments»», ««-swiftArguments»»)
     }
 }
 
@@ -63,6 +63,7 @@ public func stdlib_loadCoercions(into env: Environment) {
     ««-aliases»»
     ««-loadCoercions»»
 }
+
 """
 
 

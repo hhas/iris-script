@@ -17,7 +17,8 @@ public struct AsAbstractType: NativeCoercion { // represents a Shortcuts “type
     }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> Value {
-        print("Can’t coerce value to abstract Shortcuts type ‘\(self.name)’")
+        // TO DO: what should this output?
+        print("Coerce value to Shortcuts type ‘\(self.name)’: \(value)")
         throw TypeCoercionError(value: value, coercion: self)
     }
     
@@ -80,7 +81,7 @@ let asHiddenParameter = AsHiddenParameter(asAnything)
 
 // kludgy
 
-public struct _AsChoice: NativeCoercion {
+public struct AsChoice: NativeCoercion {
     
     public let name: Symbol = "choice"
     
@@ -112,7 +113,7 @@ public struct _AsChoice: NativeCoercion {
     }
 }
 
-extension _AsChoice: ConstrainableCoercion {
+extension AsChoice: ConstrainableCoercion {
     
     private static let type_constrain = (
         param_0: (Symbol("options"), Symbol("options"), AsArray(asString)),
@@ -133,12 +134,12 @@ extension _AsChoice: ConstrainableCoercion {
         var index = 0
         let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
         if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
-        return _AsChoice(_: arg_0)
+        return AsChoice(_: arg_0)
     }
 }
 
 
-let _asChoice = _AsChoice([])
+let asChoice = AsChoice([])
 
 
 
@@ -200,8 +201,9 @@ extension AsUnion: ConstrainableCoercion {
 
 let asUnion = AsUnion(asAnything, asAnything)
 
+// TO DO: AsIntersection (AND), AsSymmetricDifference (XOR);
 
-public struct AsExcluded: NativeCoercion {
+public struct AsSubtraction: NativeCoercion {
     
     public var name: Symbol { return Symbol("but_not") }
     
@@ -226,7 +228,7 @@ public struct AsExcluded: NativeCoercion {
     }
 }
 
-extension AsExcluded: ConstrainableCoercion {
+extension AsSubtraction: ConstrainableCoercion {
     
     private static let type_constrain = (
         param_0: (Symbol("of_type"), Symbol("value_type"), asCoercion),
@@ -250,11 +252,11 @@ extension AsExcluded: ConstrainableCoercion {
         let arg_0 = try command.value(for: Self.type_constrain.param_0, at: &index, in: scope)
         let arg_1 = try command.value(for: Self.type_constrain.param_1, at: &index, in: scope)
         if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: self) }
-        return AsExcluded(_: arg_0, butNot: arg_1)
+        return AsSubtraction(_: arg_0, butNot: arg_1)
     }
 }
 
-let asExcluded = AsExcluded(asAnything, butNot: [asNothing])
+let asSubtraction = AsSubtraction(asAnything, butNot: [asNothing])
 
 
 
@@ -267,8 +269,8 @@ func sclib_loadCoercions(into env: ExtendedEnvironment) {
     env.define(coercion: AsAbstractType("input"))
     env.define(coercion: AsSwiftPrecis(asString, "single_line_string")) // TO DO: need to implement this
     env.define(coercion: CallableCoercion(asUnion))
-    env.define(coercion: CallableCoercion(asExcluded))
-    env.define(coercion: CallableCoercion(_asChoice)) // need to override stdlib definition for now as it uses symbols but Shortcuts uses strings
+    env.define(coercion: CallableCoercion(asSubtraction))
+    env.define(coercion: CallableCoercion(asChoice)) // need to override stdlib definition for now as it uses symbols but Shortcuts uses strings
     
     env.define(coercion: AsAbstractType("integer")) // TO DO: implement this
 }

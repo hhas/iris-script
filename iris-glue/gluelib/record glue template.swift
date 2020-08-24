@@ -54,7 +54,7 @@ public struct As««structName»»: SwiftCoercion {
         let arg_««count»» = try fields.coerce(param: Self.type_struct.field_««count»», at: &index, in: scope)
         ««-unboxArguments»»
         if fields.count > index { throw UnknownFieldError(at: index, of: fields) }
-        return ««+tryKeyword»» try ««-tryKeyword»» ««structName»»(««+swiftArguments»» ««label»»: arg_««count»» ««~swiftArguments»», ««-swiftArguments»»)
+        return ««+tryKeyword»» try ««-tryKeyword»» ««structName»»(««+swiftArguments»» ««label»»: arg_««count»» ««|swiftArguments»», ««-swiftArguments»»)
     }
     
     public func wrap(_ value: SwiftType, in scope: Scope) -> Value {

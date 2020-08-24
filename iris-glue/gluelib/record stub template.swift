@@ -26,7 +26,7 @@ public struct ««swiftName»» {
     public let ««binding»»: ««swiftType»»
     ««-attributes»»
     
-    public init(««+arguments»»««label»»««binding»»: ««swiftType»»««~arguments»», ««-arguments»») {
+    public init(««+arguments»»««label»»««binding»»: ««swiftType»»««|arguments»», ««-arguments»») {
         ««+bindings»»
         self.««binding»» = ««binding»»
         ««-bindings»»

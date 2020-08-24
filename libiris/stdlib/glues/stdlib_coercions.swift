@@ -1,7 +1,7 @@
 //
 //  stdlib_coercions.swift
 //
-//  Handler extensions for constructing constrained coercions.
+//  Extend Coercions with native handler interfaces for adding constraints.
 //
 //  This file is auto-generated; do not edit directly.
 //

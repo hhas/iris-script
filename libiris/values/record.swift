@@ -36,7 +36,7 @@ public extension Record.Fields { // also used as Command.Arguments
     }
     // TO DO: better error messages
     
-    private func value(labeled label: Symbol, at index: inout Int) -> Value {
+    func value(labeled label: Symbol, at index: inout Int) -> Value {
         if index < self.count {
             let arg = self[index]
             // TO DO: should this skip over unrecognized labels, i.e. ignore unwanted fields? i.e. if arg is unlabeled or matches, use current field else call firstIndex{$0.label==label} to search for field in remaining record

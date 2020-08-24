@@ -21,23 +21,18 @@ if args.count != 2 {
 extension IncrementalParser {
     
     func loadGlue(_ file: URL) throws {
-        let s = try String(contentsOf: file, encoding: .utf8)
-        let t3 = Date()
-        self.read(s)
-        print("read", Date().timeIntervalSince(t3))
+        self.read(try String(contentsOf: file, encoding: .utf8))
         guard let script = self.ast() else {
             let errors = self.errors()
             if errors.isEmpty { throw InternalError(description: "Found syntax errors in glue.") }
             throw InternalError(description: "Found syntax errors in glue: \(errors)")
         }
-        let t2 = Date()
         let _ = try script.eval(in: env, as: asAnything)
-        print("eval", Date().timeIntervalSince(t2))
+        self.clear()
     }
 }
 
 func importGlue(from dir: URL) {
-    let t = Date()
     let parser = IncrementalParser(withStdLib: false)
     let env = parser.env
     stdlib_loadCoercions(into: env)
@@ -45,7 +40,6 @@ func importGlue(from dir: URL) {
     sclib_loadHandlers(into: env)
     sclib_loadCoercions(into: env)
     sclib_loadOperators(into: env.operatorRegistry)
-    print(Date().timeIntervalSince(t))
     do {
         try parser.loadGlue(dir.appendingPathComponent("shortcut types.iris-glue"))
         try parser.loadGlue(dir.appendingPathComponent("shortcut actions.iris-glue"))
@@ -53,9 +47,19 @@ func importGlue(from dir: URL) {
         print("Failed: \(error)")
     }
     //print(env.frame.keys)
+    parser.read("""
+        
+        random_number {minimum: 1, maximum: 10}
+        
+    """)
+    guard let script = parser.ast() else { print("Error:", parser.errors()); exit(5) }
+    do {
+        let result = try script.eval(in: env, as: asAnything)
+        print("Result:", result)
+    } catch {
+        print("Error:", error); exit(5)
+    }
 }
 
 
-let t = Date()
 importGlue(from: URL(fileURLWithPath: args[1]))
-print(Date().timeIntervalSince(t))

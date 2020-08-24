@@ -3,6 +3,8 @@
 //  iris-script
 //
 
+// TO DO: need to rethink+redesign lexer chain as current architecture is too slow parsing large files; significant costs may be heap allocation of reader structs (which are used once then discarded), next() protocol conformance checks, next() call overheads; one option might be to separate cursor state into its own CursorState struct which can be stored on stack, so that stateless chain is instantiated only once; another option might be for readers to register their own pattern matchers with main lexer
+
 // TO DO: there are a lot of misses (where the same lexer instance’s next() is called more than once, only for it to be discarded; this is probably unavoidable as it's essentially how lexers perform +1 lookahead, but it does mean a lot of repeat work; should base lexer at least keep a lookahead cache to reduce that overhead?)
 
 //  BaseLexer, given a string of source code, generates a stream of primitive .letters, .symbols, .digits and punctuation tokens. This is more granular than most lexers, e.g. the code `-3.14` will yield four tokens: .symbol("-"), .digits("3"), .separator(.period), .digits("14"). These low-level tokens require further reduction before they sufficiently high-level to be accepted by the downstream Parser, matching the `-` symbol as .operatorName("-") and combining the remaining three primitives into a single .value("3.14") token

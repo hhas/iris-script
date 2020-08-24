@@ -26,7 +26,7 @@ import Foundation
 ««+defineHandler»»
 
 func ««functionName»»(««+functionParameters»»\
-««label»»««binding»»: ««type»» ««~functionParameters»», \
+««label»»««binding»»: ««type»» ««|functionParameters»», \
 ««-functionParameters»») ««+canThrow»» throws ««-canThrow»» ««+hasReturnType»» -> ««returnType»» ««-hasReturnType»» {
     fatalError("««functionName»» of ««libraryName»» is not yet implemented.")
 }

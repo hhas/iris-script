@@ -13,7 +13,7 @@
  
  ««+NAME»» CONTENT ««-NAME»» -- `node.NAME.map(ARRAY<ELEMENT>[,OPTIONS]) {(CONTENT_NODE,ELEMENT[,OPTIONS])->Void}` renders CONTENT_NODE once for each item in ARRAY; CONTENT text contains tags to be rendered in closure
  
- ««+NAME»» CONTENT ««~NAME»» SEPARATOR ««-NAME»» -- as above, except SEPARATOR text is inserted between each rendered CONTENT (if omitted, the default separator is "")
+ ««+NAME»» CONTENT ««|NAME»» SEPARATOR ««-NAME»» -- as above, except SEPARATOR text is inserted between each rendered CONTENT (if omitted, the default separator is "")
  */
 
 // See also: https://github.com/hhas/htmltemplate
@@ -21,6 +21,7 @@
 
 import Foundation
 
+// TO DO: helper functions specifically for Swift code generation? e.g. toStringLiteral(), or is String.debugDescription adequate?
 
 // TO DO: should render funcs [re]throw?
 
@@ -196,7 +197,7 @@ class TextTemplate<T>: TextNode {
         var stack: [TextNode] = [self]
         var start = 0
         var isSep = false
-        try! NSRegularExpression(pattern: "««([-+~]?)([a-z]+)»»", options: .caseInsensitive)
+        try! NSRegularExpression(pattern: "««([-+|]?)([a-z]+)»»", options: .caseInsensitive)
             .enumerateMatches(in: template, range: NSRange(location: 0, length: template.count)) {
             (match: NSTextCheckingResult?, flags: NSRegularExpression.MatchingFlags, _) -> Void in
             if let match = match {
@@ -222,8 +223,8 @@ class TextTemplate<T>: TextNode {
                         if node.name != name { fatalError("Mismatched tags: `+\(node.name)` and `-\(name)`") }
                         node.append(TextNode(head: prefix, name: ""))
                     }
-                case "~":
-                    if stack.last!.name != name { fatalError("Mismatched tags: `+\(stack.last!.name)` and `~\(name)`") }
+                case "|":
+                    if stack.last!.name != name { fatalError("Mismatched tags: `+\(stack.last!.name)` and `|\(name)`") }
                     isSep = true
                 default:
                     let node = TextNode(head: prefix, name: name)

@@ -73,7 +73,7 @@ private func procedure_««signature»»(command: Command, commandEnv: Scope, ha
 
     ««+resultAssignment»»
     let result =
-    ««-resultAssignment»»««+tryKeyword»» try ««-tryKeyword»» ««swiftName»»(««+swiftArguments»»««label»»: ««argument»» ««~swiftArguments»», ««-swiftArguments»»)
+    ««-resultAssignment»»««+tryKeyword»» try ««-tryKeyword»» ««swiftName»»(««+swiftArguments»»««label»»: ««argument»» ««|swiftArguments»», ««-swiftArguments»»)
     ««+returnIfResult»»
     return type_««signature»».result.wrap(result, in: handlerEnv)
     ««-returnIfResult»»
@@ -91,6 +91,7 @@ public func stdlib_loadHandlers(into env: Environment) {
     env.define(interface_««signature»», procedure_««signature»»)
     ««-loadHandlers»»
 }
+
 """
 
 

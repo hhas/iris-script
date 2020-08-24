@@ -5,6 +5,7 @@
 
 «TODO: how to describe return type in terms of parameter types? e.g. `if {…} returning either [result of its action, result of its alternate_action]`?»
 
+«TODO: make `else` a separate infix operator? `if` precedence > `else` precedence, `else` is right associative»
 
 swift_handler ‘if’ {test: condition as boolean, then: action as expression, else: alternative_action as expression} returning anything requires {
     can_error: true «TODO: would be better to distinguish errors thrown by arguments from errors thrown by handler itself»

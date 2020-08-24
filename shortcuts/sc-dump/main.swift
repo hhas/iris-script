@@ -6,7 +6,7 @@
 import Foundation
 import iris
 
-// TO DO: need to write types to file, e.g. as `shortcut_type NAME`; not sure how most of these should represent themselves
+// TO DO: some actions are unnamed, e.g. "is.workflow.actions.text.changecase", "is.workflow.actions.text.combine"
 
 
 let args = CommandLine.arguments
