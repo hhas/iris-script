@@ -21,6 +21,11 @@
 		4F28591924DE83CD00610AB9 /* record glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28591824DE83CD00610AB9 /* record glue template.swift */; };
 		4F289BC324DEDB1200CAA41E /* record type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F289BC224DEDB1200CAA41E /* record type.swift */; };
 		4F289FE224DD82E700E71195 /* coercion glue template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F289FDC24DD82E700E71195 /* coercion glue template.swift */; };
+		4F28D1A724F6520F009868CE /* variable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28D1A624F6520F009868CE /* variable.swift */; };
+		4F28D1AE24F6A651009868CE /* handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28D1AD24F6A651009868CE /* handlers.swift */; };
+		4F28D1B024F7CB8B009868CE /* text.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28D1AF24F7CB8B009868CE /* text.swift */; };
+		4F28D1B324F90941009868CE /* action.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28D1B224F90941009868CE /* action.swift */; };
+		4F28D1B524F92EE0009868CE /* workflow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28D1B424F92EE0009868CE /* workflow.swift */; };
 		4F293ECF24EC56E8003D6D1E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293ECE24EC56E8003D6D1E /* main.swift */; };
 		4F293ED824ED1682003D6D1E /* read action.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293ED724ED1682003D6D1E /* read action.swift */; };
 		4F293EDA24ED1696003D6D1E /* datatypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F293ED924ED1696003D6D1E /* datatypes.swift */; };
@@ -298,6 +303,13 @@
 			remoteGlobalIDString = 4F988CB524BCC4D700EE66C7;
 			remoteInfo = libiris;
 		};
+		4F3F9846266FD7CC00870BCB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4F84CFF522ADA0F100C9FD23 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4F22428D24F1C7D200C1E64B;
+			remoteInfo = sclib;
+		};
 		4F877A6924BDBB430067A463 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4F84CFF522ADA0F100C9FD23 /* Project object */;
@@ -431,6 +443,12 @@
 		4F28B59424ACDF44005583C7 /* misc tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "misc tests.swift"; sourceTree = "<group>"; };
 		4F28B59624ACE1C2005583C7 /* test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test.swift; sourceTree = "<group>"; };
 		4F28C40724731F750079301A /* standard reducers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "standard reducers.swift"; sourceTree = "<group>"; };
+		4F28D1A624F6520F009868CE /* variable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = variable.swift; sourceTree = "<group>"; };
+		4F28D1AD24F6A651009868CE /* handlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = handlers.swift; sourceTree = "<group>"; };
+		4F28D1AF24F7CB8B009868CE /* text.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = text.swift; sourceTree = "<group>"; };
+		4F28D1B124F83D67009868CE /* shortcut actions subset.iris-glue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "shortcut actions subset.iris-glue"; sourceTree = "<group>"; };
+		4F28D1B224F90941009868CE /* action.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = action.swift; sourceTree = "<group>"; };
+		4F28D1B424F92EE0009868CE /* workflow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = workflow.swift; sourceTree = "<group>"; };
 		4F28F28E24A5F88200DA62C4 /* token stack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "token stack.swift"; sourceTree = "<group>"; };
 		4F2931FF22E2290B00BC0AD4 /* editable script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "editable script.swift"; sourceTree = "<group>"; };
 		4F29320122E23AD700BC0AD4 /* other line readers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "other line readers.swift"; sourceTree = "<group>"; };
@@ -630,6 +648,11 @@
 			isa = PBXGroup;
 			children = (
 				4F22429024F1C7D200C1E64B /* main.swift */,
+				4F28D1AF24F7CB8B009868CE /* text.swift */,
+				4F28D1A624F6520F009868CE /* variable.swift */,
+				4F28D1AD24F6A651009868CE /* handlers.swift */,
+				4F28D1B224F90941009868CE /* action.swift */,
+				4F28D1B424F92EE0009868CE /* workflow.swift */,
 				4F22429524F1CDA500C1E64B /* sclib_handlers.swift */,
 				4F22429824F1CF4E00C1E64B /* sclib_records.swift */,
 				4F29B00A24F2D8BF00E2A59B /* sclib_coercions.swift */,
@@ -826,6 +849,7 @@
 		4F29B00E24F2ECCA00E2A59B /* glues */ = {
 			isa = PBXGroup;
 			children = (
+				4F28D1B124F83D67009868CE /* shortcut actions subset.iris-glue */,
 				4F293ED424EC573D003D6D1E /* shortcut actions.iris-glue */,
 				4F29B00F24F2EE9800E2A59B /* shortcut types.iris-glue */,
 			);
@@ -1162,6 +1186,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4F3F9847266FD7CC00870BCB /* PBXTargetDependency */,
 				4F877A6A24BDBB430067A463 /* PBXTargetDependency */,
 			);
 			name = "iris-test";
@@ -1354,10 +1379,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F28D1AE24F6A651009868CE /* handlers.swift in Sources */,
 				4F22429624F1CDA500C1E64B /* sclib_handlers.swift in Sources */,
+				4F28D1B024F7CB8B009868CE /* text.swift in Sources */,
 				4F29B00D24F2D92600E2A59B /* sclib_operators.swift in Sources */,
+				4F28D1B524F92EE0009868CE /* workflow.swift in Sources */,
 				4F29B00B24F2D8BF00E2A59B /* sclib_coercions.swift in Sources */,
 				4F22429924F1CF4E00C1E64B /* sclib_records.swift in Sources */,
+				4F28D1B324F90941009868CE /* action.swift in Sources */,
+				4F28D1A724F6520F009868CE /* variable.swift in Sources */,
 				4F22429124F1C7D200C1E64B /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1634,6 +1664,11 @@
 			isa = PBXTargetDependency;
 			target = 4F988CB524BCC4D700EE66C7 /* libiris */;
 			targetProxy = 4F293EDD24ED1BC3003D6D1E /* PBXContainerItemProxy */;
+		};
+		4F3F9847266FD7CC00870BCB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4F22428D24F1C7D200C1E64B /* sclib */;
+			targetProxy = 4F3F9846266FD7CC00870BCB /* PBXContainerItemProxy */;
 		};
 		4F877A6A24BDBB430067A463 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

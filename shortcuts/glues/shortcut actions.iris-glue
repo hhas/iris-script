@@ -58,7 +58,7 @@ shortcut_action add_frame_to_gif { «Adds an image to the existing animated GIF 
 }
 
 shortcut_action add_to_up_next { «Adds the music passed as input to your Up Next queue.»
-		play: WFWhenToPlay as optional choice [“Next”, “Later”] with_default “Next” but_not [variable]
+		play: WFWhenToPlay as optional choice [“Next”, “Later”] with_default “Next” but_not variable
 		music: WFMusic as identifier} returning input requires {
 	id: “is.workflow.actions.addmusictoupnext”
 	category: “Media/Up Next”
@@ -72,7 +72,7 @@ shortcut_action add_new_event { «Creates a new event and adds it to the selecte
 		start_date: WFCalendarItemStartDate as date
 		end_date: WFCalendarItemEndDate as date
 		all_day: WFCalendarItemAllDay as boolean
-		alert: WFAlertTime as choice [“At time of event”, “5 minutes before”, “15 minutes before”, “30 minutes before”, “1 hour before”, “2 hours before”, “1 day before”, “2 days before”, “1 week before”, “Custom”] but_not [variable]
+		alert: WFAlertTime as choice [“At time of event”, “5 minutes before”, “15 minutes before”, “30 minutes before”, “1 hour before”, “2 hours before”, “1 day before”, “2 days before”, “1 week before”, “Custom”] but_not variable
 		alert_time: WFAlertCustomTime as single_line_string
 		notes: WFCalendarItemNotes as string} returning event «New Event» requires {
 	id: “is.workflow.actions.addnewevent”
@@ -123,7 +123,7 @@ shortcut_action add_to_playlist { «Adds the items passed as input to the specif
 shortcut_action adjust_date { «Adds or subtracts an amount of time from the date passed into the action.»
 		_ as ordered_list of: (date OR calendar_event OR time_interval)
 		date: WFDate as date
-		adjust_operation: WFAdjustOperation as optional choice [“Add”, “Subtract”, “Get Start of Minute”, “Get Start of Hour”, “Get Start of Day”, “Get Start of Week”, “Get Start of Month”, “Get Start of Year”] with_default “Add” but_not [ask, variable]
+		adjust_operation: WFAdjustOperation as optional choice [“Add”, “Subtract”, “Get Start of Minute”, “Get Start of Hour”, “Get Start of Day”, “Get Start of Week”, “Get Start of Month”, “Get Start of Year”] with_default “Add” but_not ask OR variable
 		duration: WFDuration as duration_quantity_field} returning ordered_list of: date «Adjusted Date» requires {
 	«This action supports decimal numbers when adding or subtracting seconds, minutes, hours, or days. Otherwise only integers are supported.»
 	id: “is.workflow.actions.adjustdate”
@@ -139,9 +139,9 @@ shortcut_action airdrop { «Prompts to share the input via AirDrop.»
 }
 
 shortcut_action show_alert { «Displays an alert with a title, a message, and two buttons. If the user selects the OK button, the shortcut continues. The cancel button stops the shortcut.»
-		title: WFAlertActionTitle as single_line_string but_not [ask]
-		message: WFAlertActionMessage as optional string with_default “Do you want to continue?” but_not [ask]
-		show_cancel_button: WFAlertActionCancelButtonShown as optional boolean with_default true but_not [ask]} returning input requires {
+		title: WFAlertActionTitle as single_line_string but_not ask
+		message: WFAlertActionMessage as optional string with_default “Do you want to continue?” but_not ask
+		show_cancel_button: WFAlertActionCancelButtonShown as optional boolean with_default true but_not ask} returning input requires {
 	id: “is.workflow.actions.alert”
 	category: “Scripting/Notification”
 	tags: [#message, #ask, #display, #prompt, #show, #confirmation]
@@ -197,7 +197,7 @@ shortcut_action calculate_expression { «Evaluates the mathematical expression i
 shortcut_action choose_from_list { «Presents a menu of the items passed as input to the action and outputs the user's selection.»
 		_ as ordered_list of: (image OR keyed_list OR item)
 		list: WFInput as identifier
-		prompt: WFChooseFromListActionPrompt as optional single_line_string with_default “” but_not [ask]
+		prompt: WFChooseFromListActionPrompt as optional single_line_string with_default “” but_not ask
 		select_multiple: WFChooseFromListActionSelectMultiple as optional boolean with_default false
 		select_all_initially: WFChooseFromListActionSelectAll as optional boolean with_default false} returning item «Chosen Item» requires {
 	id: “is.workflow.actions.choosefromlist”
@@ -206,7 +206,7 @@ shortcut_action choose_from_list { «Presents a menu of the items passed as inpu
 }
 
 shortcut_action choose_from_menu { «Presents a menu and runs different actions based on which menu item was chosen.»
-		prompt: WFMenuPrompt as single_line_string but_not [ask]
+		prompt: WFMenuPrompt as single_line_string but_not ask
 		items: WFMenuItems as optional array with_default [“One”, “Two”]} returning input requires {
 	id: “is.workflow.actions.choosefrommenu”
 	category: “Scripting/Control Flow”
@@ -229,14 +229,14 @@ shortcut_action upload_to_cloudapp { «Uploads the input to CloudApp and returns
 }
 
 shortcut_action comment { «This action lets you explain how part of a shortcut works. When run, this action does nothing.»
-		comment_action_text: WFCommentActionText as string but_not [ask, variable]} returning input requires {
+		comment_action_text: WFCommentActionText as string but_not ask OR variable} returning input requires {
 	id: “is.workflow.actions.comment”
 	category: “Scripting/No-ops”
 	tags: [#note, #explain]
 }
 
 shortcut_action if { «Tests if a condition is true, and if so, runs the actions inside. Otherwise, the actions under “Otherwise” are run.»
-		input: WFInput as conditional_subject but_not [ask]
+		input: WFInput as conditional_subject but_not ask
 		condition: WFCondition as conditional_operator
 		conditional_action_string: WFConditionalActionString as single_line_string
 		number_value: WFNumberValue as number
@@ -431,7 +431,7 @@ shortcut_action dictionary { «Passes the specified list of key-value pairs to t
 
 shortcut_action set_do_not_disturb { «Sets the device’s Do Not Disturb to on or off»
 		do_not_disturb: Enabled as optional boolean with_default false
-		until: AssertionType as optional choice [“Turned Off”, “Time”, “I Leave”, “Event Ends”] with_default “Turned Off” but_not [variable]
+		until: AssertionType as optional choice [“Turned Off”, “Time”, “I Leave”, “Event Ends”] with_default “Turned Off” but_not variable
 		event: Event as identifier
 		time: Time as date} returning input requires {
 	id: “is.workflow.actions.dnd.set”
@@ -471,7 +471,7 @@ shortcut_action get_contents_of_url { «Gets the contents of URLs passed into th
 		http_method: WFHTTPMethod as optional choice [“GET”, “POST”, “PUT”, “PATCH”, “DELETE”] with_default “GET”
 		show_headers: ShowHeaders as expanding
 		http_headers: WFHTTPHeaders as keyed_list
-		http_body_type: WFHTTPBodyType as optional choice [“JSON”, “Form”, “File”] with_default “JSON” but_not [ask, variable]
+		http_body_type: WFHTTPBodyType as optional choice [“JSON”, “Form”, “File”] with_default “JSON” but_not ask OR variable
 		form_values: WFFormValues as keyed_list
 		json_values: WFJSONValues as keyed_list
 		request_variable: WFRequestVariable as identifier} returning ordered_list of: data «Contents of URL» requires {
@@ -840,8 +840,8 @@ shortcut_action get_halfway_point { «Gets the halfway point between two locatio
 }
 
 shortcut_action home { «Gets the state of a Home accessory.»
-		accessory_state: WFHMService as home_service_picker but_not [variable]
-		characteristic: WFHMCharacteristic as home_characteristic_picker but_not [variable]} returning nothing «Accessory State» requires {
+		accessory_state: WFHMService as home_service_picker but_not variable
+		characteristic: WFHMCharacteristic as home_characteristic_picker but_not variable} returning nothing «Accessory State» requires {
 	id: “is.workflow.actions.gethomeaccessorystate”
 	category: “Home”
 	tags: [#homekit, #accessories, #accessory, #automation, #smart, #house, #scene]
@@ -866,7 +866,7 @@ shortcut_action get_current_ip_address { «Returns the local or external IP addr
 
 shortcut_action get_item_from_list { «Returns one or more items from the list passed as input. You can get the first item, the last item, a random item, the item at a particular index, or items in a range of indexes.»
 		_ as ordered_list of: item
-		get: WFItemSpecifier as optional choice [“First Item”, “Last Item”, “Random Item”, “Item At Index”, “Items in Range”] with_default “First Item” but_not [variable]
+		get: WFItemSpecifier as optional choice [“First Item”, “Last Item”, “Random Item”, “Item At Index”, “Items in Range”] with_default “First Item” but_not variable
 		index: WFItemIndex as integer
 		start_index: WFItemRangeStart as integer
 		end_index: WFItemRangeEnd as integer
@@ -1055,7 +1055,7 @@ shortcut_action get_component_of_url { «Gets the specified part of the URL pass
 
 shortcut_action get_dictionary_value { «Gets the value for the specified key in the dictionary passed into the action. »
 		_ as keyed_list
-		get: WFGetDictionaryValueType as optional choice [“Value”, “All Keys”, “All Values”] with_default “Value” but_not [ask, variable]
+		get: WFGetDictionaryValueType as optional choice [“Value”, “All Keys”, “All Values”] with_default “Value” but_not ask OR variable
 		key: WFDictionaryKey as single_line_string
 		dictionary: WFInput as identifier} returning ordered_list of: (string OR number OR date OR keyed_list OR boolean) «Dictionary Value» requires {
 	«You can reference values deep inside of a dictionary by providing multiple keys separated by dots. For example, to get the value "soup" from the dictionary {"beverages": [{"favorite": "soup"}]}, you can specify the key path "beverages.1.favorite".»
@@ -1065,7 +1065,7 @@ shortcut_action get_dictionary_value { «Gets the value for the specified key in
 }
 
 shortcut_action get_variable { «Gets the value of the specified variable and passes it to the next action.»
-		variable: WFVariable as identifier but_not [clipboard]} returning ordered_list of: item «Variable» requires {
+		variable: WFVariable as identifier but_not clipboard} returning ordered_list of: item «Variable» requires {
 	id: “is.workflow.actions.getvariable”
 	category: “Scripting/Variables”
 	tags: [#programming, #scripting, #var]
@@ -1113,8 +1113,8 @@ shortcut_action continue_in_shortcuts_app { «Switches into the Shortcuts app an
 }
 
 shortcut_action hand_off_playback { «Hands off Music or Podcasts playback between two devices.»
-		source: WFSourceMediaRoute as media_route_picker but_not [variable]
-		destination: WFDestinationMediaRoute as media_route_picker but_not [variable]} returning nothing requires {
+		source: WFSourceMediaRoute as media_route_picker but_not variable
+		destination: WFDestinationMediaRoute as media_route_picker but_not variable} returning nothing requires {
 	id: “is.workflow.actions.handoffplayback”
 	category: “Media/Playback”
 	tags: [#device, #airplay, #playback, #audio, #route]
@@ -1130,12 +1130,12 @@ shortcut_action generate_hash { «Generates a MD5/SHA1 hash from the input.»
 }
 
 shortcut_action log_health_sample { «Adds a data point into the Health app. You can log anything that the Health app supports, including your weight, steps taken, running distance, caloric intake and more.»
-		quantity_sample_type: WFQuantitySampleType as quantity_type_picker but_not [variable]
+		quantity_sample_type: WFQuantitySampleType as quantity_type_picker but_not variable
 		quantity_sample_quantity: WFQuantitySampleQuantity as health_quantity_field
 		quantity_sample_additional_quantity: WFQuantitySampleAdditionalQuantity as health_quantity_additional_field
-		quantity_sample_additional_enumeration: WFQuantitySampleAdditionalEnumeration as health_quantity_additional_picker but_not [variable]
-		category_sample_enumeration: WFCategorySampleEnumeration as health_category_picker but_not [variable]
-		category_sample_additional_enumeration_key: WFCategorySampleAdditionalEnumerationKey as health_category_additional_picker but_not [variable]
+		quantity_sample_additional_enumeration: WFQuantitySampleAdditionalEnumeration as health_quantity_additional_picker but_not variable
+		category_sample_enumeration: WFCategorySampleEnumeration as health_category_picker but_not variable
+		category_sample_additional_enumeration_key: WFCategorySampleAdditionalEnumerationKey as health_category_additional_picker but_not variable
 		quantity_sample_date: WFQuantitySampleDate as health_action_start_date_field
 		sample_end_date: WFSampleEndDate as health_action_end_date_field} returning hk_sample «Health Sample» requires {
 	id: “is.workflow.actions.health.quantity.log”
@@ -1155,7 +1155,7 @@ shortcut_action log_workout { «Adds a workout into the Health app. You can log 
 }
 
 shortcut_action home { «Sets a Home accessory.»
-		scenes_and_accessories: WFHomeTriggerActionSets as home_accessory_picker but_not [variable]} returning input requires {
+		scenes_and_accessories: WFHomeTriggerActionSets as home_accessory_picker but_not variable} returning input requires {
 	id: “is.workflow.actions.homeaccessory”
 	category: “Home”
 	tags: [#homekit, #accessories, #accessory, #automation, #smart, #house]
@@ -1207,7 +1207,7 @@ shortcut_action flip_image { «Reverses the direction of images either horizonta
 shortcut_action mask_image { «Applies a mask to each image passed into the action. For example, you can cut images into a rounded rectangle, ellipse or icon shape, or provide a custom alpha mask.»
 		_ as ordered_list of: image
 		image: WFInput as identifier
-		type: WFMaskType as optional choice [“Rounded Rectangle”, “Ellipse”, “Icon”, “Custom Image”] with_default “Rounded Rectangle” but_not [ask, variable]
+		type: WFMaskType as optional choice [“Rounded Rectangle”, “Ellipse”, “Icon”, “Custom Image”] with_default “Rounded Rectangle” but_not ask OR variable
 		corner_radius: WFMaskCornerRadius as integer
 		custom_image: WFCustomMaskImage as identifier} returning ordered_list of: image «Masked Image» requires {
 	id: “is.workflow.actions.image.mask”
@@ -1269,7 +1269,7 @@ shortcut_action get_instapaper_bookmarks { «Gets the contents of a folder in In
 
 shortcut_action import_to_lightroom { «Imports the photos passed as input into Lightroom»
 		apply_preset: applyPreset as optional boolean with_default false
-		preset_group: presetGroup as optional choice [“B&W”, “Color”, “Creative”, “Curve”, “Grain”, “Sharpening”, “Vignetting”] with_default “Color” but_not [variable]
+		preset_group: presetGroup as optional choice [“B&W”, “Color”, “Creative”, “Curve”, “Grain”, “Sharpening”, “Vignetting”] with_default “Color” but_not variable
 		preset: preset as lightroom_preset_picker
 		photos: WFInput as identifier} returning input requires {
 	id: “is.workflow.actions.lightroom.import”
@@ -1352,7 +1352,7 @@ shortcut_action calculate { «Performs a number operation on the input and retur
 
 shortcut_action convert_measurement { «Converts the measurements passed into the action to the specified unit.»
 		_ as measurement
-		type: WFMeasurementUnitType as optional unit_type_picker with_default “Length” but_not [variable]
+		type: WFMeasurementUnitType as optional unit_type_picker with_default “Length” but_not variable
 		unit: WFMeasurementUnit as measurement_unit_picker
 		measurement: WFInput as identifier} returning measurement «Converted Measurement» requires {
 	id: “is.workflow.actions.measurement.convert”
@@ -1361,7 +1361,7 @@ shortcut_action convert_measurement { «Converts the measurements passed into th
 }
 
 shortcut_action measurement { «Passes the specified measurement (including number and unit) to the next action.»
-		type: WFMeasurementUnitType as optional unit_type_picker with_default “Length” but_not [variable]
+		type: WFMeasurementUnitType as optional unit_type_picker with_default “Length” but_not variable
 		value: WFMeasurementUnit as unit_quantity_field} returning measurement «Measurement» requires {
 	id: “is.workflow.actions.measurement.create”
 	category: “Scripting/Measurements”
@@ -1375,8 +1375,8 @@ shortcut_action _nothing { «This action does nothing and produces no output. It
 }
 
 shortcut_action show_notification { «Displays a local notification.»
-		title: WFNotificationActionTitle as single_line_string but_not [ask]
-		body: WFNotificationActionBody as optional string with_default “Hello World” but_not [ask]
+		title: WFNotificationActionTitle as single_line_string but_not ask
+		body: WFNotificationActionBody as optional string with_default “Hello World” but_not ask
 		play_sound: WFNotificationActionSound as optional boolean with_default true
 		attachment: WFInput as identifier} returning input requires {
 	id: “is.workflow.actions.notification”
@@ -1457,7 +1457,7 @@ shortcut_action overlay_image { «Overlays an image on top of another image.»
 
 shortcut_action ‘play/pause’ { «Plays or pauses the currently playing media.»
 		play_pause_behavior: WFPlayPauseBehavior as optional choice [“Play/Pause”, “Play”, “Pause”] with_default “Play/Pause”
-		media_route: WFMediaRoute as optional media_route_picker with_default “Local” but_not [variable]} returning input requires {
+		media_route: WFMediaRoute as optional media_route_picker with_default “Local” but_not variable} returning input requires {
 	id: “is.workflow.actions.pausemusic”
 	category: “Media/Playback”
 	tags: [#pause, #play, #song, #podcast, #ipod, #track, #music, #itunes]
@@ -1768,7 +1768,7 @@ shortcut_action repeat_with_each { «Takes a list of items as input, and runs th
 
 shortcut_action request_ride { «Requests a ride from the specified pickup location to a specified drop off location.»
 		_ as location
-		app: IntentAppIdentifier as intent_app_picker but_not [ask, variable]
+		app: IntentAppIdentifier as intent_app_picker but_not ask OR variable
 		pickup_location: PickupLocation as location
 		drop_off_location: DropOffLocation as location
 		ride_type: RideOption as ride_option
@@ -1839,7 +1839,7 @@ shortcut_action run_script_over_ssh { «Runs a script on a remote computer over 
 		host: WFSSHHost as single_line_string
 		port: WFSSHPort as optional single_line_string with_default “22”
 		user: WFSSHUser as single_line_string
-		authentication: WFSSHAuthenticationType as optional choice [“Password”, “SSH Key”] with_default “Password” but_not [ask, variable]
+		authentication: WFSSHAuthenticationType as optional choice [“Password”, “SSH Key”] with_default “Password” but_not ask OR variable
 		password: WFSSHPassword as single_line_string
 		ssh_key: WFSSHKey as ssh_key
 		input: WFInput as identifier
@@ -2007,7 +2007,7 @@ shortcut_action set_name { «Sets the name of the item passed as input.»
 }
 
 shortcut_action set_playback_destination { «Sets playback destination to a device.»
-		device: WFMediaRoute as optional media_route_picker with_default “Local” but_not [variable]} returning nothing requires {
+		device: WFMediaRoute as optional media_route_picker with_default “Local” but_not variable} returning nothing requires {
 	id: “is.workflow.actions.setplaybackdestination”
 	category: “/Device”
 	tags: [#device, #airplay, #playback, #audio, #route]
@@ -2111,21 +2111,21 @@ shortcut_action unknown_intent {
 
 shortcut_action skip_back { «Skips to the previous song in the current music queue.»
 		skip_to: WFSkipBackBehavior as optional choice [“Beginning”, “Previous Song”] with_default “Beginning”
-		device: WFMediaRoute as optional media_route_picker with_default “Local” but_not [variable]} returning input requires {
+		device: WFMediaRoute as optional media_route_picker with_default “Local” but_not variable} returning input requires {
 	id: “is.workflow.actions.skipback”
 	category: “Media/Playback”
 	tags: [#ipod, #track, #music, #itunes, #previous]
 }
 
 shortcut_action skip_forward { «Skips to the next song in the current music queue.»
-		device: WFMediaRoute as optional media_route_picker with_default “Local” but_not [variable]} returning input requires {
+		device: WFMediaRoute as optional media_route_picker with_default “Local” but_not variable} returning input requires {
 	id: “is.workflow.actions.skipforward”
 	category: “Media/Playback”
 	tags: [#ipod, #track, #music, #itunes, #next]
 }
 
 shortcut_action post_to_slack { «Posts the input to the specified Slack channel.»
-		account: WFAccount as account_picker but_not [ask, variable]
+		account: WFAccount as account_picker but_not ask OR variable
 		channel: SlackChannel as slack_channel_picker
 		content: WFSlackInput as identifier} returning input requires {
 	id: “is.workflow.actions.slack.send”
@@ -2138,7 +2138,7 @@ shortcut_action speak_text { «Speaks the inputted text aloud.»
 		rate: WFSpeakTextRate as speak_text_rate
 		pitch: WFSpeakTextPitch as optional slider with_default 1.0
 		language: WFSpeakTextLanguage as optional speak_text_language_picker with_default “Default”
-		voice: WFSpeakTextVoice as optional speak_text_voice_picker with_default “Default” but_not [variable]
+		voice: WFSpeakTextVoice as optional speak_text_voice_picker with_default “Default” but_not variable
 		text: WFText as single_line_string} returning input requires {
 	id: “is.workflow.actions.speaktext”
 	category: “Documents/Text”
@@ -2345,7 +2345,7 @@ shortcut_action unknown_user_activity {} returning input requires {
 }
 
 shortcut_action send_payment { «Sends a payment to the specified people using a payment app on your device.»
-		app: IntentAppIdentifier as optional intent_app_picker with_default “com.apple.PassKit.PassKitIntentsExtension” but_not [ask, variable]
+		app: IntentAppIdentifier as optional intent_app_picker with_default “com.apple.PassKit.PassKitIntentsExtension” but_not ask OR variable
 		recipients: WFVenmoActionRecipients as contact_handle_field
 		amount: WFVenmoActionAmount as currency_quantity_field
 		open_in_app: WFVenmoActionAppSwitch as optional boolean with_default false
@@ -2356,7 +2356,7 @@ shortcut_action send_payment { «Sends a payment to the specified people using a
 }
 
 shortcut_action request_payment { «Requests a payment from the specified people using a payment app on your device.»
-		app: IntentAppIdentifier as optional intent_app_picker with_default “com.apple.PassKit.PassKitIntentsExtension” but_not [ask, variable]
+		app: IntentAppIdentifier as optional intent_app_picker with_default “com.apple.PassKit.PassKitIntentsExtension” but_not ask OR variable
 		recipients: WFVenmoActionRecipients as contact_handle_field
 		amount: WFVenmoActionAmount as number
 		open_in_app: WFVenmoActionAppSwitch as optional boolean with_default false
@@ -2406,8 +2406,8 @@ shortcut_action get_weather_forecast { «Gets an hourly or daily weather forecas
 
 shortcut_action post_to_wordpress { «Posts the input to a WordPress blog as a new post or page.»
 		_ as ordered_list of: (rich_text OR string OR image)
-		account: WFAccount as account_picker but_not [ask, variable]
-		blog: Blog as dynamic_choice but_not [ask, variable]
+		account: WFAccount as account_picker but_not ask OR variable
+		blog: Blog as dynamic_choice but_not ask OR variable
 		title: Title as single_line_string
 		type: Type as dynamic_choice
 		format: Format as dynamic_choice

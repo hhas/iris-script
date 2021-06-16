@@ -20,11 +20,13 @@ func test() {
     registry.add([.keyword("optional"), .optional(.expression), .optional([.keyword("with_default"), .boundExpression("with_default", "default_value")])], 1500, .left)
     registry.add([.keyword("record"), .optional(.boundExpression("of_type", "record_type"))], 1500, .left)
 
+    /*
     do {
     try parser.loadGlue(URL(fileURLWithPath: "/Users/has/swift/iris-script/shortcuts/glues/shortcut actions.iris-glue"))
     } catch {
         print(error)
     }
+     */
     //runScript(" with_default ") // stray conjunction should throw syntax error
     
     /*
@@ -42,7 +44,7 @@ func test() {
     
     //runScript(" set a to 3. 1 + - a ") //
     
-    return;
+   // return;
     
 
     runScript(" set a to 3. set a to 5. ") // this should throw immutable value error

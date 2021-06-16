@@ -1,0 +1,597 @@
+
+«ad-hoc subset of action definitions for testing purposes (since parsing the full file is currently rather slow)»
+
+
+shortcut_action create_note { «Creates a note using the content passed as input.»
+		_ as ordered_list of: string
+		app: IntentAppIdentifier as hidden_parameter {optional intent_app_picker with_default “com.apple.mobilenotes”}
+		show_compose_sheet: ShowWhenRun as optional boolean with_default true
+		folder: WFNoteGroup as note_group_picker
+		body: WFCreateNoteInput as single_line_string} returning note requires {
+	id: “com.apple.mobilenotes.SharingExtension”
+	category: “Documents/Notes”
+	tags: [#apple]
+}
+
+shortcut_action call { «Calls the phone number passed in as input.»
+		app: IntentAppIdentifier as hidden_parameter {optional intent_app_picker with_default “com.apple.TelephonyUtilities.PhoneIntentHandler”}
+		contact: WFCallContact as contact_field} returning input requires {
+	id: “com.apple.mobilephone.call”
+	category: “Contacts/Phone”
+	tags: [#phone, #number, #dial, #mobile, #telephone]
+}
+
+shortcut_action post_to_shared_album {
+		_ as ordered_list of: (image OR photo_media)
+		images: ImageInput as identifier} returning nothing requires {
+	id: “com.apple.mobileslideshow.StreamShareService”
+	category: “Sharing”
+	tags: [#post, #stream, #share, #with, #icloud, #photo, #sharing]
+}
+
+
+shortcut_action add_to_up_next { «Adds the music passed as input to your Up Next queue.»
+		play: WFWhenToPlay as optional choice [“Next”, “Later”] with_default “Next” but_not variable
+		music: WFMusic as identifier} returning input requires {
+	id: “is.workflow.actions.addmusictoupnext”
+	category: “Media/Up Next”
+	tags: [#song, #music, #itunes, #up_next, #apple, #album, #next, #play]
+}
+shortcut_action show_alert { «Displays an alert with a title, a message, and two buttons. If the user selects the OK button, the shortcut continues. The cancel button stops the shortcut.»
+		title: WFAlertActionTitle as single_line_string but_not ask
+		message: WFAlertActionMessage as optional string with_default “Do you want to continue?” but_not ask
+		show_cancel_button: WFAlertActionCancelButtonShown as optional boolean with_default true but_not ask} returning input requires {
+	id: “is.workflow.actions.alert”
+	category: “Scripting/Notification”
+	tags: [#message, #ask, #display, #prompt, #show, #confirmation]
+}
+
+
+shortcut_action add_to_variable { «Appends this action's input to the specified variable, creating the variable if it does not exist.
+
+This allows you to make a variable hold multiple items.»
+		_ as ordered_list of: item
+		variable: WFVariableName as identifier
+		input: WFInput as identifier} returning ordered_list of: item «Variable» requires {
+	id: “is.workflow.actions.appendvariable”
+	category: “Scripting/Variables”
+	tags: [#add]
+}
+
+shortcut_action markup { «Edits an image or PDF with Markup.»
+		_ as ordered_list of: (image OR pdf)
+		document: WFDocument as identifier} returning ordered_list of: (image OR pdf) «Markup Result» requires {
+	id: “is.workflow.actions.avairyeditphoto”
+	category: “/Editing”
+	tags: [#edit, #photo, #modify, #picture, #aviary, #adobe, #pdf, #sign, #draw, #document]
+}
+
+shortcut_action calculate_expression { «Evaluates the mathematical expression in the given input string and outputs the result as a number.»
+		_ as string
+		input: Input as single_line_string} returning decimal_number «Calculation Result» requires {
+	id: “is.workflow.actions.calculateexpression”
+	category: “Scripting/Math”
+	tags: [#evaluate, #expression, #math]
+}
+
+shortcut_action choose_from_list { «Presents a menu of the items passed as input to the action and outputs the user's selection.»
+		_ as ordered_list of: (image OR keyed_list OR item)
+		list: WFInput as identifier
+		prompt: WFChooseFromListActionPrompt as optional single_line_string with_default “” but_not ask
+		select_multiple: WFChooseFromListActionSelectMultiple as optional boolean with_default false
+		select_all_initially: WFChooseFromListActionSelectAll as optional boolean with_default false} returning item «Chosen Item» requires {
+	id: “is.workflow.actions.choosefromlist”
+	category: “Scripting/Lists”
+	tags: [#choose, #select, #list, #options, #menu, #multiple]
+}
+
+
+shortcut_action comment { «This action lets you explain how part of a shortcut works. When run, this action does nothing.»
+		comment_action_text: WFCommentActionText as string but_not ask OR variable} returning input requires {
+	id: “is.workflow.actions.comment”
+	category: “Scripting/No-ops”
+	tags: [#note, #explain]
+}
+
+shortcut_action if { «Tests if a condition is true, and if so, runs the actions inside. Otherwise, the actions under “Otherwise” are run.»
+		input: WFInput as conditional_subject but_not ask
+		condition: WFCondition as conditional_operator
+		conditional_action_string: WFConditionalActionString as single_line_string
+		number_value: WFNumberValue as number
+		another_number: WFAnotherNumber as number
+		bounded_number: WFBoundedNumber as slider
+		another_bounded_number: WFAnotherBoundedNumber as slider
+		date: WFDate as date
+		another_date: WFAnotherDate as date
+		measurement: WFMeasurement as unit_quantity_field
+		another_measurement: WFAnotherMeasurement as unit_quantity_field
+		duration: WFDuration as duration_quantity_field
+		another_duration: WFAnotherDuration as duration_quantity_field
+		enumeration: WFEnumeration as dynamic_choice
+		numeric_enumeration: WFNumericEnumeration as numeric_dynamic_enumeration} returning input requires {
+	id: “is.workflow.actions.conditional”
+	category: “Scripting/Control Flow”
+	tags: [#statement, #conditional, #then]
+}
+
+
+shortcut_action count { «Counts the number of items, characters, words, sentences, or lines passed as input.»
+		_ as ordered_list of: (item OR string)
+		type: WFCountType as optional choice [“Items”, “Characters”, “Words”, “Sentences”, “Lines”] with_default “Items”
+		input: Input as identifier} returning decimal_number «Count» requires {
+	«This is just like the Count in Sesame Street, but instead of a vampire, it's a Shortcuts action.»
+	id: “is.workflow.actions.count”
+	category: “Scripting/Items”
+	tags: [#get, #number, #length, #list]
+}
+
+shortcut_action get_email_addresses_from_input { «Returns any email addresses found in the output from the previous action.»
+		_ as ordered_list of: email_address
+		input: WFInput as single_line_string} returning ordered_list of: email_address «Email Addresses» requires {
+	id: “is.workflow.actions.detect.emailaddress”
+	category: “Contacts/Email”
+	tags: [#find, #search, #detect, #scan, #e_mail, #emails]
+}
+
+
+shortcut_action get_numbers_from_input { «Returns numbers from the previous action's output.»
+		_ as ordered_list of: number
+		input: WFInput as number} returning ordered_list of: number «Numbers» requires {
+	id: “is.workflow.actions.detect.number”
+	category: “Scripting/Numbers”
+	tags: [#numeric, #digits, #detect, #extract, #scan]
+}
+
+
+shortcut_action get_text_from_input { «Returns text from the previous action's output.
+
+For example, this action can get the name of a photo or song, or the text of a web page.»
+		_ as ordered_list of: item
+		input: WFInput as identifier} returning ordered_list of: string «Text» requires {
+	id: “is.workflow.actions.detect.text”
+	category: “Documents/Text”
+	tags: [#find, #search, #detect, #scan, #e_mail, #emails]
+}
+
+
+shortcut_action get_contents_of_url { «Gets the contents of URLs passed into the action. Useful for downloading files and web content, or for making API requests.»
+		_ as ordered_list of: url
+		url: WFURL as single_line_string
+		http_method: WFHTTPMethod as optional choice [“GET”, “POST”, “PUT”, “PATCH”, “DELETE”] with_default “GET”
+		show_headers: ShowHeaders as expanding
+		http_headers: WFHTTPHeaders as keyed_list
+		http_body_type: WFHTTPBodyType as optional choice [“JSON”, “Form”, “File”] with_default “JSON” but_not ask OR variable
+		form_values: WFFormValues as keyed_list
+		json_values: WFJSONValues as keyed_list
+		request_variable: WFRequestVariable as identifier} returning ordered_list of: data «Contents of URL» requires {
+	«To make a multipart HTTP request, choose "Form" as the request body type and add files as field values.»
+	id: “is.workflow.actions.downloadurl”
+	category: “Web/Web Requests”
+	tags: [#url, #web, #display, #site, #open, #show, #post, #put, #api, #curl, #wget, #http, #headers, #request, #form]
+}
+
+shortcut_action email_address { «Passes the specified email addresses to the next action.»
+		email_address: WFEmailAddress as email_address_field} returning ordered_list of: email_address «Email Address» requires {
+	id: “is.workflow.actions.email”
+	category: “Contacts/Email”
+	tags: [#emails, #e_mails, #address]
+}
+
+shortcut_action append_to_evernote { «Finds a note using the specified criteria and appends the input to the note.»
+		_ as ordered_list of: item
+		content: WFInput as identifier
+		note_title: WFEvernoteNotesTitleSearch as single_line_string
+		mode: WFEvernoteWriteMode as optional choice [“Append”, “Prepend”] with_default “Append”
+		in_notebook: WFEvernoteNotesNotebookName as evernote_notebook_picker} returning note_ref «Note» requires {
+	id: “is.workflow.actions.evernote.append”
+	category: “Documents”
+	tags: [#add, #prepend, #save, #evernote]
+}
+
+
+shortcut_action get_notes { «Get recent notes from Evernote, optionally filtering based on criteria.»
+		evernote_notes_title_search: WFEvernoteNotesTitleSearch as single_line_string
+		evernote_notes_tags: WFEvernoteNotesTags as evernote_tags_tag_field
+		evernote_notes_notebook_name: WFEvernoteNotesNotebookName as evernote_notebook_picker
+		evernote_notes_count: WFEvernoteNotesCount as optional stepper with_default 1} returning ordered_list of: note_ref «Notes» requires {
+	id: “is.workflow.actions.evernote.get”
+	category: “Documents”
+	tags: [#search, #tag]
+}
+
+shortcut_action create_new_note { «Saves the input as a note in Evernote.»
+		_ as ordered_list of: item
+		note_title: WFEvernoteNoteTitle as single_line_string
+		notebook: WFEvernoteNotebook as evernote_notebook_picker
+		tags: WFEvernoteTags as evernote_tags_tag_field
+		content: WFInput as identifier} returning note_ref «New Note» requires {
+	id: “is.workflow.actions.evernote.new”
+	category: “Documents”
+	tags: [#make, #save]
+}
+
+shortcut_action exit_shortcut { «Stops execution of the current shortcut and dismisses the shortcut on screen. No more actions will be run after this action.»
+		_ as ordered_list of: item
+		result: WFResult as identifier} returning nothing requires {
+	id: “is.workflow.actions.exit”
+	category: “Scripting/Control Flow”
+	tags: [#quit, #return, #workflow]
+}
+
+shortcut_action filter_files {
+		_ as data} returning nothing requires {
+	id: “is.workflow.actions.filter.files”
+	category: “Documents/Files”
+	tags: []
+}
+
+shortcut_action format_date { «Formats a date and time into text.»
+		_ as ordered_list of: date
+		date_format: WFDateFormatStyle as optional choice [“None”, “Short”, “Medium”, “Long”, “Relative”, “RFC 2822”, “ISO 8601”, “Custom”] with_default “Short”
+		alternate_format: WFRelativeDateFormatStyle as optional choice [“Short”, “Medium”, “Long”] with_default “Medium”
+		time_format: WFTimeFormatStyle as optional choice [“None”, “Short”, “Medium”, “Long”, “Relative”] with_default “Short”
+		include_iso_8601_time: WFISO8601IncludeTime as boolean
+		format_string: WFDateFormat as custom_date_format
+		date: WFDate as date} returning ordered_list of: string «Formatted Date» requires {
+	«Custom format strings use the format patterns from Unicode Technical Standard #35 (unicode.org/reports/tr35/tr35-31/tr35-dates.html#Date_Format_Patterns).»
+	id: “is.workflow.actions.format.date”
+	category: “Calendar/Dates”
+	tags: [#date, #time, #formatter]
+}
+
+
+shortcut_action get_playlist { «Gets every song in the specified playlist.»
+		playlist: WFPlaylistName as playlist_picker} returning ordered_list of: media_item «Playlist» requires {
+	id: “is.workflow.actions.get.playlist”
+	category: “Media/Playlists”
+	tags: [#song, #track]
+}
+
+shortcut_action get_battery_level { «Outputs the percentage of battery remaining as a number from 0 to 100.»} returning decimal_number «Battery Level» requires {
+	id: “is.workflow.actions.getbatterylevel”
+	category: “Scripting/Device”
+	tags: [#remaining, #percentage, #left, #power]
+}
+
+shortcut_action get_object_of_class { «Returns a particular object class from the input.»
+		_ as ordered_list of: item
+		class: Class as optional single_line_string with_default “NSURL”
+		input: Input as identifier} returning ordered_list of: item «Object of Class» requires {
+	id: “is.workflow.actions.getclassaction”
+	category: “Scripting/Content”
+	tags: []
+}
+
+shortcut_action get_clipboard { «Passes the contents of the clipboard to the next action.»} returning ordered_list of: item «Clipboard» requires {
+	id: “is.workflow.actions.getclipboard”
+	category: “Sharing/Clipboard”
+	tags: [#text, #clipboard, #copy, #paste, #contents, #of]
+}
+
+shortcut_action get_current_song { «Returns the song that is currently playing in the Music app, if any.»} returning media_item «Current Song» requires {
+	id: “is.workflow.actions.getcurrentsong”
+	category: “Media/Music”
+	tags: [#current, #song, #ipod, #track, #music, #itunes, #library, #listening, #playing]
+}
+
+shortcut_action make_html_from_rich_text { «Converts the rich text passed as input to HTML text.»
+		_ as rich_text
+		make_full_document: WFMakeFullDocument as boolean
+		rich_text: WFInput as identifier} returning string «HTML from Rich Text» requires {
+	id: “is.workflow.actions.gethtmlfromrichtext”
+	category: “Documents/Rich Text”
+	tags: [#page, #source, #web, #get]
+}
+
+shortcut_action get_item_from_list { «Returns one or more items from the list passed as input. You can get the first item, the last item, a random item, the item at a particular index, or items in a range of indexes.»
+		_ as ordered_list of: item
+		get: WFItemSpecifier as optional choice [“First Item”, “Last Item”, “Random Item”, “Item At Index”, “Items in Range”] with_default “First Item” but_not variable
+		index: WFItemIndex as integer
+		start_index: WFItemRangeStart as integer
+		end_index: WFItemRangeEnd as integer
+		list: WFInput as identifier} returning ordered_list of: item «Item from List» requires {
+	«Lists use one-based indexing, so the first item is at index 1, the second is at index 2, etc.»
+	id: “is.workflow.actions.getitemfromlist”
+	category: “Scripting/Lists”
+	tags: []
+}
+
+shortcut_action get_name { «Returns the name of every item passed as input. Depending on the input, this could be a file name, the title of a website, the title of a calendar event, etc.»
+		_ as ordered_list of: item
+		item: WFInput as identifier} returning ordered_list of: string «Name» requires {
+	id: “is.workflow.actions.getitemname”
+	category: “Scripting/Items”
+	tags: [#title]
+}
+
+shortcut_action get_type { «Returns the type of every item passed as input. For example, if a URL is passed, this action will return “URL”.»
+		_ as ordered_list of: item
+		item: WFInput as identifier} returning ordered_list of: string «Type» requires {
+	id: “is.workflow.actions.getitemtype”
+	category: “Scripting/Items”
+	tags: [#content, #item, #class]
+}
+
+
+shortcut_action get_my_shortcuts { «Gets the shortcuts stored on this device.»} returning ordered_list of: workflow_reference «My Shortcuts» requires {
+	id: “is.workflow.actions.getmyworkflows”
+	category: “Scripting/Shortcuts”
+	tags: [#installed, #downloaded, #workflow]
+}
+
+shortcut_action text { «Passes the specified text to the next action.»
+		text_action_text: WFTextActionText as optional string with_default “”} returning string «Text» requires {
+	id: “is.workflow.actions.gettext”
+	category: “Documents/Text”
+	tags: [#text, #such_text, #very_speech, #much_words, #so_wow, #string]
+}
+
+shortcut_action get_time_between_dates { «Subtracts the specified date from the date passed into the action. For example, this action could get the number of minutes from now until a calendar event passed in as input.»
+		_ as date
+		first_date: WFTimeUntilFromDate as date
+		second_date: WFInput as date
+		in: WFTimeUntilUnit as optional choice [“Total Time”, “Seconds”, “Minutes”, “Hours”, “Days”, “Weeks”, “Months”, “Years”] with_default “Minutes”} returning number «Time Between Dates» requires {
+	«This action outputs a negative number if the input date takes place before the specified date.»
+	id: “is.workflow.actions.gettimebetweendates”
+	category: “Calendar/Dates”
+	tags: [#between, #after, #before, #seconds, #minutes, #hours, #days, #weeks, #years, #math, #calculate, #interval]
+}
+
+shortcut_action get_variable { «Gets the value of the specified variable and passes it to the next action.»
+		variable: WFVariable as identifier but_not clipboard} returning ordered_list of: item «Variable» requires {
+	id: “is.workflow.actions.getvariable”
+	category: “Scripting/Variables”
+	tags: [#programming, #scripting, #var]
+}
+
+
+shortcut_action list { «Allows you to specify a list of items to be passed to the next action.»
+		items: WFItems as optional ordered_list with_default [“One”, “Two”]} returning ordered_list of: item «List» requires {
+	«If you specify a variable, the contents of that variable will be included in the list.»
+	id: “is.workflow.actions.list”
+	category: “Scripting/Lists”
+	tags: [#array]
+}
+
+
+shortcut_action calculate { «Performs a number operation on the input and returns the result.»
+		_ as decimal_number
+		input: WFInput as number
+		math_operation: WFMathOperation as optional choice [“+”, “-”, “×”, “÷”, “…”] with_default “+”
+		scientific_math_operation: WFScientificMathOperation as choice [“Modulus”, “x^2”, “x^3”, “x^y”, “e^x”, “10^x”, “ln(x)”, “log(x)”, “√x”, “∛x”, “x!”, “sin(x)”, “cos(x)”, “tan(x)”, “abs(x)”]
+		math_operand: WFMathOperand as number
+		scientific_math_operand: WFScientificMathOperand as number} returning decimal_number «Calculation Result» requires {
+	id: “is.workflow.actions.math”
+	category: “Scripting/Math”
+	tags: [#scientific, #math, #calculator, #number, #add, #addition, #subtract, #subtraction, #multiply, #multiplication, #times, #divide, #division, #modulus, #square, #squared, #exponent, #exponential, #power, #‘^’, #ln, #log, #logarithm, #root, #sin, #cos, #tan, #sine, #cosine, #tangent, #trig, #abs, #absolute, #value, #factorial]
+}
+
+shortcut_action convert_measurement { «Converts the measurements passed into the action to the specified unit.»
+		_ as measurement
+		type: WFMeasurementUnitType as optional unit_type_picker with_default “Length” but_not variable
+		unit: WFMeasurementUnit as measurement_unit_picker
+		measurement: WFInput as identifier} returning measurement «Converted Measurement» requires {
+	id: “is.workflow.actions.measurement.convert”
+	category: “Scripting/Measurements”
+	tags: [#degrees, #distance, #pressure, #measure, #speed, #weather]
+}
+
+shortcut_action measurement { «Passes the specified measurement (including number and unit) to the next action.»
+		type: WFMeasurementUnitType as optional unit_type_picker with_default “Length” but_not variable
+		value: WFMeasurementUnit as unit_quantity_field} returning measurement «Measurement» requires {
+	id: “is.workflow.actions.measurement.create”
+	category: “Scripting/Measurements”
+	tags: [#degrees, #distance, #pressure, #measure, #speed, #weather]
+}
+
+shortcut_action _nothing { «This action does nothing and produces no output. It is useful to separate blocks of actions, or to ensure that no input is passed to the next action.»} returning nothing requires {
+	id: “is.workflow.actions.nothing”
+	category: “Scripting/No-ops”
+	tags: [#nil, #nothing, #empty, #discard, #clear]
+}
+
+shortcut_action show_notification { «Displays a local notification.»
+		title: WFNotificationActionTitle as single_line_string but_not ask
+		body: WFNotificationActionBody as optional string with_default “Hello World” but_not ask
+		play_sound: WFNotificationActionSound as optional boolean with_default true
+		attachment: WFInput as identifier} returning input requires {
+	id: “is.workflow.actions.notification”
+	category: “Scripting/Notification”
+	tags: [#local, #notification, #show, #alert, #reminder, #push]
+}
+
+shortcut_action number { «Passes a number to the next action.»
+		number: WFNumberActionNumber as number} returning decimal_number «Number» requires {
+	id: “is.workflow.actions.number”
+	category: “Scripting/Numbers”
+	tags: [#decimal, #math]
+}
+
+shortcut_action random_number { «Passes a random number between the given minimum and maximum to the next action. The minimum and maximum numbers are included as possible results.»
+		minimum: WFRandomNumberMinimum as number
+		maximum: WFRandomNumberMaximum as number} returning decimal_number «Random Number» requires {
+	id: “is.workflow.actions.number.random”
+	category: “Scripting/Numbers”
+	tags: [#decimal, #math, #generate, #generator]
+}
+
+shortcut_action open_app { «Opens the specified app.»
+		app_identifier: WFAppIdentifier as app_picker
+		app_name: WFAppName as hidden_parameter {single_line_string}} returning input requires {
+	id: “is.workflow.actions.openapp”
+	category: “Scripting/Apps”
+	tags: [#launch, #run, #switch]
+}
+
+shortcut_action ‘play/pause’ { «Plays or pauses the currently playing media.»
+		play_pause_behavior: WFPlayPauseBehavior as optional choice [“Play/Pause”, “Play”, “Pause”] with_default “Play/Pause”
+		media_route: WFMediaRoute as optional media_route_picker with_default “Local” but_not variable} returning input requires {
+	id: “is.workflow.actions.pausemusic”
+	category: “Media/Playback”
+	tags: [#pause, #play, #song, #podcast, #ipod, #track, #music, #itunes]
+}
+
+shortcut_action phone_number { «Passes the specified phone numbers to the next action.»
+		phone_number: WFPhoneNumber as phone_number_field} returning ordered_list of: phone_number «Phone Number» requires {
+	id: “is.workflow.actions.phonenumber”
+	category: “Contacts/Phone”
+	tags: [#phone, #number, #mobile, #home, #cellular, #telephone]
+}
+
+shortcut_action play_music { «Plays music using the Music app.»
+		music: WFMediaItems as media_picker
+		shuffle: WFPlayMusicActionShuffle as choice [“Off”, “Songs”]
+		repeat: WFPlayMusicActionRepeat as choice [“None”, “One”, “All”]} returning input requires {
+	id: “is.workflow.actions.playmusic”
+	category: “Media/Music”
+	tags: [#play, #song, #ipod, #track, #music, #itunes, #library]
+}
+
+shortcut_action get_details_of_contacts {} returning nothing requires {
+	id: “is.workflow.actions.properties.contacts”
+	category: “Contacts/Contacts”
+	tags: []
+}
+
+
+shortcut_action repeat { «Repeats the contained actions, running them the specified number of times.»
+		repeat_count: WFRepeatCount as stepper} returning input requires {
+	id: “is.workflow.actions.repeat.count”
+	category: “Scripting/Control Flow”
+	tags: [#loop, #while, #for]
+}
+
+shortcut_action repeat_with_each { «Takes a list of items as input, and runs the contained actions once for each item in the list.»
+		_ as ordered_list of: item
+		items: WFInput as identifier} returning ordered_list of: item «Repeat with Each» requires {
+	id: “is.workflow.actions.repeat.each”
+	category: “Scripting/Control Flow”
+	tags: [#loop, #while, #for]
+}
+
+shortcut_action round_number { «Rounds the number(s) passed into the action.»
+		_ as ordered_list of: number
+		input: WFInput as number
+		round_to: WFRoundTo as optional choice [“Millions”, “Hundred Thousands”, “Ten Thousands”, “Thousands”, “Hundreds Place”, “Tens Place”, “Ones Place”, “Tenths”, “Hundredths”, “Thousandths”, “Ten Thousandths”, “Hundred Thousandths”, “Millionths”, “Ten Millionths”, “Hundred Millionths”, “Billionths”, “10 ^”] with_default “Ones Place”
+		round_mode: WFRoundMode as optional choice [“Normal”, “Always Round Up”, “Always Round Down”] with_default “Normal”
+		ten_to_the_power_of: TenToThePowerOf as optional integer with_default 0} returning ordered_list of: decimal_number «Rounded Number» requires {
+	id: “is.workflow.actions.round”
+	category: “Scripting/Math”
+	tags: [#calculator, #calculate, #number, #ceiling, #floor]
+}
+
+shortcut_action get_items_from_rss_feed { «Downloads the latest items from an RSS feed.»
+		rss_feedurl: WFRSSFeedURL as optional single_line_string with_default “https://www.apple.com/newsroom/rss-feed.rss”
+		rss_item_quantity: WFRSSItemQuantity as optional stepper with_default 10} returning ordered_list of: (article OR URL) «Items from RSS Feed» requires {
+	id: “is.workflow.actions.rss”
+	category: “Web/RSS”
+	tags: [#article, #podcast, #text, #clipboard, #copy, #paste]
+}
+
+shortcut_action get_rss_feeds_from_page { «Extracts any RSS feed URLs from the given web URLs or web page.»
+		_ as ordered_list of: (url OR rich_text)
+		page: WFURLs as single_line_string} returning ordered_list of: url «RSS Feeds from Page» requires {
+	id: “is.workflow.actions.rss.extract”
+	category: “Web/RSS”
+	tags: [#extract, #clipboard, #copy, #paste]
+}
+
+
+shortcut_action run_shortcut { «Run a shortcut from your shortcut.»
+		_ as ordered_list of: item
+		shortcut: WFWorkflowName as workflow_picker
+		input: WFInput as identifier
+		show_while_running: WFShowWorkflow as optional boolean with_default true} returning ordered_list of: item «Shortcut Result» requires {
+	id: “is.workflow.actions.runworkflow”
+	category: “Scripting/Shortcuts”
+	tags: [#action, #workflow, #shortcuts]
+}
+
+shortcut_action set_name { «Sets the name of the item passed as input.»
+		_ as item
+		name: WFName as single_line_string
+		don_t_include_file_extension: WFDontIncludeFileExtension as boolean
+		input: WFInput as identifier} returning item «Renamed Item» requires {
+	id: “is.workflow.actions.setitemname”
+	category: “Scripting/Items”
+	tags: [#title]
+}
+
+
+shortcut_action set_dictionary_value { «Sets a value in the dictionary passed into the action. »
+		_ as keyed_list
+		dictionary_key: WFDictionaryKey as single_line_string
+		dictionary_value: WFDictionaryValue as single_line_string
+		dictionary: WFDictionary as identifier} returning keyed_list «Dictionary» requires {
+	id: “is.workflow.actions.setvalueforkey”
+	category: “Scripting/Dictionaries”
+	tags: [#json, #plist, #xml, #urlencoded, #query, #string, #for, #key, #update, #merge]
+}
+
+shortcut_action set_variable { «Sets the value of the specified variable to the input of this action.»
+		input: WFInput as identifier
+		variable: WFVariableName as identifier} returning input requires {
+	id: “is.workflow.actions.setvariable”
+	category: “Scripting/Variables”
+	tags: [#programming, #scripting, #var]
+}
+
+shortcut_action set_volume { «Sets the system volume.»
+		volume: WFVolume as optional slider with_default 0.5} returning input requires {
+	id: “is.workflow.actions.setvolume”
+	category: “/Playback”
+	tags: [#sound, #speaker, #loud]
+}
+
+shortcut_action show_result { «Shows the specified text in Siri or in an alert.»
+		text: Text as optional string with_default “”} returning input requires {
+	id: “is.workflow.actions.showresult”
+	category: “Scripting/Notification”
+	tags: [#text, #such_text, #very_speech, #much_words, #so_wow, #string, #display]
+}
+
+shortcut_action speak_text { «Speaks the inputted text aloud.»
+		wait_until_finished: WFSpeakTextWait as optional boolean with_default true
+		rate: WFSpeakTextRate as speak_text_rate
+		pitch: WFSpeakTextPitch as optional slider with_default 1.0
+		language: WFSpeakTextLanguage as optional speak_text_language_picker with_default “Default”
+		voice: WFSpeakTextVoice as optional speak_text_voice_picker with_default “Default” but_not variable
+		text: WFText as single_line_string} returning input requires {
+	id: “is.workflow.actions.speaktext”
+	category: “Documents/Text”
+	tags: [#speak, #dictate, #text, #say, #speech, #talk, #out, #loud]
+}
+
+shortcut_action replace_text { «Replaces some text passed into the action with other text.»
+		_ as ordered_list of: string
+		find_text: WFReplaceTextFind as single_line_string
+		replace_with: WFReplaceTextReplace as single_line_string
+		case_sensitive: WFReplaceTextCaseSensitive as optional boolean with_default true
+		regular_expression: WFReplaceTextRegularExpression as optional boolean with_default false
+		text: WFInput as single_line_string} returning ordered_list of: string «Updated Text» requires {
+	id: “is.workflow.actions.text.replace”
+	category: “Documents/Text Editing”
+	tags: [#finding, #matching, #searching, #regular, #expression, #regexp]
+}
+
+shortcut_action add_todoist_item { «Adds a new item to Todoist.»
+		_ as ordered_list of: generic_file
+		item: WFTodoistContent as single_line_string
+		project: WFTodoistProject as optional todoist_project_picker with_default “Inbox”
+		due_date: WFTodoistDueDate as date
+		remind_me_on: WFTodoistReminder as date
+		reminder_type: WFTodoistReminderType as optional choice [“Email”, “Push Notification”, “Text Message”] with_default “Email”
+		priority: WFTodoistPriority as optional choice [“4”, “3”, “2”, “1”] with_default “4”
+		notes: WFTodoistNotes as string
+		files: WFTodoistFile as identifier} returning URL «Todoist Item» requires {
+	id: “is.workflow.actions.todoist.add”
+	category: “Text”
+	tags: [#note, #text, #todo, #to_do, #task]
+}
+
+shortcut_action url { «Passes the specified URL to the next action.»
+		url: WFURLActionURL as URL} returning URL «URL» requires {
+	id: “is.workflow.actions.url”
+	category: “Web/URLs”
+	tags: [#text, #such_text, #very_speech, #much_words, #so_wow]
+}

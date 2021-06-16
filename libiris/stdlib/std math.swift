@@ -24,6 +24,18 @@ func mod(left: Double, right: Double) -> Double { return left.truncatingRemainde
 
 // signature: isEqualTo(left: primitive(double), right: primitive(double)) returning primitive(boolean)
 
+
+enum ComparisonResult: Value { // TO DO: comparison (and logical?) operators should return Boolean-like value that allows multiple comparisons to be performed Icon-style, e.g. `0 ≤ x < 10`
+    
+    static var nominalType: NativeCoercion = asBool.nativeCoercion
+    
+    var description: String { if case .success = self { return "true" } else { return "false" } }
+    
+    case success(Value) // use Number? scalar? generic type?
+    case failure
+}
+
+
 func isLess(left: Double, right: Double) -> Bool { return left < right }
 func isLessOrEqual(left: Double, right: Double) -> Bool { return left <= right }
 func isEqual(left: Double, right: Double) -> Bool { return left == right }

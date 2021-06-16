@@ -163,7 +163,7 @@ func paramType(_ p: Dict) -> String {
         result = "optional \(result) with_default \(formatValue(dv))"
     }
     if let types = p["DisallowedVariableTypes"] as? [String] {
-        result = "\(result) but_not [\(types.map(formatDisallowedType).joined(separator: ", "))]"
+        result = "\(result) but_not \(types.map(formatDisallowedType).joined(separator: " OR "))"
     }
     return result
 }

@@ -17,6 +17,8 @@ import SwiftAutomation
 // TO DO: singular element names also need to be added to elementsByName table, e.g. `document at 1` currently doesn't work (also need elementsByCode Singular/Plural tables for pretty printer to use); either add extra elementsSingular dict to AETE/SDEF parsers or subclass KeywordTerm to hold both singular and plural names for elements
 
 
+// TO DO: remove high-level APIs for native bridging of user-defined procedures and user properties in references and records; they may remain accessible via low-level (raw “four-char code”) APIs for compatibility, but their use must not be encouraged: apps that wish to expose AE functionality must explicitly export it – the old laisse-faire AppleScript idioms of unlimited access to all properties and handlers in a stay-open SE applet is not secure and not compatible with modern best practices
+
 
 /******************************************************************************/
 // target address, terminology tables, codecs

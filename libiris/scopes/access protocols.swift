@@ -3,6 +3,8 @@
 //  iris-script
 //
 
+// TO DO: is there any value in distinguishing Scope from MutableScope, or should Scope always implement set(), throwing when immutable?
+
 import Foundation
 
 

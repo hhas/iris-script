@@ -208,15 +208,15 @@ public struct AsSubtraction: NativeCoercion {
     public var name: Symbol { return Symbol("but_not") }
     
     public var literalDescription: String {
-        return "‘but_not’ [{\(self.elementType.literalDescription), [\(self.excludedTypes.map{$0.literalDescription}.joined(separator: ", "))]}"
+        return "‘but_not’ {\(self.elementType.literalDescription), \(self.excludedType.literalDescription)}"
     }
     
     public let elementType: NativeCoercion
-    public let excludedTypes: [NativeCoercion]
+    public let excludedType: NativeCoercion
     
-    public init(_ elementType: NativeCoercion, butNot excludedTypes: [NativeCoercion]) {
+    public init(_ elementType: NativeCoercion, butNot excludedType: NativeCoercion) {
         self.elementType = elementType
-        self.excludedTypes = excludedTypes
+        self.excludedType = excludedType
     }
     
     public func coerce(_ value: Value, in scope: Scope) throws -> Value {
@@ -232,7 +232,7 @@ extension AsSubtraction: ConstrainableCoercion {
     
     private static let type_constrain = (
         param_0: (Symbol("of_type"), Symbol("value_type"), asCoercion),
-        param_1: (Symbol("but_not"), Symbol("excluded_types"), AsArray(asCoercion)), // TO DO: list of coercions should coerce to AsUnion
+        param_1: (Symbol("but_not"), Symbol("excluded_type"), asCoercion), // TO DO: list of coercions should coerce to AsUnion
         _: ()
     )
     
@@ -256,7 +256,7 @@ extension AsSubtraction: ConstrainableCoercion {
     }
 }
 
-let asSubtraction = AsSubtraction(asAnything, butNot: [asNothing])
+let asSubtraction = AsSubtraction(asAnything, butNot: asNothing)
 
 
 
