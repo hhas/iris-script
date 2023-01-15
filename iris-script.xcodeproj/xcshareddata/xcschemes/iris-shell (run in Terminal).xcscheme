@@ -42,8 +42,7 @@
       allowLocationSimulation = "YES">
       <PathRunnable
          runnableDebuggingMode = "0"
-         BundleIdentifier = "com.apple.Terminal"
-         FilePath = "/Applications/Utilities/Terminal.app">
+         FilePath = "/System/Applications/Utilities/Terminal.app">
       </PathRunnable>
       <MacroExpansion>
          <BuildableReference

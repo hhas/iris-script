@@ -10,7 +10,7 @@ An experiment in modern end-user language design, hybridizing [hopefully] the be
     done
 
     ➞ [“Hello again!”]
-    
+
 
 ## Build
 
@@ -21,8 +21,53 @@ Dependencies:
 
 Ad-hoc tests are currently run under the `iris-test` target.
 
-A basic interactive shell is available under target `iris-shell`. Bad error reporting, poor help, and prone to stuttering and falling over when run in Xcode’s console, but should allow simple expressions to be entered and evaluated.
 
+## Try it
+
+The iris-script project includes, `iris-shell`, a basic interactive command-line interface (REPL) for demonstration use. 
+
+To try iris, build the `iris-shell (run in Terminal)` scheme in Xcode. This will build the `iris-shell` command-line executable and launch it in Terminal.app. 
+
+Example usage (✎ indicates input prompt):
+
+    ✎ set my_name to "Bob"
+    ☺︎ “Bob”
+    ✎ to say_hello {name} run "Hello, " & name & "!"
+    ☺︎ «handler: ‘say_hello’ {name as anything} returning anything»
+    ✎ say_hello my_name
+    ☺︎ “Hello, Bob!”
+
+On pressing Return, the entered line is read. If it is valid code (☺︎), it is recolored for readability (blue = literal value; bold red = command name; red = operator keyword or record property label) and executed immediately. If the code is invalid, a limited error message is displayed (☹︎).
+
+To view a list of the shell's built-in commands:
+
+    ✎ help
+
+`iris-shell` supports `stdlib` and `aelib` commands, in addition to its own builtins. To list all available commands:
+
+    ✎ commands
+
+Stdlib also defines operator syntax (keyword-based syntactic sugar) for several commands, e.g.
+
+    ✎ ‘+’ {2, 3}
+
+is more commonally written as:
+
+    ✎ 2 + 3
+
+To list currently-loaded operator syntax:
+
+    ✎ operators
+
+(Note that operator-defined words and symbols are reserved keywords. To use a reserved keyword as a normal command name, enclose it in single quotes.)
+
+TO DO: 
+
+* Non-interactive mode for executing script files from STDIN/FILE arguments.
+
+* Improve commands and operators listings, grouping by category (currently all names are listed alphabetically).
+
+* Live pretty-printing of code as the user types.
 
 ## Features
 
@@ -150,6 +195,8 @@ Additional transpiling optimizations might include storing values directly in Sw
 * greatly improve error reporting, both in parsing and evaluation
 
 * handler overloading/multiple dispatch
+
+* should `to` and `when` operators use `to...do...done` instead of `to...run do...done`? It is rare that a handler will run only a single command, and `to...run...` reads unnaturally in practical use when combined with `do...done` block. This disrupts the consistency found in other operators which take an action to execute, where a single command or block of commands can be used interchangeably (though this is still available via the underlying `'to'` command; it is only ). The alternative is to replace the `run` keyword with one that reads more naturally, c.f. the "then" in `if...then do...done`.
 
 * allow handler signature to specify custom piped-input-to-arguments mapping, e.g. in `foo; 'add'`, if `foo` command outputs a list of 2 numbers, it would be better if the `add` handler takes the first number as default value for its `left` parameter and second number as default value for `right`; currently the first command's output is always passed as first argument to the second, which is fine for handlers that use a single-dispatch OO calling convention that neatly fits the pipeline metaphor (e.g. `trim_text {the_text, which_ends}`), but less so for rules with multiple parameters of equal importance (e.g. `add {left:number, right:number}`) or where the natural order of parameters wants the 'input' value to appear later in the parameters record (e.g. `replace_text {text_to_find, with_text, in_text}` wants to put it last; `bar; items 1 thru 10; fub` would also elide an explicit `...of VALUE` in favor of using the previous command's output, mapping down to `'items' {start, stop, of_value: default {input, any_collection}`)
 
