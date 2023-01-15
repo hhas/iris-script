@@ -39,6 +39,15 @@ func test() {
     """)
      */
     
+    
+    runScript("""
+    tell app “com.apple.TextEdit” to do
+        make new: #document at: end of documents with_properties: {name: “Test”, text: “Hello again!”}
+        get text of every document
+    done
+    """)
+    
+    return;
 
     // runScript(" tell @com.apple.iTunes to playpause ")
     

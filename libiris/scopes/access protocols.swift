@@ -33,7 +33,7 @@ public protocol Mutator: Accessor {
     func set(_ name: Symbol, to value: Value) throws
 }
 
-public protocol Scope: class, Accessor { // TO DO: can/should we move `class` further down? some frequently instantiated scopes, e.g. `TellTarget`, do not hold state directly, but merely delegate lookups to other scopes, so making them class instances is of no benefit (need to check original rationale for making Scope a class-only protocol)
+public protocol Scope: AnyObject, Accessor { // TO DO: can/should we move `class` further down? some frequently instantiated scopes, e.g. `TellTarget`, do not hold state directly, but merely delegate lookups to other scopes, so making them class instances is of no benefit (need to check original rationale for making Scope a class-only protocol)
     
     func subscope() -> Scope // TO DO: `Self` causes subclasses to barf
     

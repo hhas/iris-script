@@ -170,7 +170,7 @@ struct Reference: ReferenceProtocol {
                 default: () // fallthru
                 }
             }
-        } else if let desc = self.desc as? InsertionLocationDescriptor { // TO DO: this smells; typeInsertionLoc should unpack as InsertionLocation
+        } /* else if let desc = self.desc as? InsertionLocationDescriptor { // TO DO: this smells; typeInsertionLoc should unpack as InsertionLocation
             switch desc.position {
             case .beginning:
                 return "beginning of \(parent)"
@@ -181,7 +181,7 @@ struct Reference: ReferenceProtocol {
             case .after:
                 return "after \(parent)"
             }
-        }
+        } */
         return "«\(self.desc) of \(self.appData)»"
     }
     

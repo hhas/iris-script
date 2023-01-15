@@ -1272,7 +1272,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1130;
-				LastUpgradeCheck = 1130;
+				LastUpgradeCheck = 1340;
 				TargetAttributes = {
 					4F22428D24F1C7D200C1E64B = {
 						CreatedOnToolsVersion = 11.3.1;
@@ -1696,6 +1696,7 @@
 		4F22429324F1C7D200C1E64B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1707,6 +1708,7 @@
 		4F22429424F1C7D200C1E64B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1718,6 +1720,7 @@
 		4F293ED124EC56E8003D6D1E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1729,6 +1732,7 @@
 		4F293ED224EC56E8003D6D1E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1763,6 +1767,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1824,6 +1829,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1878,6 +1884,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1897,6 +1904,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1951,6 +1959,7 @@
 		4FE5502824C035D500509806 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1962,6 +1971,7 @@
 		4FE5502924C035D500509806 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1973,6 +1983,7 @@
 		4FFD2F9624F3A3A900E3288D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1984,6 +1995,7 @@
 		4FFD2F9724F3A3A900E3288D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;

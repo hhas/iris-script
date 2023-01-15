@@ -282,7 +282,7 @@ public class Parser {
                // print("LF REDUCE, stack size =", self.tokenStack.count)
                 
                 switch self.tokenStack.last?.form {
-                case .beginningOfQuote(_), .middleOfQuote(_): ()
+                case .beginningOfQuote(_, _, _), .middleOfQuote(_, _): ()
                 default:
                     self.foundRightExpressionDelimiter() // reduce the preceding EXPR to a single .value
                 }
@@ -301,7 +301,7 @@ public class Parser {
         }
         //self.tokenStack.show()
         switch self.tokenStack.last?.form {
-        case .beginningOfQuote(_), .middleOfQuote(_): ()
+        case .beginningOfQuote(_, _, _), .middleOfQuote(_, _): ()
         default:
             //print("foundRightExpressionDelimiter")
             self.foundRightExpressionDelimiter()

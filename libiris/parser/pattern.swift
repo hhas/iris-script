@@ -204,7 +204,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
             case .quotedName(_), .unquotedName(_), .operatorName(_): return true // TO DO: ditto; `NAME COLON` should probably be reduced to `Form.label(NAME)` before matchers are applied
             default: return false
             }
-        case .expression, .boundExpression(_):
+        case .expression, .boundExpression(_, _):
             if case .value(_) = form { return true } // TO DO: what about .error? should it always be immediately reduced to error value, or are there cases where it's preferable to put .error token on parser stack for later processing?
         case .token(let t):
             return form == t // TO DO: why does Form.==() not compare exactly? (probably because we currently only use `==` when matching punctuation tokens; it is dicey though; we probably should define a custom method for this, or else implement exact comparison [the other problem with `==` is that it's no use for matching names and other parameterized cases unless we use dummy values, which makes code very confusing/potentially misleading - best to implement those tests as Form.isName:Bool, etc])
@@ -228,7 +228,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
 
     var isExpression: Bool { // does this pattern match an EXPR? caution: this must ONLY be called on reified patterns (i.e. currently/previously matched, NEVER on remainingPatterns[1...])
         switch self {
-        case .expression, .boundExpression(_), .testValue(_):
+        case .expression, .boundExpression(_, _), .testValue(_):
             return true
         case .optional(let p), .zeroOrMore(let p), .oneOrMore(let p):
             fatalError("Cannot get isExpression for non-reified pattern: \(p)")
@@ -241,7 +241,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
 
     var hasLeftOperand: Bool { // crude; assumes all branches are consistent
         switch self {
-        case .expression, .boundExpression(_), .testValue(_): return true
+        case .expression, .boundExpression(_, _), .testValue(_): return true
         case .optional(let p):           return p.hasLeftOperand
         case .sequence(let p):           return p.first!.hasLeftOperand
         case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasLeftOperand }
@@ -253,7 +253,7 @@ public indirect enum Pattern: CustomDebugStringConvertible, ExpressibleByStringL
     
     var hasRightOperand: Bool { // ditto
         switch self {
-        case .expression, .boundExpression(_), .testValue(_): return true
+        case .expression, .boundExpression(_, _), .testValue(_): return true
         case .optional(let p):           return p.hasRightOperand
         case .sequence(let p):           return p.last!.hasRightOperand
         case .anyOf(let p):              return p.reduce(false){ $0 || $1.hasRightOperand }
