@@ -160,8 +160,10 @@ func procedure_read_prompt(command: Command, commandEnv: Scope, handler: Handler
     var index = 0
     let arg_0 = try command.value(for: type_read_prompt.param_0, at: &index, in: commandEnv)
     if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
-    fputs("\(arg_0) ", stdout)
+    print("\(arg_0)\u{1b}[1m ", terminator: "")
+    fflush(stdout)
     let rawInput = String(data: FileHandle.standardInput.availableData, encoding: .utf8) ?? ""
+    print("\u{1b}[0m", terminator: "")
     let input = rawInput.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
     return type_read_prompt.result.wrap(input, in: commandEnv)
 }

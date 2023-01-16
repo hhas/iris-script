@@ -1,33 +1,46 @@
 = README
 
-An interactive `iris-talk` shell with built-in stdlib (common operators, flow control), aelib (Apple event IPC), and shell-command libraries, provided for demonstation purposes.
+An interactive iris shell with stdlib (common operators, flow control), aelib (Apple event IPC support), and iris-shell libraries included. Its CLI is minimally functional, for demonstration purposes only.
+
+Iris is a work in progress. May contain bugs; no warranty given, use at own risk. See the README in the iris-script Xcode project for more information on the language design, syntax, and development.
 
 
 == Installation
 
-Place the pre-built `iris-talk` executable in a suitable location on your shell’s search `$PATH` (e.g. in `/usr/local/bin/`) and run in Terminal.app:
+Place the `iris-talk` executable into a directory on your shell’s search `$PATH` (e.g. copy it into `/usr/local/bin/`, or append its current location to $PATH in your `~/.zprofile`) and run in Terminal.app:
 
     % iris-talk
 
-Alternatively, build the "iris-talk (run in Terminal)" scheme in Xcode. This will build the `iris-talk` command-line executable (including its AppleEvent and SwiftAutomation dependencies) and launch it in Terminal.app for testing.
-
-
 == Example usage
 
+	Welcome to the iris interactive shell. Please type `help` for assistance.
     ✎ set my_name to "Bob"
     ☺︎ “Bob”
     ✎ to hi {name} run "Hello, " & name & "!"
     ☺︎ «handler: ‘say_hello’ {name as anything} returning anything»
     ✎ say hi my_name
     ☺︎ “Hello, Bob!”
+    
+On pressing Return, the entered line is read. If it is valid code, it is recolored for readability [1] and executed immediately [2]. If the code is invalid, a limited error message is displayed.
 
-(✎ = code input prompt; … = multi-line input; ☺ = return value on success; ☹ = syntax/evaluation error)
+	✎ = code input prompt
+	… = multi-line input
+	? = default text input (`read`) prompt
+	☺ = return value on success
+	☹ = syntax/evaluation error
 
 Lists (`[...]`), records (`{...}`), and blocks (`do...done` or `(...)`) can be entered over one or more lines. The parser will continue reading lines until all incomplete structures are correctly closed. Use commas and/or linebreaks to separate multiple values (including commands).
 
-On pressing Return, the entered code is read. If its syntax is valid it is recolored for readability [1] and executed immediately [2], otherwise a limited error message is displayed.
+Iris syntax includes a built-in “pipe” operator (`;`), allowing commands to be written sequentially so that the result of one command is passed as first argument to the next:
 
-The shell supports basic readline/VT100/Emacs bindings and behaviors, e.g. Ctrl-C to cancel a line.
+	✎ To hi {name} run "Hello " & name & "!".
+	…
+	✎ Say "Who are you?"; read; hi; say.
+	Who are you? Sam
+	☺︎ “Hello Sam!”
+
+Iris is modular. All behavior is provided by command handlers; including math and logic operations, flow control, and defining new commands (`To…`).  Iris provides a core set of value types: Booleans, numbers, strings, lists, records, blocks. Commands are iris values too: an iris script can be interpreted as instructions to perform, data to manipulate, or any combination of both. 
+
 
 == Builtin help
 
@@ -35,15 +48,15 @@ To view a list of the shell's built-in commands:
 
     ✎ help
 
-`iris-talk` supports `stdlib` and `aelib` commands, in addition to its own builtins. To list all available commands:
+`iris-shell` supports `stdlib` and `aelib` commands, in addition to its own builtins. To list all available commands:
 
     ✎ commands
 
-Stdlib also defines operator syntax (keyword-based syntactic sugar) for several commands, e.g.
+Stdlib also defines custom operator syntax (keyword-based syntactic sugar) on top of some frequently-used commands. For example:
 
     ✎ ‘+’ {2, 3}
 
-is more commonally written as:
+is more easily written as:
 
     ✎ 2 + 3
 
@@ -51,8 +64,9 @@ To list currently-loaded operator syntax:
 
     ✎ operators
 
-(Note that operator-defined words and symbols are reserved keywords. To use a reserved keyword as a normal command name, enclose it in single quotes.)
+Note that words and symbols defined for use by operators become reserved keywords. To use a reserved keyword as a normal command name, enclose it in single quotes.
 
+The shell supports basic readline/VT100/Emacs bindings and behaviors, e.g. Ctrl-L to clear; Ctrl-C to cancel a line.
 
 == Application scripting examples [3]
 
@@ -62,7 +76,7 @@ To list currently-loaded operator syntax:
 
 	say {"Now playing: " & tell app "com.apple.Music" to get name of current_track}
 
-aelib supports AppleScript-like syntax for building and sending Apple event queries and commands (minus AppleScript's arbitrary keyword injection and other ambiguities), providing access to the very high-level programmatic query-driven UIs that already exist in dozens of macOS productivity and lifestyle apps. [4]
+aelib supports AppleScript-like syntax for building and sending Apple event queries and commands (minus AppleScript's arbitrary keyword injection and other ambiguities), providing access to the very high-level programmatic query-driven UIs available today in dozens of popular macOS productivity and lifestyle apps. [4]
 
 
 == Footnotes

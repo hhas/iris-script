@@ -372,8 +372,9 @@ public class Parser {
                 }
                 wasValue = true
             case .separator(let sep):
+                // TO DO: there is a bug somewhere in the REPL where typing e.g. a single comma on a line (or several commas together) causes subsequent lines not to evaluate (the shell must be relaunched to clear the problem); for now, don't do that
                 if !wasValue {
-                    print("Discarded duplicate punctuation: `\(sep)`")
+                    //print("Discarded duplicate punctuation: `\(sep)`")
                 }
                 wasValue = false
                 self.tokenStack.skipLineBreaks(&i)
