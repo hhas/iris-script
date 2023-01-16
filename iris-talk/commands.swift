@@ -1,11 +1,12 @@
 //
 //  commands.swift
-//  iris-shell
+//  iris-talk
 //
 
 // TO DO: `help` should take `optional command` argument, e.g. `help write` should print documentation for `write` command
 
 import Foundation
+import AVFoundation
 import iris
 
 // TO DO: colorization doesn't offset corectly if entered code produces parse error
@@ -40,24 +41,26 @@ func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handl
     # iris help
     
     ## REPL commands
+    
+    `help`      – display this Help
 
     `_`         – output the result of the previous line
 
     `clear`     – clear screen
-    
-    `help`      – display this Help
 
     `commands`  – list all available commands
 
     `operators` – list all available operators
     
-    `quit`      – exit the interactive shell
-    
     `read {prompt as optional string with_default "?"} – read next line of input from stdin, with customizable prompt
+    
+    `say {message as string} returning string` – speak and return the given text
+    
+    `quit`      – exit the interactive shell
     
     ## Notes
     
-    Emacs key bindings are supported, e.g. `Ctrl-L` to clear screen.
+    VT100 codes/Emacs-style key bindings are also supported, e.g. `Ctrl-L` to clear the screen, `Ctrl-C` to exit the shell.
     
     """)
     return nullValue
@@ -164,6 +167,41 @@ func procedure_read_prompt(command: Command, commandEnv: Scope, handler: Handler
 }
 
 
+// `say {text}` – output
+
+private let type_say = (
+    name: Symbol("say"),
+    param_0: (Symbol("message"), Symbol("message"), asText),
+    result: asText
+)
+
+let interface_say = HandlerType(
+    name: type_say.name,
+    parameters: [
+        nativeParameter(type_say.param_0),
+    ],
+    result: type_say.result.nativeCoercion
+)
+
+
+func getVoice() -> AVSpeechSynthesisVoice? {
+    for voice in AVSpeechSynthesisVoice.speechVoices() {
+        if voice.name == "Allison" { return voice } // (premium voice can be d/l'd via system Settings)
+    }
+    return nil
+}
+
+func procedure_say(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+    var index = 0
+    let arg_0 = try command.value(for: type_say.param_0, at: &index, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
+    let utterance = AVSpeechUtterance(string: arg_0.data)
+    utterance.voice = getVoice()
+    utterance.rate = 0.2
+    AVSpeechSynthesizer().speak(utterance)
+    return arg_0
+}
+
 // `pp {value}` – pretty-print value/previous input
 
 private let type_pp_value = (
@@ -227,6 +265,7 @@ func loadREPLHandlers(_ env: Environment) {
     env.define(interface_operators, procedure_operators)
     env.define(interface_quit, procedure_quit)
     env.define(interface_read_prompt, procedure_read_prompt)
+    env.define(interface_say, procedure_say)
     env.define(interface_pp_value, procedure_pp_value)
     env.define(interface_spp_value, procedure_spp_value)
 }

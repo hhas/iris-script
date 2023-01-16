@@ -198,12 +198,12 @@ struct ByRangeSelector: QuerySelector { // ‘at’ {element_type, selector_data
     
     func unpackRangeSelector(value: Value, in scope: Scope, elementCode: OSType) throws -> QueryDescriptor {
         let value = try asValue.coerce(value, in: scope)
-        if let name = value as? String {
-            return RootSpecifierDescriptor.con.elements(elementCode).byName(packAsString(name))
-        } else if let n = try? asInt.coerce(value, in: scope) {
+        if let name = value as? Text { // type-check, don't coerce, to determine if user explicitly provided a Text value; if so, process it as a by-name selector even if it's a numeric string (e.g. `"ReadMe.txt"`, `"3"`)
+            return RootSpecifierDescriptor.con.elements(elementCode).byName(packAsString(name.data))
+        } else if let n = try? asInt.coerce(value, in: scope) { // if the user didn't provide text, see if it's an integer (e.g. `3`)
             return RootSpecifierDescriptor.con.elements(elementCode).byIndex(packAsInt(n))
-        } else {
-            return try asReference.coerce(value, in: scope).desc
+        } else { // if it's not an integer/text, it must be a relative (`con` root) or absolute (`app` root) specifier (e.g. `word 3`, `last document`)
+            return try asReference.coerce(value, in: scope).desc // this will throw a coercion error if the value is none of the accepted types
         }
     }
     

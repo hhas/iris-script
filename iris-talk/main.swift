@@ -1,6 +1,6 @@
 //
 //  main.swift
-//  iris-shell
+//  iris-talk
 //
 
 // TO DO: debug `print()` calls in libiris that write to console between read and print steps will screw up backtracking when applying color formatting to the previously read line (TBH there’s no easy solution to this given limitations of terminal; we'd have to hook stdout and stderr… and pretty soon we’d end up rewriting curses)
@@ -24,7 +24,7 @@ var previousInput: Value = nullValue
 
 
 func runREPL() {
-    writeHelp("Welcome to the iris runtime’s interactive shell. Type `help` for assistance.")
+    writeHelp("Welcome to the iris interactive shell. Please type `help` for assistance.")
     EL_init(CommandLine.arguments[0])
     let parser = IncrementalParser()
     loadREPLHandlers(parser.env)
@@ -44,7 +44,7 @@ func runREPL() {
             parser.read(code) // modified lexer chain writes VT100-annotated code to VT100Formatter as a side-effect
             EL_rewriteLine(raw, formatter.read()) // replace the plain line input with the VT100-formatted code
             do {
-                if let ast = parser.ast() { // parser has accummulated a complete single-/multi-line expression sequence
+                if let ast = parser.ast() { // parser has accumulated a complete single-/multi-line expression sequence
                     //print("PARSED:", ast)
                     let result = try ast.eval(in: parser.env, as: asAnything)
                     guard let prev = previousValue.get(nullSymbol) else { exit(5) } // bug if get() returns nil

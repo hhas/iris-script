@@ -24,50 +24,15 @@ Ad-hoc tests are currently run under the `iris-test` target.
 
 ## Try it
 
-The iris-script project includes, `iris-shell`, a basic interactive command-line interface (REPL) for demonstration use. 
-
-To try iris, build the `iris-shell (run in Terminal)` scheme in Xcode. This will build the `iris-shell` command-line executable and launch it in Terminal.app. 
+The iris-script project includes `iris-talk`, a basic interactive command-line interface (REPL) for demonstration use. 
 
 Example usage (✎ indicates input prompt):
 
-    ✎ set my_name to "Bob"
-    ☺︎ “Bob”
-    ✎ to say_hello {name} run "Hello, " & name & "!"
-    ☺︎ «handler: ‘say_hello’ {name as anything} returning anything»
-    ✎ say_hello my_name
-    ☺︎ “Hello, Bob!”
+    ✎ say "Hello World!"
+    ☺︎ “Hello World!”
 
-On pressing Return, the entered line is read. If it is valid code (☺︎), it is recolored for readability (blue = literal value; bold red = command name; red = operator keyword or record property label) and executed immediately. If the code is invalid, a limited error message is displayed (☹︎).
+See iris-talk/README.txt for more information.
 
-To view a list of the shell's built-in commands:
-
-    ✎ help
-
-`iris-shell` supports `stdlib` and `aelib` commands, in addition to its own builtins. To list all available commands:
-
-    ✎ commands
-
-Stdlib also defines operator syntax (keyword-based syntactic sugar) for several commands, e.g.
-
-    ✎ ‘+’ {2, 3}
-
-is more commonally written as:
-
-    ✎ 2 + 3
-
-To list currently-loaded operator syntax:
-
-    ✎ operators
-
-(Note that operator-defined words and symbols are reserved keywords. To use a reserved keyword as a normal command name, enclose it in single quotes.)
-
-TO DO: 
-
-* Non-interactive mode for executing script files from STDIN/FILE arguments.
-
-* Improve commands and operators listings, grouping by category (currently all names are listed alphabetically).
-
-* Live pretty-printing of code as the user types.
 
 ## Features
 
@@ -190,7 +155,17 @@ Additional transpiling optimizations might include storing values directly in Sw
 
 ## TO DO
 
-* improve REPL
+* improve iris-talk:
+
+  * non-interactive mode for executing script files from STDIN/FILE arguments.
+
+  * organize commands and operators listings, grouping by category (currently all names are listed alphabetically) with wildcard search.
+
+  * live pretty-printing of code as the user types.
+  
+  * future pretty-printer plugins could also format commands providing different types of feedback during different stages in authoring and testing processes: decribing categories of behavior (safe vs destructive, referentially transparent vs side-effects), identifying by library, flagging detected syntax errors and suspected logic errors or ambiguity, etc.
+
+  * voice input
 
 * greatly improve error reporting, both in parsing and evaluation
 
@@ -199,6 +174,8 @@ Additional transpiling optimizations might include storing values directly in Sw
 * should `to` and `when` operators use `to...do...done` instead of `to...run do...done`? It is rare that a handler will run only a single command, and `to...run...` reads unnaturally in practical use when combined with `do...done` block. This disrupts the consistency found in other operators which take an action to execute, where a single command or block of commands can be used interchangeably (though this is still available via the underlying `'to'` command; it is only ). The alternative is to replace the `run` keyword with one that reads more naturally, c.f. the "then" in `if...then do...done`.
 
 * allow handler signature to specify custom piped-input-to-arguments mapping, e.g. in `foo; 'add'`, if `foo` command outputs a list of 2 numbers, it would be better if the `add` handler takes the first number as default value for its `left` parameter and second number as default value for `right`; currently the first command's output is always passed as first argument to the second, which is fine for handlers that use a single-dispatch OO calling convention that neatly fits the pipeline metaphor (e.g. `trim_text {the_text, which_ends}`), but less so for rules with multiple parameters of equal importance (e.g. `add {left:number, right:number}`) or where the natural order of parameters wants the 'input' value to appear later in the parameters record (e.g. `replace_text {text_to_find, with_text, in_text}` wants to put it last; `bar; items 1 thru 10; fub` would also elide an explicit `...of VALUE` in favor of using the previous command's output, mapping down to `'items' {start, stop, of_value: default {input, any_collection}`)
+
+* decide operator vs command precedence, e.g. `say "Hello " & "Bob."` says "Hello" then throws coercion error as `say` command returns nothing, and `&` requires string operands. i.e. The command name `say` binds tighter to "Hello " than the operator `&`; however the user's visible intention is to concatenate the strings and pass the result to `say`. Conversely, there are plenty of use cases where the command wants to bind more tightly than the operator, e.g. `sin x * y`. One option is fixed order of precedence: pick whichever is the more common case during language design phase and make that the standard behavior (which the user can override by parenthesizing). This is simple to implement, maintain, and teach; though it lacks user convenience (which increases friction and frustration in using the language). Another option might be adaptive precedence: the parser defers decisions on ambiguous binding orders until some/all argument and return types are known (or at least fairly guessable), then decide which combination is most likely to match the user's intent (falling back to asking the user directly if unable to make a best-guess). e.g. If the `say` handler is known to return nothing, one of the two possible combinations becomes logically invalid; thus the parser can conclude with high degree of certainty that the correct choice is to apply `&` first, then `say`; the secondary choice being to propose that there is a logic error in the code (i.e. the user intended to use a different command that does return text as `&`'s left operand'). OTOH, if `say` returns text (its current behavior) then either choice is equally valid code and the parser must rely on frequency weighting/previous experience to best-guess the user's intent. This mode will require live feedback via pretty-printing as the user enters code so the parser's proposed rewrite is instantly visible, encouraging the user to correct it immediately it's not her desired choice. The editor can remember the frequencies of its user's previous choices to improve its own predictions of the user's intent in future (i.e. a simple learning system); such choices might be pooled globally as learned collective knowledge (caveat bad actors polluting the weightings). In the case of adaptive precedence, it is best that the language ensures fixed-order precedence so that source code is aways stable and portable, with all adaptative decisions being made by the editor where the user feedback loop is explicit and immediate.
 
 * editable scripts—currently iris supports whole-script and incremental line parsing, suitable for run-only and CLI shell respectively; eventually it should also support a syntax-directed document editor, where the parser maintains a mutable partial/whole AST representation of the program, allowing individual edits to a text (source code) buffer to be immediately applied to that AST, with API hooks for auto-suggest, auto-complete, auto-correct and other modern IDE/text authoring features
 

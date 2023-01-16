@@ -12,7 +12,7 @@ import Foundation
 
 // TO DO: also consider using lexer chain to provide basic keyword highlighting: that has the advantage that it can color code as user types as it only needs to recognize single tokens, not entire structures; thus lexer can provide pretty printer with a quick first-pass stage highlighting keyword/name/string/number/annotation semantics only, with further formatting (e.g. whitespace normalization, indentation, structural analysis) being applied as parser completes the larger structural units (lines, blocks)
 
-// TO DO: implement a lexer-only PP for applying VT100 color codes in iris-shell (ideally this should be inserted into the live lexer chain right just before the parser stage; it may even be possible to run lexer stage as soon as certain characters are typed, e.g. space, allowing coloring-as-you-type, although that will need to have some external knowledge of quoting characters as words within annotations and string literals shouldn't be colored as keywords/identifiers, obvs)
+// TO DO: implement a lexer-only PP for applying VT100 color codes in iris-talk (ideally this should be inserted into the live lexer chain right just before the parser stage; it may even be possible to run lexer stage as soon as certain characters are typed, e.g. space, allowing coloring-as-you-type, although that will need to have some external knowledge of quoting characters as words within annotations and string literals shouldn't be colored as keywords/identifiers, obvs)
 
 
 // TO DO: being a Lisp-y language, a better approach to pretty printing is to evaluate an AST using a non-standard environment that returns handler-like objects which generate the corresponding source code; the same architecture can then be used for linting, transpiling, profiling, etc; non-standard environments can also introspect a live run-time environment to determine its available handlers and their interfaces and synthesize their own equivalents (also useful in linting and transpiling, and also a3c)
@@ -247,19 +247,22 @@ enum VT100: String {
     case faint        = "\u{1b}[2m"
     case underline    = "\u{1b}[4m"
     case red          = "\u{1b}[31m"
-    case green        = "\u{1b}[32m"
+    case darkRed      = "\u{1b}[38;5;52m"
+    case orange       = "\u{1b}[38;5;166m"
+    case green        = "\u{1b}[38;5;28m"
     case yellow       = "\u{1b}[33m"
     case blue         = "\u{1b}[34m"
     case magenta      = "\u{1b}[35m"
+    case violet       = "\u{1b}[38;5;92m"
     case cyan         = "\u{1b}[36m"
 }
 
 let nameStyle     = VT100.red.rawValue + VT100.bold.rawValue
-let labelStyle    = VT100.red.rawValue
-let operatorStyle = VT100.magenta.rawValue
+let labelStyle    = VT100.orange.rawValue + VT100.bold.rawValue // e.g. `some_command x some_arg: y` shows command and argument names in similar colors
+let operatorStyle = VT100.violet.rawValue
 let numberStyle   = VT100.blue.rawValue
 let textStyle     = VT100.blue.rawValue
-let symbolStyle   = VT100.green.rawValue
+let symbolStyle   = VT100.green.rawValue // TO DO: once implemented, global `@NAME...` namespace identifiers should also use this color; this helps associate "@MENTIONS" and "#HASHTAG" as being 'special' structures; the hashtag may be recolored blue-green to place it conceptually between a global name and a literal (`#` escapes an identifier so it isn't automatically looked up when evaluated but instead returns itself, whereas global identifier is an expression that resolves to a global object or sub-object bound to that particular name)
 let resetStyle    = VT100.reset.rawValue
 
 

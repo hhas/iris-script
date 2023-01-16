@@ -1,11 +1,11 @@
 //
-//  iris-shell.c
-//  iris-shell
+//  iris-talk.c
+//  iris-talk
 //
 //  readline support
 //
 
-#include "iris-shell-Bridging-Header.h"
+#include "iris-talk-Bridging-Header.h"
 #include <sys/ioctl.h>
 #include <sys/ttycom.h>
 

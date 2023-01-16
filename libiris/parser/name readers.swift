@@ -77,7 +77,7 @@ public struct NameModifierReader: LineReader { // read hashtag, mentions, dot-no
                 switch startToken.form {
                 case .hashtag:
                     startToken = self.newToken(for: .value(name), from: startToken, to: endToken)
-                default: fatalError("TODO: support .mentions token")
+                default: fatalError("TODO: @NAME... syntax (Token.Form.mentions) for identifying persistent global namespaces are not yet implemented")
                 }
                 reader = endReader
             default: ()

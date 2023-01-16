@@ -51,7 +51,7 @@
 		4F345EA024C38C7900532054 /* quote reader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F345E9F24C38C7900532054 /* quote reader.swift */; };
 		4F877A5E24BD90A90067A463 /* libedit.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F877A5924BD90A90067A463 /* libedit.tbd */; };
 		4F877A6624BD97D10067A463 /* libedit.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F877A5924BD90A90067A463 /* libedit.tbd */; };
-		4F877A6824BD995F0067A463 /* iris-shell.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F877A6724BD995F0067A463 /* iris-shell.c */; };
+		4F877A6824BD995F0067A463 /* iris-talk.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F877A6724BD995F0067A463 /* iris-talk.c */; };
 		4F877A6B24BDBB4E0067A463 /* libiris.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988CB624BCC4D700EE66C7 /* libiris.a */; };
 		4F877A6C24BDBD7C0067A463 /* libiris.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988CB624BCC4D700EE66C7 /* libiris.a */; };
 		4F877A6F24BDC0130067A463 /* test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F28B59624ACE1C2005583C7 /* test.swift */; };
@@ -119,7 +119,6 @@
 		4F988D0524BCC5CC00EE66C7 /* native app data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F46A41923225975008E0265 /* native app data.swift */; };
 		4F988D0624BCC5CC00EE66C7 /* result descriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F731D2E23254869008700C6 /* result descriptor.swift */; };
 		4F988D0724BCC5CC00EE66C7 /* keyword converter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F46A41B232259FB008E0265 /* keyword converter.swift */; };
-		4F988D0924BCC62C00EE66C7 /* libAppleEvents.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F988D0824BCC62C00EE66C7 /* libAppleEvents.a */; };
 		4F988D0A24BCC62C00EE66C7 /* libSwiftAutomation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F28389A24B8C4D80054C70E /* libSwiftAutomation.a */; };
 		4F988D1124BCEA5C00EE66C7 /* commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F988D1024BCEA5C00EE66C7 /* commands.swift */; };
 		4FC82CF824CEC0BC00EEC170 /* thunk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC82CF724CEC0BC00EEC170 /* thunk.swift */; };
@@ -331,6 +330,13 @@
 			remoteGlobalIDString = 4F988CB524BCC4D700EE66C7;
 			remoteInfo = libiris;
 		};
+		4FEF3B75297514F300AC4372 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4F28388D24B8C4D80054C70E /* SwiftAutomation.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4F21AF3C22861DA400A1B978;
+			remoteInfo = libSwiftAutomation;
+		};
 		4FFD83C024BCF01B00E5E28A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4F28388D24B8C4D80054C70E /* SwiftAutomation.xcodeproj */;
@@ -507,10 +513,10 @@
 		4F857700230C9247002B47F2 /* stdlib_constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = stdlib_constants.swift; sourceTree = "<group>"; };
 		4F857702230D34AE002B47F2 /* std state.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "std state.swift"; sourceTree = "<group>"; };
 		4F877A5924BD90A90067A463 /* libedit.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libedit.tbd; path = usr/lib/libedit.tbd; sourceTree = SDKROOT; };
-		4F877A6224BD97730067A463 /* iris-shell-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "iris-shell-Bridging-Header.h"; sourceTree = "<group>"; };
-		4F877A6724BD995F0067A463 /* iris-shell.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "iris-shell.c"; sourceTree = "<group>"; };
+		4F877A6224BD97730067A463 /* iris-talk-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "iris-talk-Bridging-Header.h"; sourceTree = "<group>"; };
+		4F877A6724BD995F0067A463 /* iris-talk.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "iris-talk.c"; sourceTree = "<group>"; };
 		4F8C405B24BB9C1400735273 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		4F8C407224BCC02200735273 /* iris-shell */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "iris-shell"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4F8C407224BCC02200735273 /* iris-talk */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "iris-talk"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F8C407424BCC02200735273 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4F988CB624BCC4D700EE66C7 /* libiris.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libiris.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F988D0824BCC62C00EE66C7 /* libAppleEvents.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libAppleEvents.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -559,6 +565,7 @@
 		4FE8D46B24E4016A008AE1D3 /* stdlib enum stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib enum stubs.swift"; sourceTree = "<group>"; };
 		4FE8D46C24E4016A008AE1D3 /* stdlib record stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "stdlib record stubs.swift"; sourceTree = "<group>"; };
 		4FE8D46D24E5184A008AE1D3 /* multihandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = multihandler.swift; sourceTree = "<group>"; };
+		4FEF3BAB2975621D00AC4372 /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		4FFC6F2422D6818000D636B9 /* base lexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "base lexer.swift"; sourceTree = "<group>"; };
 		4FFC6F2922D7704D00D636B9 /* access protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "access protocols.swift"; sourceTree = "<group>"; };
 		4FFD2F8B24F3A2D000E3288D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -605,7 +612,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4F877A5E24BD90A90067A463 /* libedit.tbd in Frameworks */,
-				4F988D0924BCC62C00EE66C7 /* libAppleEvents.a in Frameworks */,
 				4F988D0A24BCC62C00EE66C7 /* libSwiftAutomation.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -946,7 +952,7 @@
 				4F8C405B24BB9C1400735273 /* README.md */,
 				4F28388D24B8C4D80054C70E /* SwiftAutomation.xcodeproj */,
 				4F84CFFF22ADA0F200C9FD23 /* iris-test */,
-				4F8C407324BCC02200735273 /* iris-shell */,
+				4F8C407324BCC02200735273 /* iris-talk */,
 				4FE5502524C035D500509806 /* iris-glue */,
 				4F988CB724BCC4D700EE66C7 /* libiris */,
 				4F293ECD24EC56E8003D6D1E /* shortcuts */,
@@ -960,7 +966,7 @@
 			isa = PBXGroup;
 			children = (
 				4F84CFFD22ADA0F200C9FD23 /* iris-test */,
-				4F8C407224BCC02200735273 /* iris-shell */,
+				4F8C407224BCC02200735273 /* iris-talk */,
 				4F988CB624BCC4D700EE66C7 /* libiris.a */,
 				4FE5502424C035D500509806 /* iris-glue */,
 				4F293ECC24EC56E8003D6D1E /* sc-dump */,
@@ -980,15 +986,16 @@
 			path = "iris-test";
 			sourceTree = "<group>";
 		};
-		4F8C407324BCC02200735273 /* iris-shell */ = {
+		4F8C407324BCC02200735273 /* iris-talk */ = {
 			isa = PBXGroup;
 			children = (
+				4FEF3BAB2975621D00AC4372 /* README.txt */,
 				4F8C407424BCC02200735273 /* main.swift */,
 				4F988D1024BCEA5C00EE66C7 /* commands.swift */,
-				4F877A6224BD97730067A463 /* iris-shell-Bridging-Header.h */,
-				4F877A6724BD995F0067A463 /* iris-shell.c */,
+				4F877A6224BD97730067A463 /* iris-talk-Bridging-Header.h */,
+				4F877A6724BD995F0067A463 /* iris-talk.c */,
 			);
-			path = "iris-shell";
+			path = "iris-talk";
 			sourceTree = "<group>";
 		};
 		4F988CB724BCC4D700EE66C7 /* libiris */ = {
@@ -1194,9 +1201,9 @@
 			productReference = 4F84CFFD22ADA0F200C9FD23 /* iris-test */;
 			productType = "com.apple.product-type.tool";
 		};
-		4F8C407124BCC02200735273 /* iris-shell */ = {
+		4F8C407124BCC02200735273 /* iris-talk */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4F8C407D24BCC02200735273 /* Build configuration list for PBXNativeTarget "iris-shell" */;
+			buildConfigurationList = 4F8C407D24BCC02200735273 /* Build configuration list for PBXNativeTarget "iris-talk" */;
 			buildPhases = (
 				4F8C406E24BCC02200735273 /* Sources */,
 				4F8C406F24BCC02200735273 /* Frameworks */,
@@ -1205,11 +1212,12 @@
 			buildRules = (
 			);
 			dependencies = (
+				4FEF3B76297514F300AC4372 /* PBXTargetDependency */,
 				4F877A6E24BDBD840067A463 /* PBXTargetDependency */,
 			);
-			name = "iris-shell";
+			name = "iris-talk";
 			productName = iris;
-			productReference = 4F8C407224BCC02200735273 /* iris-shell */;
+			productReference = 4F8C407224BCC02200735273 /* iris-talk */;
 			productType = "com.apple.product-type.tool";
 		};
 		4F988CB524BCC4D700EE66C7 /* libiris */ = {
@@ -1272,7 +1280,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1130;
-				LastUpgradeCheck = 1340;
+				LastUpgradeCheck = 1420;
 				TargetAttributes = {
 					4F22428D24F1C7D200C1E64B = {
 						CreatedOnToolsVersion = 11.3.1;
@@ -1318,7 +1326,7 @@
 			);
 			projectRoot = "";
 			targets = (
-				4F8C407124BCC02200735273 /* iris-shell */,
+				4F8C407124BCC02200735273 /* iris-talk */,
 				4F988CB524BCC4D700EE66C7 /* libiris */,
 				4F84CFFC22ADA0F200C9FD23 /* iris-test */,
 				4FE5502324C035D500509806 /* iris-glue */,
@@ -1417,7 +1425,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4F877A6824BD995F0067A463 /* iris-shell.c in Sources */,
+				4F877A6824BD995F0067A463 /* iris-talk.c in Sources */,
 				4F8C407524BCC02200735273 /* main.swift in Sources */,
 				4F988D1124BCEA5C00EE66C7 /* commands.swift in Sources */,
 			);
@@ -1685,6 +1693,11 @@
 			target = 4F988CB524BCC4D700EE66C7 /* libiris */;
 			targetProxy = 4FE5503224C0388300509806 /* PBXContainerItemProxy */;
 		};
+		4FEF3B76297514F300AC4372 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libSwiftAutomation;
+			targetProxy = 4FEF3B75297514F300AC4372 /* PBXContainerItemProxy */;
+		};
 		4FFD83C124BCF01B00E5E28A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = libSwiftAutomation;
@@ -1698,6 +1711,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1710,6 +1724,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1722,6 +1737,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1734,6 +1750,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1776,6 +1793,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -1793,7 +1811,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1838,6 +1856,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1849,7 +1868,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -1863,6 +1882,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1874,6 +1894,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1885,7 +1906,9 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1893,8 +1916,9 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.github.hhas.iris-script.iris";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "iris-shell/iris-shell-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "iris-talk/iris-talk-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
@@ -1905,7 +1929,9 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1913,8 +1939,9 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.github.hhas.iris-script.iris";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "iris-shell/iris-shell-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "iris-talk/iris-talk-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -1924,6 +1951,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				EXECUTABLE_PREFIX = lib;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1943,6 +1971,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				EXECUTABLE_PREFIX = lib;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1961,6 +1990,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1973,6 +2003,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1985,6 +2016,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1997,6 +2029,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27XZ82KJ77;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2043,7 +2076,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4F8C407D24BCC02200735273 /* Build configuration list for PBXNativeTarget "iris-shell" */ = {
+		4F8C407D24BCC02200735273 /* Build configuration list for PBXNativeTarget "iris-talk" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4F8C407624BCC02200735273 /* Debug */,
