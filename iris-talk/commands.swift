@@ -44,7 +44,7 @@ func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handl
     
     `help`      – display this Help
 
-    `_`         – output the result of the previous line
+    `_`         – (underscore) output the result of the previous line
 
     `clear`     – clear screen
 
@@ -52,9 +52,22 @@ func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handl
 
     `operators` – list all available operators
     
-    `read {prompt as optional string with_default "?"} – read next line of input from stdin, with customizable prompt
+    `pp {value as optional}`
+                – print a value;
+                  if value is omitted, print the previous line
     
-    `say {message as string} returning string` – speak and return the given text
+    `spp {value as optional}`
+                – print a value's raw (Swift) description;
+                  if value is omitted, print the previous line
+    
+    `read {prompt as optional string with_default "?"} returning string`
+                – read next line of input from stdin, with customizable prompt
+    
+    `say {message as string} returning string`
+                – speak and return the given text
+    
+    `unset {name as symbol} returning anything`
+                – unset a value that was previously stored in the current scope
     
     `quit`      – exit the interactive shell
     
@@ -65,6 +78,33 @@ func procedure_help(command: Command, commandEnv: Scope, handler: Handler, handl
     """)
     return nullValue
 }
+
+
+// `unset {name}` – remove from scope
+
+private let type_unset_name = (
+    name: Symbol("unset"),
+    param_0: (Symbol("name"), Symbol("name"), asLiteralName),
+    result: asIs
+)
+
+let interface_unset_name = HandlerType(
+    name: type_unset_name.name,
+    parameters: [
+        nativeParameter(type_unset_name.param_0),
+    ],
+    result: type_unset_name.result.nativeCoercion
+)
+func procedure_unset_name(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+    var index = 0, value: Value = nullValue
+    let arg_0 = try command.value(for: type_unset_name.param_0, at: &index, in: commandEnv)
+    if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
+    if let env = commandEnv as? Environment {
+        value = env.unset(arg_0) ?? nullValue
+    }
+    return value
+}
+
 
 // `clear` – clear screen
 
@@ -85,14 +125,25 @@ let interface_commands = HandlerType(
     parameters: [],
     result: asNothing.nativeCoercion
 )
-func procedure_commands(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
-    if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command, to: handler) }
-    for (name, value) in (commandEnv as! Environment).frame.sorted(by: {$0.key < $1.key}) {
+
+func printHandlers(in env: Environment) {
+    for (name, value) in env.frame.sorted(by: {$0.key < $1.key}) {
         if let handler = value as? Callable {
             writeHelp("\(handler.interface)\n")
         } else {
             writeHelp("‘\(name.label)’ – \(value)\n")
         }
+    }
+}
+
+func procedure_commands(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
+    if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command, to: handler) }
+    var env = commandEnv as? Environment
+    while let scope = env {
+        print("Scope contains \(scope.frame.count) items:\n") // TO DO: how to identify/describe/name each scope? (library/handler/tell/etc)
+        printHandlers(in: scope)
+        env = scope.readOnlyParent()
+        print()
     }
     return nullValue
 }
@@ -111,6 +162,7 @@ func procedure_operators(command: Command, commandEnv: Scope, handler: Handler, 
     if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command, to: handler) }
     var found = Set<String>()
     var precedence: Precedence = 0
+    // note: operator registry is shared with sub-scopes so for now there is no need to inspect parent envs
     let definitions = env.operatorRegistry.patternDefinitions.map{($0.precedence, $0.name, $0.description)}
     for definition in definitions.sorted(by: { ($1.0, $0.1) < ($0.0, $1.1) }) {
         if !found.contains(definition.2) {
@@ -209,7 +261,7 @@ func procedure_say(command: Command, commandEnv: Scope, handler: Handler, handle
 private let type_pp_value = (
     name: Symbol("pp"),
     param_0: (Symbol("value"), Symbol("value"), AsSwiftOptional(asValue)), // TO DO: this is a bit problematic: the proc below really wants Value, with nullValue rather than nil, but AsOptional doesn't compose with asValue and is in any case not a SwiftCoercion which is what's needed to unpack arguments
-    result: asNothing
+    result: asIs
 )
 
 let interface_pp_value = HandlerType(
@@ -229,14 +281,14 @@ func procedure_pp_value(command: Command, commandEnv: Scope, handler: Handler, h
         if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
         print("  \(formatter.format(arg_0 ?? nullValue))")
     }
-    return previousValue.get(nullSymbol) ?? nullValue
+    return previousValue.immutableValue
 }
 // `spp {value}` – print Swift representation of value/previous input; caution this may raise exception for some types (if unsupported the fallback behavior is fatalError)
 
 private let type_spp_value = (
     name: Symbol("spp"),
     param_0: (Symbol("value"), Symbol("value"), AsSwiftOptional(asValue)),
-    result: asNothing
+    result: asIs
 )
 
 let interface_spp_value = HandlerType(
@@ -255,13 +307,14 @@ func procedure_spp_value(command: Command, commandEnv: Scope, handler: Handler, 
         if command.arguments.count > index { throw UnknownArgumentError(at: index, of: command, to: handler) }
         print("  \((arg_0 ?? nullValue).swiftLiteralDescription)")
     }
-    return previousValue.get(nullSymbol) ?? nullValue
+    return previousValue.immutableValue
 }
 
 
 
 func loadREPLHandlers(_ env: Environment) {
     env.define(interface_help, procedure_help)
+    env.define(interface_unset_name, procedure_unset_name)
     env.define(interface_clear, procedure_clear)
     env.define(interface_commands, procedure_commands)
     env.define(interface_operators, procedure_operators)

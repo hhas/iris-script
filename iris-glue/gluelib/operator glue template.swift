@@ -26,7 +26,7 @@ private let templateSource = """
 
 import Foundation
 
-func stdlib_loadOperators(into registry: OperatorRegistry) {
+public func stdlib_loadOperators(into registry: OperatorRegistry) {
     ««+loadOperators»»
     registry.add(««args»»)
     ««-loadOperators»»

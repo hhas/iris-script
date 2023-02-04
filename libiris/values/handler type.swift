@@ -2,6 +2,15 @@
 //  handler type.swift
 //  libiris
 //
+//  describes a handler's interface (signature): its name, parameters, and return value
+//
+//  - note that from the native language's POV a handler has a single record parameter which is pattern-matched against the invoking command's [record] argument; in effect `f x -> y`, where x is of form {x_1,x_2,...}
+//
+//  - internally, `x` is already decomposed to a parameter tuple akin to Swift's call convention, `f(x_1,x_2,...) -> y`
+//
+//  - each Parameter is a (label,binding,coercion) tuple corresponding to {label: binding as coercion,...}; native handlers can omit the label (in which case the binding name is used for both) and/or the coercion (in which case asAnything is used)
+//
+
 
 import Foundation
 

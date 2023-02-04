@@ -8,7 +8,7 @@
 
 import Foundation
 
-func stdlib_loadOperators(into registry: OperatorRegistry) {
+public func stdlib_loadOperators(into registry: OperatorRegistry) {
     registry.add([.expression, .keyword("AND"), .expression], 398, .left)
     registry.add([.expression, .keyword(["thru", "through"]), .expression], 1120, .left)
     registry.add([.keyword("NOT"), .expression], 400, .left)

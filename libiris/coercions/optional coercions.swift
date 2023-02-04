@@ -130,5 +130,5 @@ public struct AsOptional: NativeCoercion {
     }
 }
 
-let asOptional = AsOptional(asValue)
+public let asOptional = AsOptional(asValue)
 

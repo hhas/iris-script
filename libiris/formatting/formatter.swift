@@ -48,11 +48,22 @@ public func quotableName(_ name: String) -> String {
 }
 
 
+extension Environment {
+    
+    func defines(name: Symbol) -> Bool {
+        return self.frame[name] != nil
+    }
+}
+
+func toNameStyle(env: Environment?, name: Symbol) -> String {
+    return (env?.defines(name: name) ?? false) ? userNameStyle : nameStyle
+}
 
 
 open class BasicFormatter {
 
     private var indentation = ""
+    let env: Environment?
         
     func append(_ string: String, to result: inout String) {
         if let first = string.first, let last = result.last {
@@ -65,7 +76,9 @@ open class BasicFormatter {
         result += string.replacingOccurrences(of: "\n", with: "\n\(self.indentation)") // TO DO: this is inserting extra chars into multi-line string literal, which is wrong
     }
     
-    public init() { }
+    public init(env: Environment? = nil) {
+        self.env = env
+    }
     
     //
     
@@ -257,7 +270,8 @@ enum VT100: String {
     case cyan         = "\u{1b}[36m"
 }
 
-let nameStyle     = VT100.red.rawValue + VT100.bold.rawValue
+let nameStyle     = VT100.red.rawValue
+let userNameStyle = nameStyle + VT100.bold.rawValue
 let labelStyle    = VT100.orange.rawValue + VT100.bold.rawValue // e.g. `some_command x some_arg: y` shows command and argument names in similar colors
 let operatorStyle = VT100.violet.rawValue
 let numberStyle   = VT100.blue.rawValue
@@ -298,7 +312,7 @@ public class VT100ValueFormatter: BasicFormatter {
             //print(operands)
             result += match.exactMatch.map{ $0.formatOperation(for: &operands, in: self) }.joined(separator: " ")
         } else {
-            result += "\(nameStyle)\(quotableName(value.name.label))\(resetStyle)"
+            result += "\(toNameStyle(env: self.env, name: value.name))\(quotableName(value.name.label))\(resetStyle)"
             // TO DO: use FP syntax for nested commands? or just parenthesize the entire command?
             // TO DO: if first argument is unlabeled and is a record, FP syntax MUST be used, e.g. `foo {{bar:1}, baz:…}`
             if !value.arguments.isEmpty {
@@ -319,8 +333,11 @@ public class VT100ValueFormatter: BasicFormatter {
 public class VT100TokenFormatter { // used by VT100Reader; applies VT100 codes to token stream
     
     private var result = ""
+    let env: Environment?
     
-    public init() { }
+    public init(env: Environment? = nil) {
+        self.env = env
+    }
     
     private func faintUnderscores(_ s: Substring, _ color: String) -> String {
         return "\(color)\(s == "_" ? String(s) : s.replacingOccurrences(of: "_", with: "\u{1b}[2m_\u{1b}[m\(color)"))\u{1b}[m"
@@ -333,8 +350,8 @@ public class VT100TokenFormatter { // used by VT100Reader; applies VT100 codes t
         if id > self.id { self.id = id } else { return }
         if let ws = token.leadingWhitespace { result.append(String(ws)) }
         switch token.form {
-        case .unquotedName:
-            result.append(self.faintUnderscores(token.content, nameStyle))
+        case .unquotedName(let name):
+            result.append(self.faintUnderscores(token.content, toNameStyle(env: self.env, name: name)))
         case .label:
             result.append(self.faintUnderscores(token.content, labelStyle))
         case .operatorName: // note: this currently applies to `nothing`, `true`/`false`, `π` as these are defined as atomic operators and the standard reductionForMatchedPattern() reduces down to command rather than to constant; see also TODO on `standard reducers.swift`
@@ -342,7 +359,7 @@ public class VT100TokenFormatter { // used by VT100Reader; applies VT100 codes t
         default:
             let code: String
             switch token.form {
-            case .quotedName:                   code = nameStyle
+            case .quotedName(let name):         code = toNameStyle(env: self.env, name: name)
             case .value(let v):
                 switch v {
                 case is Text:                   code = textStyle

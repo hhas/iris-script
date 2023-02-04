@@ -56,7 +56,13 @@ public let nullScope = NullScope()
 
 public class Environment: MutableScope { // TO DO: open?
     
-    internal let parent: Environment?
+    internal let parent: Environment? // this should be internal to prevent write barriers being bypassed
+    
+    
+    public func readOnlyParent() -> Environment? { // TO DO: how to allow safe traversal of parents? (e.g. by returning self.parent inside a read-only wrapper)
+        return self.parent
+    }
+    
     
     internal let isLocked: Bool // can `set` operations initiated on child scopes propagate to this scope?
     
@@ -103,6 +109,16 @@ public class Environment: MutableScope { // TO DO: open?
     
     public func subscope(withWriteBarrier isLocked: Bool) -> MutableScope {
         return Environment(parent: self, withWriteBarrier: isLocked)
+    }
+    
+    
+    public func unset(_ name: Symbol) -> Value? {
+        if let result = self.frame[name] {
+            self.frame.removeValue(forKey: name)
+            return result
+        } else {
+            return nil
+        }
     }
     
     // TO DO: implement call()? if adopting entoli-style 'everything is a command' semantics, Commands would call this rather than call Handlers directly, allowing lighterweight storage of 'variable' values (i.e. enum rather than closure)

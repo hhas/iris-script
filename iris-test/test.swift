@@ -10,6 +10,7 @@ import iris
 
 func test() {
     
+    /*
     let parser = IncrementalParser(withStdLib: false)
     let registry = parser.env.operatorRegistry
     registry.add(["shortcut_action", .expression, "requires", .expression], 180)
@@ -20,13 +21,14 @@ func test() {
     registry.add([.keyword("optional"), .optional(.expression), .optional([.keyword("with_default"), .boundExpression("with_default", "default_value")])], 1500, .left)
     registry.add([.keyword("record"), .optional(.boundExpression("of_type", "record_type"))], 1500, .left)
 
-    /*
     do {
-    try parser.loadGlue(URL(fileURLWithPath: "/Users/has/swift/iris-script/shortcuts/glues/shortcut actions.iris-glue"))
+        try parser.loadGlue(URL(fileURLWithPath: "/Users/has/swift/iris-script/shortcuts/glues/shortcut actions.iris-glue"))
     } catch {
         print(error)
     }
      */
+    
+    
     //runScript(" with_default ") // stray conjunction should throw syntax error
     
     /*

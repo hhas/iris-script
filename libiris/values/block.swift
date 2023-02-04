@@ -12,7 +12,7 @@ public class Block: BoxedCollectionValue, LiteralConvertible, SelfEvaluatingValu
     // TO DO: what about preserving user's punctuation?
     
     public var swiftLiteralDescription: String {
-        return "Block([\(self.data.map(literal).joined(separator: ", "))])"
+        return "Block([\(self.data.map({ v in v.swiftLiteralDescription }).joined(separator: ", "))])"
     }
         
     public var literalDescription: String { // TO DO: hand off to pp; also need formatting hints from parser (e.g. whether to use linbreaks and/or punctuation between exprs)

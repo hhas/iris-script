@@ -7,7 +7,7 @@ import Foundation
 import iris
 
 
-func gluelib_loadOperators(into registry: OperatorRegistry) {
+public func gluelib_loadOperators(into registry: OperatorRegistry) {
     
     // operator keywords (minimum required to write glue definitions in native syntax)
     registry.add(["swift_handler", .expression, "requires", .expression], 180)

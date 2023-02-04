@@ -7,7 +7,7 @@ import Foundation
 import iris
 
 
-func sclib_loadOperators(into registry: OperatorRegistry) {
+public func sclib_loadOperators(into registry: OperatorRegistry) {
     registry.add(["shortcut_action", .expression, "requires", .expression], 180)
     registry.add([.expression, .keyword("returning"), .expression], 300)
     registry.add([.expression, "as", .expression], 350)
