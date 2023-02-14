@@ -16,8 +16,8 @@ Place the `iris-talk` executable into a directory on your shell’s search `$PAT
 	Welcome to the iris interactive shell. Please type `help` for assistance.
     ✎ set my_name to "Bob"
     ☺︎ “Bob”
-    ✎ to hi {name} run "Hello, " & name & "!"
-    ☺︎ «handler: ‘say_hello’ {name as anything} returning anything»
+    ✎ to hi {name} perform "Hello, " & name & "!"
+    ☺︎ «handler: ‘hi’ {name as anything} returning anything»
     ✎ say hi my_name
     ☺︎ “Hello, Bob!”
     
@@ -33,7 +33,7 @@ Lists (`[...]`), records (`{...}`), and blocks (`do...done` or `(...)`) can be e
 
 Iris syntax includes a built-in “pipe” operator (`;`), allowing commands to be written sequentially so that the result of one command is passed as first argument to the next:
 
-	✎ To hi {name} run "Hello " & name & "!".
+	✎ To hi {name} perform "Hello " & name & "!".
 	…
 	✎ Say "Who are you?"; read; hi; say.
 	Who are you? Sam

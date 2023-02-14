@@ -36,7 +36,10 @@ func runREPL(parser: IncrementalParser) {
         block += String(repeating: " ", count: indent)
         EL_setIndent(Int32(indent))
         let raw = (EL_readLine().takeRetainedValue() as String)
-        if raw.isEmpty { break }
+        if raw.isEmpty { // ^D
+            print()
+            continue
+        }
         let code = raw.trimmingCharacters(in: CharacterSet.newlines)
         if !code.isEmpty {
             block += code + "\n"
@@ -61,7 +64,13 @@ func runREPL(parser: IncrementalParser) {
                     EL_writeHistory(block)
                     block = ""
                     parser.clear() // once the expression is evaluated, clear it so parser can start reading next one
-                } // else the expression is incomplete, e.g. if first line is `[[1]`, will continue reading lines until the closing "]" is received
+                } else {// else the expression is incomplete, e.g. if first line is `[[1]`, will continue reading lines until the closing "]" is received
+                    let indent = parser.incompleteBlocks().count
+                    if indent == 0 {
+                        print("Syntax error: incomplete expression.")
+                        parser.clear()
+                    }
+                }
             } catch {
                 previousInput = nullValue
                 EL_writeHistory(block)
@@ -83,7 +92,7 @@ func parseScript(_ code: String, parser: IncrementalParser) -> AbstractSyntaxTre
     //print()
     parser.read(code)
     if let script = parser.ast() {
-        print("PARSED:", script)
+        //print("PARSED:", script)
         return script
     } else {
         let errors = parser.errors()
@@ -99,17 +108,6 @@ func parseScript(_ code: String, parser: IncrementalParser) -> AbstractSyntaxTre
         return nil
     }
 }
-
-func runScript(_ script: AbstractSyntaxTree, env: Environment) {
-    do {
-        let result = try script.eval(in: env, as: asAnything)
-        print("\nRESULT:", result)
-    } catch {
-        print(error)
-    }
-}
-
-
 
 //
 
@@ -191,7 +189,15 @@ if argCount == CommandLine.arguments.count {
             if (!willRun) { print("Checking file: \(path)") }
             if let script = parseScript(code, parser: parser) {
                 if willRun {
-                    runScript(script, env: parser.env)
+                    do {
+                        let result = try script.eval(in: parser.env, as: asAnything)
+                        if result as? NullValue == nil {
+                            print(result) // TO DO: print script result or not? (script can `write` at any time); depends if we want AS-like behavior (where output is automatically written to stdout) or Python-like behavior (where explicit `print` writes to stdout)
+                        }
+                    } catch {
+                        fputs("Error: \(error)\n", stderr)
+                        exit(1)
+                    }
                 } else {
                     print("Syntax OK")
                 }

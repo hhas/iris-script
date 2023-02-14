@@ -107,7 +107,7 @@ public class IncrementalParser {
         try! self.parser.replaceReader(EndOfLineReader(nextReader: doc))
         self.parser.parseScript()
         self.lastToken = self.parser.tokenStack.last?.form
-        //print("lastToken:", self.lastToken as Any)
+        //print("lastToken:", self.lastToken as Any); print()
     }
     
     public func ast() -> AbstractSyntaxTree? { // being a “stealth-Lisp”, an iris AST is just a native Value (currently a Block) // TO DO: once annotation support is implemented, annotation and layout information will also be attached to the AST value (we'll probably want to make it a class for this so that top-level annotations can be stored more easily; also, while Command is a class so easily annotatable, other [literal] values are generally structs so would require wrappers to annotate, which we want to avoid as traversing AST is heavily recursive as it is; putting these annotations in AST as well will avoid adding run-time overheads, though will increase complexity as each indirect annotation will need some way to reference the Value to which it applies)

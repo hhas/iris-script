@@ -408,6 +408,8 @@ public class Parser {
             case .endOfCode:
                 break
             default:
+               // print("token stack not fully reduced") // DEBUG
+                //for t in self.tokenStack { print(t) } // DEBUG
                 return nil
             }
             i += 1

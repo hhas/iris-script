@@ -272,7 +272,7 @@ enum VT100: String {
 
 let nameStyle     = VT100.red.rawValue
 let userNameStyle = nameStyle + VT100.bold.rawValue
-let labelStyle    = VT100.orange.rawValue + VT100.bold.rawValue // e.g. `some_command x some_arg: y` shows command and argument names in similar colors
+let labelStyle    = VT100.orange.rawValue // + VT100.bold.rawValue // e.g. `some_command x some_arg: y` shows command and argument names in similar colors // TO DO: only embolden record labels when they are labeled arguments in a user-defined command
 let operatorStyle = VT100.violet.rawValue
 let numberStyle   = VT100.blue.rawValue
 let textStyle     = VT100.blue.rawValue

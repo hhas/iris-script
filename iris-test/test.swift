@@ -82,14 +82,14 @@ func test() {
     //runScript(" optional integer. ")
     //runScript(" set t to list of: integer. write t. t. ")
     
-//    runScript("to foo x returning anything run write x. foo 33.")
-//    runScript("to foo x returning nothing run write x. foo 33.")
-//    runScript("to foo x run write x. foo 33.")
+//    runScript("to foo x returning anything perform write x. foo 33.")
+//    runScript("to foo x returning nothing perform write x. foo 33.")
+//    runScript("to foo x perform write x. foo 33.")
 //    
-//    runScript("to foo x returning anything run x. foo 33.")
-//    runScript("to foo x returning nothing run x. foo 33.")
-//    runScript("to foo x run x. foo 33.")
-//    runScript("to foo x run x. foo nothing.")
+//    runScript("to foo x returning anything perform x. foo 33.")
+//    runScript("to foo x returning nothing perform x. foo 33.")
+//    runScript("to foo x perform x. foo 33.")
+//    runScript("to foo x perform x. foo nothing.")
     
    // return;
     
@@ -104,14 +104,14 @@ func test() {
     runScript(" “6” as list of: optional integer. ") // -> 6
     runScript(" [1, nothing, “3”] as list of: optional integer. ") // -> [1, nothing, 3]
     runScript(" [1, nothing, “3”] as optional list of: integer. ") // this should throw as the list, if given, must contain integers (i.e. the NullCoercionError raised on the failed `nothing as integer` coercion should not propagate back to the `optional list` coercion)
-   // runScript(" to foo run write “bar” \n foo ")
+   // runScript(" to foo perform write “bar” \n foo ")
     
     return;
-   // runScript(" 2+2. to foo{a} run bar a. to bar {v} run 2+v. foo 6. ")
+   // runScript(" 2+2. to foo{a} perform bar a. to bar {v} perform 2+v. foo 6. ")
     
    // print(asBool.name)
     
-   // runScript("to foo returning anything run (if false then 1). foo.")
+   // runScript("to foo returning anything perform (if false then 1). foo.")
     
    // runScript(" [\n[\n] ")//{ [ (1, 3) , 2 + 4, 5 ]}")
     
@@ -352,9 +352,9 @@ func test() {
 
     runScript("tell app “TextEdit” to make new: #document at: end of documents with_properties: {name: “Test”, text: “blah”}.")
 
-    runScript("to foo run write “ok”, bar. baz, gub, guf.")
+    runScript("to foo perform write “ok”, bar. baz, gub, guf.")
 
-    runScript("To say_hello to: name run write “Hello, ” & name & “!”. Say_hello to: “World”.")
+    runScript("To say_hello to: name perform write “Hello, ” & name & “!”. Say_hello to: “World”.")
 
     runScript("write 2 + 2")
 
@@ -504,7 +504,7 @@ func test() {
 
     runScript(" if -1 * - 2 + ---3 = -4 then -5 + -6 else -7 ÷ -8 ") // ‘else’ {‘if’ {‘=’ {‘+’ {‘*’ {-1, -2}, -3}, -4}, ‘+’ {-5, -6}}, ‘/’ {-7, -8}}
 
-    runScript("To say_hello {to: name} run write “Hello, ” & name & “!”. Say_hello to: “World”.") // TO DO: buggy parse omits `write “Hello, ” &`
+    runScript("To say_hello {to: name} perform write “Hello, ” & name & “!”. Say_hello to: “World”.") // TO DO: buggy parse omits `write “Hello, ” &`
 
     runScript("tell app “com.apple.TextEdit” to get documents at 2 thru -1")
 

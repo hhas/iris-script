@@ -13,6 +13,8 @@ public typealias AttributedValue = Value //& Accessor // TO DO: all values adopt
 
 public protocol Accessor { // slot access
     
+    // TO DO: how to implement introspection?
+    
     func get(_ name: Symbol) -> Value?
 }
 

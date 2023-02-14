@@ -5,6 +5,8 @@
 //  readline support
 //
 
+//  TO DO: debatable how much (if any) time should be invested in this; it’d be better to implement high-level GUI-based "notebook" shell with modern facilities
+
 #include "iris-talk-Bridging-Header.h"
 #include <sys/ioctl.h>
 #include <sys/ttycom.h>
@@ -73,7 +75,7 @@ void EL_writeHistory(const char *line) {
 CFStringRef EL_readLine(void) {
     int count;
     const char *line = el_gets(el, &count);
-    if (count > 0) { // -ve count indicates error; 0 = input canceled
+    if (count > 0) { // -ve count indicates error; 0 = input canceled (^D); however, ^D only works when line is empty, else it beeps and continues gets; meantime, ^C terminates process (what we really want is to break out of current line)
         return CFStringCreateWithCString(NULL, line, kCFStringEncodingUTF8); // caller takes ownership
     } else {
         return CFSTR("");

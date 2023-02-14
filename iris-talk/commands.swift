@@ -139,6 +139,9 @@ func printHandlers(in env: Environment) {
 func procedure_commands(command: Command, commandEnv: Scope, handler: Handler, handlerEnv: Scope, coercion: NativeCoercion) throws -> Value {
     if command.arguments.count > 0 { throw UnknownArgumentError(at: 0, of: command, to: handler) }
     var env = commandEnv as? Environment
+    if env == nil {
+        print("Current scope is not an Environment so cannot currently be introspected.")
+    }
     while let scope = env {
         print("Scope contains \(scope.frame.count) items:\n") // TO DO: how to identify/describe/name each scope? (library/handler/tell/etc)
         printHandlers(in: scope)

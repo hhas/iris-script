@@ -19,14 +19,14 @@ swift_handler ‘to’ {interface as handler_interface, action as expression} re
     can_error: true
     use_scopes: #command
     swift_function: defineCommandHandler {interface, action}
-    operator: {[keyword “to”, expression “interface”, keyword “run”, expression “action”], 80}
+    operator: {[keyword “to”, expression “interface”, keyword “perform”, expression “action”], 80}
 }
 
 swift_handler ‘when’ {interface as handler_interface, action as expression} returning (handler) requires {
     can_error: true
     use_scopes: #command
     swift_function: defineEventHandler {interface, action}
-    operator: {[keyword “when”, expression “interface”, keyword “run”, expression “action”], 80}
+    operator: {[keyword “when”, expression “interface”, keyword “perform”, expression “action”], 80}
 }
 
 
