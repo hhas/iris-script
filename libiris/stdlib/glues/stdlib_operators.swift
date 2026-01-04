@@ -8,7 +8,44 @@
 
 import Foundation
 
+
+public func reductionForBulletBlock(stack: Parser.TokenStack, match: PatternMatch, start: Int, end: Int) throws -> Value {
+    // TO DO: this is default reducer for OperatorRegistry.prefix(_:suffix:) used to parse a keyword-based block of form `START_KEYWORD DELIMITER (EXPR DELIMITER*) STOP_KEYWORD` (e.g. `do…done`)
+    assert(end >= start + 1)
+    var items = [Value]()
+    var i = start + 1 // ignore opening keyword (e.g. `do`)
+    stack.skipSeparator(&i)
+    stack.skipLineBreaks(&i)
+    while i < end  { // ignore closing keyword (e.g. `done`)
+        items.append(stack.value(at: i))
+        i += 1 // step over value
+        stack.skipSeparator(&i)
+        stack.skipLineBreaks(&i)
+    }
+    return Block(items, patternDefinition: match)
+}
+
+
 public func stdlib_loadOperators(into registry: OperatorRegistry) {
+    
+    registry.add(PatternDefinition(pattern: [
+                                        .keyword(["•", "*"]),
+                                        .expression,
+                                    ],
+                                   precedence: 0,
+                                   autoReduce: false, reducer: reductionForBulletBlock))
+ /*
+    registry.add([
+        .keyword(), .expression,
+        .zeroOrMore([.token(.separator(.comma)), .expression]),
+        
+    ], 10, .left, reductionForPositiveOperator)
+  PatternDefinition(pattern:
+      [.keyword(name), M_DELIM, .zeroOrMore([.expression, M_DELIM]), .keyword(suffix)],
+                             autoReduce: true, reducer: reducer)
+  
+
+*/
     registry.add([.expression, .keyword("AND"), .expression], 398, .left)
     registry.add([.expression, .keyword(["thru", "through"]), .expression], 1120, .left)
     registry.add([.keyword("NOT"), .expression], 400, .left)

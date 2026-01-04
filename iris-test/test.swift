@@ -10,6 +10,13 @@ import iris
 
 func test() {
     
+    runScript("""
+        • write “Bob”
+        • 2 + 2
+    """)
+    
+    return;
+    
     /*
     let parser = IncrementalParser(withStdLib: false)
     let registry = parser.env.operatorRegistry
